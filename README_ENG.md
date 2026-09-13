@@ -14,16 +14,12 @@ A streamlined Astro 5 personal site inspired by the Antfu-style visual language.
 
 The homepage uses a dedicated `HomeHeader` with a pure-CSS retro desktop illustration. It switches to a vertical layout on narrow screens. Below the subtitle it shows published blog count, word count, and the span from first to latest post; below the introduction it lists the five newest published posts. The navbar shows day-of-year plus annual and daily progress beside the logo. The body presents the profile, stack, GitHub stats, and social links. See [`docs/feature/首页与导航近期功能说明.md`](docs/feature/首页与导航近期功能说明.md) for the source-level notes.
 
-
-
 <p align="center">
-  <img src="img/image-20260912223918526.png" alt="图片" width="750">
+  <img src="img/image-20260914021124817.png" alt="图片" width="750">
 </p>
-
 <p align="center">
-  <img src="img/image-20260912224017446.png" alt="图片" width="750">
+  <img src="img/image-20260914021225104.png" alt="图片" width="750">
 </p>
-
 ## Blogs Page
 
 `/blogs/` aggregates every visible post tag with its post count and supports multi-tag AND filtering. On wide screens the tag panel sits to the left and aligns with the `Blogs` heading; it scrolls away with the document. When the container becomes narrow, it moves between the subtitle and year groups. See [`docs/feature/Blogs标签汇聚与筛选说明.md`](docs/feature/Blogs标签汇聚与筛选说明.md) for the source-level design and implementation notes.
@@ -35,8 +31,9 @@ The homepage uses a dedicated `HomeHeader` with a pure-CSS retro desktop illustr
 ### blog Page
 
 <p align="center">
-  <img src="img/PixPin_2026-09-12_22-43-14.png" alt="图片" width="800">
+  <img src="img/PixPin_2026-09-14_02-10-18.png" alt="图片" width="800">
 </p>
+
 
 ## Projects Page
 
@@ -54,8 +51,9 @@ The `/insights/` page is currently cleared into a blank placeholder page. The ro
 ## Friends Page
 
 <p align="center">
-  <img src="img/image-20260912224403728.png" alt="图片" width="800">
+  <img src="img/image-20260914021618840" alt="图片" width="800">
 </p>
+
 
 ## Overview
 

@@ -17,11 +17,10 @@
 首页使用独立的 `HomeHeader`，在标题右侧展示纯 CSS 绘制的复古桌面，窄屏下自动切换为纵向布局。副标题下展示已发布 Blog 的篇数、字数与首末篇日期间隔；正文后是最近 5 篇已发布文章的时间线。导航栏 Logo 旁显示今年第几天、年度进度和今日进度。正文展示个人介绍、技术栈、GitHub 统计和社交链接。完整实现见 [`docs/feature/首页与导航近期功能说明.md`](docs/feature/首页与导航近期功能说明.md)。
 
 <p align="center">
-  <img src="img/image-20260912223918526.png" alt="图片" width="750">
+  <img src="img/image-20260914021124817.png" alt="图片" width="750">
 </p>
-
 <p align="center">
-  <img src="img/image-20260912224017446.png" alt="图片" width="750">
+  <img src="img/image-20260914021225104.png" alt="图片" width="750">
 </p>
 
 
@@ -32,13 +31,11 @@
 <p align="center">
   <img src="img/PixPin_2026-09-12_22-42-02.png" alt="图片" width="800">
 </p>
-
 ### blog 页面
 
 <p align="center">
-  <img src="img/PixPin_2026-09-12_22-43-14.png" alt="图片" width="800">
+  <img src="img/PixPin_2026-09-14_02-10-18.png" alt="图片" width="800">
 </p>
-
 
 ## Projects 页面
 
@@ -55,9 +52,8 @@
 ## Friends 页面
 
 <p align="center">
-  <img src="img/image-20260912224403728.png" alt="图片" width="800">
+  <img src="img/image-20260914021618840" alt="图片" width="800">
 </p>
-
 
 ## 概览
 
