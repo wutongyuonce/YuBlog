@@ -34,18 +34,34 @@ const tocDisplayMode = Array.isArray(toc) && toc[0] && toc[1].displayMode
 
 <style>
   .desktop-aside {
-    --desktop-toc-width: 12rem;
+    /* Match .prose.post-content max-width so the gutter math stays aligned. */
+    --article-width: 65ch;
+    --toc-inset-start: calc(clamp(3.25rem, 6.5vw, 8.5rem) - 1.4rem);
+    --toc-inset-end: calc(1.2rem + 1.4rem);
+    --desktop-toc-width: calc(
+      50% - var(--article-width) / 2 - var(--toc-inset-start) -
+        var(--toc-inset-end)
+    );
     position: fixed;
     top: 8.875rem;
+    right: var(--toc-inset-end);
+    left: auto;
     z-index: 100;
-    left: calc(100vw - var(--desktop-toc-width) - 3.2rem);
+    width: var(--desktop-toc-width);
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
   }
 
+  @media (min-width: 1280px) {
+    .desktop-aside {
+      --article-width: 70ch;
+    }
+  }
+
   .desktop-aside[data-position='left'] {
-    left: 2rem;
+    right: auto;
+    left: var(--toc-inset-end);
   }
 
   .desktop-aside__trigger {

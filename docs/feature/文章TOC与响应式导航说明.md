@@ -50,14 +50,19 @@
 
 ### 3.1 当前核心参数
 
-- `--desktop-toc-width: 12rem`
-  - 桌面 TOC 的统一宽度变量
-  - 同时影响目录实际宽度和水平定位
+- `--article-width: 65ch`（`1280px` 及以上为 `70ch`）
+  - 与 `.prose.post-content` 的 `max-width` 对齐，用来计算右侧空白
+- `--toc-inset-start: calc(clamp(3.25rem, 6.5vw, 8.5rem) - 1.4rem)`
+  - TOC 块相对正文的间距，比靠视口一侧更大，避免贴住正文
+- `--toc-inset-end: calc(1.2rem + 1.4rem)`
+  - TOC 块相对视口右缘的间距；相对居中再整体左移 `1.4rem`
+- `--desktop-toc-width: calc(50% - article/2 - start - end)`
+  - 宽度等于右侧空白减去两侧 inset
+  - 视口越宽 TOC 越宽；到隐藏断点时最窄
 - `top: 8.875rem`
   - 整个右侧 TOC 距离页面顶部的位置
-- `left: calc(100vw - var(--desktop-toc-width) - 3.2rem)`
-  - 保持 TOC 距离页面右侧 `3.2rem`
-  - 只通过 `--desktop-toc-width` 控制 TOC 自身宽度
+- `right: var(--toc-inset-end)`
+  - 靠视口右缘定位，不在右侧空白里绝对居中
 - `@media (max-width: 1199.9px)`
   - 页面宽度小于这个值时，桌面 TOC 直接隐藏
 
@@ -82,9 +87,8 @@
 
 当前参数：
 
-- `width: var(--desktop-toc-width, 12rem)`
-  - 优先读取 `DesktopAside` 传入的统一宽度变量
-  - 如果变量不存在，兜底宽度为 `12rem`
+- `width: 100%`
+  - 目录列表跟 `DesktopAside` 的流体宽度走，避免子元素里的 `%` 相对 aside 再算一遍
 - `font-size: calc(var(--blog-reading-size) * 0.9)`
   - 当前目录字体比正文基准略小
 - `max-height: 74vh`
@@ -287,16 +291,17 @@
 文件：
 
 - `src/components/base/DesktopAside.astro`
-- `src/components/toc/TocSidebar.astro`
 
 优先改：
 
-- `--desktop-toc-width`
+- `--toc-inset-start`：TOC 与正文的间距，变大则 TOC 变窄、更不贴正文
+- `--toc-inset-end`：TOC 与视口边缘的间距，变小则更靠右
+- `--article-width`：必须与 `.prose.post-content` 的 `max-width` 保持一致
 
 说明：
 
-- 这是桌面 TOC 宽度的主控变量
-- 改它会同时影响宽度和定位
+- 宽度由右侧空白自动算出，不要再写死成 `12rem`
+- `TocSidebar` 使用 `width: 100%` 跟随 aside，不要在子元素里再用带 `%` 的 `--desktop-toc-width`
 
 ### 6.2 改 TOC 提前/延后消失
 
@@ -355,7 +360,7 @@
 
 当前最重要的几个控制参数是：
 
-- 桌面 TOC 宽度：`12rem`
+- 桌面 TOC 宽度：随右侧空白流体变化，偏靠视口右缘
 - 桌面 TOC 隐藏断点：`1199.9px`
 - 移动 TOC 恢复桌面断点：`1200px`
 - 桌面 TOC 字号：`calc(var(--blog-reading-size) * 0.9)`
@@ -366,9 +371,9 @@
 
 基于当前代码，可以把最近这一轮 TOC 相关更新概括为：
 
-- 桌面端 TOC 做了宽度和字号收紧
-  - 宽度统一由 `--desktop-toc-width: 12rem` 控制
-  - 字号调整为 `calc(var(--blog-reading-size) * 0.9)`
+- 桌面端 TOC 宽度随右侧空白流体变化
+  - 宽度由 `--desktop-toc-width` 按正文 `max-width` 和视口计算
+  - 字号为 `calc(var(--blog-reading-size) * 0.9)`
 - 桌面 TOC 的消失断点提前到 `1199.9px`
   - 目的是在目录快接近正文右边界之前提前切换
 - 小宽度下新增了右下角目录按钮和目录卡片
