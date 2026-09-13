@@ -22,8 +22,16 @@ Start by confirming the repository root contains `package.json` and reading the 
 3. Use `draft: true` when the user asks for a draft or does not explicitly ask to publish. Set it to `false` or omit it only for a requested public post.
 4. Keep `description` concise and factual. Set `toc: false` only for very short content; use `search: false` only when the post should be excluded from Pagefind. `ogImage` defaults to automatic generation, so omit it unless disabling or supplying a custom image.
 5. For images used in the post body, copy each image into a dedicated `public/` subdirectory named after the post — one folder per blog post — and reference it with an absolute site path rooted at that folder, e.g. for the post "Prompt Caching 的工程策略: ..." use `public/Prompt Caching/image.png` and reference it in Markdown as `/Prompt Caching/image.png`. For `cover`, use a valid remote URL or a valid local image reference accepted by the content schema. Include descriptive `coverAlt` when a cover is used.
-6. If the post body starts with a top-level `# H1` heading, remove it — the `title` in frontmatter already serves as the page heading. Keep only the YAML frontmatter at the very top, then the body content starting from `## H2` onward.
-7. Keep Markdown readable: use headings in order, fenced code blocks with a language, meaningful image alt text, and direct links. Do not invent citations, dates, or claims.
+6. For the optional title hero image, use the shared directory `public/blog-title-images/` rather than a per-post folder. Add `titleImage` and a descriptive `titleImageAlt` to frontmatter:
+
+   ```yaml
+   titleImage: /blog-title-images/weekly-107.webp
+   titleImageAlt: A swimmer in the pool during a competition
+   ```
+
+   `titleImage` must point inside `/blog-title-images/`; `titleImageAlt` is required whenever `titleImage` is set. The title image is rendered by the article header, so do not duplicate it as a Markdown body image unless the article needs the image again in its content. Prefer compressed WebP/AVIF files, ideally no wider than 1600px.
+7. If the post body starts with a top-level `# H1` heading, remove it — the `title` in frontmatter already serves as the page heading. Keep only the YAML frontmatter at the very top, then the body content starting from `## H2` onward.
+8. Keep Markdown readable: use headings in order, fenced code blocks with a language, meaningful image alt text, and direct links. Do not invent citations, dates, or claims.
 
 Minimal public-post frontmatter:
 
@@ -65,8 +73,8 @@ Example:
 Run the bundled structural check on the relevant content, then run the repository checks:
 
 ```bash
-python3 skills/blog-content-publisher/scripts/validate_content.py --root . --blog path/to/post.md
-python3 skills/blog-content-publisher/scripts/validate_content.py --root . --friends
+python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog path/to/post.md
+python3 blog-content-publisher-skill/scripts/validate_content.py --root . --friends
 pnpm check
 pnpm build
 ```
