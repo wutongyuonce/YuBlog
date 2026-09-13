@@ -28,7 +28,6 @@ const { Content, headings, remarkPluginFrontmatter } = await render(post)
 
 const title = frontmatter.title
 const description = frontmatter.description
-const ogImage = frontmatter.ogImage
 const pubDate = frontmatter.pubDate.toISOString()
 const lastModDate =
   frontmatter.lastModDate && frontmatter.lastModDate.toISOString()
@@ -62,7 +61,7 @@ in production. Set the post's <code>draft</code> property in
 frontmatter to <code>false</code> or remove it to publish the post.`
 ---
 
-<BaseLayout {title} {description} {ogImage} {pubDate} {lastModDate}>
+<BaseLayout {title} {description} {pubDate} {lastModDate}>
   <StandardLayout
     {title}
     {subtitle}

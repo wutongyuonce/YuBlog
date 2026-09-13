@@ -4,7 +4,6 @@ description: 记录 Apple Silicon Mac 上主动安装的 Homebrew 工具、开�
 pubDate: 2026-02-02
 lastModDate: ''
 tags: [macOS]
-ogImage: false
 toc: true
 search: true
 draft: false

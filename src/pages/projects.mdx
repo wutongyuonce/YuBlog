@@ -3,7 +3,6 @@ title: Projects
 subtitle: Currently Working on
 description: My categorized Projects List
 bgType: plum
-ogImage: true
 ---
 
 import BaseLayout from '~/layouts/BaseLayout.astro'
@@ -14,7 +13,6 @@ import GroupView from '~/components/views/GroupView.astro'
   title={frontmatter.title}
   description={frontmatter.description}
   bgType={frontmatter.bgType}
-  ogImage={frontmatter.ogImage}
 >
   <StandardLayout
     class="max-w-300 group/content"

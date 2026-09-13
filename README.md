@@ -67,7 +67,7 @@
 - 内容：通过 Astro Content Collections 管理 Markdown / MDX
 - 搜索：Pagefind（仅限博客）
 - 体验：支持明/暗主题切换与视图转场
-- 内容增强：文章目录、阅读友好的博客排版、可选的 OG 图片生成链路
+- 内容增强：文章目录、阅读友好的博客排版
 
 ## 功能亮点
 
@@ -80,7 +80,6 @@
 - Friends 页 `/friends/`，以同一列表展示友链卡片，包含 GitHub PR 申请面板，并适配明暗主题
 - 基于 Pagefind 的博客全文搜索
 - 文章详情页右侧目录
-- 保留 OG 图片生成能力，当前全局开关已关闭
 - 四种内置背景效果：`plum`、`dot`、`rose`、`snow`
 - 统一的配置文件控制社交链接与导航栏
 
@@ -91,7 +90,7 @@
 - `unocss` — 原子化 CSS
 - `astro-expressive-code` — 代码块语法高亮
 - `pagefind` — 静态搜索索引
-- `sharp` + `satori` — 图片处理与 OG 图片生成
+- `sharp` — 图片处理
 - `eslint` + `prettier` — 代码质量与格式化
 
 ## 环境要求
@@ -155,7 +154,7 @@ pnpm format:write # 格式化代码（Prettier）
 
 - `src/config.ts` 中的 `SITE`：网站 URL、标题、描述、语言地区、图片域名
 - `src/config.ts` 中的 `UI`：内部导航、社交链接、导航栏布局、文章/项目展示规则
-- `src/config.ts` 中的 `FEATURES`：目录、搜索、入场动画、OG 图片默认配置
+- `src/config.ts` 中的 `FEATURES`：目录、搜索、入场动画
 
 ## 项目结构
 
@@ -181,8 +180,8 @@ src/
   styles/         # main.css, prose.css, markdown.css
   utils/          # 路径、日期、数据、标签筛选、Blog 统计、近期日期、时间进度、杂项、目录工具函数
 test/             # Node 内置测试，覆盖博客标签、首页统计、近期日期、时间进度与 CJK 强调
-plugins/          # remark/rehype 插件、OG 辅助
-public/           # 静态资源：favicon、字体、生成的图片等
+plugins/          # remark/rehype 插件
+public/           # 静态资源：favicon、字体、图片等
 docs/             # 项目文档与定制说明
 ```
 
@@ -234,7 +233,6 @@ src/components/* + styles/*  -> 最终 UI 输出
 - 仅限博客的 Pagefind 搜索
 - 文章页目录
 - 明暗主题切换与视图转场
-- 可选的 OG 图片生成链路（当前全局关闭）
 - 多种背景效果（`plum`、`dot`、`rose`、`snow`）
 
 MIT

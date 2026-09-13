@@ -2,7 +2,6 @@
 title: Java 成员设计最佳实践
 description: Java Member Design Best Practices
 pubDate: 2025-12-14
-ogImage: false
 toc: true
 search: true
 ---

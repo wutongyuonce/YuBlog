@@ -66,7 +66,7 @@ The `/insights/` page is currently cleared into a blank placeholder page. The ro
 - Content: Markdown / MDX via Astro Content Collections
 - Search: Pagefind (blogs only)
 - UX: light/dark theme switching with view transitions
-- Content extras: article TOC, reading-friendly blog layout, and an optional OG image generation pipeline
+- Content extras: article TOC and a reading-friendly blog layout
 
 ## Feature Highlights
 
@@ -79,7 +79,6 @@ The `/insights/` page is currently cleared into a blank placeholder page. The ro
 - Friends page at `/friends/` with a single card list, a GitHub PR application panel, and light/dark theme support
 - Full-text blog search powered by Pagefind
 - Right-side article TOC for blog detail pages
-- OG image generation remains available, but its global switch is currently disabled
 - Four built-in background effects: `plum`, `dot`, `rose`, and `snow`
 - Social links and navigation configured from a single config file
 
@@ -90,7 +89,7 @@ The `/insights/` page is currently cleared into a blank placeholder page. The ro
 - `unocss` for utility-first styling
 - `astro-expressive-code` for code block presentation
 - `pagefind` for static search indexing
-- `sharp` + `satori` for image and OG generation
+- `sharp` for image processing
 - `eslint` + `prettier` for code quality and formatting
 
 ## Requirements
@@ -154,7 +153,7 @@ pnpm format:write # format files with Prettier
 
 - `SITE` in `src/config.ts`: website URL, title, description, locale, image domains
 - `UI` in `src/config.ts`: internal navs, social links, navbar layout, post/group display rules
-- `FEATURES` in `src/config.ts`: TOC, search, slide animation, OG image defaults
+- `FEATURES` in `src/config.ts`: TOC, search, and slide animation
 
 ## Project Structure
 
@@ -180,8 +179,8 @@ src/
   styles/         # main.css, prose.css, markdown.css
   utils/          # path, datetime, data, blog tag filtering, blog stats, recent dates, progress stats, misc, and TOC helpers
 test/             # Node built-in tests covering blog tags, home stats, recent dates, progress stats, and CJK emphasis
-plugins/          # remark/rehype plugins, OG helpers
-public/           # Static assets such as favicon, fonts, and generated images
+plugins/          # remark/rehype plugins
+public/           # Static assets such as favicon, fonts, and images
 docs/             # Project documentation and customization guides
 ```
 
@@ -233,7 +232,6 @@ Retained core experience:
 - Blog-only search via Pagefind
 - Article TOC on post pages
 - Theme switching with view transitions
-- Optional OG image generation pipeline (currently disabled globally)
 - Multiple background effects (`plum`, `dot`, `rose`, `snow`)
 
 MIT

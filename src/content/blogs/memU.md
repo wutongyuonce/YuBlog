@@ -3,7 +3,6 @@ title: 看懂 memU：从运行方式到完整记忆链路
 description: 从运行方式、宿主接入到完整记忆链路，梳理 memU 如何保存、检索和复用 Agent 记忆。
 pubDate: 2026-08-31
 tags: [memU, Agent Memory]
-ogImage: false
 toc: true
 search: true
 ---

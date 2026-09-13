@@ -8,7 +8,6 @@ export const SITE: Site = {
     'A streamlined Astro Antfu-style site with blog, projects, search, and theme switching.',
   author: 'Wutong Yu',
   lang: 'en',
-  ogLocale: 'en_US',
   imageDomains: [],
 }
 
@@ -99,15 +98,6 @@ export const UI: Ui = {
  */
 export const FEATURES: Features = {
   slideEnterAnim: [true, { enterStep: 60 }],
-  ogImage: false,
-  // ogImage: [
-  //   true,
-  //   {
-  //     authorOrBrand: `${SITE.title}`,
-  //     fallbackTitle: `${SITE.description}`,
-  //     fallbackBgType: 'plum',
-  //   },
-  // ],
   toc: [
     true,
     {

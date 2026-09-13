@@ -3,7 +3,6 @@ title: Astro Notes
 description: Astro Grammer & Blog Development
 pubDate: 2026-04-01
 tags: [Astro]
-ogImage: false
 toc: true
 search: true
 ---

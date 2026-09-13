@@ -3,7 +3,6 @@ title: 创建 Agent Skill 的最佳实践
 description: 从简洁性、触发发现、渐进式披露、脚本化和验证等方面，整理专业 Agent Skill 的设计方法。
 pubDate: 2026-04-15
 tags: [Skill]
-ogImage: false
 toc: true
 search: true
 ---

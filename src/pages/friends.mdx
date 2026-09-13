@@ -3,7 +3,6 @@ title: 友情链接
 subtitle: Together we go further
 description: 浏览我的友链列表，查看值得反复回访的博客、个人主页与独立站点
 bgType: snow
-ogImage: true
 ---
 
 import BaseLayout from '~/layouts/BaseLayout.astro'
@@ -14,7 +13,6 @@ import FriendsView from '~/components/views/FriendsView.astro'
   title={frontmatter.title}
   description={frontmatter.description}
   bgType={frontmatter.bgType}
-  ogImage={frontmatter.ogImage}
 >
   <StandardLayout title={frontmatter.title} subtitle={frontmatter.subtitle} isCentered={true}>
     <FriendsView />

@@ -5,7 +5,6 @@ pubDate: 2026-09-13
 tags: [OpenViking, Agent Memory, RAG]
 titleImage: /blog-title-images/cold-anime.webp
 titleImageAlt: 冷艳风格二次元人物壁纸
-ogImage: false
 toc: true
 search: true
 ---

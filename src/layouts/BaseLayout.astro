@@ -20,13 +20,12 @@ import type { BgType } from '~/types'
 interface Props {
   title?: string
   description?: string
-  ogImage?: string | boolean
   bgType?: BgType | false
   pubDate?: string
   lastModDate?: string
 }
 
-const { title, description, ogImage, bgType, pubDate, lastModDate } =
+const { title, description, bgType, pubDate, lastModDate } =
   Astro.props
 const pathname = Astro.url.pathname
 const currentPath = ensureTrailingSlash(pathname)
@@ -72,7 +71,7 @@ if (hasCustomCursor) style['--external-link-cursor'] = cursorType
 <!doctype html>
 <html lang={SITE.lang}>
   <head>
-    <Head {title} {description} {ogImage} {pubDate} {lastModDate} />
+    <Head {title} {description} {pubDate} {lastModDate} />
   </head>
 
   <body

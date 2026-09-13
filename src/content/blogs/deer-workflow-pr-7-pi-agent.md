@@ -3,7 +3,6 @@ title: "Deer Workflow PR #7：Pi Coding Agent 统一 Harness 实现报告"
 description: "拆解 Deer Workflow PR #7 如何通过 subprocess Harness 接入 Pi Coding Agent，并保持统一的 Agent 调用与结构化输出契约。"
 pubDate: 2026-09-06
 tags: [Workflow, Pi, Multi-Agent, PR]
-ogImage: false
 toc: true
 search: true
 ---

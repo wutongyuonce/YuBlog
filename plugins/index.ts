@@ -6,7 +6,6 @@ import remarkDirective from 'remark-directive'           // 支持通用指令�
 import remarkDirectiveSugar from 'remark-directive-sugar' // 提供 :badge、:link、:image 等内置指令
 import remarkMath from 'remark-math'                     // 解析数学公式（$...$ 和 $$...$$）
 import remarkReadingTime from './remark-reading-time'    // 计算文章阅读时间（自定义）
-import remarkGenerateOgImage from './remark-generate-og-image' // 自动生成 OG 图片（自定义）
 
 // ==================== Rehype 插件（MDAST → HTML） ====================
 import { rehypeHeadingIds } from '@astrojs/markdown-remark' // 为标题自动添加 ID
@@ -16,7 +15,7 @@ import rehypeExternalLinks from 'rehype-external-links'    // 处理外部链接
 import rehypeAutolinkHeadings from 'rehype-autolink-headings' // 标题自动添加锚点链接
 import rehypeWrapAll from './rehype-wrap-all'              // 用 div 包裹指定元素
 
-import { UI, FEATURES } from '../src/config'               // 导入项目配置
+import { UI } from '../src/config'                          // 导入项目配置
 
 import type { RemarkPlugins, RehypePlugins } from 'astro'
 import type { PropertiesFromTextDirective } from 'remark-directive-sugar'
@@ -151,10 +150,6 @@ export const remarkPlugins: RemarkPlugins = [
   // 4. 阅读时间计算
   remarkReadingTime,  // 统计文章字数，计算预计阅读时间
 
-  // 5. OG 图片生成（条件启用，根据 FEATURES 配置）
-  ...(Array.isArray(FEATURES.ogImage) && FEATURES.ogImage[0]
-    ? [remarkGenerateOgImage]  // 如果启用了 OG 图片功能，才添加此插件
-    : []),
 ]
 
 // ==================== 导出 Rehype 插件配置 ====================

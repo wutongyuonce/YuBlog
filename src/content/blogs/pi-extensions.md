@@ -4,7 +4,6 @@ description: 记录当前实际装进 Pi 的 extensions、各自干什么、怎�
 pubDate: 2026-09-10
 lastModDate: ''
 tags: [Pi, Agent]
-ogImage: false
 toc: true
 search: true
 draft: false

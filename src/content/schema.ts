@@ -136,14 +136,6 @@ export const postSchema = ({ image }: SchemaContext) =>
           '音视频内容的发布平台名称（如 YouTube、Spotify）。不需要时留空。'
         ),
 
-      // OG 图片
-      ogImage: z
-        .union([z.string(), z.boolean()])
-        .default(true)
-        .describe(
-          '社交分享图片。true=自动生成，false=禁用，字符串=使用自定义图片。'
-        ),
-
       // 是否生成目录（Table of Contents）
       toc: z.boolean().default(true).describe('是否为文章生成目录。'),
 

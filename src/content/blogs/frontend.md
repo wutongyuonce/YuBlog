@@ -4,7 +4,6 @@ description: "From Multi-page to Hybrid: A Complete Map of Web Application Archi
 pubDate: 2026-03-16
 lastModDate: ''
 tags: [Web 架构, SSR, SSG]
-ogImage: false
 toc: true
 search: true
 ---

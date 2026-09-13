@@ -20,7 +20,7 @@ Start by confirming the repository root contains `package.json` and reading the 
 1. Choose a short, stable Markdown filename. A nested directory is valid and becomes part of `/blogs/<slug>/`; do not rename an existing post without confirming because it changes the URL.
 2. Write YAML frontmatter. `title` (maximum 60 characters) and `pubDate` are required. Use `YYYY-MM-DD`; use the user's requested date or today's local date. Add optional fields only when they convey real intent.
 3. Use `draft: true` when the user asks for a draft or does not explicitly ask to publish. Set it to `false` or omit it only for a requested public post.
-4. Keep `description` concise and factual. Set `toc: false` only for very short content; use `search: false` only when the post should be excluded from Pagefind. `ogImage` defaults to automatic generation, so omit it unless disabling or supplying a custom image.
+4. Keep `description` concise and factual. Set `toc: false` only for very short content; use `search: false` only when the post should be excluded from Pagefind.
 5. For images used in the post body, copy each image into a dedicated `public/` subdirectory named after the post — one folder per blog post — and reference it with an absolute site path rooted at that folder, e.g. for the post "Prompt Caching 的工程策略: ..." use `public/Prompt Caching/image.png` and reference it in Markdown as `/Prompt Caching/image.png`. For `cover`, use a valid remote URL or a valid local image reference accepted by the content schema. Include descriptive `coverAlt` when a cover is used.
 6. For the optional title hero image, use the shared directory `public/blog-title-images/` rather than a per-post folder. Add `titleImage` and a descriptive `titleImageAlt` to frontmatter:
 

@@ -3,7 +3,6 @@ title: 'Wutong Yu'
 subtitle: INTJ ｜ Unwavering to the end
 description: 'A streamlined Astro Antfu-style site with blog, projects, search, and theme switching.'
 bgType: dot
-ogImage: false
 ---
 
 import BaseLayout from '~/layouts/BaseLayout.astro'
@@ -16,7 +15,6 @@ import RecentWriting from '~/components/home/RecentWriting.astro'
   title={frontmatter.title}
   description={frontmatter.description}
   bgType={frontmatter.bgType}
-  ogImage={frontmatter.ogImage}
 >
   <StandardLayout>
     <HomeHeader

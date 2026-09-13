@@ -60,7 +60,6 @@ InsightsView.astro
 
 - `subtitle`
 - `bgType: snow`
-- `ogImage: true`
 - `StandardLayout`
 - 页面内部自定义 `article` 容器
 

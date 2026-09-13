@@ -3,7 +3,6 @@ title: '404'
 subtitle: ''
 description: Page not found
 bgType: false
-ogImage: false
 ---
 
 import BaseLayout from '~/layouts/BaseLayout.astro'
@@ -13,7 +12,6 @@ import StandardLayout from '~/layouts/StandardLayout.astro'
   title={frontmatter.title}
   description={frontmatter.description}
   bgType={frontmatter.bgType}
-  ogImage={frontmatter.ogImage}
 >
   <StandardLayout title={frontmatter.title} subtitle={frontmatter.subtitle}>
     <p slot="article">Nice to meet you tho!</p>

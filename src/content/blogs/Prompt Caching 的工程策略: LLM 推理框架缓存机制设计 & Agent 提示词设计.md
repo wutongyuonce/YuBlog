@@ -4,7 +4,6 @@ subtitle: 以前缀稳定性为中心，理解会话树、工具加载与上下�
 description: 从 token 前缀匹配出发，系统梳理对话缓存的复用条件、常见失效模式，以及 append-only、按需工具加载和主动压缩等工程策略。
 tags: [Prompt Caching, KV Cache]
 pubDate: 2026-07-24
-ogImage: false
 toc: true
 search: true
 ---

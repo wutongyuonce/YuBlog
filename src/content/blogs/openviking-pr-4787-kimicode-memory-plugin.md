@@ -5,7 +5,6 @@ pubDate: 2026-09-13
 tags: [OpenViking, Kimi Code, Agent Memory, PR]
 titleImage: /blog-title-images/yae-miko.webp
 titleImageAlt: 八重神子动漫角色壁纸
-ogImage: false
 toc: true
 search: true
 draft: false

@@ -57,19 +57,6 @@ export interface Site {
   lang: string
 
   /**
-   * Specifies the page content's language and region for better content display on social platforms,
-   * found in `src/components/base/Head.astro`.
-   *
-   * It must be in `language_TERRITORY` format, which you can find in
-   * {@link https://www.unicode.org/cldr/charts/44/supplemental/language_territory_information.html Language-Territory Information}.
-   *
-   * @example
-   * 'zh_CN'
-   * 'fr_FR'
-   */
-  ogLocale: string
-
-  /**
    * Specifies the allowed domains for optimizing remote images,
    * including those used with `![]()` and the `<Image />` or `<Picture />` components.
    *
@@ -488,32 +475,6 @@ interface slideEnterAnimConfig {
   enterStep: number
 }
 
-interface OgImageConfig {
-  /**
-   * Sets your name or brand name that will be displayed on the OG image.
-   */
-  authorOrBrand: string
-
-  /**
-   * Sets the fallback title for OG images.
-   *
-   * Used when the `title` in the frontmatter is missing or invalid.
-   */
-  fallbackTitle: string
-
-  /**
-   * Sets the fallback background for OG images.
-   *
-   * By default, the background used for auto-generated OG images is based on the `bgType` set in frontmatter.
-   * This value is only used for the fallback OG image (stored at `/public/og-images/og-image.png`)
-   * and as the background when `bgType` is not specified.
-   *
-   * A fallback OG image is the default image used when the specified or auto-generated OG image is missing.
-   * You can delete the existing file to regenerate a new one.
-   */
-  fallbackBgType: BgType
-}
-
 export interface TocConfig {
   /**
    * Sets the minimum heading level for TOC.
@@ -592,18 +553,6 @@ export interface Features {
    * Whether to enable slide-in animation on each page.
    */
   slideEnterAnim: FeatureConfig<slideEnterAnimConfig>
-
-  /**
-   * Whether to enable OG image auto-generation.
-   *
-   * - Automatically generates OG images for Markdown/MDX files when:
-   *   - The `ogImage` field is absent in frontmatter, or
-   *   - The `ogImage` field is set to `true`.
-   * - To disable for a specific post or page, set `ogImage: false` in the frontmatter.
-   * - Generated images are saved in `/public/og-images`.
-   * - If disabled, deleting `/public/og-images/og-image.png` won't regenerate it.
-   */
-  ogImage: FeatureConfig<OgImageConfig>
 
   /**
    * Whether to enable TOC feature.
