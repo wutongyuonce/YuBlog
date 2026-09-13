@@ -32,9 +32,4 @@
 - Insights 页面或内容链路：`docs/feature/Insights模块更新说明.md`
 - Friends 页面或友链数据：`docs/feature/友链模块说明.md`
 - 博客目录、桌面端 TOC、移动端 TOC：`docs/feature/文章TOC与响应式导航说明.md`
-- Insights 页面展开收起、字体样式：`docs/notes/Insights页面展开收起与字体说明.md`
-- LogoButton 或站点左上角图标：`docs/notes/LogoButton图标替换说明.md`
-- 依赖治理、减包、替代方案评估：`docs/notes/减少非官方依赖开发更新说明.md`
-- 本地字体接入和字体替换：`docs/notes/字体修改.md`
-- 博客阅读体验、TOC 字号、页面视觉微调：`docs/notes/页面调整.md`
-- 页面头部与正文间距、首屏观感差异：`docs/notes/页面间距统一.md`
+- 博客内容、frontmatter 与标题图：`blog-content-publisher-skill/SKILL.md`

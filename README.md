@@ -183,7 +183,7 @@ src/
 test/             # Node 内置测试，覆盖博客标签、首页统计、近期日期、时间进度与 CJK 强调
 plugins/          # remark/rehype 插件、OG 辅助
 public/           # 静态资源：favicon、字体、生成的图片等
-docs/             # 项目笔记与定制说明文档
+docs/             # 项目文档与定制说明
 ```
 
 ## 架构说明
@@ -215,12 +215,7 @@ src/components/* + styles/*  -> 最终 UI 输出
 - `docs/feature/Insights模块更新说明.md` — Insights 模块当前状态、链路与后续恢复说明
 - `docs/feature/友链模块说明.md` — Friends 模块结构、数据链路与维护说明
 - `docs/feature/文章TOC与响应式导航说明.md` — 目录行为与响应式导航细节
-- `docs/notes/Insights页面清空说明.md` — Insights 页面清空为预留页的变更记录
-- `docs/notes/页面调整.md` — 博客阅读体验与页面级调整
-- `docs/notes/页面间距统一.md` — 页面间距修复记录
-- `docs/notes/2026-08-09-页面更新说明.md` — 首页、Blogs、Projects、Friends 与 OG 配置的本次更新汇总
-- `docs/notes/LogoButton图标替换说明.md` — Logo 从文字替换为 SVG 及主题切换适配
-- `docs/notes/字体修改.md` — 本地字体的添加与应用
+- `blog-content-publisher-skill/SKILL.md` — 博客内容、frontmatter、标题图与发布校验规范
 
 ## 定位
 

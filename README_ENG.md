@@ -182,7 +182,7 @@ src/
 test/             # Node built-in tests covering blog tags, home stats, recent dates, progress stats, and CJK emphasis
 plugins/          # remark/rehype plugins, OG helpers
 public/           # Static assets such as favicon, fonts, and generated images
-docs/             # Project notes and customization documents
+docs/             # Project documentation and customization guides
 ```
 
 ## Architecture Notes
@@ -206,7 +206,7 @@ src/components/* + styles/*  -> final UI output
 
 ## Documentation
 
-Project-specific notes are kept in `docs/`:
+Project-specific documentation is kept in `docs/`:
 
 - `docs/项目解析.md` - Full project architecture and data flow analysis
 - `docs/feature/首页与导航近期功能说明.md` - Home blog statistics, recent writing, and navbar progress
@@ -214,12 +214,7 @@ Project-specific notes are kept in `docs/`:
 - `docs/feature/Insights模块更新说明.md` - Current Insights module status, wiring, and restoration notes
 - `docs/feature/友链模块说明.md` - Friends module structure, data flow, and maintenance guide
 - `docs/feature/文章TOC与响应式导航说明.md` - TOC behavior and responsive navigation details
-- `docs/notes/Insights页面清空说明.md` - Change note for clearing the Insights page into a placeholder
-- `docs/notes/页面调整.md` - Blog reading experience and page-level adjustments
-- `docs/notes/页面间距统一.md` - Notes on page spacing fixes
-- `docs/notes/2026-08-09-页面更新说明.md` - Summary of the latest home, blogs, projects, friends, and OG configuration updates
-- `docs/notes/LogoButton图标替换说明.md` - Logo replacement from text to SVG with theme switching
-- `docs/notes/字体修改.md` - Adding and applying local fonts
+- `blog-content-publisher-skill/SKILL.md` - Blog content, frontmatter, title images, and publishing validation
 
 ## Positioning
 

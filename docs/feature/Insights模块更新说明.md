@@ -107,7 +107,6 @@ InsightsView.astro
 
 - `src/pages/insights.mdx`
 - `src/components/views/InsightsView.astro`
-- `docs/notes/Insights页面清空说明.md`
 
 ### 7.2 如果后续要重新开发 Insights 页面
 
