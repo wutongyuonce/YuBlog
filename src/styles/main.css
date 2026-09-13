@@ -260,24 +260,12 @@ body {
 .prose.post-header h1.page-title {
   font-family: 'LXGWWenKai-Regular', sans-serif;
   font-size: 2.5rem;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0;
 }
 
-.prose.post-header .post-title-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.prose.post-header .post-title-row .page-title {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.prose.post-header .post-card-export {
-  flex: none;
-  margin-top: 0.3rem;
+.prose.post-header .post-subtitle {
+  margin-top: 0.95rem;
+  margin-bottom: 0;
 }
 
 .fade-in {
@@ -376,7 +364,6 @@ mark.pagefind-highlight {
 #toc-sidebar ul > li::before {
   display: none;
 }
-
 
 #toc-sidebar ul > li {
   padding-left: 0.8rem;

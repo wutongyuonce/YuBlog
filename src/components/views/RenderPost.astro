@@ -3,7 +3,6 @@ import { render } from 'astro:content'
 
 import BaseLayout from '~/layouts/BaseLayout.astro'
 import StandardLayout from '~/layouts/StandardLayout.astro'
-import PostCardExport from '~/components/base/PostCardExport.astro'
 import PostMeta from '~/components/base/PostMeta.astro'
 import Warning from '~/components/base/Warning.astro'
 import DesktopAside from '~/components/base/DesktopAside.astro'
@@ -28,11 +27,6 @@ const { Content, headings, remarkPluginFrontmatter } = await render(post)
 
 const title = frontmatter.title
 const description = frontmatter.description
-const intro =
-  (post.body ?? '')
-    .split('\n')
-    .find((line) => line.trim() && !line.startsWith('#') && !line.startsWith('```'))
-    ?.trim() ?? ''
 const ogImage = frontmatter.ogImage
 const pubDate = frontmatter.pubDate.toISOString()
 const lastModDate =
@@ -67,11 +61,14 @@ frontmatter to <code>false</code> or remove it to publish the post.`
 
 <BaseLayout {title} {description} {ogImage} {pubDate} {lastModDate}>
   <StandardLayout {title} {subtitle} isArticle {isSearchable} {searchFilter}>
-    <Fragment slot="title-action">
-      <PostCardExport {title} {description} {intro} {pubDate} {tags} />
-    </Fragment>
     <Fragment slot="head">
-      <PostMeta {pubDate} {lastModDate} {minutesRead} {tags} hasSubtitle={!!subtitle} />
+      <PostMeta
+        {pubDate}
+        {lastModDate}
+        {minutesRead}
+        {tags}
+        hasSubtitle={!!subtitle}
+      />
     </Fragment>
     <Fragment slot="article">
       {isDraft && <Warning html={WARNING} />}

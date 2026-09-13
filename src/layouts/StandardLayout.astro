@@ -26,39 +26,28 @@ const {
     { 'text-center': isCentered, 'post-header': isArticle },
   ]}
 >
-  {
-    title && (
-      <div class:list={['title-row', { 'post-title-row': isArticle }]}>
-        <h1 class="page-title">{title}</h1>
-        {isArticle && <slot name="title-action" />}
-      </div>
-    )
-  }
-  {
-    subtitle && (
-      <p class={`${isArticle ? 'mt--2!' : 'mt--8!'} op-50 italic`}>
-        {subtitle}
-      </p>
-    )
-  }
+  {title && <h1 class="page-title">{title}</h1>}
+  {subtitle && (
+    <p class={`${isArticle ? 'post-subtitle' : 'mt--8!'} op-50 italic`}>
+      {subtitle}
+    </p>
+  )}
   <slot name="head" />
 </header>
-{
-  Astro.slots.has('article') && (
-    <article
-      class:list={[
-        'slide-enter-content prose mx-auto',
-        { 'post-content': isArticle },
-      ]}
-      data-pagefind-body={isSearchable ? '' : undefined}
-      data-pagefind-filter={
-        isSearchable && searchFilter ? searchFilter : undefined
-      }
-    >
-      <slot name="article" />
-    </article>
-  )
-}
+{Astro.slots.has('article') && (
+  <article
+    class:list={[
+      'slide-enter-content prose mx-auto',
+      { 'post-content': isArticle },
+    ]}
+    data-pagefind-body={isSearchable ? '' : undefined}
+    data-pagefind-filter={
+      isSearchable && searchFilter ? searchFilter : undefined
+    }
+  >
+    <slot name="article" />
+  </article>
+)}
 
 <style>
   .page-header {
@@ -68,12 +57,28 @@ const {
   .post-header {
     margin-bottom: 1.75rem;
   }
-
 </style>
-{
-  Astro.slots.has('default') && (
-    <div class:list={['mx-auto', className]}>
-      <slot />
-    </div>
-  )
-}
+
+<style is:inline>
+  .prose.post-header h1.page-title {
+    margin-bottom: 0 !important;
+  }
+
+  .prose.post-header .post-subtitle {
+    margin-top: 0.95rem !important;
+    margin-bottom: 0 !important;
+  }
+
+  .prose.post-header .post-meta {
+    margin-top: 1rem !important;
+  }
+
+  .prose.post-header .post-meta--with-subtitle {
+    margin-top: 0.5rem !important;
+  }
+</style>
+{Astro.slots.has('default') && (
+  <div class:list={['mx-auto', className]}>
+    <slot />
+  </div>
+)}
