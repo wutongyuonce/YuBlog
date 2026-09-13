@@ -31,11 +31,14 @@
 <p align="center">
   <img src="img/PixPin_2026-09-12_22-42-02.png" alt="图片" width="800">
 </p>
-### blog 页面
+
+
+### blog 页面  
 
 <p align="center">
   <img src="img/PixPin_2026-09-14_02-10-18.png" alt="图片" width="800">
 </p>
+
 
 ## Projects 页面
 
@@ -52,8 +55,10 @@
 ## Friends 页面
 
 <p align="center">
-  <img src="img/image-20260914021618840" alt="图片" width="800">
+  <img src="img/image-20260914021618840.png" alt="图片" width="800">
 </p>
+
+
 
 ## 概览
 
