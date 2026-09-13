@@ -42,6 +42,7 @@ const stats = await getBlogStats()
 
   .home-title-subtitle {
     margin-top: -2rem !important;
+    font-size: 1.125rem;
   }
 
   .home-title-stats {
@@ -67,5 +68,31 @@ const stats = await getBlogStats()
       flex-direction: column;
       gap: 1.75rem;
     }
+  }
+</style>
+
+<style is:inline>
+  .home-content {
+    font-size: 1.125rem;
+  }
+
+  .prose .home-content > p,
+  .prose .home-content > ul > li {
+    line-height: 1.2;
+  }
+
+  .prose .home-content > p {
+    margin-top: 1em;
+    margin-bottom: 1em;
+  }
+
+  .prose .home-content > ul {
+    margin-top: 0.4em;
+    margin-bottom: 0.4em;
+  }
+
+  .prose .home-content > ul > li {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
   }
 </style>

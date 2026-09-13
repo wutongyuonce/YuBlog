@@ -33,12 +33,18 @@ const posts = await getRecentBlogPosts()
                 </a>
                 {data.tags.length > 0 && (
                   <p class="recent-writing__tags">
-                    {data.tags.slice(0, 2).map((tag, index) => (
+                    {data.tags.slice(0, 4).map((tag, index) => (
                       <>
                         {index > 0 && <span aria-hidden="true">·</span>}
                         <span>{tag}</span>
                       </>
                     ))}
+                    {data.tags.length > 4 && (
+                      <>
+                        <span aria-hidden="true">·</span>
+                        <span aria-hidden="true">…</span>
+                      </>
+                    )}
                   </p>
                 )}
               </div>
@@ -67,7 +73,7 @@ const posts = await getRecentBlogPosts()
     --timeline-number-color: color-mix(in srgb, var(--c-text) 64%, transparent);
     --timeline-number-shadow: 0 1px 5px
       color-mix(in srgb, var(--c-text) 6%, transparent);
-    margin-top: clamp(2.5rem, 5vw, 3.5rem);
+    margin-top: clamp(1.25rem, 2.5vw, 1.75rem);
     margin-bottom: 1rem;
   }
 
@@ -75,7 +81,7 @@ const posts = await getRecentBlogPosts()
     display: block;
     width: clamp(3.5rem, 10vw, 4.5rem);
     height: 1px;
-    margin: 0 auto clamp(2.25rem, 4vw, 2.75rem);
+    margin: 0 auto clamp(1.1rem, 2vw, 1.4rem);
     background: color-mix(in srgb, var(--c-text) 22%, transparent);
     content: '';
   }
@@ -107,7 +113,7 @@ const posts = await getRecentBlogPosts()
     margin: 0;
     border: 0;
     font-family: 'SourceHanSerifCN-Regular', serif;
-    font-size: clamp(1.85rem, 5vw, 2.35rem);
+    font-size: clamp(1.6rem, 4.2vw, 2.05rem);
     font-weight: 400;
     letter-spacing: 0.05em;
     line-height: 1.2;
@@ -174,7 +180,7 @@ const posts = await getRecentBlogPosts()
     box-shadow: var(--timeline-number-shadow);
     color: var(--timeline-number-color);
     font-family: 'SourceHanSerifCN-Regular', serif;
-    font-size: 1.05rem;
+    font-size: 0.95rem;
     font-variant-numeric: tabular-nums;
     line-height: 1;
   }
@@ -191,7 +197,7 @@ const posts = await getRecentBlogPosts()
   .recent-writing__link {
     color: color-mix(in srgb, var(--c-text) 92%, transparent);
     font-family: 'SourceHanSerifCN-Regular', serif;
-    font-size: clamp(1.05rem, 2.6vw, 1.25rem);
+    font-size: clamp(0.98rem, 2.2vw, 1.12rem);
     line-height: 1.55;
     text-decoration: none;
     border-bottom: 1px solid transparent;
@@ -208,7 +214,7 @@ const posts = await getRecentBlogPosts()
     gap: 0.38rem;
     margin: 0.45rem 0 0;
     color: color-mix(in srgb, var(--c-text) 45%, transparent);
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     line-height: 1.45;
   }
 
@@ -216,7 +222,7 @@ const posts = await getRecentBlogPosts()
     padding-top: 0.25rem;
     color: color-mix(in srgb, var(--c-text) 55%, transparent);
     font-family: 'SourceHanSerifCN-Regular', serif;
-    font-size: 0.9rem;
+    font-size: 0.82rem;
     font-variant-numeric: tabular-nums;
     line-height: 1.5;
     white-space: nowrap;
