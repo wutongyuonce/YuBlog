@@ -3,6 +3,8 @@ title: 云端 Agent
 description: 从存算分离、持久化工作区到沙箱执行，梳理云端 Agent 的架构设计。
 pubDate: 2026-08-14
 tags: [Cloud Agent, VM/FS]
+titleImage: /blog-title-images/cloud-agent.webp
+titleImageAlt: 云端 Agent 工作区与执行运行时架构图
 ---
 
 ## “Your agent needs a computer, not a container.”

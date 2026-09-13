@@ -1,0 +1,139 @@
+---
+import { withBasePath } from '~/utils/path'
+import PostMeta from '~/components/base/PostMeta.astro'
+
+interface Props {
+  title: string
+  subtitle: string
+  titleImage: string
+  titleImageAlt: string
+  pubDate: string
+  lastModDate: string | undefined
+  minutesRead: number
+  tags: string[]
+}
+
+const {
+  title,
+  subtitle,
+  titleImage,
+  titleImageAlt,
+  pubDate,
+  lastModDate,
+  minutesRead,
+  tags,
+} = Astro.props
+---
+
+<section class="post-hero" aria-labelledby="post-hero-title">
+  <img
+    class="post-hero__image"
+    src={withBasePath(titleImage)}
+    alt={titleImageAlt}
+    fetchpriority="high"
+    decoding="async"
+  />
+  <div class="post-hero__content">
+    <h1 id="post-hero-title" class="post-hero__title">
+      {title}
+    </h1>
+    {subtitle && <p class="post-hero__subtitle">{subtitle}</p>}
+    <PostMeta
+      {pubDate}
+      {lastModDate}
+      {minutesRead}
+      {tags}
+      hasSubtitle={!!subtitle}
+      variant="hero"
+    />
+  </div>
+</section>
+
+<style>
+  .post-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    min-height: clamp(20rem, 46vw, 28rem);
+    border-radius: 0.5rem;
+    color: var(--c-text);
+    background: var(--c-bg);
+  }
+
+  .post-hero::after {
+    content: '';
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgb(255 255 255 / 0) 20%,
+      rgb(255 255 255 / 0.12) 46%,
+      rgb(255 255 255 / 0.96) 100%
+    );
+    pointer-events: none;
+  }
+
+  :global(html.dark) .post-hero::after {
+    background: linear-gradient(
+      to bottom,
+      rgb(0 0 0 / 0) 20%,
+      rgb(0 0 0 / 0.18) 46%,
+      rgb(0 0 0 / 0.96) 100%
+    );
+  }
+
+  .post-hero__image {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    object-fit: cover;
+  }
+
+  .post-hero__content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    min-height: inherit;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: clamp(1.25rem, 4vw, 2.5rem);
+  }
+
+  .post-hero__title {
+    max-width: 100%;
+    margin: 0 !important;
+    color: inherit !important;
+    font-family: 'LXGWWenKai-Regular', sans-serif;
+    font-size: clamp(1.8rem, 4.5vw, 2.8rem);
+    font-weight: 400 !important;
+    line-height: 1.18;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+  }
+
+  .post-hero__subtitle {
+    max-width: 60ch;
+    margin: 0.8rem 0 0 !important;
+    color: inherit;
+    font-size: clamp(1rem, 2.2vw, 1.25rem);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    opacity: 0.78;
+  }
+
+  @media (max-width: 640px) {
+    .post-hero {
+      min-height: 22rem;
+    }
+
+    .post-hero__content {
+      padding: 1.25rem;
+    }
+  }
+</style>

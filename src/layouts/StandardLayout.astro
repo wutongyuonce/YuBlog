@@ -4,6 +4,7 @@ interface Props {
   subtitle?: string
   isCentered?: boolean
   isArticle?: boolean
+  hasHeroImage?: boolean
   isSearchable?: boolean
   searchFilter?: string
   class?: string
@@ -14,6 +15,7 @@ const {
   subtitle,
   isCentered = false,
   isArticle = false,
+  hasHeroImage = false,
   isSearchable,
   searchFilter,
   class: className,
@@ -23,16 +25,25 @@ const {
 <header
   class:list={[
     'page-header prose mx-auto',
-    { 'text-center': isCentered, 'post-header': isArticle },
+    {
+      'text-center': isCentered,
+      'post-header': isArticle,
+    },
   ]}
 >
-  {title && <h1 class="page-title">{title}</h1>}
-  {subtitle && (
-    <p class={`${isArticle ? 'post-subtitle' : 'mt--8!'} op-50 italic`}>
-      {subtitle}
-    </p>
+  {hasHeroImage ? (
+    <slot name="hero" />
+  ) : (
+    <>
+      {title && <h1 class="page-title">{title}</h1>}
+      {subtitle && (
+        <p class={`${isArticle ? 'post-subtitle' : 'mt--8!'} op-50 italic`}>
+          {subtitle}
+        </p>
+      )}
+      <slot name="head" />
+    </>
   )}
-  <slot name="head" />
 </header>
 {Astro.slots.has('article') && (
   <article

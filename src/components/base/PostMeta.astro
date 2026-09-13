@@ -1,5 +1,6 @@
 ---
 import { formatDate } from '~/utils/datetime'
+import { withBasePath } from '~/utils/path'
 import { UI } from '~/config'
 
 interface Props {
@@ -8,14 +9,37 @@ interface Props {
   minutesRead: number
   tags: string[]
   hasSubtitle: boolean
+  variant?: 'default' | 'hero'
 }
 
-const { pubDate, lastModDate, minutesRead, tags, hasSubtitle } = Astro.props
+const {
+  pubDate,
+  lastModDate,
+  minutesRead,
+  tags,
+  hasSubtitle,
+  variant = 'default',
+} = Astro.props
 
 const isMinimal = UI.postView.postMetaStyle === 'minimal'
 ---
 
-{isMinimal ? (
+{variant === 'hero' ? (
+  <div class="post-meta post-meta--hero">
+    <img
+      class="post-meta__avatar"
+      src={withBasePath('/avatar.webp')}
+      alt=""
+      aria-hidden="true"
+    />
+    <time datetime={pubDate}>{formatDate(pubDate)}</time>
+    {lastModDate && (
+      <time datetime={lastModDate}>· Updated {formatDate(lastModDate)}</time>
+    )}
+    {minutesRead > 0 && <span>· {minutesRead} min read</span>}
+    {tags.length > 0 && <span>· {tags.join(' / ')}</span>}
+  </div>
+) : isMinimal ? (
   <div
     class:list={[
       'post-meta op-50 lt-md:text-sm',
@@ -58,3 +82,39 @@ const isMinimal = UI.postView.postMetaStyle === 'minimal'
     )}
   </div>
 )}
+
+<style>
+  .post-meta--hero {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.55rem;
+    margin-top: 1.1rem !important;
+    color: var(--c-text);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+    opacity: 0.72;
+  }
+
+  .post-meta--hero > :not(.post-meta__avatar) {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .post-meta__avatar {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    margin: 0 0.45rem 0 0 !important;
+    border: 1px solid currentColor;
+    border-radius: 999px !important;
+    object-fit: cover;
+  }
+
+  @media (max-width: 640px) {
+    .post-meta--hero {
+      margin-top: 0.9rem !important;
+      font-size: 0.8rem;
+    }
+  }
+</style>
