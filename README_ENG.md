@@ -43,7 +43,7 @@ The homepage uses a dedicated `HomeHeader` with a pure-CSS retro desktop illustr
 Projects are grouped in a compact responsive grid with small category labels. The project `icon` field is optional, and the current project data is intentionally icon-free.
 
 <p align="center">
-  <img src="img/PixPin_2026-09-12_22-44-28.png" alt="图片" width="600">
+  <img src="img/PixPin_2026-09-12_22-44-28.png" alt="图片" width="800">
 </p>
 
 

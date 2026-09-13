@@ -45,7 +45,7 @@
 项目按分类以紧凑网格展示，分类标题使用小型标签。项目 `icon` 字段为可选项，当前数据不使用图标。
 
 <p align="center">
-  <img src="img/PixPin_2026-09-12_22-44-28.png" alt="图片" width="600">
+  <img src="img/PixPin_2026-09-12_22-44-28.png" alt="图片" width="800">
 </p>
 
 ## Insights 页面
