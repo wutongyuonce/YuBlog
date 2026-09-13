@@ -9,7 +9,7 @@
 </bg-snow>
 
 <script>
-  type Snowflake = {
+  interface Snowflake {
     x: number
     y: number
     radius: number
@@ -132,7 +132,11 @@
         flake.x += (flake.speedX + sway + wind * 40 * flake.depth) * delta
         flake.y += flake.speedY * delta
 
-        if (flake.y - flake.radius > height || flake.x < -80 || flake.x > width + 80) {
+        if (
+          flake.y - flake.radius > height ||
+          flake.x < -80 ||
+          flake.x > width + 80
+        ) {
           this.respawnFlake(flake)
         }
 
@@ -148,7 +152,10 @@
           this.ctx.lineWidth = Math.max(0.5, flake.radius * 0.35)
           this.ctx.beginPath()
           this.ctx.moveTo(flake.x - flake.radius * 0.4, flake.y - flake.radius)
-          this.ctx.lineTo(flake.x + flake.radius * 0.25, flake.y + flake.radius * 1.6)
+          this.ctx.lineTo(
+            flake.x + flake.radius * 0.25,
+            flake.y + flake.radius * 1.6
+          )
           this.ctx.stroke()
         }
       }

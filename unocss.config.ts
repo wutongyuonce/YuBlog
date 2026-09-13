@@ -34,7 +34,7 @@ const socialIcons = socialLinks
   )
   .map((item) => (item as IconSocialItem | ResponsiveSocialItem).icon)
 
-const projectIcons = (projecstData as Array<{ icon?: string }>)
+const projectIcons = (projecstData as { icon?: string }[])
   .map((item) => item.icon)
   .filter((icon): icon is string => Boolean(icon))
 
