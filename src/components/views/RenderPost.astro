@@ -4,6 +4,7 @@ import { render } from 'astro:content'
 import BaseLayout from '~/layouts/BaseLayout.astro'
 import StandardLayout from '~/layouts/StandardLayout.astro'
 import PostMeta from '~/components/base/PostMeta.astro'
+import PostHero from '~/components/base/PostHero.astro'
 import Warning from '~/components/base/Warning.astro'
 import DesktopAside from '~/components/base/DesktopAside.astro'
 import PostCover from '~/components/base/PostCover.astro'
@@ -41,6 +42,8 @@ const isDraft = frontmatter.draft
 
 const cover = frontmatter.cover
 const coverAlt = frontmatter.coverAlt
+const titleImage = frontmatter.titleImage
+const titleImageAlt = frontmatter.titleImageAlt
 
 const tocEnabled = Array.isArray(toc) && toc[0] && frontmatter.toc
 const haveHeadings = tocEnabled && headings.length > 0
@@ -60,16 +63,38 @@ frontmatter to <code>false</code> or remove it to publish the post.`
 ---
 
 <BaseLayout {title} {description} {ogImage} {pubDate} {lastModDate}>
-  <StandardLayout {title} {subtitle} isArticle {isSearchable} {searchFilter}>
-    <Fragment slot="head">
-      <PostMeta
-        {pubDate}
-        {lastModDate}
-        {minutesRead}
-        {tags}
-        hasSubtitle={!!subtitle}
-      />
-    </Fragment>
+  <StandardLayout
+    {title}
+    {subtitle}
+    isArticle
+    hasHeroImage={!!titleImage}
+    {isSearchable}
+    {searchFilter}
+  >
+    {titleImage ? (
+      <Fragment slot="hero">
+        <PostHero
+          {title}
+          {subtitle}
+          {titleImage}
+          {titleImageAlt}
+          {pubDate}
+          {lastModDate}
+          {minutesRead}
+          {tags}
+        />
+      </Fragment>
+    ) : (
+      <Fragment slot="head">
+        <PostMeta
+          {pubDate}
+          {lastModDate}
+          {minutesRead}
+          {tags}
+          hasSubtitle={!!subtitle}
+        />
+      </Fragment>
+    )}
     <Fragment slot="article">
       {isDraft && <Warning html={WARNING} />}
       {haveHeadings && (
