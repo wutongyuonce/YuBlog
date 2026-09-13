@@ -3,6 +3,8 @@ title: Omni 多模态模型入门：从语音 ASR/TTS、视觉 VLM 到统一多�
 description: 梳理 ASR、TTS、VLM 和 Omni 模型分别解决什么问题，以及音频、图像进入模型后的处理链路。
 pubDate: 2026-09-12
 tags: [多模态, ASR, TTS, VLM]
+titleImage: /blog-title-images/darling-in-the-franxx.webp
+titleImageAlt: Darling in the Franxx 动漫壁纸
 ---
 
 > 目标：读完后能说清楚 ASR、TTS、VLM 和 Omni 模型分别解决什么问题；知道音频、图像进入模型后经历了哪些处理；能理解编码器、特征、token、对齐、声码器等常见术语在链路中的位置。

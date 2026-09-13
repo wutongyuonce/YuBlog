@@ -3,6 +3,8 @@ title: Agent 与模型请求中的工具延迟加载设计
 description: 解释 Anthropic、OpenAI Responses 与 Pi 如何实现工具 schema 的延迟加载，以及缓存与 Provider 序列化边界。
 pubDate: 2026-09-11
 tags: [Agent, Tools]
+titleImage: /blog-title-images/eva.webp
+titleImageAlt: EVA 动漫壁纸
 ogImage: false
 toc: true
 search: true

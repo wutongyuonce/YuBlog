@@ -3,6 +3,8 @@ title: "OpenViking PR #4787：Kimi Code 记忆插件实现报告"
 description: 从 Hook 映射、召回注入、wire 日志增量捕获与 MCP 代理，拆解 Kimi Code 如何接入 OpenViking 长期记忆。
 pubDate: 2026-09-13
 tags: [OpenViking, Kimi Code, Agent Memory, PR]
+titleImage: /blog-title-images/yae-miko.webp
+titleImageAlt: 八重神子动漫角色壁纸
 ogImage: false
 toc: true
 search: true
