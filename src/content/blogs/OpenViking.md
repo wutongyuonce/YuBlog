@@ -2,7 +2,7 @@
 title: 看懂 OpenViking：从服务运行到上下文写入、检索与记忆提取
 description: 从运行形态、整体架构和三条核心链路，梳理 OpenViking 如何组织资源、检索上下文并提取长期记忆。
 pubDate: 2026-09-13
-tags: [OpenViking, Agent, RAG, Memory]
+tags: [OpenViking, Agent Memory, RAG]
 ogImage: false
 toc: true
 search: true
