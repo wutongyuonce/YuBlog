@@ -214,20 +214,8 @@ body {
 }
 
 @font-face {
-  font-family: 'ChenYuluoyan-2.0-Thin';
-  src:
-    url('/fonts/ChenYuluoyan-2.0-Thin.woff2') format('woff2'),
-    url('/fonts/ChenYuluoyan-2.0-Thin.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
   font-family: 'WoHuiBaNiJiaoZuoAiQing-2';
-  src:
-    url('/fonts/WoHuiBaNiJiaoZuoAiQing-2.woff2') format('woff2'),
-    url('/fonts/WoHuiBaNiJiaoZuoAiQing-2.ttf') format('truetype');
+  src: url('/fonts/WoHuiBaNiJiaoZuoAiQing-2.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -235,7 +223,7 @@ body {
 
 @font-face {
   font-family: 'SourceHanSerifCN-Regular';
-  src: url('/fonts/SourceHanSerifCN-Regular.ttf') format('truetype');
+  src: url('/fonts/SourceHanSerifCN-Regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -243,7 +231,7 @@ body {
 
 @font-face {
   font-family: 'LXGWWenKai-Regular';
-  src: url('/fonts/LXGWWenKai-Regular.ttf') format('truetype');
+  src: url('/fonts/LXGWWenKai-Regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
