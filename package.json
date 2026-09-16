@@ -38,7 +38,7 @@
     "@types/mdast": "^4.0.4",
     "@types/node": "^24.7.2",
     "@typescript-eslint/parser": "^8.46.0",
-    "@unocss/reset": "66.5.3",
+    "@unocss/reset": "66.10.5",
     "astro": "^5.14.4",
     "astro-expressive-code": "^0.44.0",
     "eslint": "^10.0.0",
@@ -62,7 +62,7 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.0",
     "unist-util-visit": "^5.1.0",
-    "unocss": "66.5.3",
+    "unocss": "66.10.5",
     "vfile": "^6.0.3"
   },
   "engines": {
