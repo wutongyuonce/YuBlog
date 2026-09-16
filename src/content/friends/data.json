@@ -128,5 +128,14 @@
     "desc": "一个小透明的透明世界",
     "category": "Friends",
     "order": 14
+  },
+  {
+    "id": "sukka",
+    "name": "苏卡卡的有底洞",
+    "link": "https://skk.moe",
+    "avatar": "https://cdn.skk.moe/avatar/96x96.png",
+    "desc": "童话只美在真实却从不续写",
+    "category": "Friends",
+    "order": 15
   }
 ]
