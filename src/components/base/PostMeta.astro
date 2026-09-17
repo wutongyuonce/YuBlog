@@ -22,6 +22,8 @@ const {
 } = Astro.props
 
 const isMinimal = UI.postView.postMetaStyle === 'minimal'
+const showLastModDate =
+  !!lastModDate && formatDate(lastModDate) !== formatDate(pubDate)
 ---
 
 {variant === 'hero' ? (
@@ -33,7 +35,7 @@ const isMinimal = UI.postView.postMetaStyle === 'minimal'
       aria-hidden="true"
     />
     <time datetime={pubDate}>{formatDate(pubDate)}</time>
-    {lastModDate && (
+    {showLastModDate && (
       <time datetime={lastModDate}>· Updated {formatDate(lastModDate)}</time>
     )}
     {minutesRead > 0 && <span>· {minutesRead} min read</span>}
@@ -47,7 +49,7 @@ const isMinimal = UI.postView.postMetaStyle === 'minimal'
     ]}
   >
     <time datetime={pubDate}>{formatDate(pubDate)}</time>
-    {lastModDate && (
+    {showLastModDate && (
       <time datetime={lastModDate}> · Updated {formatDate(lastModDate)}</time>
     )}
     {minutesRead > 0 && <span> · {minutesRead} min</span>}
@@ -64,7 +66,7 @@ const isMinimal = UI.postView.postMetaStyle === 'minimal'
       <span class="i-ri-calendar-line mr-1.2" />
       <time datetime={pubDate}>{formatDate(pubDate)}</time>
     </div>
-    {lastModDate && (
+    {showLastModDate && (
       <div>
         <span class="i-ri-history-fill mr-1.2" />
         <time datetime={lastModDate}>{formatDate(lastModDate)}</time>
