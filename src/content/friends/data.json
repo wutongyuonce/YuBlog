@@ -137,5 +137,14 @@
     "desc": "童话只美在真实却从不续写",
     "category": "Friends",
     "order": 15
+  },
+  {
+    "id": "tcdw",
+    "name": "吐槽大王部落格",
+    "link": "https://www.tcdw.net",
+    "avatar": "https://avatars.githubusercontent.com/u/8687182?v=4&s=200",
+    "desc": "正在学习接受不完美的世界",
+    "category": "Friends",
+    "order": 16
   }
 ]
