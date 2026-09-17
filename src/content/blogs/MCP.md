@@ -71,21 +71,126 @@ MCP 协议定义了 [STDIO](https://modelcontextprotocol.io/specification/2025-0
 
 MCP 引入 **Streamable HTTP** 替代原来的 HTTP + SSE 传输方式。
 
-> **SSE (Server-Sent Events，服务端推送事件)** 是一种基于 HTTP 的技术，允许服务器主动向客户端**单向**、**持续**地推送数据。
->
-> - 它的 **MIME 类型**是 `text/event-stream`。
-> - 工作原理：客户端发起一个普通的 HTTP 请求（通常是 `GET`），服务器不关闭连接，而是不断发送格式如 `data: something\n\n` 的消息块。
->
-> MCP 旧版采用双通道模式：
->
-> - **第一步**：客户端发起 `GET /sse` 请求，建立 SSE 长连接。
->   - 服务器收到后，会为此会话分配一个唯一的 **会话 ID**（或消息端点 URL），并通过 SSE 通道发送一条特殊事件（例如 `endpoint` 事件）把这个地址告诉客户端。
-> - **第二步**：客户端从 SSE 事件中拿到这个地址后，后续的所有 JSON-RPC 请求（如 `tools/call`）都通过 `POST /messages?sessionId=abc123` 发送，服务端再通过 sse 通道将 POST 请求产生的**异步执行结果**推送回来。
->
-> **为什么要这样设计？**
->
-> - SSE 长连接本身无法携带请求体（它是服务器→客户端的单向流），所以通过一般的 HTTP 通道 POST 来携带 JSON-RPC 请求。
-> - SSE 长连接用于在客户端和服务端之间“注册”一个会话，后续 POST 请求的返回值才能使用正确的 SSE 通道把响应或主动推送发回给对应的客户端。
+### SSE 模式
+
+**SSE (Server-Sent Events，服务端推送事件)** 是一种基于 HTTP 的技术，允许服务器主动向客户端**单向**、**持续**地推送数据。
+
+- 它的 **MIME 类型**是 `text/event-stream`。
+- 工作原理：客户端发起一个普通的 HTTP 请求（通常是 `GET`），服务器不关闭连接，而是不断发送格式如 `data: something\n\n` 的消息块。
+
+**SSE 也有自己的一套文本格式**。这个格式规定了数据如何被分段和发送。SSE 响应必须设置 `Content-Type: text/event-stream`，然后消息以纯文本形式发送，每条消息由几个字段组成，以空行（`\n\n`）分隔。
+
+常见的 SSE 字段包括：
+
+| 字段     | 说明                                   | 是否必需 |
+| :------- | :------------------------------------- | :------- |
+| `data:`  | 消息的有效载荷内容                     | **是**   |
+| `event:` | 事件类型，用于客户端区分不同种类的消息 | 否       |
+| `id:`    | 消息的唯一标识符，用于断线重连时恢复   | 否       |
+| `retry:` | 建议的重连等待时间（毫秒）             | 否       |
+
+1、**建立连接**：GET 开 SSE，服务器发 endpoint 事件
+
+客户端先发一个普通 HTTP GET：
+
+```http
+GET /sse
+Accept: text/event-stream
+```
+
+服务器返回：
+
+```http
+HTTP/1.1 200 OK
+Content-Type: text/event-stream
+```
+
+然后这条连接**不结束**，保持为 SSE 长连接。服务器马上通过 SSE 发一个控制事件，通常叫 `endpoint`：
+
+```text
+event: endpoint
+data: /messages?sessionId=abc123
+```
+
+这个 `data` 里的 `/messages?sessionId=abc123` 就是**客户端之后用来 POST 消息的地址**。
+
+注意：
+
+- 这个地址是通过 **SSE 事件**发回来的，不是普通 GET 的 JSON 响应。
+- `endpoint` 事件本身不是 JSON-RPC 消息，它只是 SSE 传输层的控制信息。
+- 这个 POST 地址通常带 `sessionId`，用来和刚才那条 SSE 连接绑定。
+
+2、**客户端上行**：POST JSON-RPC
+
+客户端拿到 POST 地址后，发送 JSON-RPC 请求：
+
+```http
+POST /messages?sessionId=abc123
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": { ... }
+}
+```
+
+服务器对这个 POST 的 HTTP 响应通常只是确认收到，比如：
+
+```http
+HTTP/1.1 202 Accepted
+```
+
+**重点：这个 POST 的 HTTP 响应体通常不是 JSON-RPC 的业务结果。**真正的 JSON-RPC 响应会通过之前建立的 SSE 长连接推回来。
+
+3、**服务器下行**：通过 SSE 发 JSON-RPC
+
+服务器处理完后，通过 SSE 连接发送：
+
+```text
+event: message
+data: {"jsonrpc":"2.0","id":1,"result":{ ... }}
+```
+
+这里的 `data:` 里面才是完整的 JSON-RPC 消息。
+它可以是：
+
+- JSON-RPC 响应，对应客户端之前的请求；
+- JSON-RPC 请求，服务器主动要求客户端做事；
+- JSON-RPC 通知，不需要回复。
+
+所以服务器并不是只能“发回响应”，它也可以主动发请求或通知。
+
+4、画成图大概是这样
+
+```
+客户端                                      服务器
+  |                                           |
+  | ---- GET /sse --------------------------> |
+  | <--- 200 text/event-stream --------------- |
+  | <--- event: endpoint --------------------- |
+  |      data: /messages?sessionId=abc123     |
+  |                                           |
+  | ---- POST /messages?sessionId=abc123 ---> |
+  |      body: JSON-RPC 请求                  |
+  | <--- 202 Accepted ------------------------ |
+  |                                           |
+  | <--- event: message ---------------------- |
+  |      data: JSON-RPC 响应                  |
+  |                                           |
+```
+
+SSE 模式可以理解为：
+
+> **客户端 GET 开一条 SSE 长连接；服务器通过 SSE 告诉客户端“你往这个地址 POST”；客户端用 POST 发 JSON-RPC 上行；服务器用 SSE 发 JSON-RPC 下行。上行 POST + 下行 SSE 合起来，形成逻辑上的双向通信。**
+
+**为什么要这样设计？**
+
+- SSE 本身是单向的，只能服务器推给客户端。所以必须靠 POST 补上客户端到服务器的方向。
+- SSE 长连接用于在客户端和服务端之间“注册”一个会话，后续 POST 请求的返回值才能使用正确的 SSE 通道把响应或主动推送发回给对应的客户端。
+
+### Streamable HTTP 模式
 
 旧模式有几个痛点：
 
@@ -118,11 +223,11 @@ MCP 引入 **Streamable HTTP** 替代原来的 HTTP + SSE 传输方式。
 
 需要注意的是：MCP Streamable HTTP 可以通过 Session ID 维护状态，但是这是可选项，本文后续默认使用无状态 Streamable HTTP。
 
-### MCP Streamable HTTP API
+### JSON-RPC
+
+JSON-RPC：是一种基于 JSON 的“消息格式”，它定义了一套标准的请求和响应结构，让客户端可以像调用本地函数一样调用远程服务器上的方法。一个典型的 JSON-RPC 2.0 请求和响应如下：
 
 #### Client Request
-
-方法与格式：客户端必须使用 HTTP POST 向 MCP 端点发送消息，内容必须是单一的 JSON-RPC 请求、通知或响应。
 
 请求体 Body 的基本格式如下：
 
