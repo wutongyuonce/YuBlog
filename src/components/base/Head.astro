@@ -105,6 +105,15 @@ const webPageData = {
 
 <!-- Sitemap -->
 <link rel="sitemap" href={withBasePath('/sitemap-index.xml')} />
+<link
+  rel="alternate"
+  type="application/rss+xml"
+  title="RSS"
+  href={withBasePath('/rss.xml')}
+/>
+
+<!-- Shell UI: real stylesheet so hard refresh and ClientRouter share one CSS path -->
+<link rel="stylesheet" href={withBasePath('/shell.css')} />
 
 <!-- Google JSON-LD Structured Data -->
 {

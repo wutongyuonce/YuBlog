@@ -63,6 +63,7 @@ export default defineConfig({
   // ==================== Vite 配置（底层构建工具） ====================
   vite: {
     build: {
+      cssCodeSplit: false, // 全站一份 CSS，避免硬刷新某个页面时丢掉顶栏/侧栏样式
       chunkSizeWarningLimit: 1200  // 代码块大小警告阈值（KB），超过提示优化
       // 默认 500KB，这里提升到 1200KB 避免不必要的警告
     },

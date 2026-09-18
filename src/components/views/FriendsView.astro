@@ -78,9 +78,9 @@ const isEmpty = friends.length === 0
 
 <style>
   .friends-page {
-    width: min(68vw, 90rem);
+    width: 100%;
     max-width: 100%;
-    margin: -1.6rem auto 0;
+    margin: 0;
     --friends-shell-bg: transparent;
     --friends-panel-bg: transparent;
     --friends-card-bg: color-mix(in srgb, var(--c-bg) 99%, var(--c-text) 1%);
@@ -113,7 +113,6 @@ const isEmpty = friends.length === 0
     gap: 1.25rem;
   }
 
-  .friends-board,
   .friends-empty {
     padding: 1.35rem 1.35rem 1.45rem;
     border: 1px solid var(--friends-border);
@@ -134,7 +133,7 @@ const isEmpty = friends.length === 0
 
   .friends-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.9rem;
   }
 
@@ -267,33 +266,9 @@ const isEmpty = friends.length === 0
     font-size: 0.92em;
   }
 
-  @media (max-width: 1480px) {
-    .friends-page {
-      width: min(74vw, 86rem);
-    }
-
-    .friends-grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-  }
-
-  @media (max-width: 1180px) {
-    .friends-page {
-      width: min(82vw, 76rem);
-    }
-
-    .friends-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
-
   @media (max-width: 920px) {
-    .friends-page {
-      width: 100%;
-    }
-
     .friends-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: 1fr;
     }
   }
 

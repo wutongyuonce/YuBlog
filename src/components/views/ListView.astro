@@ -1,343 +1,308 @@
 ---
-import Categorizer from '~/components/base/Categorizer.astro'
-import ListItem from '~/components/views/ListItem.astro'
-import TagFilter from '~/components/views/TagFilter.astro'
-
-import { getGroupedPostsByYear } from '~/utils/data'
-import {
-  buildTagSummary,
-  normalizePostTags,
-  truncateTagLabel,
-} from '~/utils/blog-tag-filter.js'
+import ListItem from './ListItem.astro'
+import { getBlogListItems } from '~/utils/data'
+import { withBasePath } from '~/utils/path'
 
 interface Props {
-  collectionType: 'blogs'
-  urlPath?: string
+  basePath?: string
+  requireTags?: boolean
 }
 
-const { collectionType, urlPath = collectionType } = Astro.props
-
-const groupedBlogItems = await getGroupedPostsByYear(collectionType)
-const allBlogItems = groupedBlogItems.flatMap((group) => group.items)
-const tagSummary = buildTagSummary(
-  allBlogItems.map(({ data }) => data.tags)
-).map(({ tag, count }) => ({
-  tag,
-  count,
-  displayName: truncateTagLabel(tag),
-}))
+const { basePath = withBasePath('/'), requireTags = false } = Astro.props
+const posts = await getBlogListItems()
 ---
 
-<div
-  class="blog-browser"
+<section
   data-blog-browser
-  data-total-posts={allBlogItems.length}
+  data-home={basePath}
+  data-require-tags={requireTags ? '' : undefined}
+  aria-label="文章列表"
 >
-  <div
-    class="blog-browser__layout"
-    data-has-tags={tagSummary.length > 0 ? '' : undefined}
-  >
-    {tagSummary.length > 0 && <TagFilter tags={tagSummary} />}
-
-    <div class="blog-browser__posts prose">
-      <p class="sr-only" aria-live="polite" data-filter-status>
-        Showing all {allBlogItems.length} posts.
-      </p>
-
-      <div aria-label="Post list" data-post-list>
-        {
-          groupedBlogItems.length === 0 ? (
-            <div class="py-2 op-50">nothing here yet</div>
-          ) : (
-            groupedBlogItems.map((group) => {
-              const idx = group.items[0].idx
-
-              return (
-                <section
-                  data-year={group.year}
-                  data-year-group
-                  class="blog-year-group mb-16"
-                >
-                  <Categorizer {idx} text={group.year} />
-
-                  {group.items.map(({ data, id, minutesRead, idx }) => (
-                    <div
-                      data-blog-item
-                      data-tags={JSON.stringify(normalizePostTags(data.tags))}
-                    >
-                      <ListItem
-                        {idx}
-                        urlPath={urlPath}
-                        postSlug={id}
-                        title={data.title}
-                        tags={data.tags}
-                        date={data.pubDate}
-                        minutesRead={minutesRead}
-                        radio={data.radio}
-                        video={data.video}
-                        platform={data.platform}
-                        redirect={data.redirect}
-                      />
-                    </div>
-                  ))}
-                </section>
-              )
-            })
-          )
-        }
-      </div>
-
-      <div class="blog-browser__empty" data-filter-empty hidden>
-        <p>No posts match all selected tags.</p>
-        <button type="button" data-clear-tags>Clear filters</button>
-      </div>
+  {!requireTags && (
+    <>
+      <header class="blog-category-header" data-category-header hidden>
+        <p class="blog-category-kicker">分类</p>
+        <h1 data-category-title>文章</h1>
+        <p class="blog-category-count" data-category-count></p>
+      </header>
+      <h1 class="sr-only" data-default-title>文章</h1>
+    </>
+  )}
+  {requireTags ? (
+    <noscript>启用 JavaScript 后可按标签筛选文章。</noscript>
+  ) : (
+    <noscript>当前显示全部文章；启用 JavaScript 后可筛选和分页。</noscript>
+  )}
+  <div class="blog-filters" data-filters hidden></div>
+  <p class="sr-only" data-status aria-live="polite"></p>
+  <div data-list-panel hidden={requireTags}>
+    <div data-post-list>
+      {posts.map((item) => (
+        <div
+          data-blog-item
+          data-category={item.data.category}
+          data-tags={JSON.stringify(item.data.tags)}
+        >
+          <ListItem {item} />
+        </div>
+      ))}
     </div>
+    <p data-empty hidden>
+      没有符合条件的文章。<a href={basePath}>清空筛选</a>
+    </p>
+    <nav data-pagination aria-label="文章分页" hidden></nav>
   </div>
-</div>
-
-<style>
-  .blog-browser {
-    width: 100%;
-    max-width: 100rem;
-    margin-inline: auto;
-    container: blog-browser / inline-size;
+</section>
+<style is:global>
+  [data-blog-item]:not([hidden]) ~ [data-blog-item]:not([hidden]) {
+    padding-top: 24px;
   }
-
-  .blog-browser__layout {
-    display: grid;
-    grid-template-columns:
-      minmax(14rem, 18rem)
-      65ch
-      minmax(14rem, 18rem);
-    justify-content: center;
-    gap: clamp(1.5rem, 3vw, 3.5rem);
-    font-size: var(--blog-reading-size);
+  [data-blog-browser][data-require-tags] [data-list-panel]:not([hidden]) {
+    margin-top: 2.5rem;
   }
-
-  .blog-browser__layout > :global(.tag-filter) {
-    align-self: start;
-    margin-top: -9.3125rem;
+  [data-blog-browser] [hidden] {
+    display: none !important;
   }
-
-  .blog-browser__posts {
-    grid-column: 2;
-    width: 100%;
-    min-width: 0;
+  .blog-category-header {
+    margin-bottom: 2rem;
   }
-
-  .blog-year-group:last-child {
-    margin-bottom: 0;
+  .blog-category-kicker {
+    margin: 0 0 0.45rem;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: color-mix(in srgb, var(--c-text) 55%, transparent);
   }
-
-  .blog-browser__empty {
-    padding-block: 1rem 2rem;
-    text-align: center;
-    opacity: 0.62;
+  .blog-category-header h1 {
+    margin: 0;
+    font-size: 2.25rem;
+    font-weight: 650;
+    line-height: 1.25;
   }
-
-  .blog-browser__empty p {
-    margin: 0 0 0.75rem;
+  .blog-category-count {
+    margin: 0.75rem 0 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: color-mix(in srgb, var(--c-text) 50%, transparent);
   }
-
-  .blog-browser__empty button {
-    padding: 0;
-    border: 0;
+  .blog-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+  }
+  .blog-filters a,
+  [data-pagination] a,
+  [data-pagination] span[aria-disabled] {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
+    border-radius: 7px;
     color: inherit;
-    background: transparent;
-    font: inherit;
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-    cursor: pointer;
+    text-decoration: none;
   }
-
-  @container blog-browser (max-width: 76rem) {
-    .blog-browser__layout {
-      grid-template-columns: minmax(0, 65ch);
+  [data-pagination] {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2.25rem;
+  }
+  [data-pagination] > :last-child {
+    justify-self: end;
+  }
+  [data-pagination] > :first-child {
+    justify-self: start;
+  }
+  [data-pagination] div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  [data-pagination] a {
+    transition:
+      background-color 160ms ease,
+      border-color 160ms ease,
+      color 160ms ease,
+      box-shadow 160ms ease,
+      transform 160ms ease;
+  }
+  [data-pagination] a:hover {
+    background: color-mix(in srgb, var(--c-text) 8%, transparent);
+    border-color: color-mix(in srgb, var(--c-text) 28%, transparent);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--c-text) 10%, transparent);
+    transform: translateY(-1px);
+  }
+  [data-pagination] [aria-current] {
+    background: var(--c-text);
+    color: var(--c-bg);
+    border-color: transparent;
+  }
+  [data-pagination] [aria-current]:hover {
+    background: var(--c-text);
+    color: var(--c-bg);
+    box-shadow: 0 6px 16px color-mix(in srgb, var(--c-text) 22%, transparent);
+  }
+  [data-pagination] [aria-disabled] {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-pagination] a {
+      transition: none;
+    }
+    [data-pagination] a:hover {
+      transform: none;
+    }
+  }
+  @media (max-width: 767px) {
+    .blog-category-header h1 {
+      font-size: 1.85rem;
+    }
+    [data-pagination] {
+      grid-template-columns: 1fr 1fr;
+    }
+    [data-pagination] div {
+      grid-area: 1 / 1 / 2 / 3;
       justify-content: center;
-      gap: 2.5rem;
-    }
-
-    .blog-browser__layout > :global(.tag-filter) {
-      grid-row: 1;
-      margin-top: 0;
-    }
-
-    .blog-browser__posts {
-      grid-row: 2;
-      grid-column: 1;
-    }
-
-    .blog-browser__layout:not([data-has-tags]) .blog-browser__posts {
-      grid-row: 1;
-    }
-  }
-
-  @container blog-browser (max-width: 40rem) {
-    .blog-browser__layout {
-      gap: 2rem;
     }
   }
 </style>
-
 <script>
-  import { matchesAllTags } from '~/utils/blog-tag-filter.js'
+  import {
+    parseBlogQuery,
+    serializeBlogQuery,
+    selectBlogPage,
+    getPageNumbers,
+  } from '~/utils/blog-browser.js'
+  const update = () => {
+    const root = document.querySelector<HTMLElement>('[data-blog-browser]')
+    if (!root) return
+    const home = root.dataset.home!
+    const requireTags = root.hasAttribute('data-require-tags')
+    const query = parseBlogQuery(location.search)
+    const posts = Array.from(
+      root.querySelectorAll<HTMLElement>('[data-blog-item]')
+    ).map((element) => ({
+      element,
+      data: {
+        category: element.dataset.category!,
+        tags: JSON.parse(element.dataset.tags!) as string[],
+      },
+    }))
+    const header = root.querySelector<HTMLElement>('[data-category-header]')
+    const defaultTitle = root.querySelector<HTMLElement>('[data-default-title]')
+    const filters = root.querySelector<HTMLElement>('[data-filters]')!
+    const empty = root.querySelector<HTMLElement>('[data-empty]')!
+    const pagination = root.querySelector<HTMLElement>('[data-pagination]')!
+    const panel = root.querySelector<HTMLElement>('[data-list-panel]')!
+    const showList = !requireTags || query.tags.length > 0
+    if (!showList) {
+      posts.forEach((post) => (post.element.hidden = true))
+      if (header) header.hidden = true
+      if (defaultTitle) defaultTitle.hidden = false
+      filters.hidden = true
+      empty.hidden = true
+      pagination.hidden = true
+      panel.hidden = true
+      root.querySelector('[data-status]')!.textContent = ''
+      return
+    }
+    const result = selectBlogPage(posts, query)
+    query.page = result.page
+    const canonical = new URL(location.href)
+    if (query.page === 1) canonical.searchParams.delete('page')
+    else canonical.searchParams.set('page', String(query.page))
+    if (canonical.href !== location.href)
+      history.replaceState(history.state, '', canonical)
 
-  const FILTER_DELAY_MS = 140
-  const FADE_OUT_MS = 90
-  const FADE_IN_MS = 140
-
-  const initializeBlogTagFilters = () => {
-    const roots = document.querySelectorAll<HTMLElement>(
-      '[data-blog-browser]:not([data-initialized])'
-    )
-
-    roots.forEach((root) => {
-      root.dataset.initialized = 'true'
-
-      const postList = root.querySelector<HTMLElement>('[data-post-list]')
-      const status = root.querySelector<HTMLElement>('[data-filter-status]')
-      const emptyState = root.querySelector<HTMLElement>('[data-filter-empty]')
-      const selectedCount = root.querySelector<HTMLElement>(
-        '[data-selected-count]'
+    const visible = new Set(result.items)
+    posts.forEach((post) => (post.element.hidden = !visible.has(post)))
+    panel.hidden = false
+    empty.hidden = result.total !== 0
+    root.querySelector('[data-status]')!.textContent =
+      `共 ${result.total} 篇文章，第 ${result.page} 页`
+    const showCategoryHeader = Boolean(query.category) && Boolean(header)
+    if (header) header.hidden = !showCategoryHeader
+    if (defaultTitle) defaultTitle.hidden = showCategoryHeader
+    if (showCategoryHeader && header) {
+      root.querySelector('[data-category-title]')!.textContent = query.category
+      root.querySelector('[data-category-count]')!.textContent =
+        `共 ${result.total} 篇文章`
+    }
+    const link = (label: string, state: typeof query) => {
+      const a = document.createElement('a')
+      a.textContent = label
+      a.href = home + serializeBlogQuery(state)
+      return a
+    }
+    filters.replaceChildren()
+    const showFilters = !requireTags && query.tags.length > 0
+    filters.hidden = !showFilters
+    if (showFilters) {
+      query.tags.forEach((tag) =>
+        filters.append(
+          link(`${tag} ×`, {
+            ...query,
+            tags: query.tags.filter((t) => t !== tag),
+            page: 1,
+          })
+        )
       )
-      const tagButtons = [
-        ...root.querySelectorAll<HTMLButtonElement>('[data-tag]'),
-      ]
-      const clearButtons = [
-        ...root.querySelectorAll<HTMLButtonElement>('[data-clear-tags]'),
-      ]
-
-      if (!postList || !status || !emptyState || !selectedCount) return
-
-      const posts = [
-        ...root.querySelectorAll<HTMLElement>('[data-blog-item]'),
-      ].map((element) => ({
-        element,
-        tags: JSON.parse(element.dataset.tags ?? '[]') as string[],
-      }))
-      const yearGroups = [
-        ...root.querySelectorAll<HTMLElement>('[data-year-group]'),
-      ]
-      const selectedTags = new Set<string>()
-      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
-      let timer: number | undefined
-      let revision = 0
-      let animation: Animation | undefined
-
-      const updateControls = () => {
-        tagButtons.forEach((button) => {
-          button.setAttribute(
-            'aria-pressed',
-            selectedTags.has(button.dataset.tag ?? '') ? 'true' : 'false'
-          )
-        })
-
-        selectedCount.textContent = `${selectedTags.size} selected`
-        clearButtons.forEach((button) => {
-          button.hidden = selectedTags.size === 0
-        })
+      filters.append(link('清空筛选', { category: '', tags: [], page: 1 }))
+      if (!query.category) {
+        const count = document.createElement('span')
+        count.textContent = `共 ${result.total} 篇`
+        const tagsLink = document.createElement('a')
+        tagsLink.textContent = '全部标签'
+        tagsLink.href = `${home}tags/`
+        filters.append(count, tagsLink)
       }
-
-      const updateVisibility = (selection: Set<string>) => {
-        let visiblePosts = 0
-
-        posts.forEach(({ element, tags }) => {
-          const visible = matchesAllTags(tags, selection)
-          element.hidden = !visible
-          if (visible) visiblePosts += 1
-        })
-
-        yearGroups.forEach((group) => {
-          group.hidden = !group.querySelector('[data-blog-item]:not([hidden])')
-        })
-
-        emptyState.hidden = visiblePosts !== 0
-        status.textContent =
-          selection.size === 0
-            ? `Showing all ${posts.length} posts.`
-            : `Showing ${visiblePosts} of ${posts.length} posts.`
+    }
+    pagination.replaceChildren()
+    pagination.hidden = result.pageCount <= 1
+    const control = (label: string, page: number, disabled: boolean) => {
+      if (!disabled) return link(label, { ...query, page })
+      const span = document.createElement('span')
+      span.textContent = label
+      span.setAttribute('aria-disabled', 'true')
+      return span
+    }
+    const numbers = document.createElement('div')
+    getPageNumbers(query.page, result.pageCount).forEach((number) => {
+      if (number === '…') {
+        const span = document.createElement('span')
+        span.textContent = number
+        numbers.append(span)
+        return
       }
-
-      const applyFilter = async (expectedRevision: number) => {
-        const selection = new Set(selectedTags)
-
-        if (reduceMotion.matches || typeof postList.animate !== 'function') {
-          if (expectedRevision === revision) updateVisibility(selection)
-          return
-        }
-
-        const fadeOut = postList.animate(
-          [
-            { opacity: 1, transform: 'translateY(0)' },
-            { opacity: 0.25, transform: 'translateY(2px)' },
-          ],
-          { duration: FADE_OUT_MS, easing: 'ease-out', fill: 'forwards' }
-        )
-        animation = fadeOut
-
-        try {
-          await fadeOut.finished
-        } catch {
-          return
-        }
-
-        if (expectedRevision !== revision) return
-        fadeOut.cancel()
-        updateVisibility(selection)
-
-        const fadeIn = postList.animate(
-          [
-            { opacity: 0.25, transform: 'translateY(2px)' },
-            { opacity: 1, transform: 'translateY(0)' },
-          ],
-          { duration: FADE_IN_MS, easing: 'ease-out' }
-        )
-        animation = fadeIn
-
-        try {
-          await fadeIn.finished
-        } catch {
-          return
-        }
-
-        if (animation === fadeIn) animation = undefined
-      }
-
-      const queueFilter = () => {
-        revision += 1
-        const expectedRevision = revision
-        window.clearTimeout(timer)
-        animation?.cancel()
-        timer = window.setTimeout(
-          () => void applyFilter(expectedRevision),
-          FILTER_DELAY_MS
-        )
-      }
-
-      tagButtons.forEach((button) => {
-        button.addEventListener('click', () => {
-          const tag = button.dataset.tag
-          if (!tag) return
-
-          if (selectedTags.has(tag)) selectedTags.delete(tag)
-          else selectedTags.add(tag)
-
-          updateControls()
-          queueFilter()
-        })
-      })
-
-      clearButtons.forEach((button) => {
-        button.addEventListener('click', () => {
-          if (selectedTags.size === 0) return
-          selectedTags.clear()
-          updateControls()
-          queueFilter()
-        })
-      })
+      const a = link(String(number), { ...query, page: number })
+      if (number === query.page) a.setAttribute('aria-current', 'page')
+      numbers.append(a)
     })
+    pagination.append(
+      control('← 上一页', query.page - 1, query.page === 1),
+      numbers,
+      control('下一页 →', query.page + 1, query.page === result.pageCount)
+    )
+    if (!requireTags)
+      document
+        .querySelectorAll<HTMLAnchorElement>('[data-blog-category]')
+        .forEach((a) => {
+          a.href =
+            home +
+            serializeBlogQuery({
+              ...query,
+              category: a.dataset.blogCategory!,
+              page: 1,
+            })
+          if (a.dataset.blogCategory === query.category)
+            a.setAttribute('aria-current', 'true')
+          else a.removeAttribute('aria-current')
+        })
   }
-
-  initializeBlogTagFilters()
-  document.addEventListener('astro:page-load', initializeBlogTagFilters)
+  document.addEventListener('astro:page-load', update)
+  document.addEventListener('blog:querychange', update)
+  window.addEventListener('popstate', update)
+  update()
 </script>

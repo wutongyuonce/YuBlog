@@ -1,0 +1,28 @@
+---
+import BlogSidebar from '~/components/blog/BlogSidebar.astro'
+---
+
+<div class="blog-index-layout">
+  <div class="blog-index-main">
+    <slot />
+  </div>
+  <BlogSidebar />
+</div>
+<style>
+  .blog-index-layout {
+    max-width: var(--blog-shell-width);
+    margin: 1rem auto 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 264px;
+    gap: 56px;
+    align-items: start;
+  }
+  .blog-index-main {
+    min-width: 0;
+  }
+  @media (max-width: 1099px) {
+    .blog-index-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

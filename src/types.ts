@@ -464,7 +464,7 @@ export interface Ui {
 }
 
 /* FEATURES */
-export type BgType = 'plum' | 'dot' | 'rose' | 'snow'
+export type BgType = 'dot' | 'rose' | 'snow'
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6
 type FeatureConfig<T> = false | [boolean, T]
 

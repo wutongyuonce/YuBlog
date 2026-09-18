@@ -112,6 +112,8 @@ export default defineConfig({
     ...navIcons,
     ...socialIcons,
     ...projectIcons,
+    'i-simple-icons-instagram',
+    'i-simple-icons-bilibili',
 
     /* BaseLayout */
     'focus:not-sr-only',

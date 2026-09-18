@@ -54,6 +54,8 @@ export const postSchema = ({ image }: SchemaContext) =>
         .describe('简短描述，用于 SEO 和分享。不需要时使用站点默认描述。')
         .transform((value) => value.trim()),
 
+      category: z.enum(['技术向', '工具向']).default('技术向'),
+
       // 标签列表
       tags: z
         .array(z.string()) // 字符串数组
@@ -300,4 +302,13 @@ export const insightSchema = z.object({
     .boolean()
     .default(false)
     .describe('标记为草稿。true 时仅在开发环境可见，生产构建时会被排除。'),
+})
+
+export const aboutSchema = z.object({
+  title: z
+    .string()
+    .describe('标签按钮上的名字。intro 可随便填。')
+    .transform((value) => value.trim()),
+  order: z.number().default(0).describe('标签排序，数值越小越靠前。'),
+  tab: z.boolean().default(true).describe('false 时作为关于页顶部介绍，不进标签栏。'),
 })

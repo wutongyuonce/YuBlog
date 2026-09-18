@@ -1,107 +1,87 @@
 ---
-interface TagSummary {
-  tag: string
-  count: number
-  displayName: string
-}
+import { getFilteredPosts } from '~/utils/data'
+import { buildTagSummary } from '~/utils/blog-tag-filter.js'
 
-interface Props {
-  tags: TagSummary[]
-}
-
-const { tags } = Astro.props
+const tags = buildTagSummary(
+  (await getFilteredPosts('blogs')).map(({ data }) => data.tags)
+)
 ---
 
-<aside class="tag-filter" aria-labelledby="blog-tag-filter-title">
-  <div class="tag-filter__heading">
-    <h2 id="blog-tag-filter-title">Tags</h2>
-    <div class="tag-filter__actions">
-      <span class="tag-filter__selected" data-selected-count> 0 selected </span>
-      <button type="button" class="tag-filter__clear" data-clear-tags hidden>
-        Clear
-      </button>
+<section data-tag-directory aria-labelledby="tags-title">
+  <header class="tags-header">
+    <div>
+      <h1 id="tags-title">标签</h1>
+      <p>{tags.length} 个标签</p>
     </div>
-  </div>
-
-  <div
-    class="tag-filter__items"
-    role="group"
-    aria-labelledby="blog-tag-filter-title"
-  >
-    {
-      tags.map(({ tag, count, displayName }) => (
-        <button
-          type="button"
-          class="tag-filter__chip"
-          data-tag={tag}
-          aria-label={`${tag}, ${count} ${count === 1 ? 'post' : 'posts'}`}
-          aria-pressed="false"
-          title={tag}
-        >
-          <span class="tag-filter__label">{displayName}</span>
-          <span class="tag-filter__count" aria-hidden="true">
-            {count}
-          </span>
+    <div class="tags-toolbar">
+      <div class="tags-selected" data-selected-status hidden>
+        <span data-selected-count></span>
+        <button type="button" data-clear-tags>清空</button>
+      </div>
+      <div class="tags-sort" role="group" aria-label="标签排序" hidden>
+        <button type="button" data-sort="count" aria-pressed="true">
+          按数量
         </button>
-      ))
-    }
+        <button type="button" data-sort="name" aria-pressed="false">
+          按名称
+        </button>
+      </div>
+    </div>
+  </header>
+  <div class="tags-list">
+    {tags.map(({ tag, count }, index) => (
+      <button
+        type="button"
+        data-tag-name={tag}
+        data-tag-rank={index}
+        aria-pressed="false"
+      >
+        <span>{tag}</span>
+        <span class="tags-count">{count}</span>
+      </button>
+    ))}
   </div>
-</aside>
-
+  {tags.length === 0 && <p>暂无标签。</p>}
+</section>
 <style>
-  .tag-filter {
-    --tag-text: #4b5563;
-    --tag-bg: #00000008;
-    --tag-border: #00000018;
-    --tag-hover: #00000010;
-    --tag-selected-bg: #1f2937;
-    --tag-selected-text: #fff;
-
-    min-width: 0;
-    color: var(--tag-text);
-  }
-
-  :global(.dark) .tag-filter {
-    --tag-text: #d1d5db;
-    --tag-bg: #ffffff0d;
-    --tag-border: #ffffff20;
-    --tag-hover: #ffffff18;
-    --tag-selected-bg: #e5e7eb;
-    --tag-selected-text: #111827;
-  }
-
-  .tag-filter__heading {
+  .tags-header {
     display: flex;
-    align-items: baseline;
     justify-content: space-between;
-    gap: 0.75rem;
-    margin-bottom: 0.5rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    margin-bottom: 1.4rem;
   }
-
-  .tag-filter__heading h2 {
+  .tags-header h1 {
+    font-size: 1.55rem;
     margin: 0;
-    color: inherit;
-    font-size: 0.75rem;
     font-weight: 600;
-    line-height: 1.4;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    line-height: 1.3;
   }
-
-  .tag-filter__actions {
-    display: flex;
-    align-items: baseline;
-    gap: 0.5rem;
-    font-size: 0.6875rem;
-    line-height: 1.4;
-  }
-
-  .tag-filter__selected {
+  .tags-header p {
+    margin: 0.25rem 0 0;
+    font-size: 0.875rem;
     opacity: 0.55;
-    white-space: nowrap;
   }
-
-  .tag-filter__clear {
+  .tags-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .tags-selected {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+  }
+  .tags-selected[hidden] {
+    display: none;
+  }
+  .tags-selected span {
+    opacity: 0.55;
+  }
+  .tags-selected button {
     padding: 0;
     border: 0;
     color: inherit;
@@ -110,83 +90,166 @@ const { tags } = Astro.props
     text-decoration: underline;
     text-underline-offset: 0.2em;
     cursor: pointer;
-    opacity: 0.7;
   }
-
-  .tag-filter__clear:hover {
-    opacity: 1;
+  .tags-sort {
+    border: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
+    border-radius: 6px;
+    padding: 2px;
   }
-
-  .tag-filter__items {
+  .tags-sort button {
+    padding: 0.28rem 0.6rem;
+    border-radius: 4px;
+    color: inherit;
+    background: transparent;
+    font: inherit;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    cursor: pointer;
+  }
+  .tags-sort [aria-pressed='true'] {
+    background: color-mix(in srgb, var(--c-text) 8%, transparent);
+  }
+  .tags-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.35rem;
+    gap: 0.5rem;
   }
-
-  .tag-filter__chip {
-    position: relative;
-    min-width: 3.75rem;
+  .tags-list button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.38rem;
     max-width: 100%;
-    min-height: 2.05rem;
-    padding: 0.3rem 1.25rem 0.42rem 0.55rem;
-    overflow: hidden;
-    border: 1px solid var(--tag-border);
-    border-radius: 0.35rem;
+    padding: 0.32rem 0.65rem;
     color: inherit;
-    background: var(--tag-bg);
+    background: transparent;
     font: inherit;
-    line-height: 1.25;
-    text-align: start;
+    font-size: 0.9375rem;
+    line-height: 1.4;
+    border: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
+    border-radius: 7px;
+    overflow-wrap: anywhere;
     cursor: pointer;
-    transition:
-      transform 160ms ease,
-      color 160ms ease,
-      background-color 160ms ease,
-      border-color 160ms ease;
   }
-
-  .tag-filter__chip:hover {
-    background: var(--tag-hover);
-    transform: translateY(-1px);
+  .tags-list button:hover {
+    background: color-mix(in srgb, var(--c-text) 6%, transparent);
   }
-
-  .tag-filter__chip:active {
-    transform: scale(0.97);
+  .tags-list button[aria-pressed='true'] {
+    border-color: var(--c-text);
+    color: var(--c-bg);
+    background: var(--c-text);
   }
-
-  .tag-filter__chip[aria-pressed='true'] {
-    border-color: var(--tag-selected-bg);
-    color: var(--tag-selected-text);
-    background: var(--tag-selected-bg);
+  .tags-list button[aria-pressed='true']:hover {
+    background: var(--c-text);
   }
-
-  .tag-filter__label {
-    display: block;
-    overflow: hidden;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .tags-count {
+    opacity: 0.45;
+    font-size: 0.75rem;
   }
-
-  .tag-filter__count {
-    position: absolute;
-    right: 0.32rem;
-    bottom: 0.14rem;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.5625rem;
-    line-height: 1;
-    opacity: 0.62;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .tag-filter__chip {
-      transition: none;
-    }
-
-    .tag-filter__chip:hover,
-    .tag-filter__chip:active {
-      transform: none;
-    }
+  .tags-list button[aria-pressed='true'] .tags-count {
+    opacity: 0.7;
   }
 </style>
+<script>
+  import { parseBlogQuery, serializeBlogQuery } from '~/utils/blog-browser.js'
+
+  const FILTER_DELAY_MS = 140
+
+  const initializeTags = () => {
+    const root = document.querySelector<HTMLElement>('[data-tag-directory]')
+    if (!root || root.dataset.initialized) return
+    root.dataset.initialized = 'true'
+    root.querySelector<HTMLElement>('.tags-sort')!.hidden = false
+    const list = root.querySelector<HTMLElement>('.tags-list')!
+    const buttons = Array.from(
+      list.querySelectorAll<HTMLButtonElement>('[data-tag-name]')
+    )
+    const selectedStatus = root.querySelector<HTMLElement>(
+      '[data-selected-status]'
+    )!
+    const selectedCount = root.querySelector<HTMLElement>(
+      '[data-selected-count]'
+    )!
+    const selected = new Set<string>()
+    let timer: number | undefined
+
+    const selectedTags = () =>
+      buttons
+        .map((button) => button.dataset.tagName!)
+        .filter((tag) => selected.has(tag))
+
+    const syncPressed = () => {
+      buttons.forEach((button) =>
+        button.setAttribute(
+          'aria-pressed',
+          String(selected.has(button.dataset.tagName!))
+        )
+      )
+      const count = selected.size
+      selectedStatus.hidden = count === 0
+      selectedCount.textContent = `${count} 个已选`
+    }
+
+    const syncFromUrl = () => {
+      selected.clear()
+      parseBlogQuery(location.search).tags.forEach((tag) => selected.add(tag))
+      syncPressed()
+    }
+
+    const commit = () => {
+      if (!root.isConnected) return
+      const next =
+        location.pathname +
+        serializeBlogQuery({ category: '', tags: selectedTags(), page: 1 })
+      const current = `${location.pathname}${location.search}`
+      if (next !== current) history.pushState(history.state, '', next)
+      document.dispatchEvent(new Event('blog:querychange'))
+    }
+
+    const queueCommit = () => {
+      window.clearTimeout(timer)
+      timer = window.setTimeout(commit, FILTER_DELAY_MS)
+    }
+
+    syncFromUrl()
+    root.querySelectorAll<HTMLButtonElement>('[data-sort]').forEach((button) =>
+      button.addEventListener('click', () => {
+        root
+          .querySelectorAll('[data-sort]')
+          .forEach((control) =>
+            control.setAttribute('aria-pressed', String(control === button))
+          )
+        buttons.sort((a, b) =>
+          button.dataset.sort === 'name'
+            ? a.dataset.tagName!.localeCompare(
+                b.dataset.tagName!,
+                'zh-Hans-CN',
+                { numeric: true, sensitivity: 'base' }
+              )
+            : Number(a.dataset.tagRank) - Number(b.dataset.tagRank)
+        )
+        list.append(...buttons)
+      })
+    )
+    buttons.forEach((button) =>
+      button.addEventListener('click', () => {
+        const tag = button.dataset.tagName
+        if (!tag) return
+        if (selected.has(tag)) selected.delete(tag)
+        else selected.add(tag)
+        syncPressed()
+        queueCommit()
+      })
+    )
+    root
+      .querySelector<HTMLButtonElement>('[data-clear-tags]')
+      ?.addEventListener('click', () => {
+        if (selected.size === 0) return
+        selected.clear()
+        syncPressed()
+        queueCommit()
+      })
+    window.addEventListener('popstate', syncFromUrl)
+  }
+  document.addEventListener('astro:page-load', initializeTags)
+  initializeTags()
+</script>

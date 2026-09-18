@@ -9,7 +9,7 @@ titleImageAlt: 云端 Agent 工作区与执行运行时架构图
 
 ## “Your agent needs a computer, not a container.”
 
-<img src="/cloud-agent-img/PixPin_2026-08-22_13-18-57.png" alt="PixPin_2026-08-22_13-18-57" style="zoom:40%;" />
+<img src="/blogs/cloud-agent-img/PixPin_2026-08-22_13-18-57.png" alt="PixPin_2026-08-22_13-18-57" style="zoom:40%;" />
 
 云端 Agent 比较直接的理解是**存算分离**，这里的算是 agent 运行所需的运算，存是各种状态、产物的存储，也就是将本地 Agent 的‘状态存储’与‘计算推理’从同一进程实例中解耦。
 
@@ -277,9 +277,9 @@ Cloudflare Computer 则是一个 npm SDK，基于 DO 的持久化层（额外的
 | `ws.git`                   | 执行 Git 相关操作                                            |
 | `createAITools(workspace)` | 把电脑能力包装成 LLM 工具                                    |
 
-<img src="/cloud-agent-img/_image2.webp" style="zoom: 50%;" />
+<img src="/blogs/cloud-agent-img/_image2.webp" style="zoom: 50%;" />
 
-<img src="/cloud-agent-img/_image3.webp" style="zoom: 50%;" />
+<img src="/blogs/cloud-agent-img/_image3.webp" style="zoom: 50%;" />
 
 工作区还支持可选的执行运行时 `Workspace.runtime`，使您能够在文件系统上运行代码。所有运行时都支持相同的接口 `exec(string, options)`，提供了两种默认选项：
 
@@ -488,7 +488,7 @@ export default {
 
 ## [Grok Bot](https://docs.x.ai/grok-bot/overview)
 
-<img src="/cloud-agent-img/PixPin_2026-08-19_13-19-56.png" alt="PixPin_2026-08-19_13-19-56" style="zoom:33%;" />
+<img src="/blogs/cloud-agent-img/PixPin_2026-08-19_13-19-56.png" alt="PixPin_2026-08-19_13-19-56" style="zoom:33%;" />
 
 Grok Bot 的官方定义是：每个用户拥有**一台持久化的托管 Linux VM**，里面有 browser、filesystem、terminal；多个有名字、有持久状态的 Agent Bot 共享这台电脑、文件和登录会话。[Grok Bot 官方说明](https://docs.x.ai/grok-bot/overview)
 

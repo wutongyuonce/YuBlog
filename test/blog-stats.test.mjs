@@ -5,6 +5,7 @@ import {
   countReadableUnits,
   formatChineseCount,
   getCalendarDaySpan,
+  getInclusiveDayCount,
   sumWordCounts,
 } from '../src/utils/blog-stats.js'
 
@@ -21,6 +22,23 @@ test('calculates a calendar-day span independently of time of day', () => {
     2
   )
   assert.equal(getCalendarDaySpan([new Date('2026-01-01')]), 0)
+})
+
+test('counts inclusive days from the site launch date', () => {
+  assert.equal(
+    getInclusiveDayCount(
+      new Date('2026-05-05T00:00:00Z'),
+      new Date('2026-05-05T23:00:00Z')
+    ),
+    1
+  )
+  assert.equal(
+    getInclusiveDayCount(
+      new Date('2026-05-05T00:00:00Z'),
+      new Date('2026-05-06T00:00:00Z')
+    ),
+    2
+  )
 })
 
 test('formats large Chinese counts in ten-thousands', () => {

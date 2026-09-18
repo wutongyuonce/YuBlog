@@ -126,7 +126,7 @@ ripgrep 不是对每个文件都做正则匹配。它在真正搜索内容之前
 
 ### 实现
 
-![img](/RAG-img/accesswximg-20260516191337540.png)
+![img](/blogs/RAG-img/accesswximg-20260516191337540.png)
 
 #### 代码内容搜索
 
@@ -232,7 +232,7 @@ Grep({pattern: "GrepTool|tool.*track|tool.*activity", glob: "*.ts"})→ 返回 4
 
 **4 个文件，其中 3 个在** bridge/ **目录下，1 个在** cli/ **下。问题问的是 bridge 系统，LLM 关注** bridge/ **下的文件。**sessionRunner.ts**（session + runner = 会话执行器）最可能包含工具执行追踪逻辑。**
 
-![img](/RAG-img/accesswximg.png)
+![img](/blogs/RAG-img/accesswximg.png)
 
 第 2 轮：看上下文。**Grep 切换到** content **模式，看 GrepTool 在** sessionRunner.ts **中的上下文：**
 
@@ -242,7 +242,7 @@ Grep({pattern: "GrepTool|tool.*activity", path: "bridge/sessionRunner.ts", outpu
 
 返回的代码片段中能看到一张映射表的尾部，显示 GrepTool: 'Searching'、BashTool: 'Running'，但上文被截断了。LLM 判断需要 Read 整段代码才能看全。
 
-![img](/RAG-img/accesswximg-20260516190815668.png)
+![img](/blogs/RAG-img/accesswximg-20260516190815668.png)
 
 **第 3 轮：调用Read。** 使用 Read 打开 sessionRunner.ts 的完整上下文，一次看到了三个关键结构：
 
@@ -257,7 +257,7 @@ Grep: 'Searching',   GrepTool: 'Searching',Glob: 'Searching',   GlobTool: 'Searc
 
 到这里已经知道了怎么追踪和怎么记录，但活动事件生成之后去了哪里？
 
-![img](/RAG-img/accesswximg-20260516190815688.png)
+![img](/blogs/RAG-img/accesswximg-20260516190815688.png)
 
 **第 4 轮：追踪使用方。** Grep 搜 SessionActivity 被谁引用，一次追出整条链：
 
@@ -273,7 +273,7 @@ Grep({pattern: "SessionActivity|currentActivity", path: "bridge/", output_mode: 
 
 这样就拼出了完整的追踪链：session 进程输出工具调用的 JSON → 活动解析器提取并生成摘要 → bridge 主进程定时轮询获取最新活动 → UI 模块渲染到状态面板。
 
-![img](/RAG-img/d3hfZm10PXBuZyZhbXA=;from=appmsg.png)
+![img](/blogs/RAG-img/d3hfZm10PXBuZyZhbXA=;from=appmsg.png)
 
 ## 三、Agentic Retrieval is Emerging 智能体检索
 
@@ -285,7 +285,7 @@ Grep({pattern: "SessionActivity|currentActivity", path: "bridge/", output_mode: 
 
 其他依据：这篇 blog [Vibe code benchmark](https://rlancemartin.github.io/2025/04/03/vibe-code/) 对检索方法进行了基准比较。在对开发者文档的实际测试中，发现精心编写的 llms.txt 文件（包含 URL 和简洁的描述）加上简单的工具调用（例如 *grep*），在各种编码任务中**都优于向量数据库管道**。
 
-![PixPin_2026-05-15_20-37-37](/RAG-img/PixPin_2026-05-15_20-37-37.png)
+![PixPin_2026-05-15_20-37-37](/blogs/RAG-img/PixPin_2026-05-15_20-37-37.png)
 
 > [【llms.txt标准】](https://llmstxt.org) Answer.AI创始人Jeremy Howard提出了一个看似简单却意义深远的提案：在网站根目录放一个叫llms.txt的Markdown文件，专门给AI大语言模型看。
 >
@@ -340,7 +340,7 @@ webgrep：一个现代化的工具，可以直接对任何URL进行搜索。它�
 >
 >    收集到足够的信息后，给出完整且论证充分的答案。
 >
-> ![PixPin_2026-05-15_19-17-31](/RAG-img/PixPin_2026-05-15_19-17-31.png)
+> ![PixPin_2026-05-15_19-17-31](/blogs/RAG-img/PixPin_2026-05-15_19-17-31.png)
 
 ### 2 "Table of Contents" Index for LLMs 给大模型的目录索引
 

@@ -1,0 +1,98 @@
+---
+import { getCollection, render } from 'astro:content'
+
+const entries = await getCollection('about')
+const intro = entries.find((entry) => !entry.data.tab)
+const tabs = entries
+  .filter((entry) => entry.data.tab)
+  .sort((a, b) => a.data.order - b.data.order || a.id.localeCompare(b.id))
+
+const IntroContent = intro ? (await render(intro)).Content : null
+const panels = await Promise.all(
+  tabs.map(async (entry) => ({
+    id: entry.id,
+    title: entry.data.title,
+    Content: (await render(entry)).Content,
+  }))
+)
+---
+
+<section class="about-page">
+  {IntroContent && (
+    <div class="about-intro prose">
+      <IntroContent />
+    </div>
+  )}
+
+  {panels.length > 0 && (
+    <>
+      <div class="about-tabs" role="tablist" aria-label="关于">
+        {panels.map((panel, index) => (
+          <button
+            type="button"
+            role="tab"
+            id={`about-tab-${panel.id}`}
+            data-about-tab={panel.id}
+            aria-controls={`about-panel-${panel.id}`}
+            aria-selected={index === 0 ? 'true' : 'false'}
+            tabindex={index === 0 ? 0 : -1}
+          >
+            {panel.title}
+          </button>
+        ))}
+      </div>
+      {panels.map((panel, index) => (
+        <div
+          class="about-panel prose"
+          role="tabpanel"
+          id={`about-panel-${panel.id}`}
+          data-about-panel={panel.id}
+          aria-labelledby={`about-tab-${panel.id}`}
+          hidden={index !== 0}
+        >
+          <panel.Content />
+        </div>
+      ))}
+    </>
+  )}
+</section>
+
+<script>
+  const setupAboutTabs = () => {
+    const tabs = [
+      ...document.querySelectorAll<HTMLButtonElement>('[data-about-tab]'),
+    ]
+    if (tabs.length === 0) return
+
+    const select = (id: string) => {
+      const exists = tabs.some((tab) => tab.dataset.aboutTab === id)
+      const current = exists ? id : tabs[0].dataset.aboutTab
+      if (!current) return
+
+      tabs.forEach((tab) => {
+        const on = tab.dataset.aboutTab === current
+        tab.setAttribute('aria-selected', on ? 'true' : 'false')
+        tab.tabIndex = on ? 0 : -1
+      })
+      document
+        .querySelectorAll<HTMLElement>('[data-about-panel]')
+        .forEach((panel) => {
+          panel.hidden = panel.dataset.aboutPanel !== current
+        })
+      if (location.hash.slice(1) !== current)
+        history.replaceState(null, '', `#${current}`)
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const id = tab.dataset.aboutTab
+        if (id) select(id)
+      })
+    })
+
+    select(decodeURIComponent(location.hash.slice(1)))
+  }
+
+  document.addEventListener('astro:page-load', setupAboutTabs)
+  setupAboutTabs()
+</script>

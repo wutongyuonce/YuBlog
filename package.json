@@ -12,6 +12,7 @@
     "check": "astro check",
     "build": "astro build --force",
     "preview": "astro preview",
+    "test:blog-browser": "node --test test/blog-browser.test.mjs",
     "test:blog-tags": "node --test test/blog-tag-filter.test.mjs",
     "test:blog-stats": "node --test test/blog-stats.test.mjs",
     "test:progress-stats": "node --test test/progress-stats.test.mjs",

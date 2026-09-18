@@ -255,4 +255,4 @@ Agent 严格依据 YAML frontmatter 加载 skill。要单独测试 LLM 如何理
 
 ## [npx skills](https://github.com/vercel-labs/skills) 进行 SKILL 维护
 
-![Skill 101：可以自动更新的 Skill-diagram-2](/agent-skill/skill-101-auto-updating.png)
+![Skill 101：可以自动更新的 Skill-diagram-2](/blogs/agent-skill-img/skill-101-auto-updating.png)

@@ -1,237 +1,141 @@
 # YuBlog
 
+[中文](README.md) · [Architecture](docs/项目解析.md) · [SEO](docs/Canonical%20URL、Sitemap、RSS.md) · [Astro](docs/Astro.md)
+
 [![Astro](https://img.shields.io/badge/Astro-5-ff5a03?logo=astro&logoColor=white)](https://astro.build)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![UnoCSS](https://img.shields.io/badge/UnoCSS-66-656565?logo=unocss&logoColor=white)](https://unocss.dev)
-[![MDX](https://img.shields.io/badge/MDX-ok-1b1f24?logo=mdx&logoColor=white)](https://mdxjs.com)
 [![Pagefind](https://img.shields.io/badge/Pagefind-search-4b32c3)](https://pagefind.app)
-[![pnpm](https://img.shields.io/badge/pnpm-12.4-f69220?logo=pnpm&logoColor=white)](https://pnpm.io)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-A streamlined Astro 5 personal site inspired by the Antfu-style visual language. This repository focuses on a small, opinionated feature set: homepage, blog, projects, insights, friends, and search, while keeping the codebase easy to extend.
+*WutongRain*’s personal site: Astro 5, static, black-and-white, built around reading posts.
 
-## Home Page
+Live: [https://www.wutongyu.site/](https://www.wutongyu.site/)
 
-The homepage uses a dedicated `HomeHeader` with a pure-CSS retro desktop illustration. It switches to a vertical layout on narrow screens. Below the subtitle it shows published blog count, word count, and the span from first to latest post; below the introduction it lists the five newest published posts. The navbar shows day-of-year plus annual and daily progress beside the logo. The body presents the profile, stack, GitHub stats, and social links. See [`docs/feature/首页与导航近期功能说明.md`](docs/feature/首页与导航近期功能说明.md) for the source-level notes.
+## Preview
 
-<p align="center">
-  <img src="img/image-20260914021124817.png" alt="图片" width="750">
-</p>
-<p align="center">
-  <img src="img/image-20260914021225104.png" alt="图片" width="750">
-</p>
+### Home
 
+![image-20260918220616992](README-img/image-20260918220616992.png)
 
-## Blogs Page
+### Tags
 
-`/blogs/` aggregates every visible post tag with its post count and supports multi-tag AND filtering. On wide screens the tag panel sits to the left and aligns with the `Blogs` heading; it scrolls away with the document. When the container becomes narrow, it moves between the subtitle and year groups. See [`docs/feature/Blogs标签汇聚与筛选说明.md`](docs/feature/Blogs标签汇聚与筛选说明.md) for the source-level design and implementation notes.
+![PixPin_2026-09-18_22-07-23](README-img/PixPin_2026-09-18_22-07-23.png)
 
-<p align="center">
-  <img src="img/PixPin_2026-09-12_22-42-02.png" alt="图片" width="800">
-</p>
+### Archive
 
+![PixPin_2026-09-18_22-07-59](README-img/PixPin_2026-09-18_22-07-59.png)
 
-### blog Page
+### About
 
-<p align="center">
-  <img src="img/PixPin_2026-09-14_02-10-18.png" alt="图片" width="800">
-</p>
+![PixPin_2026-09-18_22-08-39](README-img/PixPin_2026-09-18_22-08-39.png)
 
+### Friends
 
-## Projects Page
+![image-20260918220924204](README-img/image-20260918220924204.png)
 
-Projects are grouped in a compact responsive grid with small category labels. The project `icon` field is optional, and the current project data is intentionally icon-free.
+## Pages
 
-<p align="center">
-  <img src="img/PixPin_2026-09-12_22-44-28.png" alt="图片" width="800">
-</p>
+| Route | What it is |
+| :--- | :--- |
+| `/` | Home. Post list (category, date, reading time, title, summary, optional image), six per page. Sidebar: profile, recent posts, categories. |
+| `/tags/` | Tags. Sort by count or name. Multi-select is AND. No list until a tag is selected. |
+| `/archives/` | Archive timeline grouped by year. |
+| `/projects/` | Project grid from JSON. |
+| `/about/#use` | About. Intro plus Use / Hobby / Soul markdown tabs. No background effect. |
+| `/friends/` | Friend links, apply notes, and a `friend.txt` template. |
+| `/blogs/[slug]/` | Post. Right TOC; click TOC to pin. |
+| `/blogs/` | Legacy index; redirects home and keeps the query string. |
+| `/rss.xml` | RSS. |
 
+Nav: `WutongRain's Blog`, Home / Tags / Archive / Projects / About / Friends, then GitHub, X, Instagram, Bilibili, Xiaohongshu, search, theme. The current page is bold.
 
-## Insights Page
+Home, tags, archive, projects, about, and friends share `BlogIndexLayout` and the sidebar. Post pages use a separate layout.
 
-The `/insights/` page is currently cleared into a blank placeholder page. The route is kept so the page can be redesigned and rebuilt later.
+## Content
 
-## Friends Page
+| Path | Purpose |
+| :--- | :--- |
+| `src/content/blogs/**/*.{md,mdx}` | Posts. `title` and `pubDate` required; `category` is `技术向` or `工具向`. Title images use `titleImage: /blog-title-images/...`. |
+| `src/content/about/*.md` | About. `intro.md` is the top copy (`tab: false`); other files become tabs via `title` and `order`. |
+| `src/content/projects/data.json` | Project cards. |
+| `src/content/friends/data.json` | Friend-link cards. |
+| `public/blog-title-images/` | List and title-block images |
+| `public/blogs/<name>-img/` | In-article images |
+| `public/about/<tab>/` | About-tab images |
+| `src/config.ts` | Site, nav, socials, TOC / search flags |
 
-<p align="center">
-  <img src="img/image-20260914021618840.png" alt="图片" width="800">
-</p>
+Edit page copy and data with `blog-content-publisher-skill/SKILL.md` (one page at a time). Architecture and seams: `docs/项目解析.md`.
 
+## Stack
 
+- Astro 5 + TypeScript, Markdown / MDX Content Collections
+- UnoCSS + `public/shell.css` (nav, sidebar, archive, about tabs — survives ClientRouter)
+- Pagefind indexes blogs only
+- `astro-expressive-code`
+- Light / dark theme, ClientRouter
+- Backgrounds `dot` / `rose` / `snow` per page; about turns them off
 
-## Overview
+## Run
 
-- Framework: Astro 5 + TypeScript
-- Styling: UnoCSS + custom CSS
-- Content: Markdown / MDX via Astro Content Collections
-- Search: Pagefind (blogs only)
-- UX: light/dark theme switching with view transitions
-- Content extras: article TOC and a reading-friendly blog layout
-
-## Feature Highlights
-
-- Home page at `/`, with blog statistics and a five-post recent-writing timeline
-- Day-of-year, annual progress, and daily progress beside the navbar logo
-- Blog index at `/blogs/` and article pages at `/blogs/[slug]/`
-- Responsive blog tag counts and multi-tag AND filtering with light/dark themes
-- Project showcase page at `/projects/` with compact category grids and optional icons
-- Insights page at `/insights/`, currently kept as a blank placeholder route for future redevelopment
-- Friends page at `/friends/` with a single card list, a GitHub PR application panel, and light/dark theme support
-- Full-text blog search powered by Pagefind
-- Right-side article TOC for blog detail pages
-- Four built-in background effects: `plum`, `dot`, `rose`, and `snow`
-- Social links and navigation configured from a single config file
-
-## Tech Stack
-
-- `astro` for routing, static generation, and content rendering
-- `@astrojs/mdx` for MDX support
-- `unocss` for utility-first styling
-- `astro-expressive-code` for code block presentation
-- `pagefind` for static search indexing
-- `sharp` for image processing
-- `eslint` + `prettier` for code quality and formatting
-
-## Requirements
-
-- Node.js `18.20.8`, `20.9.0+`, `22+`, or `24+`
-- `pnpm@12.4.1`
-
-## Quick Start
+Node.js `18.20.8` / `20.9+` / `22` / `24`, and `pnpm@12.4.1`.
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-Then open the local Astro dev server shown in the terminal.
-
-## Available Commands
-
 ```bash
-pnpm dev          # start local development server
-pnpm check        # run Astro type/content checks
-pnpm build        # create production build
-pnpm preview      # preview the production build locally
-pnpm test:blog-tags        # verify blog tag aggregation and AND matching
-pnpm test:blog-stats       # verify home blog word counts, date span, and formatting
-pnpm test:recent-post-date # verify recent-writing relative and absolute dates
-pnpm test:progress-stats   # verify navbar day-of-year and progress percentages
-pnpm test:cjk-emphasis     # verify Markdown emphasis next to CJK punctuation
-pnpm lint         # run ESLint
-pnpm lint:fix     # fix lint issues where possible
-pnpm format       # check formatting with Prettier
-pnpm format:write # format files with Prettier
+pnpm check                 # Astro type and content checks
+pnpm build                 # production build (includes Pagefind)
+pnpm preview
+pnpm test:blog-browser     # pagination and URLs
+pnpm test:blog-tags        # tag AND filtering
+pnpm test:blog-stats       # profile stats
+pnpm test:recent-post-date # recent-post dates
+pnpm test:progress-stats   # day-of-year and progress
+pnpm test:cjk-emphasis     # emphasis next to CJK punctuation
+pnpm lint
+pnpm format
 ```
 
-## Routes
-
-| Route | Purpose |
-| :--- | :--- |
-| `/` | Homepage with a custom header, blog stats, retro desktop, profile content, and recent writing |
-| `/blogs/` | Blog index with tag aggregation, counts, and multi-tag AND filtering |
-| `/blogs/[slug]/` | Blog post detail page |
-| `/projects/` | Compact categorized project grid with optional icons |
-| `/insights/` | Insights page: currently a blank placeholder route with only the base page shell |
-| `/friends/` | Friends page: single card list, GitHub PR application, reference format, and page-level `cd ..` alignment |
-| `/search/` | Search page powered by Pagefind |
-
-## Content And Customization
-
-| File | Purpose |
-| :--- | :--- |
-| `src/content/home/index.md` | Homepage body content |
-| `src/content/blogs/**/*.{md,mdx}` | Blog posts rendered at `/blogs/` |
-| `src/content/projects/data.json` | Project card data |
-| `src/content/insights/**/*.{md,mdx}` | Insight content source files, not rendered on the page right now |
-| `src/content/friends/data.json` | Friends card data |
-| `src/content/schema.ts` | Collection schemas (page, post, project, insight, friend) |
-| `src/config.ts` | Site metadata, nav items, social links, and feature switches |
-| `astro.config.ts` | Astro integrations, Markdown pipeline, image config, and build settings |
-
-### Main Config Entry Points
-
-- `SITE` in `src/config.ts`: website URL, title, description, locale, image domains
-- `UI` in `src/config.ts`: internal navs, social links, navbar layout, post/group display rules
-- `FEATURES` in `src/config.ts`: TOC, search, and slide animation
-
-## Project Structure
+## Layout
 
 ```text
 src/
-  components/
-    backgrounds/  # Background, Dot, Plum, Rose, Snow
-    base/         # Head, Link, Footer, Backdrop, PostMeta, Divider
-    home/         # HomeHeader, TinyDesktop, RecentWriting
-    nav/          # NavBar, NavItem, NavSwitch
-    toc/          # Toc, TocSidebar, TocItem
-    views/        # page composition; ListView and TagFilter power the blog index filtering
-    widgets/      # LogoButton, ProgressStats, SearchSwitch, ThemeSwitch, BackLink
-  content/
-    blogs/        # Blog posts (Markdown / MDX)
-    home/         # Homepage content
-    projects/     # Project data (JSON)
-    insights/     # Insight content source files organized by year (currently not rendered)
-    friends/      # Friends data (JSON)
-    schema.ts     # Shared Zod schemas for all content collections
-  layouts/        # BaseLayout, StandardLayout
-  pages/          # Route definitions
-  styles/         # main.css, prose.css, markdown.css
-  utils/          # path, datetime, data, blog tag filtering, blog stats, recent dates, progress stats, misc, and TOC helpers
-test/             # Node built-in tests covering blog tags, home stats, recent dates, progress stats, and CJK emphasis
-plugins/          # remark/rehype plugins
-public/           # Static assets such as favicon, fonts, and images
-docs/             # Project documentation and customization guides
+  components/     nav, sidebar, lists, archive, about, friends, TOC
+  content/        blogs / about / projects / friends
+  layouts/        BaseLayout, BlogIndexLayout, StandardLayout
+  pages/          routes
+  styles/         prose and Markdown
+  utils/          lists, stats, filters, paths
+public/shell.css  chrome styles that persist across pages
+docs/             architecture, Astro notes, SEO tutorial
 ```
 
-## Architecture Notes
+## Forking / making it yours
 
-**Content flow**
+Fork it and turn it into your own site. You can point an AI at this README and the docs.
 
-```text
-src/content/*                -> raw Markdown / MDX / JSON content
-src/content.config.ts        -> schema validation and parsing
-astro.config.ts + plugins/*  -> Markdown / MDX processing
-src/pages/*                  -> route generation
-src/layouts/*                -> page shell
-src/components/views/*       -> page-level composition
-src/components/* + styles/*  -> final UI output
-```
+1. Fork / clone, then edit `SITE` (URL, title, description, author, language) and `UI` (nav labels, social links) in `src/config.ts`.
+2. Swap content before touching layout:
+   - Posts: `src/content/blogs/`, body images `public/blogs/<name>-img/`, title images `public/blog-title-images/`
+   - About: `src/content/about/`, images `public/about/<tab>/`
+   - Projects / friends: the matching `data.json`
+3. Avatar: `public/avatar.webp`. The friends apply template (`friendInfo` in `FriendsApplyPanel.astro`) is not the same as `SITE`.
+4. Chrome (nav, sidebar, archive line): read the authority table and seams in `docs/项目解析.md`. Edit `public/shell.css` only — do not put those rules solely in component `<style>` tags.
+5. New index pages that need the sidebar should use `BlogIndexLayout`; do not copy the sidebar.
+6. After changes: `pnpm check`, then `pnpm build` if needed.
 
-**Cross-cutting files**
+Field contract: `src/content/schema.ts`.
 
-- `src/config.ts` centralizes site, UI, and feature configuration
-- `src/types.ts` defines shared TypeScript types for config and features (including `BgType`)
+## Using the content skill
 
-## Documentation
+The skill lives at `blog-content-publisher-skill/SKILL.md`.
 
-Project-specific documentation is kept in `docs/`:
-
-- `docs/项目解析.md` - Full project architecture and data flow analysis
-- `docs/feature/首页与导航近期功能说明.md` - Home blog statistics, recent writing, and navbar progress
-- `docs/feature/Blogs标签汇聚与筛选说明.md` - Blog tag data, AND filtering, responsive layout, and maintenance notes
-- `docs/feature/Insights模块更新说明.md` - Current Insights module status, wiring, and restoration notes
-- `docs/feature/友链模块说明.md` - Friends module structure, data flow, and maintenance guide
-- `docs/feature/文章TOC与响应式导航说明.md` - TOC behavior and responsive navigation details
-- `blog-content-publisher-skill/SKILL.md` - Blog content, frontmatter, title images, and publishing validation
-
-## Positioning
-
-This repository is a trimmed variant of the original `astro-antfustyle-theme`. It removes less relevant modules and keeps a smaller, easier-to-maintain surface area.
-
-Removed or excluded parts:
-
-- Extra pages such as photos, shorts, changelog, feeds, streams, releases, and pull requests
-- Unused integrations such as GitHub activity, RSS, Bluesky, and comments
-- Upstream boilerplate metadata and demo-oriented assets
-
-Retained core experience:
-
-- Home, blog, blog detail, projects, insights, friends, and search
-- Config-driven social links and navbar layout
-- Blog-only search via Pagefind
-- Article TOC on post pages
-- Theme switching with view transitions
-- Multiple background effects (`plum`, `dot`, `rose`, `snow`)
+- Put it in your agent’s skills directory.
+- Say which page to change, e.g. new post, edit Use, add a friend link, change nav socials. The agent should match the page table first, then edit files.
+- It edits Markdown / JSON / `SITE` and `UI` in `src/config.ts`. Keep `draft: true` unless you asked to publish. Do not push unless you asked to deploy.
+- Do not use this skill for structure, CSS, or pagination logic — use `docs/项目解析.md`.
 
 MIT

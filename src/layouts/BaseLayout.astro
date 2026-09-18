@@ -13,7 +13,7 @@ import ToTopButton from '~/components/widgets/ToTopButton.astro'
 import Backdrop from '~/components/base/Backdrop.astro'
 
 import { SITE, UI, FEATURES } from '~/config'
-import { ensureTrailingSlash, resolvePath, withBasePath } from '~/utils/path'
+import { resolvePath, withBasePath } from '~/utils/path'
 
 import type { BgType } from '~/types'
 
@@ -28,30 +28,24 @@ interface Props {
 const { title, description, bgType, pubDate, lastModDate } =
   Astro.props
 const pathname = Astro.url.pathname
-const currentPath = ensureTrailingSlash(pathname)
 const isHomePage = pathname === withBasePath('/')
-const isInsightsPage = pathname === resolvePath('/insights')
+const isTagsPage = pathname === resolvePath('/tags')
+const isArchivesPage = pathname === resolvePath('/archives')
+const isProjectsPage = pathname === resolvePath('/projects')
+const isAboutPage = pathname === resolvePath('/about')
 const isFriendsPage = pathname === resolvePath('/friends')
-const isBlogDetailPage =
-  currentPath.startsWith(resolvePath('/blogs')) &&
-  currentPath !== resolvePath('/blogs')
+const hideBackLink =
+  isHomePage ||
+  isTagsPage ||
+  isArchivesPage ||
+  isProjectsPage ||
+  isAboutPage ||
+  isFriendsPage
 
 const footerClasses = ['slide-enter animate-delay-1000! mx-auto print:hidden']
 const footerStyle: Record<string, string> = { marginTop: '1.5rem' }
 
-if (isFriendsPage) {
-  footerClasses.push('w-full')
-  footerStyle.width = 'min(68vw, 90rem)'
-  footerStyle.maxWidth = '100%'
-} else if (isInsightsPage) {
-  footerClasses.push('w-full')
-  footerStyle.width = '100%'
-  footerStyle.maxWidth = '75rem'
-} else if (isBlogDetailPage) {
-  footerClasses.push('prose')
-} else {
-  footerClasses.push('prose')
-}
+if (!hideBackLink) footerClasses.push('prose')
 
 let style: Record<string, string> = {}
 
@@ -99,7 +93,7 @@ if (hasCustomCursor) style['--external-link-cursor'] = cursorType
       <!-- Content -->
       <slot />
       {
-        !isHomePage && (
+        !hideBackLink && (
           <footer
             class:list={footerClasses}
             style={footerStyle}

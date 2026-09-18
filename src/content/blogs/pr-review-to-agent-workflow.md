@@ -4,6 +4,8 @@ description: "复盘复杂 PR 中的设计漂移、模块归属与测试累积�
 pubDate: 2026-09-16
 lastModDate: 2026-09-16
 tags: [Agent, Skill, PR, 软件工程]
+titleImage: /blog-title-images/bocchi.png
+titleImageAlt: 孤独摇滚 波奇酱
 toc: true
 search: true
 draft: false

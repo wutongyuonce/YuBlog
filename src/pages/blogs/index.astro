@@ -1,0 +1,29 @@
+---
+import { withBasePath } from '~/utils/path'
+import { SITE } from '~/config'
+const home = withBasePath('/')
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>文章已迁移至首页</title>
+    <link rel="canonical" href={new URL(home, SITE.website)} />
+    <meta name="robots" content="noindex" />
+  </head>
+  <body>
+    <p>
+      文章列表已迁移至
+      <a id="blog-home" href={home}>
+        首页
+      </a>
+      。
+    </p>
+  </body>
+</html>
+<script>
+  const home = document.querySelector<HTMLAnchorElement>('#blog-home')
+  if (home) location.replace(home.href + location.search + location.hash)
+</script>

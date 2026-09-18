@@ -12,7 +12,7 @@ search: true
 
 ## 六、Java 内存模型（Java Memory Model，JMM）
 
-![jmm-20230823200720](/juc-img/jmm-20230823200720.png)
+![jmm-20230823200720](/blogs/juc-img/jmm-20230823200720.png)
 
 JMM 定义了 Java 程序中的变量、线程如何和主存以及工作内存进行交互的规则。
 
@@ -28,13 +28,13 @@ JMM 定义了 Java 程序中的变量、线程如何和主存以及工作内存�
 
 这两种模型之间的区别如下图所示：
 
-<img src="/juc-img/image-20260108024420583.png" alt="image-20260108024420583" style="zoom:50%;" />
+<img src="/blogs/juc-img/image-20260108024420583.png" alt="image-20260108024420583" style="zoom:50%;" />
 
 **Java 使用的是共享内存并发模型**。
 
 ### Java 共享内存并发模型
 
-<img src="/juc-img/image-20260108024553656.png" alt="image-20260108024553656" style="zoom:50%;" />
+<img src="/blogs/juc-img/image-20260108024553656.png" alt="image-20260108024553656" style="zoom:50%;" />
 
 - 主内存：Java堆中对象实例数据部分，对应于物理硬件的内存
 - 工作内存：对应线程的虚拟机栈的部分区域，虚拟机可能会对这部分内存进行优化，优先存储在CPU的寄存器或高速缓存中。
@@ -43,7 +43,7 @@ JMM 定义了 Java 程序中的变量、线程如何和主存以及工作内存�
 
 所以，内存可见性针对的是堆中的共享变量。
 
-![jmm-f02219aa-e762-4df0-ac08-6f4cceb535c2](/juc-img/jmm-f02219aa-e762-4df0-ac08-6f4cceb535c2.jpg)
+![jmm-f02219aa-e762-4df0-ac08-6f4cceb535c2](/blogs/juc-img/jmm-f02219aa-e762-4df0-ac08-6f4cceb535c2.jpg)
 
 内存模型规定如下：
 
@@ -236,9 +236,9 @@ public class AccountingSync implements Runnable{
 
 主要来看Mark Word的格式：
 
-<img src="/juc-img/image-20260110012835833.png" alt="image-20260110012835833" style="zoom:50%;" />
+<img src="/blogs/juc-img/image-20260110012835833.png" alt="image-20260110012835833" style="zoom:50%;" />
 
-<img src="/juc-img/w5kq4gbBHcCMv1L.png" alt="w5kq4gbBHcCMv1L" style="zoom:30%;" />
+<img src="/blogs/juc-img/w5kq4gbBHcCMv1L.png" alt="w5kq4gbBHcCMv1L" style="zoom:30%;" />
 
 可以看到，当对象状态为偏向锁时， Mark Word 存储的是偏向的线程ID；当状态为轻量级锁时， Mark Word 存储的是指向线程栈中 Lock Record 的指针；当状态为重量级锁时， Mark Word 为指向堆中的monitor对象的指针。
 
@@ -292,7 +292,7 @@ Exception table:
       19    22    19   any      // 如果19~22行出现了异常，跳转到19行继续执行
 ```
 
-<img src="/juc-img/bYUPEDwoBdkSxi3.png" alt="bYUPEDwoBdkSxi3" style="zoom:30%;" />
+<img src="/blogs/juc-img/bYUPEDwoBdkSxi3.png" alt="bYUPEDwoBdkSxi3" style="zoom:30%;" />
 
 <a id="加锁、释放锁的具体场景"></a>
 
@@ -304,7 +304,7 @@ Exception table:
 
 *注意：不加synchronized的对象不会关联监视器*
 
-<img src="/juc-img/pC1iNxH.png" alt="pC1iNxH" style="zoom: 50%;" />
+<img src="/blogs/juc-img/pC1iNxH.png" alt="pC1iNxH" style="zoom: 50%;" />
 
 ```c++
 class ObjectMonitor {
@@ -423,7 +423,7 @@ Java 6 为了减少获得锁和释放锁带来的性能消耗，引入了“偏�
     - 调用 OS 的 mutex 解锁原语；
     - 唤醒 Entry Set 中等待的线程（即之前因竞争失败而被阻塞的线程）。
 
-<img src="/juc-img/image-20260110013257842.png" alt="image-20260110013257842" style="zoom:60%;" />
+<img src="/blogs/juc-img/image-20260110013257842.png" alt="image-20260110013257842" style="zoom:60%;" />
 
 #### 重量级锁
 

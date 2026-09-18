@@ -1,30 +1,19 @@
 ---
-title: 'WutongRain'
-subtitle: INTJ ｜ Unwavering to the end
-description: 'A streamlined Astro Antfu-style site with blog, projects, search, and theme switching.'
+title: 首页
+description: WutongRain 的技术文章与工具笔记
 bgType: dot
 ---
 
 import BaseLayout from '~/layouts/BaseLayout.astro'
-import StandardLayout from '~/layouts/StandardLayout.astro'
-import RenderPage from '~/components/views/RenderPage.astro'
-import HomeHeader from '~/components/home/HomeHeader.astro'
-import RecentWriting from '~/components/home/RecentWriting.astro'
+import BlogIndexLayout from '~/layouts/BlogIndexLayout.astro'
+import ListView from '~/components/views/ListView.astro'
 
 <BaseLayout
   title={frontmatter.title}
   description={frontmatter.description}
   bgType={frontmatter.bgType}
 >
-  <StandardLayout>
-    <HomeHeader
-      slot="head"
-      title={frontmatter.title}
-      subtitle={frontmatter.subtitle}
-    />
-    <div slot="article" class="home-content" style="margin-top: -1em;">
-      <RenderPage collectionType="home" id="index" />
-      <RecentWriting />
-    </div>
-  </StandardLayout>
+  <BlogIndexLayout>
+    <ListView />
+  </BlogIndexLayout>
 </BaseLayout>

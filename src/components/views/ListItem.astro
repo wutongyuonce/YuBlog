@@ -1,151 +1,157 @@
 ---
+import { Image } from 'astro:assets'
 import Link from '~/components/base/Link.astro'
-
 import { withBasePath } from '~/utils/path'
-import { formatDate } from '~/utils/datetime'
-
+import { serializeBlogQuery } from '~/utils/blog-browser.js'
+import type { GroupedBlogItem } from '~/utils/data'
 interface Props {
-  collectionType?: string
-  idx: number
-  postSlug?: string
-  title: string
-  tags?: string[]
-  minutesRead?: number
-  date: string | Date
-  radio?: boolean
-  video?: boolean
-  platform?: string
-  redirect?: string
-  urlPath?: string
+  item: GroupedBlogItem
 }
-
 const {
-  collectionType,
-  idx,
-  postSlug,
-  title,
-  tags,
-  minutesRead,
-  date,
-  video,
-  radio,
-  platform,
-  redirect,
-  urlPath,
+  item: { id, data, minutesRead },
 } = Astro.props
+const image = data.titleImage || data.cover
+const alt = data.titleImage ? data.titleImageAlt : data.coverAlt
+const href = data.redirect || withBasePath(`/blogs/${id}/`)
 ---
 
-<div class="slide-enter" style={{ '--enter-stage': idx }}>
-  <Link
-    class="list-item"
-    href={
-      redirect
-        ? redirect
-        : withBasePath(`/${urlPath || collectionType || 'blogs'}/${postSlug}/`)
-    }
-    external={redirect ? true : false}
-    enableNewTabWarning={redirect ? true : false}
-  >
-    <span class="list-item__title">{title}</span>
-    <span class="list-item__meta">
-      {
-        video && (
-          <span
-            u-i-ri-film-line
-            class="list-item__icon flex-none op-50 align-middle"
-            title="Provided in video"
-            aria-label="Provided in video"
-          />
-        )
-      }
-      {
-        radio && (
-          <span
-            u-i-ri-radio-line
-            class="list-item__icon flex-none op-50 align-middle"
-            title="Provided in radio"
-            aria-label="Provided in radio"
-          />
-        )
-      }
-      <time
-        class="list-item__time op-50 text-sm ws-nowrap"
-        datetime={new Date(date).toISOString()}
+<article class="post-preview">
+  <div>
+    <div class="post-preview__meta">
+      <a
+        data-blog-category={data.category}
+        href={`${withBasePath('/')}${serializeBlogQuery({ category: data.category, tags: [], page: 1 })}`}
       >
-        {formatDate(date, false)}
+        {data.category}
+      </a>
+      <span aria-hidden="true">·</span>
+      <time datetime={data.pubDate.toISOString()}>
+        {data.pubDate.toISOString().slice(0, 10)}
       </time>
-      {
-        !!minutesRead && (
-          <span class="list-item__muted op-40 text-sm ws-nowrap">
-            · {minutesRead} min
-          </span>
-        )
-      }
-      {platform && (
-        <span class="list-item__muted op-40 text-sm ws-nowrap">
-          · {platform}
-        </span>
+      {!!minutesRead && (
+        <>
+          <span aria-hidden="true">·</span>
+          <span>约 {minutesRead} 分钟</span>
+        </>
       )}
-    </span>
-    {
-      tags && tags.length > 0 && (
-        <span class="list-item__tags op-40 text-sm ws-nowrap inner-x-scroll">
-          {tags.join(' / ')}
-        </span>
-      )
-    }
-  </Link>
-</div>
-
+      {data.video && <span>视频</span>}
+      {data.radio && <span>音频</span>}
+      {data.platform && <span>{data.platform}</span>}
+    </div>
+    <h2>
+      <Link
+        {href}
+        external={!!data.redirect}
+        enableNewTabWarning={!!data.redirect}
+      >
+        {data.title}
+      </Link>
+    </h2>
+    {data.tags.length > 0 && (
+      <ul class="post-preview__tags">
+        {data.tags.map((tag) => (
+          <li>#{tag}</li>
+        ))}
+      </ul>
+    )}
+    {data.description && <p>{data.description}</p>}
+  </div>
+  <div
+    class:list={[
+      'post-preview__media',
+      { 'post-preview__media--empty': !image },
+    ]}
+  >
+    {image && (
+      <a {href} tabindex="-1" aria-hidden="true">
+        {typeof image === 'string' ? (
+          <img src={image} {alt} width="640" height="360" loading="lazy" />
+        ) : (
+          <Image src={image} {alt} width={640} loading="lazy" />
+        )}
+      </a>
+    )}
+  </div>
+</article>
 <style>
-  .list-item {
+  .post-preview {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      'title meta'
-      'tags tags';
-    align-items: center;
-    column-gap: 0.75rem;
-    row-gap: 0.35rem;
-    margin-top: 0.5rem;
-    margin-bottom: 1.5rem;
-    overflow: hidden;
-    border-bottom: none !important;
-    transition: opacity 0.3s ease-in-out;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: 28px;
+    padding: 0 0 24px;
+    border-bottom: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
   }
-
-  .list-item__title {
-    grid-area: title;
-    min-width: 0;
-    font-size: 1.125rem;
-    line-height: 1.35;
-  }
-
-  .list-item__meta {
-    grid-area: meta;
+  .post-preview__meta {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    max-width: 100%;
     flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: color-mix(in srgb, var(--c-text) 60%, transparent);
   }
-
-  .list-item__icon {
-    flex: none;
+  .post-preview a {
+    color: inherit;
+    text-decoration: none;
   }
-
-  .list-item__tags {
-    grid-area: tags;
-    max-width: 100%;
+  .post-preview h2 {
+    margin: 0.6rem 0 0.35rem;
+    font-size: 1.125rem;
+    line-height: 1.45;
+    font-weight: 600;
+    overflow-wrap: anywhere;
   }
-
-  @media (max-width: 767.9px) {
-    .list-item {
+  .post-preview__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.65rem;
+    margin: 0 0 0.45rem;
+    padding: 0;
+    list-style: none;
+    font-size: 0.75rem;
+    color: color-mix(in srgb, var(--c-text) 50%, transparent);
+  }
+  .post-preview h2 :global(a) {
+    opacity: 1;
+    color: color-mix(in srgb, var(--c-text) 88%, transparent);
+    border-bottom: 1px solid transparent;
+    transition:
+      color 160ms ease,
+      border-color 160ms ease;
+  }
+  .post-preview h2 :global(a:hover) {
+    color: var(--c-text);
+    border-bottom-color: color-mix(in srgb, var(--c-text) 38%, transparent);
+  }
+  .post-preview p {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.75;
+    color: color-mix(in srgb, var(--c-text) 65%, transparent);
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .post-preview__media a {
+    display: block;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--c-text) 10%, transparent);
+  }
+  .post-preview__media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+  @media (max-width: 767px) {
+    .post-preview {
       grid-template-columns: minmax(0, 1fr);
-      grid-template-areas:
-        'title'
-        'meta'
-        'tags';
+      gap: 1rem;
+    }
+    .post-preview__media--empty {
+      display: none;
     }
   }
 </style>
