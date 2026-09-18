@@ -146,5 +146,14 @@
     "desc": "正在学习接受不完美的世界",
     "category": "Friends",
     "order": 16
+  },
+  {
+    "id": "linmeng-blog",
+    "name": "linmeng'blog",
+    "link": "https://kslinmeng.cn/",
+    "avatar": "https://cdn.kslinmeng.cn/gh/tanf/my-photos@main/new-windows1/20260901222623983.png",
+    "desc": "爱吃柠檬",
+    "category": "Friends",
+    "order": 17
   }
 ]
