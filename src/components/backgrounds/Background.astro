@@ -1,5 +1,4 @@
 ---
-import Plum from '~/components/backgrounds/Plum.astro'
 import Dot from '~/components/backgrounds/Dot.astro'
 import Rose from '~/components/backgrounds/Rose.astro'
 import Snow from '~/components/backgrounds/Snow.astro'
@@ -11,7 +10,6 @@ interface Props {
 const { type } = Astro.props
 ---
 
-{type === 'plum' && <Plum />}
 {type === 'dot' && <Dot />}
 {type === 'rose' && <Rose />}
 {type === 'snow' && <Snow />}

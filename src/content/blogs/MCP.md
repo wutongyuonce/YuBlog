@@ -13,9 +13,9 @@ MCP 和 Function Calling 是完全不同层面的东西。
 
 1、MCP 是一个**系统架构层面的协议标准**。提供一种 LLM 与外部工具、数据源之间的**标准化连接方式**，通信格式遵循 **JSON-RPC 2.0**
 
-![mcp-overview](/MCP-img/mcp-overview.png)
+![mcp-overview](/blogs/MCP-img/mcp-overview.png)
 
-![PixPin_2026-05-10_20-40-23](/MCP-img/PixPin_2026-05-10_20-40-23.png)
+![PixPin_2026-05-10_20-40-23](/blogs/MCP-img/PixPin_2026-05-10_20-40-23.png)
 
 >  MCP 采用了非常经典的 C/S 架构（客户端/服务器），主要包括三个部分：
 >
@@ -38,11 +38,11 @@ MCP 的三件套让这种交互变得标准化：
 > * 传统 RAG（检索增强生成）主要处理非结构化文本（PDF、文档、知识库），适合稳定数据；动态数据需频繁重建索引，成本高
 > * MCP Resources 可处理结构化数据（JSON、数据库行、API返回结果），直接查询实时数据，天然支持高动态场景
 
-![img](/MCP-img/1db1d2642c33a8a4fa923eeedf978a293546383483144655.png@1192w.webp)
+![img](/blogs/MCP-img/1db1d2642c33a8a4fa923eeedf978a293546383483144655.png@1192w.webp)
 
 2、Function Calling 是**大模型层面内置的能力**。让模型能根据上下文产出结构化的函数调用请求，调用预定义的外部函数，**扩展模型的实际操作能力**。但它不要求消息是 JSON-RPC 格式，也不遵守 MCP 的上下文管理方式，是各家厂商自己定义的调用机制。
 
-![img](/MCP-img/b0d4743868ae34c60bef7a339638bcb53546383483144655.png@1192w.webp)
+![img](/blogs/MCP-img/b0d4743868ae34c60bef7a339638bcb53546383483144655.png@1192w.webp)
 
 3、在实际项目里，MCP 和 Function Calling 配合使用
 
@@ -823,7 +823,7 @@ async def use_mcp_tools(query: str):
 asyncio.run(use_mcp_tools("计算 sqrt(144) + pi * 2"))
 ```
 
-![deepseek_mermaid_20260510_c55629](/MCP-img/deepseek_mermaid_20260510_c55629.png)
+![deepseek_mermaid_20260510_c55629](/blogs/MCP-img/deepseek_mermaid_20260510_c55629.png)
 
 1、传输层
 
@@ -853,7 +853,7 @@ async with ClientSession(read, write) as session:
 
 #### mcp-server
 
-![deepseek_mermaid_20260510_908f5e](/MCP-img/deepseek_mermaid_20260510_908f5e.png)
+![deepseek_mermaid_20260510_908f5e](/blogs/MCP-img/deepseek_mermaid_20260510_908f5e.png)
 
 ##### 项目的基本结构
 
@@ -1199,7 +1199,7 @@ echo "Done"
 > ENTRYPOINT ["node", "build/index.js"]
 > ```
 >
-> ![PixPin_2026-05-10_20-14-13](/MCP-img/PixPin_2026-05-10_20-14-13.png)
+> ![PixPin_2026-05-10_20-14-13](/blogs/MCP-img/PixPin_2026-05-10_20-14-13.png)
 
 3、发布前需要确认 `dockerBuild.sh` 中的版本号与 `package.json` 一致。
 
@@ -1642,15 +1642,15 @@ export { useMcpTools };
 
 配置好 Filesystem MCP Server 之后，重启 Claude Desktop 应用，Claude Desktop 在启动时会自动加载所有的 MCP Server（其实就是为每个 Server 启动一个独立的进程，运行配置文件中的命令）。加载成功后，在对话框右下角会看到一个小锤子的图标：
 
-![](/MCP-img/claude-mcp-hammer.png)
+![](/blogs/MCP-img/claude-mcp-hammer.png)
 
 点击小图标，可以看到 Filesystem MCP Server 自带的所有工具列表：
 
-![](/MCP-img/claude-mcp-tools.png)
+![](/blogs/MCP-img/claude-mcp-tools.png)
 
 这时我们就可以在对话时让 Claude 调用这些工具了：
 
-![](/MCP-img/claude-file-list.png)
+![](/blogs/MCP-img/claude-file-list.png)
 
 Claude 在调用工具之前会提醒用户，只有当用户确认允许后才会真正执行相应操作。
 

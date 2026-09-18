@@ -1,12 +1,11 @@
 ---
 title: 友情链接
-subtitle: Together we go further
 description: 浏览我的友链列表，查看值得反复回访的博客、个人主页与独立站点
 bgType: snow
 ---
 
 import BaseLayout from '~/layouts/BaseLayout.astro'
-import StandardLayout from '~/layouts/StandardLayout.astro'
+import BlogIndexLayout from '~/layouts/BlogIndexLayout.astro'
 import FriendsView from '~/components/views/FriendsView.astro'
 
 <BaseLayout
@@ -14,7 +13,8 @@ import FriendsView from '~/components/views/FriendsView.astro'
   description={frontmatter.description}
   bgType={frontmatter.bgType}
 >
-  <StandardLayout title={frontmatter.title} subtitle={frontmatter.subtitle} isCentered={true}>
+  <BlogIndexLayout>
+    <h1 class="sr-only">{frontmatter.title}</h1>
     <FriendsView />
-  </StandardLayout>
+  </BlogIndexLayout>
 </BaseLayout>

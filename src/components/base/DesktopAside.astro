@@ -21,8 +21,9 @@ const tocDisplayMode = Array.isArray(toc) && toc[0] && toc[1].displayMode
       <button
         type="button"
         class="desktop-aside__trigger"
-        aria-label="Table of contents"
-        title="Table of contents"
+        aria-label="固定目录"
+        aria-pressed="false"
+        title="点击固定目录"
         data-display-mode={tocDisplayMode}
       >
         TOC
@@ -31,6 +32,25 @@ const tocDisplayMode = Array.isArray(toc) && toc[0] && toc[1].displayMode
     </aside>
   )
 }
+
+<script>
+  const setupTocPin = () => {
+    const aside = document.getElementById('desktop-aside')
+    const trigger = aside?.querySelector<HTMLButtonElement>(
+      '.desktop-aside__trigger'
+    )
+    if (!aside || !trigger || trigger.dataset.pinBound) return
+    trigger.dataset.pinBound = 'true'
+    trigger.addEventListener('click', () => {
+      const on = aside.dataset.pinned !== 'true'
+      aside.dataset.pinned = on ? 'true' : 'false'
+      trigger.setAttribute('aria-pressed', String(on))
+    })
+  }
+
+  document.addEventListener('astro:page-load', setupTocPin)
+  setupTocPin()
+</script>
 
 <style>
   .desktop-aside {
@@ -43,7 +63,7 @@ const tocDisplayMode = Array.isArray(toc) && toc[0] && toc[1].displayMode
         var(--toc-inset-end)
     );
     position: fixed;
-    top: 8.875rem;
+    top: 5.75rem;
     right: var(--toc-inset-end);
     left: auto;
     z-index: 100;
@@ -65,16 +85,24 @@ const tocDisplayMode = Array.isArray(toc) && toc[0] && toc[1].displayMode
   }
 
   .desktop-aside__trigger {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    padding: 0;
-    border: 0;
+    align-self: start;
+    margin-inline: -0.4rem;
+    padding: 0.15rem 0.4rem;
+    border: 1px solid transparent;
+    border-radius: 6px;
     background: transparent;
     color: var(--c-text);
     font-size: var(--blog-reading-size);
     font-weight: 500;
     opacity: 0.55;
-    transition: opacity 0.7s ease-in-out;
+    cursor: pointer;
+    transition:
+      opacity 0.25s ease,
+      background-color 0.25s ease,
+      font-weight 0.25s ease,
+      transform 0.25s ease;
   }
 
   .desktop-aside__trigger[data-display-mode='always'] {
@@ -86,6 +114,18 @@ const tocDisplayMode = Array.isArray(toc) && toc[0] && toc[1].displayMode
     .desktop-aside__trigger[data-display-mode='content'],
   :global(.group\/content:hover)
     .desktop-aside__trigger[data-display-mode='content'] {
+    opacity: 0.82;
+  }
+
+  .desktop-aside[data-pinned='true'] .desktop-aside__trigger {
+    font-weight: 600;
+    opacity: 1;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  .desktop-aside[data-pinned='true'] :global(.desktop-toc) {
     opacity: 0.82;
   }
 

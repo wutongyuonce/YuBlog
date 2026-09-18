@@ -49,7 +49,7 @@ const users = ['Alice', 'Bob', 'Charlie']
 </script>
 ```
 
-![PixPin\_2026-05-05\_04-13-48](/Astro-img/PixPin_2026-05-05_04-13-48.png)
+![PixPin\_2026-05-05\_04-13-48](/blogs/Astro-img/PixPin_2026-05-05_04-13-48.png)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -621,7 +621,7 @@ const { title } = Astro.props
 
 > **插槽 = 占位符，让父组件可以"注入"内容到子组件的指定位置**
 
-![PixPin\_2026-05-04\_00-43-21](/Astro-img/PixPin_2026-05-04_00-43-21.png)
+![PixPin\_2026-05-04\_00-43-21](/blogs/Astro-img/PixPin_2026-05-04_00-43-21.png)
 
 ##### 1、默认插槽（任意内容）
 
@@ -714,7 +714,7 @@ const { title } = Astro.props
 
 > **模板指令 = 编译时的 DOM 操作标记，构建时转化为静态 HTML**
 >
-> ![PixPin\_2026-05-04\_00-52-57](/Astro-img/PixPin_2026-05-04_00-52-57.png)
+> ![PixPin\_2026-05-04\_00-52-57](/blogs/Astro-img/PixPin_2026-05-04_00-52-57.png)
 
 Astro 指令最终都会被编译成**纯 HTML**（以及可选的客户端 JavaScript），这就是 Astro"零 JS 默认"的核心原理。这些指令是 **Astro 团队预先实现**的，就像 Vue 的 `v-if`、React 的 `className` 一样
 
@@ -754,7 +754,7 @@ const result = <div class:active={condition}>内容</div>
 
 > **布局 = 页面包装器，提供一致的页面结构**
 
-![PixPin_2026-05-04_00-48-12.png](/Astro-img/PixPin_2026-05-04_00-48-12.png)
+![PixPin_2026-05-04_00-48-12.png](/blogs/Astro-img/PixPin_2026-05-04_00-48-12.png)
 
 ## Astro 博客开发流程
 

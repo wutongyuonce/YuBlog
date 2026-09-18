@@ -773,44 +773,44 @@ const result = <div class:active={condition}>内容</div>
 
 <img src="img/PixPin_2026-05-04_00-48-12.png" alt="PixPin_2026-05-04_00-48-12" style="zoom:50%;" />
 
-## Astro 博客开发流程
+## 对照 YuBlog 的开发流程
 
-1. **构思内容结构**
+上面是 Astro 通用语法。这个仓库里对应关系如下。
 
-   - 首页、文章列表、关于页、标签页
+1. **内容结构**
 
-2. **创建 Astro 项目**（使用官方博客模板）
+   首页 `/`、标签 `/tags/`、归档 `/archives/`、项目 `/projects/`、关于 `/about/`、友链 `/friends/`、文章 `/blogs/[slug]/`。
 
-   ```bash
-   npm create astro@latest -- --template blog
-   ```
+2. **布局**
 
-3. **编写布局（Layout）**\
-   `src/layouts/BlogLayout.astro` – 包含 `<header>`、`<main>`、`<footer>`
+   - `src/layouts/BaseLayout.astro`：Head、顶栏、背景、页脚
+   - `src/layouts/BlogIndexLayout.astro`：索引页主栏 + 右栏
+   - `src/layouts/StandardLayout.astro`：文章详情
 
-4. **添加 Markdown 文章**\
-   `src/content/posts/第一篇.md`
+3. **Markdown 文章**
+
+   放在 `src/content/blogs/`，不是 `posts/`。
 
    ```markdown
    ---
-   title: '我的第一篇博客'
-   pubDate: 2025-01-01
+   title: 我的第一篇博客
+   pubDate: 2026-01-01
+   category: 技术向
+   tags: [Astro]
    ---
    这里是内容...
    ```
 
-5. **编写动态路由**（自动生成每篇文章的页面）\
-   `src/pages/posts/[...slug].astro` – 读取 Markdown 并渲染
+4. **动态路由**
 
-6. **添加交互（可选）**
+   `src/pages/blogs/[...slug].astro` 读 `blogs` 集合并渲染。
 
-   - 比如：评论区（React 组件 + `client:load`）
-   - 比如：图片灯箱（Vue 组件 + `client:visible`）
-
-7. **优化和构建**
+5. **构建**
 
    ```bash
-   npm run build   # 输出到 dist/
+   pnpm build    # 输出到 dist/，随后 Pagefind 建搜索索引
    ```
 
-8. **部署**（可免费托管到 Netlify、Vercel、Cloudflare Pages）
+   `dist/` 是构建产物，不进 git。
+
+站点级行为与模块边界见 [项目解析](./项目解析.md)。

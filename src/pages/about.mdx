@@ -1,0 +1,19 @@
+---
+title: 关于
+description: 关于 WutongRain
+---
+
+import BaseLayout from '~/layouts/BaseLayout.astro'
+import BlogIndexLayout from '~/layouts/BlogIndexLayout.astro'
+import AboutView from '~/components/views/AboutView.astro'
+
+<BaseLayout
+  title={frontmatter.title}
+  description={frontmatter.description}
+  bgType={false}
+>
+  <BlogIndexLayout>
+    <h1 class="sr-only">{frontmatter.title}</h1>
+    <AboutView />
+  </BlogIndexLayout>
+</BaseLayout>

@@ -11,11 +11,11 @@ search: true
 
 Context Engineering 最重要的工程技巧之一就是**不要重复算同样的前缀**。这里有几个层层递进的概念：
 
-<img src="/KV-Prefix-Prompt-Semantic-Caching/HQzFEXmaQAAzsnc.png" alt="KV、Prefix、Prompt 与 Context Caching 关系图" style="zoom:50%;" />
+<img src="/blogs/kv-prefix-prompt-semantic-caching-img/HQzFEXmaQAAzsnc.png" alt="KV、Prefix、Prompt 与 Context Caching 关系图" style="zoom:50%;" />
 
-<img src="/KV-Prefix-Prompt-Semantic-Caching/Screenshot_20260904_152838_com_twitter_android_M.jpg" alt="KV、Prefix、Prompt 与 Context Caching 原文截图" style="zoom:50%;" />
+<img src="/blogs/kv-prefix-prompt-semantic-caching-img/Screenshot_20260904_152838_com_twitter_android_M.jpg" alt="KV、Prefix、Prompt 与 Context Caching 原文截图" style="zoom:50%;" />
 
-<img src="/KV-Prefix-Prompt-Semantic-Caching/image-20260724171231080.png" alt="缓存层次示意图" style="zoom:45%;" />
+<img src="/blogs/kv-prefix-prompt-semantic-caching-img/image-20260724171231080.png" alt="缓存层次示意图" style="zoom:45%;" />
 
 - **KV Cache（算法层）**：单请求内的动态规划，算完就扔。
 - **Prefix Caching / Prompt Caching（引擎层/商业层）**：单机内的块级复用 + API 计费包装，解决“同前缀省钱”。
@@ -31,7 +31,7 @@ Context Engineering 最重要的工程技巧之一就是**不要重复算同样�
 
 KV Cache 就是把每一步算好的 key/value 张量存下来，生成时只算新 token 的那一份，前面的直接复用。效果：**单步计算量大降，代价是显存随 token 数线性增长**。
 
-<img src="/KV-Prefix-Prompt-Semantic-Caching/HQyjE2BbUAEHkfN.jpeg" alt="KV Cache 示意图" style="zoom:50%;" />
+<img src="/blogs/kv-prefix-prompt-semantic-caching-img/HQyjE2BbUAEHkfN.jpeg" alt="KV Cache 示意图" style="zoom:50%;" />
 
 ```
 KV cache
@@ -80,7 +80,7 @@ print("cache length:", past_key_values.get_seq_length()) # 24
 
 虽然单步计算量小了，但每一步仍要把整个 cache 从 HBM 加载出来。注意力内核算得比缓存加载快，GPU 在解码时大部分时间在等内存——**decode 受内存带宽限制，不再受计算限制**。
 
-<img src="/KV-Prefix-Prompt-Semantic-Caching/HQyjpbhasAEIxp_.jpeg" alt="KV Cache 的内存带宽瓶颈" style="zoom:50%;" />
+<img src="/blogs/kv-prefix-prompt-semantic-caching-img/HQyjpbhasAEIxp_.jpeg" alt="KV Cache 的内存带宽瓶颈" style="zoom:50%;" />
 
 ### 长上下文主要是显存问题
 
@@ -93,13 +93,13 @@ KV cache 大小**由模型形状决定，随 token 数线性增长**。70B 模�
 
 #### KV Cache 到底占多少显存
 
-<img src="/KV-Prefix-Prompt-Semantic-Caching/image-20260908190831017.png" alt="KV Cache 显存计算示例" style="zoom:35%;" />
+<img src="/blogs/kv-prefix-prompt-semantic-caching-img/image-20260908190831017.png" alt="KV Cache 显存计算示例" style="zoom:35%;" />
 
-<img src="/KV-Prefix-Prompt-Semantic-Caching/image-20260908190920619.png" alt="不同模型的 KV Cache 显存占用" style="zoom:33%;" />
+<img src="/blogs/kv-prefix-prompt-semantic-caching-img/image-20260908190920619.png" alt="不同模型的 KV Cache 显存占用" style="zoom:33%;" />
 
-<img src="/KV-Prefix-Prompt-Semantic-Caching/image-20260908190948537.png" alt="长上下文下的 KV Cache 显存占用" style="zoom:35%;" />
+<img src="/blogs/kv-prefix-prompt-semantic-caching-img/image-20260908190948537.png" alt="长上下文下的 KV Cache 显存占用" style="zoom:35%;" />
 
-<img src="/KV-Prefix-Prompt-Semantic-Caching/image-20260908185938017.png" alt="KV Cache 显存估算" style="zoom:35%;" />
+<img src="/blogs/kv-prefix-prompt-semantic-caching-img/image-20260908185938017.png" alt="KV Cache 显存估算" style="zoom:35%;" />
 
 #### KV Cache 的瘦身手段
 
@@ -226,7 +226,7 @@ A B 的 KV 还能复用的关键原因是 Transformer 的 self-attention 通常�
   - 从 miss 位置开始重新 prefill；
   - 用引用计数防止正在使用的缓存被淘汰。
 
-  <img src="/KV-Prefix-Prompt-Semantic-Caching/HQysThObwAA-7pj.jpeg" alt="vLLM 与 SGLang 的 Prefix Caching 实现" style="zoom:50%;" />
+  <img src="/blogs/kv-prefix-prompt-semantic-caching-img/HQysThObwAA-7pj.jpeg" alt="vLLM 与 SGLang 的 Prefix Caching 实现" style="zoom:50%;" />
 
 - **SGLang RadixAttention**：使用 token 级 radix tree
 
@@ -294,7 +294,7 @@ def schedule(token_ids, cache):
 2. 尾部残块跳过：`range` 停在 `len - BLOCK_SIZE + 1`，说明块大小会造成命中损失；
 3. `ref_count`：淘汰只碰 ref_count 为 0 的块，说明缓存复用和缓存淘汰之间存在生命周期管理。
 
-<img src="/KV-Prefix-Prompt-Semantic-Caching/HQyuRrXboAAnzVA.jpeg" alt="Prefix Caching 复用流程" style="zoom:50%;" />
+<img src="/blogs/kv-prefix-prompt-semantic-caching-img/HQyuRrXboAAnzVA.jpeg" alt="Prefix Caching 复用流程" style="zoom:50%;" />
 
 #### 租户隔离：salt
 
@@ -457,7 +457,7 @@ vs
 显存占用和并发损失
 ```
 
-<img src="/KV-Prefix-Prompt-Semantic-Caching/HQy1Sp3bEAAym-Z.jpeg" alt="Prefix Caching 块大小与缓存总量" style="zoom:50%;" />
+<img src="/blogs/kv-prefix-prompt-semantic-caching-img/HQy1Sp3bEAAym-Z.jpeg" alt="Prefix Caching 块大小与缓存总量" style="zoom:50%;" />
 
 ### 两个边界
 
@@ -493,7 +493,7 @@ vs
 
 OpenAI 是全自动（≥1024 token自动触发），Anthropic 需要显式 `cache_control` 标记，Gemini 是显式创建缓存对象。
 
-<img src="/KV-Prefix-Prompt-Semantic-Caching/HQy465yawAASW2-.jpeg" alt="Prompt Caching 计费示意图" style="zoom:50%;" />
+<img src="/blogs/kv-prefix-prompt-semantic-caching-img/HQy465yawAASW2-.jpeg" alt="Prompt Caching 计费示意图" style="zoom:50%;" />
 
 ### 代码示例：Anthropic 的 cache_control
 
@@ -552,7 +552,7 @@ Context Caching 没有准确的定义概念，它**是将 KV Cache 从“临时�
 
 ### RAG 的问题：顺序变化的检索块
 
-<img src="/KV-Prefix-Prompt-Semantic-Caching/HQy3BhpbEAAvI8C.jpeg" alt="RAG 检索块顺序变化" style="zoom:50%;" />
+<img src="/blogs/kv-prefix-prompt-semantic-caching-img/HQy3BhpbEAAvI8C.jpeg" alt="RAG 检索块顺序变化" style="zoom:50%;" />
 
 普通 prefix caching 假设：
 
@@ -616,4 +616,4 @@ C → A → B
 CacheBlend：可以复用乱序、分散的检索块
 ```
 
-<img src="/KV-Prefix-Prompt-Semantic-Caching/HQy4gbtaMAAnZJ-.jpeg" alt="CacheBlend 复用流程" style="zoom:50%;" />
+<img src="/blogs/kv-prefix-prompt-semantic-caching-img/HQy4gbtaMAAnZJ-.jpeg" alt="CacheBlend 复用流程" style="zoom:50%;" />

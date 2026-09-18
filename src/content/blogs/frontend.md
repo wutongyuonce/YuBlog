@@ -735,32 +735,32 @@ SSG之前介绍了，我之前有使用过[Hexo](https://hexo.io/)、[Hugo](http
 
 点击Vercel左侧栏的Domains，选择右上侧的Add Existing，输入购买的个性化域名
 
-![PixPin_2026-05-07_13-43-13](/deploy-img/PixPin_2026-05-07_13-43-13.png)
+![PixPin_2026-05-07_13-43-13](/blogs/deploy-img/PixPin_2026-05-07_13-43-13.png)
 
 打开 Cloudflare，进入 Domains-Overview-Add domain
 
-![PixPin_2026-05-07_13-49-42](/deploy-img/PixPin_2026-05-07_13-49-42.png)
+![PixPin_2026-05-07_13-49-42](/blogs/deploy-img/PixPin_2026-05-07_13-49-42.png)
 
 回到之前添加的两条域名，进行 Auto configure，分别各自增加 TXT 和 CNAME 两条 records
 
-![PixPin_2026-05-07_13-59-47](/deploy-img/PixPin_2026-05-07_13-59-47.png)
+![PixPin_2026-05-07_13-59-47](/blogs/deploy-img/PixPin_2026-05-07_13-59-47.png)
 
-![PixPin_2026-05-07_14-00-13](/deploy-img/PixPin_2026-05-07_14-00-13.png)
+![PixPin_2026-05-07_14-00-13](/blogs/deploy-img/PixPin_2026-05-07_14-00-13.png)
 
 在 Cloudflare 点击添加的 domain，进入 DNS-Records，可以看到四条
 
-![PixPin_2026-05-07_14-03-26](/deploy-img/PixPin_2026-05-07_14-03-26.png)
+![PixPin_2026-05-07_14-03-26](/blogs/deploy-img/PixPin_2026-05-07_14-03-26.png)
 
 可以看到下方有 Cloudflare Nameservers，复制这两条 NS
 
-![PixPin_2026-05-07_13-51-25](/deploy-img/PixPin_2026-05-07_13-51-25.png)
+![PixPin_2026-05-07_13-51-25](/blogs/deploy-img/PixPin_2026-05-07_13-51-25.png)
 
 进入阿里云，打开域名控制台修改DNS服务器地址
 
 1. 前往[域名产品控制台](https://dc.console.aliyun.com/?spm=5176.28197678_55416700.console-base_help.18.63045b8eO61o25)，在域名列表中找到目标域名，单击操作列的 **管理** 按钮![image.png](/deploy-img-img/p751347.png)
 2. 在左侧导航栏选择 **DNS管理** 下的 **DNS修改** 菜单，单击 **修改DNS服务器** 按钮![image.png](/deploy-img-img/p751353.png)
-3. 输入 **云解析 DNS** 分配的DNS服务器地址，例如：`vip1.alidns.com`、`vip2.alidns.com`，提交变更。![image](/deploy-img/p852184.png)
+3. 输入 **云解析 DNS** 分配的DNS服务器地址，例如：`vip1.alidns.com`、`vip2.alidns.com`，提交变更。![image](/blogs/deploy-img/p852184.png)
 
 完成之后回到 Cloudflare 的域名Overview，可以 Check nameservers now，阿里云那边生效之后，这个页面会刷新：
 
-![PixPin_2026-05-07_14-10-06](/deploy-img/PixPin_2026-05-07_14-10-06.png)
+![PixPin_2026-05-07_14-10-06](/blogs/deploy-img/PixPin_2026-05-07_14-10-06.png)

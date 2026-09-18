@@ -55,6 +55,15 @@ export function getCalendarDaySpan(dates) {
   )
 }
 
+/** Inclusive calendar days from start through end (UTC date). Same day → 1. */
+export function getInclusiveDayCount(start, end = new Date()) {
+  const toUtcDay = (date) =>
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+  const startDay = toUtcDay(start instanceof Date ? start : new Date(start))
+  const endDay = toUtcDay(end instanceof Date ? end : new Date(end))
+  return Math.max(0, Math.round((endDay - startDay) / DAY_IN_MILLISECONDS) + 1)
+}
+
 /**
  * Uses ten-thousands for long Chinese counts while preserving exact small counts.
  *

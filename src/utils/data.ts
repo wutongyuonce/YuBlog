@@ -1,7 +1,7 @@
 import { getCollection, render } from 'astro:content'
 
 import { getYear } from '~/utils/datetime'
-import { getCalendarDaySpan, sumWordCounts } from '~/utils/blog-stats'
+import { getInclusiveDayCount, sumWordCounts } from '~/utils/blog-stats'
 
 import type { CollectionEntry } from 'astro:content'
 
@@ -33,7 +33,7 @@ export function getMinutesRead(
   minutesRead: number | boolean,
   computedMinutesRead: number
 ) {
-  return minutesRead === false
+  return minutesRead === false || minutesRead === 0
     ? 0
     : typeof minutesRead === 'number' && minutesRead > 0
       ? minutesRead
@@ -59,7 +59,9 @@ export function getSortedPosts(
   posts: CollectionEntry<'blogs'>[]
 ) {
   return [...posts].sort(
-    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+    (a, b) =>
+      b.data.pubDate.valueOf() - a.data.pubDate.valueOf() ||
+      a.id.localeCompare(b.id)
   )
 }
 
@@ -79,6 +81,7 @@ export interface BlogStats {
   postCount: number
   wordCount: number
   daySpan: number
+  startedAt: string
 }
 
 /**
@@ -87,13 +90,20 @@ export interface BlogStats {
 export async function getBlogStats(): Promise<BlogStats> {
   const posts = await getPublishedBlogPosts()
   const renderedPosts = await Promise.all(posts.map((post) => render(post)))
+  const startedAt =
+    posts.length === 0
+      ? new Date().toISOString()
+      : new Date(
+          Math.min(...posts.map(({ data }) => data.pubDate.valueOf()))
+        ).toISOString()
 
   return {
     postCount: posts.length,
     wordCount: sumWordCounts(
       renderedPosts.map((post) => post.remarkPluginFrontmatter.wordCount)
     ),
-    daySpan: getCalendarDaySpan(posts.map(({ data }) => data.pubDate)),
+    daySpan: getInclusiveDayCount(startedAt),
+    startedAt,
   }
 }
 
@@ -137,11 +147,11 @@ export interface GroupedInsightYear {
 }
 
 /**
- * Retrieves all blog posts and groups them by publication year in descending order.
+ * Retrieves date-sorted blog items with reading metadata for list views.
  */
-export async function getGroupedPostsByYear(
-  collection: 'blogs'
-): Promise<GroupedBlogYear[]> {
+export async function getBlogListItems(
+  collection: 'blogs' = 'blogs'
+): Promise<GroupedBlogItem[]> {
   const items = await getFilteredPosts(collection)
   const sortedPosts = getSortedPosts(items)
 
@@ -163,6 +173,14 @@ export async function getGroupedPostsByYear(
     })
   )
 
+  return enrichedPosts
+}
+
+/** Keeps the existing year-based list on the same article data source. */
+export async function getGroupedPostsByYear(
+  collection: 'blogs'
+): Promise<GroupedBlogYear[]> {
+  const enrichedPosts = await getBlogListItems(collection)
   return enrichedPosts.reduce<GroupedBlogYear[]>((groups, item) => {
     const existingGroup = groups.find((group) => group.year === item.year)
 

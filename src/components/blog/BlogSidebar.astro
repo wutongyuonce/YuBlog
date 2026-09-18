@@ -1,0 +1,36 @@
+---
+import BlogProfile from './BlogProfile.astro'
+import RecentWriting from '~/components/home/RecentWriting.astro'
+import { getFilteredPosts } from '~/utils/data'
+import {
+  buildCategorySummary,
+  serializeBlogQuery,
+} from '~/utils/blog-browser.js'
+import { withBasePath } from '~/utils/path'
+
+const categories = buildCategorySummary(await getFilteredPosts('blogs'))
+---
+
+<aside class="blog-sidebar" aria-label="博客信息">
+  <BlogProfile />
+  <RecentWriting compact />
+  <section class="blog-categories" aria-labelledby="blog-categories-title">
+    <h2 id="blog-categories-title">分类</h2>
+    <ul>
+      {categories.map(({ category, count }) => (
+        <li>
+          <a
+            data-blog-category={category}
+            href={`${withBasePath('/')}${serializeBlogQuery({ category, tags: [], page: 1 })}`}
+          >
+            <span>{category}</span>
+            <span class="blog-categories__count">
+              {count}
+              <span class="sr-only"> 篇文章</span>
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+</aside>

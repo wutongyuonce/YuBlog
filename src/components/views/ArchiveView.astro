@@ -1,0 +1,46 @@
+---
+import { getGroupedPostsByYear } from '~/utils/data'
+import { withBasePath } from '~/utils/path'
+
+const groups = await getGroupedPostsByYear('blogs')
+---
+
+<div class="archive-timeline">
+  {groups.map((group) => (
+    <section class="archive-year" aria-labelledby={`archive-${group.year}`}>
+      <header class="archive-year__head">
+        <h2 id={`archive-${group.year}`}>{group.year}</h2>
+        <span class="archive-year__mark" aria-hidden="true"></span>
+        <p>{group.items.length} 篇文章</p>
+      </header>
+      <ol class="archive-year__posts">
+        {group.items.map((item) => {
+          const href =
+            item.data.redirect || withBasePath(`/blogs/${item.id}/`)
+          const dateTime = item.data.pubDate.toISOString()
+
+          return (
+            <li class="archive-post" style={`--i: ${item.idx}`}>
+              <time datetime={dateTime}>{dateTime.slice(5, 10)}</time>
+              <span class="archive-post__mark" aria-hidden="true"></span>
+              <a
+                class="archive-post__title"
+                href={href}
+                {...(item.data.redirect
+                  ? { target: '_blank', rel: 'noopener noreferrer' }
+                  : {})}
+              >
+                {item.data.title}
+              </a>
+              {item.data.tags.length > 0 && (
+                <p class="archive-post__tags">
+                  {item.data.tags.map((tag) => `#${tag}`).join(' ')}
+                </p>
+              )}
+            </li>
+          )
+        })}
+      </ol>
+    </section>
+  ))}
+</div>

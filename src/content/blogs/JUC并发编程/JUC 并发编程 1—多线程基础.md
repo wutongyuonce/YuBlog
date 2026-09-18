@@ -22,15 +22,15 @@ search: true
 
 批处理操作系统的瓶颈在于内存中只存在一个程序，那么内存中能不能存在多个程序呢？于是**提出了进程**。 进程就是应用程序在内存中分配的空间，也就是正在运行的程序，各个进程之间互不干扰。同时进程保存着程序每一个时刻运行的状态。
 
-<img src="/juc-img/GhrSTfNRsc2jFZM.jpg" alt="b040eadb-8aa1-4b2a-b587-2c0a6b4efa0b" style="zoom:67%;" />
+<img src="/blogs/juc-img/GhrSTfNRsc2jFZM.jpg" alt="b040eadb-8aa1-4b2a-b587-2c0a6b4efa0b" style="zoom:67%;" />
 
 使用**进程+CPU时间片轮转方式**的操作系统，在宏观上看起来同一时间段执行多个任务，换句话说，进程让操作系统的并发成为了可能。虽然并发从宏观上看有多个任务在执行，但在事实上，对于单核CPU来说，任意具体时刻都只有一个任务在占用CPU资源。
 
-<img src="/juc-img/hUkGafu7vztB4qR.png" alt="image-20221004132729868" style="zoom: 67%;" />
+<img src="/blogs/juc-img/hUkGafu7vztB4qR.png" alt="image-20221004132729868" style="zoom: 67%;" />
 
 在早期的计算机中，进程是拥有资源和独立运行的最小单位，也是程序执行的最小单位。但是，如果我希望两个任务同时进行，就必须运行两个进程，由于每个进程都有一个自己的内存空间，进程之间的通信就变得非常麻烦（比如要共享某些数据）而且执行不同进程会产生上下文切换，非常耗时，那么能否实现在一个进程中就能够执行多个任务呢？
 
-<img src="/juc-img/okgq3HEKGn6jBVw.png" alt="image-20221004132700554" style="zoom: 67%;" />
+<img src="/blogs/juc-img/okgq3HEKGn6jBVw.png" alt="image-20221004132700554" style="zoom: 67%;" />
 
 于是提出了线程，一个进程可以有多个线程，线程是程序执行中一个单一的顺序控制流程，现在线程才是程序执行流的最小单元，各个线程之间共享程序的内存空间（也就是所在进程的内存空间），上下文切换速度也高于进程。
 
@@ -195,7 +195,7 @@ public class EmptyMain {
 }
 ```
 
-<img src="/juc-img/image-20260101125328508.png" alt="image-20260101125328508" style="zoom:50%;" />
+<img src="/blogs/juc-img/image-20260101125328508.png" alt="image-20260101125328508" style="zoom:50%;" />
 
 | 方法                                    | 作用           |
 | ------------------------------------- | ------------ |
@@ -208,7 +208,7 @@ public class EmptyMain {
 
 ## 二、Java多线程类和接口
 
-![juc](/juc-img/juc.png)
+![juc](/blogs/juc-img/juc.png)
 
 ### Thread类和Runnable接口
 
@@ -890,7 +890,7 @@ ThreadGroup.setMaxPriority(int pri)
 
 ### Java线程的六种状态和转换
 
-![image-20260106002627819](/juc-img/image-20260106002627819.png)
+![image-20260106002627819](/blogs/juc-img/image-20260106002627819.png)
 
 ```java
 // Thread.State 源码
@@ -1128,7 +1128,7 @@ class Test {
 - 线程 1 执行 update 方法将 i 赋值为 100，一般情况下线程 1 会在自己的工作内存中完成赋值操作，但不会及时将新值刷新到主内存中。
 - 这个时候线程 2 执行 get 方法，首先会从主内存中读取 i 的值，然后加载到自己的工作内存中，此时读到 i 的值仍然是 50，再将 50 赋值给 j，最后返回 j 的值就是 50 了，这就是可见性问题，线程 A 修改了变量，线程 B 仍看到旧值（因 CPU 缓存或编译器优化）。
 
-<img src="/juc-img/thread-bring-some-problem-d91ca0c2-4f39-4e98-90e2-8acb793eb983.png" alt="thread-bring-some-problem-d91ca0c2-4f39-4e98-90e2-8acb793eb983" style="zoom: 33%;" />
+<img src="/blogs/juc-img/thread-bring-some-problem-d91ca0c2-4f39-4e98-90e2-8acb793eb983.png" alt="thread-bring-some-problem-d91ca0c2-4f39-4e98-90e2-8acb793eb983" style="zoom: 33%;" />
 
 > 可见性：当多个线程访问同一个变量时，一个线程修改了这个变量的值，其他线程能够立即看得到修改的值。
 
@@ -1178,7 +1178,7 @@ JMM 定义了一套**happens-before（先行发生）规则**，用来保证**�
 - 在每个volatile读操作后插入一个LoadLoad屏障；
 - 在每个volatile读操作后再插入一个LoadStore屏障。
 
-![image-20260108033326901](/juc-img/image-20260108033326901.png)
+![image-20260108033326901](/blogs/juc-img/image-20260108033326901.png)
 
 | 屏障类型       | 指令示例                     | 说明                                    |
 | ---------- | ------------------------ | ------------------------------------- |
@@ -1440,7 +1440,7 @@ new Thread(() -> table.put("key", "value"), "t2").start();
 
 其实死锁的概念在`操作系统`中也有提及，它是指两个线程相互持有对方需要的锁，但是又迟迟不释放，导致程序卡住：
 
-![image-20221004205058223](/juc-img/Ja6TPO23wCI8pvn.png)
+![image-20221004205058223](/blogs/juc-img/Ja6TPO23wCI8pvn.png)
 
 我们发现，线程A和线程B都需要对方的锁，但是又被对方牢牢把握，由于线程被无限期地阻塞，因此程序不可能正常终止。我们来看看以下这段代码会得到什么结果：
 
@@ -1689,7 +1689,7 @@ public class Test04 {
   21:04:01.816 c.Philosopher [苏格拉底] - 我踏马吃吃吃
   ```
 - 使用jconsole来检测一下是否发生了死锁
-  ![pCzX44H](/juc-img/pCzX44H.png)
+  ![pCzX44H](/blogs/juc-img/pCzX44H.png)
 - 确实是发生了死锁
   ```
   名称: 阿基米德

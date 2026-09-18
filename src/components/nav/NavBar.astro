@@ -1,183 +1,45 @@
 ---
-import LogoButton from '~/components/widgets/LogoButton.astro'
-import ProgressStats from '~/components/widgets/ProgressStats.astro'
-import Divider from '~/components/base/Divider.astro'
 import SearchSwitch from '~/components/widgets/SearchSwitch.astro'
 import ThemeSwitch from '~/components/widgets/ThemeSwitch.astro'
-import NavItem from '~/components/nav/NavItem.astro'
-import NavSwitch from '~/components/nav/NavSwitch.astro'
-
+import NavItem from './NavItem.astro'
+import Divider from '~/components/base/Divider.astro'
 import { UI } from '~/config'
-
-const { navBarLayout, internalNavs, socialLinks } = UI
-const { left, right, mergeOnMobile } = navBarLayout
-
-for (const item of new Set(left)) {
-  if (new Set(right).has(item)) {
-    throw new Error(
-      `Duplicate '${item}' found in both 'UI.navBarLayout.left' and 'UI.navBarLayout.right'.`
-    )
-  }
-}
+import { withBasePath } from '~/utils/path'
+const { internalNavs, socialLinks, navBarLayout } = UI
+const home = withBasePath('/')
 ---
 
-<header
-  class={`nav-bar flex items-center gap-6 p-[1.75rem_2rem_2rem] ${mergeOnMobile ? 'lt-md:px-7' : 'lt-md:(px-6 gap-3)'}`}
->
-  <div class="nav-bar__brand">
-    <LogoButton />
-    <ProgressStats />
-  </div>
-  <nav
-    class={`nav-bar__nav flex items-center gap-4.8 w-full lt-md:justify-end
-    ${left.length !== 0 ? (right.length !== 0 ? 'justify-between' : '') : 'justify-end'}`}
-    aria-label="Main menu"
-  >
-    {
-      left.length !== 0 && (
-        <div
-          class={`nav-bar__group nav-bar__group--left grid grid-flow-col items-center gap-4.8 print:op-0 ${mergeOnMobile ? '' : 'lt-md:(gap-3)'}`}
-        >
-          {left.map((key) =>
-            key === 'hr' ? (
-              <Divider class={mergeOnMobile ? 'lt-md:hidden' : undefined} />
-            ) : key === 'searchButton' ? (
-              <SearchSwitch />
-            ) : key === 'themeButton' ? (
-              <ThemeSwitch />
-            ) : key === 'internalNavs' ? (
-              internalNavs.map((item) => (
-                <NavItem type="internal" {item} {mergeOnMobile} />
-              ))
-            ) : (
-              socialLinks.map((item) => (
-                <NavItem type="social" {item} {mergeOnMobile} />
-              ))
-            )
-          )}
-        </div>
-      )
-    }
-    {
-      right.length !== 0 && (
-        <div
-          class={`nav-bar__group nav-bar__group--right grid grid-flow-col items-center gap-4.8 print:op-0
-              ${!right.includes('themeButton') && !right.includes('searchButton') && 'lt-md:hidden'}
-              ${mergeOnMobile ? '' : 'lt-md:(gap-3)'}`}
-        >
-          {right.map((key) =>
-            key === 'hr' ? (
-              <Divider class={mergeOnMobile ? 'lt-md:hidden' : undefined} />
-            ) : key === 'searchButton' ? (
-              <SearchSwitch />
-            ) : key === 'themeButton' ? (
-              <ThemeSwitch />
-            ) : key === 'internalNavs' ? (
-              internalNavs.map((item) => (
-                <NavItem type="internal" {item} {mergeOnMobile} />
-              ))
-            ) : (
-              socialLinks.map((item) => (
-                <NavItem type="social" {item} {mergeOnMobile} />
-              ))
-            )
-          )}
-        </div>
-      )
-    }
-    {
-      mergeOnMobile && (
-        <NavSwitch>
-          <Fragment slot="text">
-            {internalNavs.length !== 0 &&
-              internalNavs.map((item) => (
-                <NavItem
-                  type="internal"
-                  {item}
-                  {mergeOnMobile}
-                  mobileItemType="text"
-                />
+<header class="nav-bar">
+  <nav aria-label="主导航" class="nav-bar__inner">
+    {(['left', 'right'] as const).map((side) => (
+      <div class={`nav-bar__group nav-bar__group--${side}`}>
+        {side === 'left' && (
+          <a class="nav-bar__brand" href={home}>
+            WutongRain's Blog
+          </a>
+        )}
+        {navBarLayout[side].map((key) =>
+          key === 'internalNavs' ? (
+            <div class="nav-bar__pages">
+              {internalNavs.map((item) => (
+                <NavItem type="internal" {item} mergeOnMobile={false} />
               ))}
-            {socialLinks.length !== 0 &&
-              socialLinks.map((item) => (
-                <NavItem
-                  type="social"
-                  {item}
-                  {mergeOnMobile}
-                  mobileItemType="text"
-                />
+            </div>
+          ) : key === 'socialLinks' ? (
+            <div class="nav-bar__social">
+              {socialLinks.map((item) => (
+                <NavItem type="social" {item} mergeOnMobile={false} />
               ))}
-          </Fragment>
-          <Fragment slot="icon">
-            {internalNavs.length !== 0 &&
-              internalNavs.map((item) => (
-                <NavItem
-                  type="internal"
-                  {item}
-                  {mergeOnMobile}
-                  mobileItemType="icon"
-                />
-              ))}
-            {socialLinks.length !== 0 &&
-              socialLinks.map((item) => (
-                <NavItem
-                  type="social"
-                  {item}
-                  {mergeOnMobile}
-                  mobileItemType="icon"
-                />
-              ))}
-          </Fragment>
-        </NavSwitch>
-      )
-    }
+            </div>
+          ) : key === 'searchButton' ? (
+            <SearchSwitch />
+          ) : key === 'themeButton' ? (
+            <ThemeSwitch />
+          ) : (
+            <Divider />
+          )
+        )}
+      </div>
+    ))}
   </nav>
 </header>
-
-<style>
-  .nav-bar {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    padding: 1.75rem 2rem 2rem;
-  }
-
-  .nav-bar__nav {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    gap: 1.2rem;
-  }
-
-  .nav-bar__brand {
-    display: flex;
-    align-items: center;
-    flex: none;
-  }
-
-  .nav-bar__group {
-    display: grid;
-    grid-auto-flow: column;
-    align-items: center;
-    gap: 1.2rem;
-  }
-
-  .nav-bar__group--right {
-    margin-left: auto;
-  }
-
-  @media (max-width: 767.9px) {
-    .nav-bar {
-      gap: 0.75rem;
-      padding-inline: 1rem;
-    }
-
-    .nav-bar__nav {
-      justify-content: flex-end;
-    }
-
-    .nav-bar__group {
-      gap: 0.75rem;
-    }
-  }
-</style>

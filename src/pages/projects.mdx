@@ -1,12 +1,11 @@
 ---
-title: Projects
-subtitle: Currently Working on
-description: My categorized Projects List
-bgType: plum
+title: 项目
+description: 我的项目与开源实践
+bgType: rose
 ---
 
 import BaseLayout from '~/layouts/BaseLayout.astro'
-import StandardLayout from '~/layouts/StandardLayout.astro'
+import BlogIndexLayout from '~/layouts/BlogIndexLayout.astro'
 import GroupView from '~/components/views/GroupView.astro'
 
 <BaseLayout
@@ -14,12 +13,8 @@ import GroupView from '~/components/views/GroupView.astro'
   description={frontmatter.description}
   bgType={frontmatter.bgType}
 >
-  <StandardLayout
-    class="max-w-300 group/content"
-    title={frontmatter.title}
-    subtitle={frontmatter.subtitle}
-    isCentered={true}
-  >
-    <GroupView slot="article" collectionType="projects" />
-  </StandardLayout>
+  <BlogIndexLayout>
+    <h1 class="sr-only">{frontmatter.title}</h1>
+    <GroupView collectionType="projects" />
+  </BlogIndexLayout>
 </BaseLayout>

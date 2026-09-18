@@ -62,7 +62,7 @@ memU 给现有各个 Agent 增加一套跨会话记忆能力。
 
 ## 3. 先看整体架构，不急着看类名
 
-<img src="/memu/structure-v2.png" alt="memU memory system architecture" style="zoom: 45%;" />
+<img src="/blogs/memu-img/structure-v2.png" alt="memU memory system architecture" style="zoom: 45%;" />
 
 从上到下，memU 可以理解成五层：
 
@@ -102,7 +102,7 @@ memU 给现有各个 Agent 增加一套跨会话记忆能力。
 
 ## 4. memU 实际怎样运行：它主要是一组 CLI
 
-<img src="/memu/skill-extraction.png" alt="How memU turns agent history into reusable skills" style="zoom:40%;" />
+<img src="/blogs/memu-img/skill-extraction.png" alt="How memU turns agent history into reusable skills" style="zoom:40%;" />
 
 ### 4.1 安装了什么
 

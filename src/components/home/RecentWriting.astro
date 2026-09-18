@@ -3,66 +3,74 @@ import { getRecentBlogPosts } from '~/utils/data'
 import { formatRecentPostDate } from '~/utils/recent-post-date.js'
 import { withBasePath } from '~/utils/path'
 
+interface Props {
+  compact?: boolean
+}
+const { compact = false } = Astro.props
+
 const posts = await getRecentBlogPosts()
 ---
 
-{
-  posts.length > 0 && (
-    <section class="recent-writing" aria-labelledby="recent-writing-title">
-      <header class="recent-writing__header">
-        <p>RECENT WRITING</p>
-        <h2 id="recent-writing-title">近期笔墨</h2>
-      </header>
+{posts.length > 0 && (
+  <section
+    class:list={['recent-writing', { 'recent-writing--compact': compact }]}
+    aria-labelledby="recent-writing-title"
+  >
+    <header class="recent-writing__header">
+      {!compact && <p>RECENT WRITING</p>}
+      <h2 id="recent-writing-title">近期文章</h2>
+    </header>
 
-      <ol class="recent-writing__timeline">
-        {posts.map(({ id, data }, index) => {
-          const dateTime = data.pubDate.toISOString()
+    <ol class="recent-writing__timeline">
+      {posts.map(({ id, data }, index) => {
+        const dateTime = data.pubDate.toISOString()
 
-          return (
-            <li class="recent-writing__item">
+        return (
+          <li class="recent-writing__item">
+            {!compact && (
               <span class="recent-writing__number" aria-hidden="true">
                 {String(index + 1).padStart(2, '0')}
               </span>
+            )}
 
-              <div class="recent-writing__content">
-                <a
-                  class="recent-writing__link"
-                  href={withBasePath(`/blogs/${id}/`)}
-                >
-                  {data.title}
-                </a>
-                {data.tags.length > 0 && (
-                  <p class="recent-writing__tags">
-                    {data.tags.slice(0, 4).map((tag, index) => (
-                      <>
-                        {index > 0 && <span aria-hidden="true">·</span>}
-                        <span>{tag}</span>
-                      </>
-                    ))}
-                    {data.tags.length > 4 && (
-                      <>
-                        <span aria-hidden="true">·</span>
-                        <span aria-hidden="true">…</span>
-                      </>
-                    )}
-                  </p>
-                )}
-              </div>
-
-              <time
-                class="recent-writing__date"
-                datetime={dateTime}
-                data-recent-post-date={dateTime}
+            <div class="recent-writing__content">
+              <a
+                class="recent-writing__link"
+                href={withBasePath(`/blogs/${id}/`)}
               >
-                {formatRecentPostDate(data.pubDate)}
-              </time>
-            </li>
-          )
-        })}
-      </ol>
-    </section>
-  )
-}
+                {data.title}
+              </a>
+              {!compact && data.tags.length > 0 && (
+                <p class="recent-writing__tags">
+                  {data.tags.slice(0, 4).map((tag, index) => (
+                    <>
+                      {index > 0 && <span aria-hidden="true">·</span>}
+                      <span>{tag}</span>
+                    </>
+                  ))}
+                  {data.tags.length > 4 && (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <span aria-hidden="true">…</span>
+                    </>
+                  )}
+                </p>
+              )}
+            </div>
+
+            <time
+              class="recent-writing__date"
+              datetime={dateTime}
+              data-recent-post-date={dateTime}
+            >
+              {formatRecentPostDate(data.pubDate)}
+            </time>
+          </li>
+        )
+      })}
+    </ol>
+  </section>
+)}
 
 <style>
   .recent-writing {
@@ -257,6 +265,48 @@ const posts = await getRecentBlogPosts()
       padding-top: 0;
       font-size: 0.82rem;
     }
+  }
+  .recent-writing--compact {
+    margin: 0;
+  }
+  .recent-writing--compact::before {
+    display: none;
+  }
+  .recent-writing--compact .recent-writing__header h2 {
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    opacity: 0.65;
+  }
+  .recent-writing--compact .recent-writing__timeline {
+    margin-top: 0.85rem;
+  }
+  .recent-writing--compact .recent-writing__timeline::before {
+    left: 0;
+    top: 0;
+    bottom: 0.2rem;
+  }
+  .recent-writing--compact .recent-writing__item {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 0.65rem;
+    align-items: baseline;
+    padding: 0 0 0.75rem 0.85rem;
+  }
+  .recent-writing--compact .recent-writing__link {
+    font-family: inherit;
+    font-size: 0.92rem;
+    font-weight: 400;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+  }
+  .recent-writing--compact .recent-writing__date {
+    padding: 0;
+    font-family: inherit;
+    font-size: 0.75rem;
+    line-height: 1.55;
+    white-space: nowrap;
+    text-align: right;
   }
 </style>
 

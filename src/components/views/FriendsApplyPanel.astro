@@ -6,7 +6,7 @@ const prUrl =
   'https://github.com/wutongyuonce/YuBlog/edit/main/src/content/friends/data.json'
 
 const friendInfo = {
-  name: 'wutong-rain',
+  name: 'CN：梧桐雨/EN：WutongRain，选一个',
   desc: 'Coding, Living and Loving.',
   link: 'https://www.wutongyu.site/',
   avatar: 'https://www.wutongyu.site/avatar.webp',
@@ -20,7 +20,6 @@ Avatar: ${friendInfo.avatar}`
 
 <aside class="friends-apply" aria-label="申请友链">
   <section class="friends-apply__intro">
-    <p class="friends-apply__kicker">Apply</p>
     <h3>交换友链</h3>
     <ol class="friends-apply__rules">
       <li>
@@ -36,23 +35,28 @@ Avatar: ${friendInfo.avatar}`
       在仓库的 <code>{dataFilePath}</code> 数组末尾追加一条对象，补上上一项的逗号，然后提交
       Pull Request。
     </p>
-    <Link href={prUrl} external={true} class="friends-apply__pr op-100">
+    <Link href={prUrl} external={true} class="friends-apply__pr">
       在 GitHub 提交 PR
     </Link>
   </section>
 
-  <section class="friends-apply__block">
-    <h3>参考格式</h3>
-    <div class="friends-apply__code-wrap">
+  <section class="friends-apply__block" aria-label="参考格式">
+    <h3 class="sr-only">参考格式</h3>
+    <div class="friends-apply__editor">
+      <header class="friends-apply__titlebar">
+        <span class="friends-apply__dots" aria-hidden="true">
+          <i></i><i></i><i></i>
+        </span>
+        <span class="friends-apply__filename">friend.txt</span>
+        <button
+          class="friends-apply__copy"
+          type="button"
+          data-copy-target="friend-format"
+        >
+          复制
+        </button>
+      </header>
       <pre id="friend-format">{referenceTemplate}</pre>
-      <button
-        class="friends-apply__copy"
-        type="button"
-        data-copy-target="friend-format"
-        aria-label="复制参考格式"
-      >
-        复制
-      </button>
     </div>
   </section>
 </aside>
@@ -81,20 +85,9 @@ Avatar: ${friendInfo.avatar}`
 <style>
   .friends-apply {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    align-items: stretch;
-    border: 1px solid var(--friends-border);
-    border-radius: 1.8rem;
-    background: var(--friends-panel-bg);
-    overflow: hidden;
-  }
-
-  .friends-apply__intro {
-    padding: 1.25rem 1.15rem 1.35rem 1.3rem;
-  }
-
-  .friends-apply__block {
-    padding: 1.25rem 1.5rem 1.35rem 1.2rem;
+    grid-template-columns: minmax(0, 1fr) minmax(16rem, 1.05fr);
+    gap: 1.5rem 1.75rem;
+    align-items: start;
   }
 
   .friends-apply__intro {
@@ -102,30 +95,14 @@ Avatar: ${friendInfo.avatar}`
     align-content: start;
     gap: 0.65rem;
     min-width: 0;
-    border-right: 1px solid var(--friends-border);
-  }
-
-  .friends-apply__kicker {
-    margin: 0;
-    color: var(--friends-subtle);
-    font-size: 0.82rem;
-    letter-spacing: 0.02em;
-  }
-
-  .friends-apply h3 {
-    margin: 0;
-    color: var(--friends-subtle);
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    padding: 0.35rem 0.15rem 0;
   }
 
   .friends-apply__intro h3 {
+    margin: 0;
     color: var(--c-text);
     font-size: 1.05rem;
-    letter-spacing: 0;
-    text-transform: none;
+    font-weight: 600;
   }
 
   .friends-apply__rules {
@@ -183,7 +160,10 @@ Avatar: ${friendInfo.avatar}`
     color: var(--friends-muted);
     font-size: 0.86rem;
     line-height: 1.4;
-    transition: border-color 180ms ease, color 180ms ease;
+    opacity: 1;
+    transition:
+      border-color 180ms ease,
+      color 180ms ease;
   }
 
   .friends-apply__pr:hover {
@@ -192,41 +172,84 @@ Avatar: ${friendInfo.avatar}`
   }
 
   .friends-apply__block {
-    display: grid;
-    align-content: start;
-    gap: 0.75rem;
     min-width: 0;
   }
 
-  .friends-apply__code-wrap {
-    position: relative;
+  .friends-apply__editor {
+    overflow: hidden;
+    border: 1px solid var(--friends-border);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--c-bg) 92%, var(--c-text) 8%);
+    box-shadow: 0 10px 24px color-mix(in srgb, var(--c-text) 8%, transparent);
+  }
+
+  .friends-apply__titlebar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.65rem;
+    min-height: 2.15rem;
+    padding: 0 0.55rem 0 0.75rem;
+    border-bottom: 1px solid var(--friends-border);
+    background: color-mix(in srgb, var(--c-bg) 82%, var(--c-text) 18%);
+  }
+
+  .friends-apply__dots {
+    display: flex;
+    gap: 0.32rem;
+  }
+
+  .friends-apply__dots i {
+    width: 0.62rem;
+    height: 0.62rem;
+    border-radius: 50%;
+    background: #ff5f57;
+  }
+
+  .friends-apply__dots i:nth-child(2) {
+    background: #febc2e;
+  }
+
+  .friends-apply__dots i:nth-child(3) {
+    background: #28c840;
+  }
+
+  .friends-apply__filename {
+    overflow: hidden;
+    color: var(--friends-muted);
+    font-family:
+      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'DM Mono',
+      monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .friends-apply pre {
     margin: 0;
-    padding: 0.9rem 3.6rem 0.9rem 0.9rem;
-    border: 1px solid var(--friends-border);
-    border-radius: 0.9rem;
-    background: var(--c-bg);
+    min-height: 9.5rem;
+    padding: 1rem 1rem 1.15rem;
     color: var(--c-text);
-    font-size: 0.84rem;
-    line-height: 1.65;
+    font-family:
+      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'DM Mono',
+      monospace;
+    font-size: 0.82rem;
+    line-height: 1.7;
     overflow-wrap: anywhere;
     white-space: pre-wrap;
   }
 
   .friends-apply__copy {
-    position: absolute;
-    top: 0.55rem;
-    right: 0.55rem;
-    padding: 0.35rem 0.65rem;
+    padding: 0.18rem 0.55rem;
     border: 1px solid var(--friends-border);
-    border-radius: 0.55rem;
-    background: var(--c-bg);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--c-bg) 88%, var(--c-text) 12%);
     color: var(--friends-muted);
     cursor: pointer;
     font: inherit;
-    font-size: 0.78rem;
+    font-size: 0.72rem;
   }
 
   .friends-apply__copy:hover {
@@ -236,22 +259,11 @@ Avatar: ${friendInfo.avatar}`
   @media (max-width: 920px) {
     .friends-apply {
       grid-template-columns: 1fr;
-      border-radius: 1.25rem;
-    }
-
-    .friends-apply__intro,
-    .friends-apply__block {
-      padding: 1.1rem;
+      gap: 1.6rem;
     }
 
     .friends-apply__intro {
-      border-right: 0;
-      border-bottom: 1px solid var(--friends-border);
-    }
-
-    .friends-apply pre {
-      padding: 0.8rem 3.4rem 0.8rem 0.8rem;
-      font-size: 0.82rem;
+      padding: 0;
     }
   }
 </style>

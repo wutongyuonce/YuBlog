@@ -4,10 +4,9 @@ export const SITE: Site = {
   website: 'https://www.wutongyu.site/',
   base: '/',
   title: 'Wutong Yu',
-  description:
-    'A streamlined Astro Antfu-style site with blog, projects, search, and theme switching.',
+  description: 'WutongRain 的技术文章、工具笔记与项目记录。',
   author: 'Wutong Yu',
-  lang: 'en',
+  lang: 'zh-CN',
   imageDomains: [],
 }
 
@@ -15,33 +14,39 @@ export const UI: Ui = {
   internalNavs: [
     {
       path: '/',
-      title: 'Home',
+      title: '首页',
       displayMode: 'alwaysText',
-      text: 'Home',
+      text: '首页',
     },
     {
-      path: '/blogs',
-      title: 'Blog',
+      path: '/tags',
+      title: '标签',
       displayMode: 'alwaysText',
-      text: 'Blogs',
+      text: '标签',
+    },
+    {
+      path: '/archives',
+      title: '归档',
+      displayMode: 'alwaysText',
+      text: '归档',
     },
     {
       path: '/projects',
-      title: 'Projects',
+      title: '项目',
       displayMode: 'alwaysText',
-      text: 'Projects',
+      text: '项目',
     },
     {
-      path: '/insights',
-      title: 'Insights',
+      path: '/about',
+      title: '关于',
       displayMode: 'alwaysText',
-      text: 'Insights',
+      text: '关于',
     },
     {
       path: '/friends',
-      title: 'Friends',
+      title: '友链',
       displayMode: 'alwaysText',
-      text: 'Friends',
+      text: '友链',
     },
   ],
   socialLinks: [
@@ -58,6 +63,18 @@ export const UI: Ui = {
       icon: 'i-simple-icons-x',
     },
     {
+      link: 'https://www.instagram.com/wutongyu0730',
+      title: 'Instagram',
+      displayMode: 'alwaysIcon',
+      icon: 'i-simple-icons-instagram',
+    },
+    {
+      link: 'https://space.bilibili.com/521627597',
+      title: 'Bilibili',
+      displayMode: 'alwaysIcon',
+      icon: 'i-simple-icons-bilibili',
+    },
+    {
       link: 'https://www.xiaohongshu.com/user/profile/64842572000000001f005e63',
       title: 'Xiaohongshu',
       displayMode: 'alwaysIcon',
@@ -65,16 +82,9 @@ export const UI: Ui = {
     },
   ],
   navBarLayout: {
-    left: [],
-    right: [
-      'internalNavs',
-      'hr',
-      'socialLinks',
-      'hr',
-      'searchButton',
-      'themeButton',
-    ],
-    mergeOnMobile: true,
+    left: ['internalNavs'],
+    right: ['socialLinks', 'hr', 'searchButton', 'themeButton'],
+    mergeOnMobile: false,
   },
   postView: {
     postMetaStyle: 'minimal',
