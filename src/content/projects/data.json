@@ -2,61 +2,62 @@
   {
     "id": "XingClaw",
     "link": "https://github.com/wutongyuonce/XingClaw",
-    "desc": "miniopenclaw agent",
+    "desc": "miniopenclaw",
     "category": "Agent"
   },
   {
     "id": "Trajex",
     "link": "https://github.com/wutongyuonce/Trajex",
-    "desc": "数万行散落的 Claude Code、Codex 与 Pi JSONL 会话，索引至同一个 SQLite 中：Agent 可通过 CLI 实现毫秒级查询，用户可通过 App 直观浏览",
+    "desc": "数万行散落的 Claude Code、Codex 与 Pi JSONL 会话，索引至同一个 SQLite 中",
     "category": "Agent"
   },
   {
     "id": "pi-deep-dive",
     "link": "https://github.com/wutongyuonce/pi-deep-dive",
-    "desc": "A deep-dive analysis and source code walkthrough of Pi",
+    "desc": "pi的源码解析、二次开发教程",
     "category": "Agent"
+  },
+  {
+    "id": "Replica",
+    "link": "https://github.com/wutongyuonce/Replica",
+    "desc": "Memory Layer for AI",
+    "category": "Agent"
+  },
+  {
+    "id": "pi-zen-mode",
+    "link": "https://github.com/wutongyuonce/pi-zen-mode",
+    "desc": "pi 的专注模式扩展",
+    "category": "Agent"
+  },
+  {
+    "id": "pr-lifecycle",
+    "link": "https://github.com/wutongyuonce/pr-lifecycle",
+    "desc": "开启并监督 Agent 完成一个 PR 的完整生命周期",
+    "category": "Personal"
   },
   {
     "id": "skills",
     "link": "https://github.com/wutongyuonce/skills",
-    "desc": "A deep-dive analysis and source code walkthrough of Pi",
+    "desc": "我平时使用的 skill",
     "category": "Personal"
   },
+
   {
     "id": "pi-extensions",
     "link": "https://github.com/wutongyuonce/pi-extensions",
-    "desc": "Extensions of Pi",
+    "desc": "我平时使用和推荐的 pi 扩展集合",
     "category": "Personal"
-  },
-  {
-    "id": "MODULAR-RAG-MCP-SERVER",
-    "link": "https://github.com/wutongyuonce/MODULAR-RAG-MCP-SERVER",
-    "desc": "MODULAR-RAG-MCP-SERVER",
-    "category": "RAG"
-  },
-  {
-    "id": "PageIndexRag-Web",
-    "link": "https://github.com/wutongyuonce/PageIndexRag-Web",
-    "desc": "PageIndexRag-Web",
-    "category": "RAG"
   },
   {
     "id": "RepoMirror",
     "link": "https://github.com/wutongyuonce/RepoMirror",
-    "desc": "RepoMirror",
+    "desc": "将GitHub仓库或仓库子目录镜像到本地文件夹树的 macOS 桌面应用",
     "category": "APP"
   },
   {
     "id": "YuBlog",
     "link": "https://github.com/wutongyuonce/YuBlog",
-    "desc": "my personal website",
+    "desc": "黑白极简开源Astro博客主题",
     "category": "Frontend"
-  },
-  {
-    "id": "fire-detection",
-    "link": "https://github.com/wutongyuonce/fire-detection",
-    "desc": "a real-time fire-detection system using yolo-8",
-    "category": "Backend"
   }
 ]

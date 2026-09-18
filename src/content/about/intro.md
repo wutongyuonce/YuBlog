@@ -4,7 +4,9 @@ order: 0
 tab: false
 ---
 
-我的网名是梧桐雨，因为 tong 和 yu 是我名字的其中两个字。INTJ。河海大学物联网工程专业。正在申请香港 CS Msc，也在找 Agent 方向的实习。喜欢写代码，也喜欢研究设计优雅、极简的系统。最近研究的领域：Long-horizon Harness、Agent Memory、Sandbox、Computer Use。
+我的网名是梧桐雨，mbti 是 INTJ。正在申请香港 CS Msc，也在找 Agent 方向的 Intern。喜欢写代码，也喜欢研究设计优雅、极简的系统。最近研究的领域：Long-horizon Harness、Agent Memory、Sandbox、Computer Use。
+
+我的简历放在这：...
 
 这个博客是我的工作台：技术向写系统、模型和工程，工具向写自己真正用过的东西，未来会加上我的生活。不追求更新频率，只希望在这个世界留下点痕迹。
 
