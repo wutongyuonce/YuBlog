@@ -1,7 +1,7 @@
 ---
 title: RAG 系统测试——以电商 APP 客服问答为例
 description: 以虚构电商客服场景为例，拆解 RAG 的意图识别、召回、精准率、生成忠实度和系统性能测试。
-pubDate: 2026-08-31
+pubDate: 2026-08-16
 tags: [RAG, Eval]
 toc: true
 search: true

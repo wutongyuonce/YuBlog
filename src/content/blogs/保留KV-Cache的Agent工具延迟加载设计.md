@@ -2,7 +2,7 @@
 title: 保留 KV Cache 的 Agent 工具延迟加载设计
 description: 讲 Anthropic、OpenAI 如何把工具 schema 推迟到历史加载点，以及 Pi 怎样在不改写缓存前缀的前提下做延迟加载。
 pubDate: 2026-09-19
-tags: [Agent, Tools]
+tags: [Agent, Tools, KV Cache]
 titleImage: /blog-title-images/eva.webp
 titleImageAlt: EVA 动漫壁纸
 toc: true
