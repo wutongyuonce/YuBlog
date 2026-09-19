@@ -2,7 +2,7 @@
 title: DeepSeek Harness 架构解析：从 Cordis 到一切皆插件的 Agent Runtime
 description: 解析 DeepSeek Harness 如何用 Cordis 将 Agent Runtime 拆解为可组合插件。
 pubDate: 2026-08-15
-tags: [DSH, Agent Harness]
+tags: [DSH, Agent]
 ---
 
 DeepSeek Harness（DSH）首先是一个基于 Cordis 的 Agent 运行时。它的目标不是像 [pi](https://github.com/earendil-works/pi) 一样提供一个固定 Agent 核心，再允许用户在外围增加功能；它把组成 Agent 的能力（llm、session、tools、system-prompt等）拆开，通过插件配置把它们组装成一个具体产品。

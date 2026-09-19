@@ -1,21 +1,21 @@
 ---
-title: Agent Harness
+title: Harness Engineering
 description: 从 ReAct Loop 讲到 Plan、Workflow 和 Dynamic Workflow，梳理 Agent Harness 各层职责。
 pubDate: 2026-07-10
-tags: [Agent Harness]
+tags: [Agent]
 toc: true
 search: true
 ---
 
-<img src="/blogs/agent-harness-img/PixPin_2026-08-05_13-26-30.png" alt="PixPin_2026-08-05_13-26-30" style="zoom:50%;" />
-
 ## Harness Engineering
 
-![taxonomy](/blogs/agent-harness-img/taxonomy.png)
+<img src="/blogs/harness-engineering-img/PixPin_2026-08-05_13-26-30.png" alt="PixPin_2026-08-05_13-26-30" style="zoom:50%;" />
 
-![com.xingin.xhs_20260516210416](/blogs/agent-harness-img/com.xingin.xhs_20260516210416.png)
+![taxonomy](/blogs/harness-engineering-img/taxonomy.png)
 
-<img src="/blogs/agent-harness-img/Harness%20101：从%20ReAct%20Loop%20讲起-image-3.png" alt="Harness 101：从 ReAct Loop 讲起-image-3" style="zoom:50%;" />
+![com.xingin.xhs_20260516210416](/blogs/harness-engineering-img/com.xingin.xhs_20260516210416.png)
+
+<img src="/blogs/harness-engineering-img/Harness%20101：从%20ReAct%20Loop%20讲起-image-3.png" alt="Harness 101：从 ReAct Loop 讲起-image-3" style="zoom:50%;" />
 
 * **Agent Loop**：Harness 的运行核心，驱动 LLM ↔ Tool ↔ Context 的循环调度，每一轮都要决定"调工具还是出终态"。
 * **Tool Layer**：Agent 在每一步 Loop 里可调用的能力集合。
@@ -60,7 +60,7 @@ search: true
 
 ## Harness 范式的演进
 
-![Harness 101：从 ReAct Loop 讲起-diagram](/blogs/agent-harness-img/Harness%20101：从%20ReAct%20Loop%20讲起-diagram.png)
+![Harness 101：从 ReAct Loop 讲起-diagram](/blogs/harness-engineering-img/Harness%20101：从%20ReAct%20Loop%20讲起-diagram.png)
 
 每一级往上加的东西都极少：多轮只是让 loop 多转几圈；Plan 只是在 loop 外头多塞一条 TODO；Coding Agent 只是把 Tool 从 `web_search` 换成 `read_file`、`write_file`、`edit_file`、`bash`；Offloading 和 Skill 解决的则是「东西多到塞不进 Context Window」之后的两个不同方向的妥协。
 
@@ -68,25 +68,25 @@ search: true
 
 * 发起单次工具调用：
 
-  <img src="/blogs/agent-harness-img/Harness%20101：从%20ReAct%20Loop%20讲起-diagram-1.png" alt="Harness 101：从 ReAct Loop 讲起-diagram-1" style="zoom:33%;" />
+  <img src="/blogs/harness-engineering-img/Harness%20101：从%20ReAct%20Loop%20讲起-diagram-1.png" alt="Harness 101：从 ReAct Loop 讲起-diagram-1" style="zoom:33%;" />
 
 * 发起多次工具调用（一次 emit 多个 tool\_call）：
 
-  <img src="/blogs/agent-harness-img/Harness%20101：从%20ReAct%20Loop%20讲起-diagram-2.png" alt="Harness 101：从 ReAct Loop 讲起-diagram-2" style="zoom:33%;" />
+  <img src="/blogs/harness-engineering-img/Harness%20101：从%20ReAct%20Loop%20讲起-diagram-2.png" alt="Harness 101：从 ReAct Loop 讲起-diagram-2" style="zoom:33%;" />
 
 #### tool_calls 工具调用
 
-![LLM三大天生局限工具解决](/blogs/agent-harness-img/chapter_tools_01_llm_limits.svg)
+![LLM三大天生局限工具解决](/blogs/harness-engineering-img/chapter_tools_01_llm_limits.svg)
 
 Function Calling 是 OpenAI 于 2023 年 6 月推出的重要特性，让模型能够输出结构化的函数调用指令。2024 年 8 月，OpenAI 进一步推出了 **Structured Outputs**（结构化输出），确保模型生成的参数 100% 符合 JSON Schema，大幅提升了生产环境的可靠性。理解其完整机制，是构建可靠 Agent 的基础。
 
-![chapter_tools_02_function_calling](/blogs/agent-harness-img/chapter_tools_02_function_calling.svg)
+![chapter_tools_02_function_calling](/blogs/harness-engineering-img/chapter_tools_02_function_calling.svg)
 
 ### 多轮 ReAct Loop
 
-![Agent感知-思考-行动循环](/blogs/agent-harness-img/chapter_intro_03_loop.svg)
+![Agent感知-思考-行动循环](/blogs/harness-engineering-img/chapter_intro_03_loop.svg)
 
-<img src="/blogs/agent-harness-img/Harness%20101：从%20ReAct%20Loop%20讲起-diagram-3.png" alt="Harness 101：从 ReAct Loop 讲起-diagram-3" style="zoom:33%;" />
+<img src="/blogs/harness-engineering-img/Harness%20101：从%20ReAct%20Loop%20讲起-diagram-3.png" alt="Harness 101：从 ReAct Loop 讲起-diagram-3" style="zoom:33%;" />
 
 谁决定 loop 什么时候停：**决定 loop 停机的不是 harness，而是 LLM 自己**。
 
@@ -222,9 +222,9 @@ async function runAgent(sessionId: string, userInput: string) {
 
 一个 TODOs 看上去是这样的：
 
-<img src="/blogs/agent-harness-img/image-20260728161427551.png" alt="image-20260728161427551" style="zoom:50%;" />
+<img src="/blogs/harness-engineering-img/image-20260728161427551.png" alt="image-20260728161427551" style="zoom:50%;" />
 
-![Harness 101：从 ReAct Loop 讲起-diagram-5](/blogs/agent-harness-img/Harness%20101：从%20ReAct%20Loop%20讲起-diagram-5.png)
+![Harness 101：从 ReAct Loop 讲起-diagram-5](/blogs/harness-engineering-img/Harness%20101：从%20ReAct%20Loop%20讲起-diagram-5.png)
 
 实战中会撞见两个小坑：
 
@@ -265,7 +265,7 @@ Harness 的解法叫 **nudge（提醒 / 推一把）**，也叫 **system-reminde
 
 画成时序图更清楚：
 
-<img src="/blogs/agent-harness-img/Harness%20101：从%20ReAct%20Loop%20讲起-diagram-6.png" alt="Harness 101：从 ReAct Loop 讲起-diagram-6" style="zoom:33%;" />
+<img src="/blogs/harness-engineering-img/Harness%20101：从%20ReAct%20Loop%20讲起-diagram-6.png" alt="Harness 101：从 ReAct Loop 讲起-diagram-6" style="zoom:33%;" />
 
 注意 Harness 的两个动作：一是把 `tool_result` 原样回传给 LLM；二是在检查到「当前 todo list 非空」时，**额外**追加一条 system-reminder。两件事在同一个消息里交给 LLM，看起来像是「工具返回自带了一句 nudge」。
 
@@ -295,7 +295,7 @@ Workflow 的多种模式：
 | 编排器-工作者 | 已有“计划 → `parallel()` 分派 → 综合”的 fan-in/out 现成模式；不是内置 `spawn` 工具，而是由工作流代码显式调度。 |
 | 评估器-优化器 | 用顺序 `agent()` 加 `while` 循环实现：生成、评估、反馈、重写，达到阈值或次数上限即结束。 |
 
-![五种常见控制模式](/blogs/agent-harness-img/five_agent_patterns.svg)
+![五种常见控制模式](/blogs/harness-engineering-img/five_agent_patterns.svg)
 
 一个最小化的 DAG 引擎通常包含以下核心模块：
 
