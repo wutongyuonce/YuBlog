@@ -2,6 +2,7 @@
 title: Agent 开发习惯
 description: 从配置管理、共享状态到异步调用、日志、异常处理与 Prompt 编写，整理 Agent 服务开发中的实用规范。
 pubDate: 2026-08-06
+category: 技术向
 tags: [Agent]
 toc: true
 search: true

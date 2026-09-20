@@ -7,7 +7,6 @@ import PostMeta from '~/components/base/PostMeta.astro'
 import PostHero from '~/components/base/PostHero.astro'
 import Warning from '~/components/base/Warning.astro'
 import DesktopAside from '~/components/base/DesktopAside.astro'
-import PostCover from '~/components/base/PostCover.astro'
 import Toc from '~/components/toc/Toc.astro'
 import MobileTocControl from '~/components/toc/MobileTocControl.astro'
 
@@ -39,8 +38,6 @@ const minutesRead = getMinutesRead(
 const tags = frontmatter.tags
 const isDraft = frontmatter.draft
 
-const cover = frontmatter.cover
-const coverAlt = frontmatter.coverAlt
 const titleImage = frontmatter.titleImage
 const titleImageAlt = frontmatter.titleImageAlt
 
@@ -102,7 +99,6 @@ frontmatter to <code>false</code> or remove it to publish the post.`
           <MobileTocControl {headings} />
         </Toc>
       )}
-      <PostCover {cover} {coverAlt} />
       <Content />
     </Fragment>
   </StandardLayout>

@@ -65,7 +65,11 @@ def validate_blog(root: Path, relative_path: str) -> None:
     except ValueError:
         fail(f"{relative_path}: pubDate must use YYYY-MM-DD")
 
-    for key in ("cover", "redirect"):
+    category = data.get("category")
+    if not isinstance(category, str) or not category.strip():
+        fail(f"{relative_path}: category is required")
+
+    for key in ("redirect",):
         value = data.get(key)
         if value and not is_http_url(value):
             print(f"WARN: {relative_path}: {key} is not an http(s) URL; Astro will validate a local reference.")

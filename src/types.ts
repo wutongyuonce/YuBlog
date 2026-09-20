@@ -367,14 +367,6 @@ interface PostView {
    * On mobile devices, the modified date (if present) is hidden.
    */
   postMetaStyle: 'minimal' | 'icon'
-
-  /**
-   * Whether to show the custom frontmatter `coverAlt` as the cover caption.
-   *
-   * If `true`, the `coverAlt` text will appear below the cover image.
-   * You can style it in `src/components/views/RenderPost.astro`.
-   */
-  useCoverAltAsCaption: boolean
 }
 
 interface GroupView {
@@ -443,7 +435,7 @@ export interface Ui {
   /**
    * Configures the post UIs.
    *
-   * Used in `src/components/base/PostMeta.astro`and `src/components/base/PostCover.astro`.
+   * Used in `src/components/base/PostMeta.astro`.
    */
   postView: PostView
 

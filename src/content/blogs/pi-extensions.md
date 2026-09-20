@@ -2,6 +2,7 @@
 title: 我的生产 Pi Extensions 合集
 description: 记录当前实际装进 Pi 的 extensions、各自干什么、怎么用，以及几个没装但值得看的替代。
 pubDate: 2026-09-10
+category: 技术向
 lastModDate: ''
 tags: [Pi, Agent]
 titleImage: /blog-title-images/doll-leaves.jpg

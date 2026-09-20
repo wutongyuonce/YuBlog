@@ -2,6 +2,7 @@
 title: Harness Engineering
 description: 从 ReAct Loop 讲到 Plan、Workflow 和 Dynamic Workflow，梳理 Agent Harness 各层职责。
 pubDate: 2026-07-10
+category: 技术向
 tags: [Agent]
 toc: true
 search: true

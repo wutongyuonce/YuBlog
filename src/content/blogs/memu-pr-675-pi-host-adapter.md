@@ -2,6 +2,7 @@
 title: "memU PR #675：从 Pi Session 到记忆闭环"
 description: "从整体架构、使用方式到 session 分类、增量状态、自循环隔离与跨平台调度，解析 memU Pi Host Adapter 的最终实现。"
 pubDate: 2026-09-06
+category: 技术向
 tags: [memU, Agent Memory, Pi, PR]
 toc: true
 search: true

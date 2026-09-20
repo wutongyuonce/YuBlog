@@ -3,7 +3,7 @@ name: blog-content-publisher
 description: >
   维护 YuBlog（Wutong-Yu Astro 站）所有可改内容。按页面改：首页文章与配图、标签/归档所依赖的文章元数据、
   项目 JSON、关于页 intro/Use/Hobby/Soul、友链 JSON、顶栏导航与社交、友链申请模板文案。
-  触发：发博客、改文章、改关于、改 Use、改 Hobby、改友链、改项目、改导航、改社交链接、改名片站名。
+  触发：发博客、改文章、改封面、改 titleImage、改分类、改关于、改 Use、改 Hobby、改友链、改项目、改导航、改社交链接、改名片站名。
   不要用来做布局/CSS 重构；那些看 docs/项目解析.md。
 ---
 
@@ -17,7 +17,7 @@ description: >
 
 | 用户在说 | 页面 | 改哪里 |
 | :--- | :--- | :--- |
-| 发文章、改正文、改封面/标题图、改分类标签、草稿 | 首页列表 + 标签 + 归档 + 详情 + RSS | 文：`src/content/blogs/`；正文图：`public/blogs/<名>-img/`；标题图：`public/blog-title-images/` |
+| 发文章、改正文、改封面/标题图、改分类标签、草稿 | 首页列表 + 标签 + 归档 + 详情 + RSS | 文：`src/content/blogs/`；正文图：`public/blogs/<名>-img/`；封面：`public/blog-title-images/` + `titleImage` |
 | 改标签展示（标签名来自文章） | 标签页 | 改各篇 `tags:`，不要手写标签页数组 |
 | 归档多一条/少一条 | 归档 | 同上，靠 `pubDate` |
 | 项目卡片 | 项目 | `src/content/projects/data.json` |
@@ -34,22 +34,26 @@ description: >
 
 ## 首页 / 标签 / 归档 / 文章详情（同一批文章）
 
-文章出现在首页、标签、归档、`/blogs/<slug>/`、RSS。改一篇，四处一起变。
+文章出现在首页、标签、归档、`/blogs/<slug>/`、RSS。改一篇，四处一起变。没有 `/blogs/` 列表页；旧索引已删除，该地址 404。
 
-1. 文件名短而稳。子目录会进 slug。**不要擅自改已有文件名**（会改 URL）。
-2. `title`（最多 60 字）和 `pubDate`（`YYYY-MM-DD`）必填。
+1. 文件名短而稳。子目录会进 slug。**不要擅自改已有文件名**（会改 URL）。用户明确要求改名时可以改，但本站**没有**旧 slug → 新 slug 跳转，旧链接会 404。
+2. `title`（最多 60 字）、`pubDate`（`YYYY-MM-DD`）、`category` 必填。
 3. 用户没说发布就 `draft: true`。只有明确要上线才 `false` 或删掉。
-4. `category` 可使用任意非空字符串；未填写时默认为 `技术向`。`tags` 是独立话题数组。
+4. `category` 必填，任意非空字符串；不写或写空会构建失败。现有值有 `技术向`、`工具向`、`思考向`，沿用已有分类，用户指定了再新开。没有默认分类。`tags` 是独立话题数组。
 5. `description` 短、事实。极短文才 `toc: false`。不进搜索才 `search: false`。
-6. 正文图：放到 `public/blogs/<短名>-img/`，Markdown 用 `/blogs/<短名>-img/文件.png`。现有目录：`Astro-img`、`MCP-img`、`RAG-img`、`agent-skill-img`、`cloud-agent-img`、`deploy-img`、`jianquan-img`、`juc-img`、`kv-prefix-prompt-semantic-caching-img`、`memu-img`、`prompt-caching-img`、`多模态Agent-img`。新文章新建 `public/blogs/<短名>-img/`，不要写回 `public/` 根目录。
-7. 列表/标题块配图：放 `public/blog-title-images/`，frontmatter：
+6. 正文图：放到 `public/blogs/<短名>-img/`，Markdown 用 `/blogs/<短名>-img/文件.png`。现有目录：`Astro-img`、`MCP-img`、`RAG-img`、`agent-skill-img`、`deploy-img`、`harness-engineering-img`、`jianquan-img`、`juc-img`、`kv-prefix-prompt-semantic-caching-img`、`memu-img`、`prompt-caching-img`、`代码库搜索-img`、`多模态Agent-img`。新文章新建 `public/blogs/<短名>-img/`，不要写回 `public/` 根目录。
+7. 列表和详情标题块的封面**只有一条路**：文件放 `public/blog-title-images/`，frontmatter 用 `titleImage` / `titleImageAlt`。
 
    ```yaml
-   titleImage: /blog-title-images/foo.webp
-   titleImageAlt: 一句能读的描述
+   titleImage: /blog-title-images/night-lantern.webp
+   titleImageAlt: 夜晚提灯的动漫场景
    ```
 
-   有 `titleImage` 必须有 `titleImageAlt`。不要把同一张图再当正文第一张，除非正文真的还要用。优先 WebP，宽不必超过 1600px。
+   - **不要写 `cover` / `coverAlt`**，字段已删除；列表也不会再 fallback。
+   - 有 `titleImage` 必须有 `titleImageAlt`。没封面就两行都别写，列表对应位置空着。
+   - 路径必须是 `/blog-title-images/<文件>`，不要 `..`、空格、查询串。文件名短、ASCII，如 `night-lantern.webp`。
+   - 优先 WebP，宽不必超过 1600px。用户丢来超大 jpg 时先压再引用，不要原样提交 4K/8K。
+   - 不要把同一张封面再当正文第一张，除非正文真的还要用。
 8. 正文不要再写一个 `# 标题`，frontmatter 的 `title` 已经是页标题。从 `##` 开始。
 9. 不编造引用、日期、数据。
 
@@ -60,6 +64,8 @@ description: 给列表和 RSS 的一句摘要。
 pubDate: 2026-09-18
 category: 技术向
 tags: [Astro]
+titleImage: /blog-title-images/foo.webp
+titleImageAlt: 一句能读的描述
 ---
 ```
 

@@ -2,6 +2,7 @@
 title: Claude Code 记忆系统笔记
 description: 梳理 Claude Code 的 CLAUDE.md 与 Auto Memory 机制、生命周期、存储结构和排错方法。
 pubDate: 2026-08-08
+category: 技术向
 tags: [Claude Code, Agent Memory]
 toc: true
 search: true

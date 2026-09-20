@@ -2,6 +2,7 @@
 title: 不破坏 KV Cache 缓存的 Agent 工具延迟加载设计
 description: 关于 Agent 工具延迟加载：Anthropic、OpenAI 如何把工具 schema 推迟到历史加载点，以及 Pi 是如何在不破坏前缀缓存的前提下做 API 适配的。
 pubDate: 2026-09-19
+category: 技术向
 tags: [Agent, Tools, KV Cache]
 titleImage: /blog-title-images/eva.webp
 titleImageAlt: EVA 动漫壁纸

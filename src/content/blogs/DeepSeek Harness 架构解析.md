@@ -2,6 +2,7 @@
 title: DeepSeek Harness 架构解析：从 Cordis 到一切皆插件的 Agent Runtime
 description: 解析 DeepSeek Harness 如何用 Cordis 将 Agent Runtime 拆解为可组合插件。
 pubDate: 2026-08-15
+category: 技术向
 tags: [DSH, Agent]
 ---
 

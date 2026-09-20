@@ -2,6 +2,7 @@
 title: KV、Prefix、Prompt 与 Context Caching
 description: 从 KV Cache、Prefix Caching、Prompt Caching 到 Context Caching，梳理 LLM 缓存的作用域、复用条件与工程实现。
 pubDate: 2026-08-29
+category: 技术向
 tags: [KV Cache]
 toc: true
 search: true
