@@ -70,6 +70,21 @@ test('category and every selected tag filter the full collection before paginati
   ])
 })
 
+test('custom categories remain filterable and included in the summary', () => {
+  const customPosts = [
+    { id: 'custom', data: { category: '思考向', tags: ['Essay'] } },
+  ]
+  const result = selectBlogPage(customPosts, parseBlogQuery('category=思考向'))
+
+  assert.deepEqual(
+    result.items.map(({ id }) => id),
+    ['custom']
+  )
+  assert.deepEqual(buildCategorySummary(customPosts), [
+    { category: '思考向', count: 1 },
+  ])
+})
+
 test('page links keep endpoints and current neighbors with gaps indicated', () => {
   assert.deepEqual(getPageNumbers(1, 0), [])
   assert.deepEqual(getPageNumbers(2, 3), [1, 2, 3])

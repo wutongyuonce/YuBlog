@@ -54,7 +54,12 @@ export const postSchema = ({ image }: SchemaContext) =>
         .describe('简短描述，用于 SEO 和分享。不需要时使用站点默认描述。')
         .transform((value) => value.trim()),
 
-      category: z.enum(['技术向', '工具向']).default('技术向'),
+      category: z
+        .string()
+        .trim()
+        .min(1, '文章分类不能为空。')
+        .default('技术向')
+        .describe('文章分类。支持任意非空字符串，未填写时默认为技术向。'),
 
       // 标签列表
       tags: z

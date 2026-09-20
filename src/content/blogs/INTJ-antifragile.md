@@ -3,6 +3,8 @@ title: INTJ 最稀缺的一种能力：Antifragile
 description: 重读《反脆弱》后的笔记：INTJ 的认知结构为什么吃波动，以及四条可练的方法。
 pubDate: 2026-09-20
 category: 思考向
+cover: ./INTJ-antifragile-cover.jpg
+coverAlt: 三位旅人在阳光下的古代遗迹中前行
 tags: [INTJ, Antifragile]
 toc: true
 search: true
