@@ -50,9 +50,10 @@ import BlogSidebar from '~/components/blog/BlogSidebar.astro'
     let locked = false
 
     const readSidebarBottomGap = () => {
-      const recentWriting =
-        sidebar.querySelector<HTMLElement>('.recent-writing')
-      return getSidebarBottomGap(recentWriting?.offsetHeight ?? 0)
+      const bottomGapSource = sidebar.querySelector<HTMLElement>(
+        '[data-sidebar-bottom-gap-source]'
+      )
+      return getSidebarBottomGap(bottomGapSource?.offsetHeight ?? 0)
     }
 
     const updateFixedMetrics = (sidebarBottomGap = readSidebarBottomGap()) => {
