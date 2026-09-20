@@ -1,28 +1,23 @@
 import { SITE } from '~/config'
 import { getFilteredPosts, getSortedPosts } from '~/utils/data'
 import { withBasePath } from '~/utils/path'
-
-function escapeXml(value) {
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-}
+import { encodePathSegments, escapeXml } from '~/utils/rss-feed.js'
 
 export async function GET() {
-  const site = SITE.website.replace(/\/$/, '')
+  const homeUrl = new URL(withBasePath('/'), SITE.website).href
   const posts = getSortedPosts(await getFilteredPosts('blogs'))
   const items = posts
     .map((post) => {
-      const link = `${site}${withBasePath(`/blogs/${post.id}/`)}`
+      const articlePath = encodePathSegments(`/blogs/${post.id}/`)
+      const articleUrl = new URL(withBasePath(articlePath), SITE.website).href
+      const link = post.data.redirect || articleUrl
       const description = post.data.description
         ? `<description>${escapeXml(post.data.description)}</description>`
         : ''
       return `<item>
 <title>${escapeXml(post.data.title)}</title>
-<link>${link}</link>
-<guid>${link}</guid>
+<link>${escapeXml(link)}</link>
+<guid>${escapeXml(articleUrl)}</guid>
 <pubDate>${post.data.pubDate.toUTCString()}</pubDate>
 ${description}
 </item>`
@@ -33,7 +28,7 @@ ${description}
 <rss version="2.0">
 <channel>
 <title>${escapeXml(SITE.title)}</title>
-<link>${site}/</link>
+<link>${escapeXml(homeUrl)}</link>
 <description>${escapeXml(SITE.description)}</description>
 ${items}
 </channel>

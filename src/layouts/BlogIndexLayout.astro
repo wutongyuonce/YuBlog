@@ -10,28 +10,6 @@ import BlogSidebar from '~/components/blog/BlogSidebar.astro'
     <BlogSidebar />
   </div>
 </div>
-<style>
-  .blog-index-layout {
-    max-width: var(--blog-shell-width);
-    margin: 1rem auto 0;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 264px;
-    gap: 56px;
-    align-items: start;
-  }
-  .blog-index-main {
-    min-width: 0;
-  }
-  .blog-index-sidebar-column {
-    min-width: 0;
-  }
-  /* Copy of BLOG_SIDEBAR_BREAKPOINT; media queries cannot read JS. */
-  @media (max-width: 1099px) {
-    .blog-index-layout {
-      grid-template-columns: minmax(0, 1fr);
-    }
-  }
-</style>
 <script>
   import {
     getSidebarBottomGap,
@@ -65,10 +43,7 @@ import BlogSidebar from '~/components/blog/BlogSidebar.astro'
       sidebar.style.setProperty('--sidebar-bottom-gap', `${sidebarBottomGap}px`)
     }
 
-    const setLocked = (
-      next: boolean,
-      sidebarBottomGap?: number | null
-    ) => {
+    const setLocked = (next: boolean, sidebarBottomGap?: number | null) => {
       if (next && sidebarBottomGap != null) {
         if (!locked) {
           locked = true

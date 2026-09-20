@@ -41,7 +41,7 @@ const posts = await getRecentBlogPosts()
             <div class="recent-writing__content">
               <a
                 class="recent-writing__link"
-                href={withBasePath(`/blogs/${id}/`)}
+                href={data.redirect || withBasePath(`/blogs/${id}/`)}
               >
                 {data.title}
               </a>

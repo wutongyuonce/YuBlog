@@ -4,12 +4,16 @@ import {
   BLOG_SIDEBAR_BREAKPOINT,
   MIN_SIDEBAR_BOTTOM_GAP,
   SIDEBAR_BOTTOM_GAP_REDUCTION,
+  SIDEBAR_BOTTOM_GAP_SCALE,
   getSidebarBottomGap,
   shouldLockSidebar,
 } from '../src/utils/blog-sidebar.js'
 
 test('sidebar bottom gap follows source height and keeps a minimum', () => {
-  assert.equal(getSidebarBottomGap(280), 280 - SIDEBAR_BOTTOM_GAP_REDUCTION)
+  assert.equal(
+    getSidebarBottomGap(280),
+    Math.round((280 - SIDEBAR_BOTTOM_GAP_REDUCTION) * SIDEBAR_BOTTOM_GAP_SCALE)
+  )
   assert.equal(getSidebarBottomGap(20), MIN_SIDEBAR_BOTTOM_GAP)
 })
 

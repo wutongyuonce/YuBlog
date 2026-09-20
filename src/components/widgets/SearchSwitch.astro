@@ -741,17 +741,3 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
       pagefindHighlight.highlight()
     })
   </script>}
-
-<style>
-  #search-panel {
-    position: fixed;
-    inset: 15vh auto auto 50%;
-    translate: -50% 0;
-    width: min(42rem, 90vw);
-    max-height: 70vh;
-    z-index: 200;
-  }
-  @media (max-width: 767px) {
-    #search-panel { top: 10vh; max-height: 80vh; }
-  }
-</style>

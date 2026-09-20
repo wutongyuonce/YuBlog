@@ -1,18 +1,21 @@
 ---
 import Link from '~/components/base/Link.astro'
-import { resolvePath } from '~/utils/path'
-import { ensureTrailingSlash } from '~/utils/path'
+import { ensureTrailingSlash, resolvePath, withBasePath } from '~/utils/path'
 
 const currentPath = ensureTrailingSlash(Astro.url.pathname)
-const isBlogDetail = currentPath.startsWith(resolvePath('/blogs')) && currentPath !== resolvePath('/blogs')
+const isBlogDetail =
+  currentPath.startsWith(resolvePath('/blogs')) &&
+  currentPath !== resolvePath('/blogs')
 
 const pathSegments = currentPath.split('/').slice(0, -2)
 const href = isBlogDetail
-  ? resolvePath('/blogs')
+  ? withBasePath('/')
   : pathSegments.length > 1
     ? pathSegments.join('/') + '/'
     : '/'
 ---
 
 <span class="font-mono op-50">&gt; </span>
-<Link class="font-mono op-50!" {href}>cd ..</Link>
+<Link class="font-mono op-50!" {href}>
+  cd ..
+</Link>

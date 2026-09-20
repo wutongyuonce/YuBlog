@@ -16,7 +16,9 @@ const tags = buildTagSummary(
     <div class="tags-toolbar">
       <div class="tags-selected" data-selected-status hidden>
         <span data-selected-count></span>
-        <button type="button" data-clear-tags>清空</button>
+        <button type="button" data-clear-tags>
+          清空
+        </button>
       </div>
       <div class="tags-sort" role="group" aria-label="标签排序" hidden>
         <button type="button" data-sort="count" aria-pressed="true">
@@ -153,11 +155,14 @@ const tags = buildTagSummary(
   import { parseBlogQuery, serializeBlogQuery } from '~/utils/blog-browser.js'
 
   const FILTER_DELAY_MS = 140
+  let activeRoot: HTMLElement | undefined
+  let cleanup = () => undefined
 
   const initializeTags = () => {
     const root = document.querySelector<HTMLElement>('[data-tag-directory]')
-    if (!root || root.dataset.initialized) return
-    root.dataset.initialized = 'true'
+    if (!root || root === activeRoot) return
+    cleanup()
+    activeRoot = root
     root.querySelector<HTMLElement>('.tags-sort')!.hidden = false
     const list = root.querySelector<HTMLElement>('.tags-list')!
     const buttons = Array.from(
@@ -249,7 +254,20 @@ const tags = buildTagSummary(
         queueCommit()
       })
     window.addEventListener('popstate', syncFromUrl)
+    cleanup = () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('popstate', syncFromUrl)
+      activeRoot = undefined
+    }
   }
+
+  const teardownTags = () => {
+    cleanup()
+    cleanup = () => undefined
+    activeRoot = undefined
+  }
+
+  document.addEventListener('astro:before-swap', teardownTags)
   document.addEventListener('astro:page-load', initializeTags)
   initializeTags()
 </script>

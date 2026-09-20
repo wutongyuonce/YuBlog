@@ -60,6 +60,22 @@ header.nav-bar .nav-bar__group--right {
   gap: 0.65rem;
 }
 
+#search-panel {
+  position: fixed;
+  inset: 15vh auto auto 50%;
+  translate: -50% 0;
+  width: min(42rem, 90vw);
+  max-height: 70vh;
+  z-index: 200;
+}
+
+@media (max-width: 767px) {
+  #search-panel {
+    top: 10vh;
+    max-height: 80vh;
+  }
+}
+
 header.nav-bar .nav-bar__pages a {
   display: inline-flex;
   align-items: center;
@@ -152,6 +168,25 @@ header.nav-bar .nav-bar__group--right #search-switch {
   min-width: 0;
 }
 
+.blog-index-layout {
+  max-width: var(--blog-shell-width);
+  margin: 1rem auto 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 264px;
+  gap: 56px;
+  align-items: start;
+}
+.blog-index-main,
+.blog-index-sidebar-column {
+  min-width: 0;
+}
+/* Keep in sync with BLOG_SIDEBAR_BREAKPOINT in blog-sidebar.js. */
+@media (max-width: 1099px) {
+  .blog-index-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .blog-sidebar[data-sidebar-locked] {
   position: fixed;
   z-index: 20;
@@ -216,13 +251,19 @@ header.nav-bar .nav-bar__group--right #search-switch {
   }
 }
 
-.blog-sidebar .recent-writing--compact {
+.blog-sidebar > [data-sidebar-bottom-gap-source] > .recent-writing--compact {
   margin: 0;
 }
-.blog-sidebar .recent-writing--compact::before {
+.blog-sidebar
+  > [data-sidebar-bottom-gap-source]
+  > .recent-writing--compact::before {
   display: none;
 }
-.blog-sidebar .recent-writing--compact .recent-writing__header h2 {
+.blog-sidebar
+  > [data-sidebar-bottom-gap-source]
+  > .recent-writing--compact
+  .recent-writing__header
+  h2 {
   font-family: inherit;
   font-size: 0.9rem;
   font-weight: 500;
