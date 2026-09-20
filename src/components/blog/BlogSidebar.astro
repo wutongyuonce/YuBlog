@@ -11,7 +11,7 @@ import { withBasePath } from '~/utils/path'
 const categories = buildCategorySummary(await getFilteredPosts('blogs'))
 ---
 
-<aside class="blog-sidebar" aria-label="博客信息">
+<aside class="blog-sidebar" data-blog-sidebar aria-label="博客信息">
   <BlogProfile />
   <div data-sidebar-bottom-gap-source>
     <RecentWriting compact />

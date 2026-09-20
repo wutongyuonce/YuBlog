@@ -271,64 +271,6 @@ const posts = await getRecentBlogPosts()
       font-size: 0.82rem;
     }
   }
-  .recent-writing--compact {
-    margin: 0;
-  }
-  .recent-writing--compact::before {
-    display: none;
-  }
-  .recent-writing--compact .recent-writing__header h2 {
-    font-family: inherit;
-    font-size: 0.9rem;
-    font-weight: 500;
-    letter-spacing: 0;
-    opacity: 0.65;
-  }
-  .recent-writing--compact .recent-writing__timeline {
-    margin-top: 0.85rem;
-  }
-  .recent-writing--compact .recent-writing__timeline::before {
-    left: 0;
-    top: 0;
-    bottom: 0.2rem;
-  }
-  .recent-writing--compact .recent-writing__item {
-    grid-template-columns: minmax(0, 1fr) auto;
-    column-gap: 0.65rem;
-    align-items: baseline;
-    padding: 0 0 0.75rem 0.85rem;
-  }
-  .recent-writing--compact .recent-writing__link {
-    color: color-mix(in srgb, var(--c-text) 76%, transparent);
-    font-family: inherit;
-    font-size: 0.92rem;
-    font-weight: 400;
-    line-height: 1.55;
-    overflow-wrap: anywhere;
-  }
-  .recent-writing--compact .recent-writing__item--latest .recent-writing__link {
-    color: var(--c-text);
-    font-weight: 500;
-    text-shadow: 0 0 0.45rem
-      color-mix(in srgb, var(--timeline-accent) 52%, transparent);
-    background: color-mix(in srgb, var(--timeline-accent) 11%, var(--c-bg));
-    -webkit-box-decoration-break: clone;
-    box-decoration-break: clone;
-  }
-  :global(.dark)
-    .recent-writing--compact
-    .recent-writing__item--latest
-    .recent-writing__link {
-    background: color-mix(in srgb, var(--timeline-accent) 18%, var(--c-bg));
-  }
-  .recent-writing--compact .recent-writing__date {
-    padding: 0;
-    font-family: inherit;
-    font-size: 0.75rem;
-    line-height: 1.55;
-    white-space: nowrap;
-    text-align: right;
-  }
 </style>
 
 <script>

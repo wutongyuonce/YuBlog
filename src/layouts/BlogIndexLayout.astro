@@ -25,6 +25,7 @@ import BlogSidebar from '~/components/blog/BlogSidebar.astro'
   .blog-index-sidebar-column {
     min-width: 0;
   }
+  /* Copy of BLOG_SIDEBAR_BREAKPOINT; media queries cannot read JS. */
   @media (max-width: 1099px) {
     .blog-index-layout {
       grid-template-columns: minmax(0, 1fr);
@@ -43,7 +44,7 @@ import BlogSidebar from '~/components/blog/BlogSidebar.astro'
     const column = layout.querySelector<HTMLElement>(
       '[data-blog-sidebar-column]'
     )
-    const sidebar = column?.querySelector<HTMLElement>('.blog-sidebar')
+    const sidebar = column?.querySelector<HTMLElement>('[data-blog-sidebar]')
     if (!column || !sidebar) return noop
 
     let frame = 0
@@ -53,41 +54,47 @@ import BlogSidebar from '~/components/blog/BlogSidebar.astro'
       const bottomGapSource = sidebar.querySelector<HTMLElement>(
         '[data-sidebar-bottom-gap-source]'
       )
-      return getSidebarBottomGap(bottomGapSource?.offsetHeight ?? 0)
+      if (!bottomGapSource) return null
+      return getSidebarBottomGap(bottomGapSource.offsetHeight)
     }
 
-    const updateFixedMetrics = (sidebarBottomGap = readSidebarBottomGap()) => {
+    const updateFixedMetrics = (sidebarBottomGap: number) => {
       const rect = column.getBoundingClientRect()
       sidebar.style.setProperty('--sidebar-left', `${rect.left}px`)
       sidebar.style.setProperty('--sidebar-width', `${rect.width}px`)
       sidebar.style.setProperty('--sidebar-bottom-gap', `${sidebarBottomGap}px`)
     }
 
-    const setLocked = (next: boolean) => {
-      if (locked === next) return
-      locked = next
-
-      if (next) {
-        column.style.minHeight = `${sidebar.offsetHeight}px`
-        sidebar.dataset.sidebarLocked = ''
-        updateFixedMetrics()
-      } else {
-        delete sidebar.dataset.sidebarLocked
-        sidebar.style.removeProperty('--sidebar-left')
-        sidebar.style.removeProperty('--sidebar-width')
-        sidebar.style.removeProperty('--sidebar-bottom-gap')
-        column.style.minHeight = ''
+    const setLocked = (
+      next: boolean,
+      sidebarBottomGap?: number | null
+    ) => {
+      if (next && sidebarBottomGap != null) {
+        if (!locked) {
+          locked = true
+          column.style.minHeight = `${sidebar.offsetHeight}px`
+          sidebar.dataset.sidebarLocked = ''
+        }
+        updateFixedMetrics(sidebarBottomGap)
+        return
       }
+
+      if (!locked) return
+      locked = false
+      delete sidebar.dataset.sidebarLocked
+      sidebar.style.removeProperty('--sidebar-left')
+      sidebar.style.removeProperty('--sidebar-width')
+      sidebar.style.removeProperty('--sidebar-bottom-gap')
+      column.style.minHeight = ''
     }
 
     const update = () => {
       frame = 0
       const columnRect = column.getBoundingClientRect()
       const sidebarHeight = sidebar.offsetHeight
-      const headerHeight =
-        document.querySelector<HTMLElement>('header.nav-bar')?.offsetHeight ?? 0
+      const header = document.querySelector<HTMLElement>('[data-site-header]')
+      const headerHeight = header?.offsetHeight ?? null
       const sidebarBottomGap = readSidebarBottomGap()
-      if (locked) column.style.minHeight = `${sidebarHeight}px`
 
       if (
         !shouldLockSidebar({
@@ -104,8 +111,8 @@ import BlogSidebar from '~/components/blog/BlogSidebar.astro'
         return
       }
 
-      setLocked(true)
-      if (locked) updateFixedMetrics(sidebarBottomGap)
+      if (locked) column.style.minHeight = `${sidebarHeight}px`
+      setLocked(true, sidebarBottomGap)
     }
 
     const scheduleUpdate = () => {
