@@ -256,64 +256,14 @@ export const friendSchema = z.object({
     .describe('同组内排序值，数值越小越靠前。'),
 })
 
-/* =====================================================
-   Insight Schema - 用于语录/启发/哲理内容
-   ===================================================== */
-export const insightSchema = z.object({
-  title: z
-    .string()
-    .describe('**必填**。Insight 标题。')
-    .transform((value) => value.trim()),
-
-  description: z
-    .string()
-    .default('')
-    .describe('简短描述，用于 SEO 或列表摘要。')
-    .transform((value) => value.trim()),
-
-  pubDate: z.coerce.date().describe('**必填**。Insight 的记录日期。'),
-
-  category: z
-    .string()
-    .describe('**必填**。Insight 的分类标签。')
-    .transform((value) => value.trim()),
-
-  image: z
-    .string()
-    .default('')
-    .describe(
-      'Insight 右侧展示图片，使用 /public 下的路径。为空表示不展示图片。'
-    )
-    .transform((value) => value.trim()),
-
-  imageAlt: z
-    .string()
-    .default('')
-    .describe('图片的替代文本。无图时可留空。')
-    .transform((value) => value.trim()),
-
-  author: z
-    .string()
-    .default('')
-    .describe('语录或观点的作者。为空表示不标注作者。')
-    .transform((value) => value.trim()),
-
-  sourceUrl: z
-    .union([z.string().url('无效的 URL 格式。'), z.literal('')])
-    .default('')
-    .describe('语录来源链接。为空表示不提供来源链接。'),
-
-  draft: z
-    .boolean()
-    .default(false)
-    .describe('标记为草稿。true 时仅在开发环境可见，生产构建时会被排除。'),
-})
-
 export const aboutSchema = z.object({
   title: z
     .string()
     .describe('标签按钮上的名字。intro 可随便填。')
     .transform((value) => value.trim()),
   order: z.number().default(0).describe('标签排序，数值越小越靠前。'),
-  tab: z.boolean().default(true).describe('false 时作为关于页顶部介绍，不进标签栏。'),
+  tab: z
+    .boolean()
+    .default(true)
+    .describe('false 时作为关于页顶部介绍，不进标签栏。'),
 })

@@ -2,11 +2,13 @@
 import BlogSidebar from '~/components/blog/BlogSidebar.astro'
 ---
 
-<div class="blog-index-layout">
+<div class="blog-index-layout" data-blog-index-layout>
   <div class="blog-index-main">
     <slot />
   </div>
-  <BlogSidebar />
+  <div class="blog-index-sidebar-column" data-blog-sidebar-column>
+    <BlogSidebar />
+  </div>
 </div>
 <style>
   .blog-index-layout {
@@ -20,9 +22,125 @@ import BlogSidebar from '~/components/blog/BlogSidebar.astro'
   .blog-index-main {
     min-width: 0;
   }
+  .blog-index-sidebar-column {
+    min-width: 0;
+  }
   @media (max-width: 1099px) {
     .blog-index-layout {
       grid-template-columns: minmax(0, 1fr);
     }
   }
 </style>
+<script>
+  import {
+    getSidebarBottomGap,
+    shouldLockSidebar,
+  } from '~/utils/blog-sidebar.js'
+
+  const noop = (): void => undefined
+
+  const setupBlogSidebar = (layout: HTMLElement) => {
+    const column = layout.querySelector<HTMLElement>(
+      '[data-blog-sidebar-column]'
+    )
+    const sidebar = column?.querySelector<HTMLElement>('.blog-sidebar')
+    if (!column || !sidebar) return noop
+
+    let frame = 0
+    let locked = false
+
+    const readSidebarBottomGap = () => {
+      const recentWriting =
+        sidebar.querySelector<HTMLElement>('.recent-writing')
+      return getSidebarBottomGap(recentWriting?.offsetHeight ?? 0)
+    }
+
+    const updateFixedMetrics = (sidebarBottomGap = readSidebarBottomGap()) => {
+      const rect = column.getBoundingClientRect()
+      sidebar.style.setProperty('--sidebar-left', `${rect.left}px`)
+      sidebar.style.setProperty('--sidebar-width', `${rect.width}px`)
+      sidebar.style.setProperty('--sidebar-bottom-gap', `${sidebarBottomGap}px`)
+    }
+
+    const setLocked = (next: boolean) => {
+      if (locked === next) return
+      locked = next
+
+      if (next) {
+        column.style.minHeight = `${sidebar.offsetHeight}px`
+        sidebar.dataset.sidebarLocked = ''
+        updateFixedMetrics()
+      } else {
+        delete sidebar.dataset.sidebarLocked
+        sidebar.style.removeProperty('--sidebar-left')
+        sidebar.style.removeProperty('--sidebar-width')
+        sidebar.style.removeProperty('--sidebar-bottom-gap')
+        column.style.minHeight = ''
+      }
+    }
+
+    const update = () => {
+      frame = 0
+      const columnRect = column.getBoundingClientRect()
+      const sidebarHeight = sidebar.offsetHeight
+      const headerHeight =
+        document.querySelector<HTMLElement>('header.nav-bar')?.offsetHeight ?? 0
+      const sidebarBottomGap = readSidebarBottomGap()
+      if (locked) column.style.minHeight = `${sidebarHeight}px`
+
+      if (
+        !shouldLockSidebar({
+          viewportWidth: window.innerWidth,
+          sidebarHeight,
+          viewportHeight: window.innerHeight,
+          headerHeight,
+          columnTop: columnRect.top,
+          columnBottom: columnRect.bottom,
+          sidebarBottomGap,
+        })
+      ) {
+        setLocked(false)
+        return
+      }
+
+      setLocked(true)
+      if (locked) updateFixedMetrics(sidebarBottomGap)
+    }
+
+    const scheduleUpdate = () => {
+      if (frame) return
+      frame = requestAnimationFrame(update)
+    }
+
+    const resizeObserver = new ResizeObserver(scheduleUpdate)
+    resizeObserver.observe(sidebar)
+    window.addEventListener('scroll', scheduleUpdate, { passive: true })
+    window.addEventListener('resize', scheduleUpdate)
+    scheduleUpdate()
+
+    return () => {
+      if (frame) cancelAnimationFrame(frame)
+      resizeObserver.disconnect()
+      window.removeEventListener('scroll', scheduleUpdate)
+      window.removeEventListener('resize', scheduleUpdate)
+      setLocked(false)
+    }
+  }
+
+  let cleanup = noop
+
+  const mountBlogSidebar = () => {
+    cleanup()
+    const layout = document.querySelector<HTMLElement>(
+      '[data-blog-index-layout]'
+    )
+    cleanup = layout ? setupBlogSidebar(layout) : noop
+  }
+
+  document.addEventListener('astro:before-swap', () => {
+    cleanup()
+    cleanup = noop
+  })
+  document.addEventListener('astro:page-load', mountBlogSidebar)
+  mountBlogSidebar()
+</script>

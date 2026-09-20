@@ -26,7 +26,12 @@ const posts = await getRecentBlogPosts()
         const dateTime = data.pubDate.toISOString()
 
         return (
-          <li class="recent-writing__item">
+          <li
+            class:list={[
+              'recent-writing__item',
+              { 'recent-writing__item--latest': index === 0 },
+            ]}
+          >
             {!compact && (
               <span class="recent-writing__number" aria-hidden="true">
                 {String(index + 1).padStart(2, '0')}
@@ -294,11 +299,27 @@ const posts = await getRecentBlogPosts()
     padding: 0 0 0.75rem 0.85rem;
   }
   .recent-writing--compact .recent-writing__link {
+    color: color-mix(in srgb, var(--c-text) 76%, transparent);
     font-family: inherit;
     font-size: 0.92rem;
     font-weight: 400;
     line-height: 1.55;
     overflow-wrap: anywhere;
+  }
+  .recent-writing--compact .recent-writing__item--latest .recent-writing__link {
+    color: var(--c-text);
+    font-weight: 500;
+    text-shadow: 0 0 0.45rem
+      color-mix(in srgb, var(--timeline-accent) 52%, transparent);
+    background: color-mix(in srgb, var(--timeline-accent) 11%, var(--c-bg));
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+  :global(.dark)
+    .recent-writing--compact
+    .recent-writing__item--latest
+    .recent-writing__link {
+    background: color-mix(in srgb, var(--timeline-accent) 18%, var(--c-bg));
   }
   .recent-writing--compact .recent-writing__date {
     padding: 0;

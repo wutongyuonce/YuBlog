@@ -3,9 +3,12 @@
    not persisted across Astro swaps and can disappear after a full reload. */
 
 header.nav-bar {
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 160;
-  background: transparent;
+  background: color-mix(in srgb, var(--c-bg) 86%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
 }
 
 header.nav-bar .nav-bar__inner {
@@ -149,6 +152,14 @@ header.nav-bar .nav-bar__group--right #search-switch {
   min-width: 0;
 }
 
+.blog-sidebar[data-sidebar-locked] {
+  position: fixed;
+  z-index: 20;
+  left: var(--sidebar-left);
+  bottom: var(--sidebar-bottom-gap, 4px);
+  width: var(--sidebar-width);
+}
+
 .blog-sidebar .blog-categories h2 {
   margin: 0;
   padding: 0 0 0.7rem;
@@ -174,7 +185,7 @@ header.nav-bar .nav-bar__group--right #search-switch {
   align-items: center;
   gap: 1rem;
   margin-inline: -0.35rem;
-  padding: 0.7rem 0.35rem 0.7rem 1.75rem;
+  padding: 0.55rem 0.35rem 0.55rem 1.75rem;
   border-radius: 6px;
   color: inherit;
   font-size: 0.875rem;
@@ -194,6 +205,13 @@ header.nav-bar .nav-bar__group--right #search-switch {
   opacity: 0.55;
   font-size: inherit;
   font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 1099px) {
+  .blog-sidebar[data-sidebar-locked] {
+    position: static;
+    width: auto;
+  }
 }
 
 /* Editorial profile: the same open layout in both site themes. */

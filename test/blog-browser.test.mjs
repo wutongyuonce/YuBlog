@@ -37,17 +37,17 @@ test('untrusted page values cannot produce an empty or partial page by accident'
   ]) {
     assert.equal(parseBlogQuery(`page=${page}`).page, 1)
   }
-  assert.equal(selectBlogPage(posts, parseBlogQuery('page=999')).page, 3)
+  assert.equal(selectBlogPage(posts, parseBlogQuery('page=999')).page, 2)
 })
 
-test('six-post pagination handles empty, exact and partial final pages', () => {
-  for (const size of [0, 1, 6, 7, 12, 13]) {
+test('seven-post pagination handles empty, exact and partial final pages', () => {
+  for (const size of [0, 1, 7, 8, 12, 13]) {
     const result = selectBlogPage(
       posts.slice(0, size),
       parseBlogQuery('page=999')
     )
-    assert.equal(result.pageCount, Math.ceil(size / 6))
-    assert.equal(result.items.length, size === 0 ? 0 : ((size - 1) % 6) + 1)
+    assert.equal(result.pageCount, Math.ceil(size / 7))
+    assert.equal(result.items.length, size === 0 ? 0 : ((size - 1) % 7) + 1)
   }
 })
 

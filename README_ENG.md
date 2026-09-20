@@ -38,7 +38,7 @@ Live: [https://www.wutongyu.site/](https://www.wutongyu.site/)
 
 | Route | What it is |
 | :--- | :--- |
-| `/` | Home. Post list (category, date, reading time, title, summary, optional image), six per page. Sidebar: profile, recent posts, categories. |
+| `/` | Home. Post list (category, date, reading time, title, summary, optional image), seven per page. Sidebar: profile, recent posts, categories. |
 | `/tags/` | Tags. Sort by count or name. Multi-select is AND. No list until a tag is selected. |
 | `/archives/` | Archive timeline grouped by year. |
 | `/projects/` | Project grid from JSON. |

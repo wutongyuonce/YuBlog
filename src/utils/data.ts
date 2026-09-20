@@ -44,9 +44,7 @@ export function getMinutesRead(
  * Retrieves filtered posts from the specified content collection.
  * In production, it filters out draft posts.
  */
-export async function getFilteredPosts(
-  collection: 'blogs'
-) {
+export async function getFilteredPosts(collection: 'blogs') {
   return await getCollection(collection, ({ data }) => {
     return import.meta.env.PROD ? !data.draft : true
   })
@@ -55,9 +53,7 @@ export async function getFilteredPosts(
 /**
  * Sorts an array of posts by their publication date in descending order.
  */
-export function getSortedPosts(
-  posts: CollectionEntry<'blogs'>[]
-) {
+export function getSortedPosts(posts: CollectionEntry<'blogs'>[]) {
   return [...posts].sort(
     (a, b) =>
       b.data.pubDate.valueOf() - a.data.pubDate.valueOf() ||
@@ -132,20 +128,6 @@ export interface GroupedFriendCategory {
   items: GroupedFriendItem[]
 }
 
-export interface GroupedInsightItem {
-  idx: number
-  year: string
-  id: CollectionEntry<'insights'>['id']
-  body: CollectionEntry<'insights'>['body']
-  data: CollectionEntry<'insights'>['data']
-  entry: CollectionEntry<'insights'>
-}
-
-export interface GroupedInsightYear {
-  year: string
-  items: GroupedInsightItem[]
-}
-
 /**
  * Retrieves date-sorted blog items with reading metadata for list views.
  */
@@ -199,18 +181,6 @@ export async function getGroupedPostsByYear(
 }
 
 /**
- * Retrieves filtered insights from the specified content collection.
- * In production, it filters out draft insights.
- */
-export async function getFilteredInsights(
-  collection: 'insights'
-) {
-  return await getCollection(collection, ({ data }) => {
-    return import.meta.env.PROD ? !data.draft : true
-  })
-}
-
-/**
  * Retrieves sorted friends from the specified content collection.
  */
 export async function getSortedFriends(
@@ -252,52 +222,6 @@ export async function getGroupedFriendsByCategory(
 
     groups.push({
       category: item.data.category,
-      items: [item],
-    })
-
-    return groups
-  }, [])
-}
-
-/**
- * Sorts an array of insights by their publication date in descending order.
- */
-export function getSortedInsights(
-  insights: CollectionEntry<'insights'>[]
-) {
-  return [...insights].sort(
-    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-  )
-}
-
-/**
- * Retrieves all insights and groups them by publication year in descending order.
- */
-export async function getGroupedInsightsByYear(
-  collection: 'insights'
-): Promise<GroupedInsightYear[]> {
-  const items = await getFilteredInsights(collection)
-  const sortedInsights = getSortedInsights(items)
-
-  const enrichedInsights = sortedInsights.map((item, idx) => ({
-    idx,
-    year: getYear(item.data.pubDate).toString(),
-    id: item.id,
-    body: item.body,
-    data: item.data,
-    entry: item,
-  }))
-
-  return enrichedInsights.reduce<GroupedInsightYear[]>((groups, item) => {
-    const existingGroup = groups.find((group) => group.year === item.year)
-
-    if (existingGroup) {
-      existingGroup.items.push(item)
-      return groups
-    }
-
-    groups.push({
-      year: item.year,
       items: [item],
     })
 

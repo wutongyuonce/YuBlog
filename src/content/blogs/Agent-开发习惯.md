@@ -11,7 +11,7 @@ search: true
 
 **第一步：创建 `.env`、`.env.example`文件，所有敏感配置写在这里。**
 
-```env
+```ini
 # .env —— 这个文件绝对不能提交到 Git！
 OPENAI_API_KEY=sk-abc123def456ghi789jkl...
 OPENAI_BASE_URL=https://api.openai.com/v1
@@ -21,7 +21,7 @@ LOG_LEVEL=INFO
 MAX_RETRY_TIMES=3
 ```
 
-```env
+```ini
 # .env.example（提交到 Git，不含真实值）
 # 复制此文件为 .env 并填入真实的 API Key
 
@@ -100,7 +100,7 @@ client = AsyncOpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL)
 
 ### 必须配的 `.gitignore`
 
-```gitignore
+```text
 # .gitignore
 .env
 .env.local
