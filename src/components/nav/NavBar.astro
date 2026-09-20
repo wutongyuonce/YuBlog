@@ -9,7 +9,7 @@ const { internalNavs, socialLinks, navBarLayout } = UI
 const home = withBasePath('/')
 ---
 
-<header class="nav-bar">
+<header class="nav-bar" data-site-header>
   <nav aria-label="主导航" class="nav-bar__inner">
     {(['left', 'right'] as const).map((side) => (
       <div class={`nav-bar__group nav-bar__group--${side}`}>

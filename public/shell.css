@@ -3,9 +3,12 @@
    not persisted across Astro swaps and can disappear after a full reload. */
 
 header.nav-bar {
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 160;
-  background: transparent;
+  background: color-mix(in srgb, var(--c-bg) 86%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
 }
 
 header.nav-bar .nav-bar__inner {
@@ -55,6 +58,22 @@ header.nav-bar a.nav-bar__brand:hover {
 
 header.nav-bar .nav-bar__group--right {
   gap: 0.65rem;
+}
+
+#search-panel {
+  position: fixed;
+  inset: 15vh auto auto 50%;
+  translate: -50% 0;
+  width: min(42rem, 90vw);
+  max-height: 70vh;
+  z-index: 200;
+}
+
+@media (max-width: 767px) {
+  #search-panel {
+    top: 10vh;
+    max-height: 80vh;
+  }
 }
 
 header.nav-bar .nav-bar__pages a {
@@ -149,6 +168,34 @@ header.nav-bar .nav-bar__group--right #search-switch {
   min-width: 0;
 }
 
+.blog-index-layout {
+  max-width: var(--blog-shell-width);
+  margin: 1rem auto 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 264px;
+  gap: 56px;
+  align-items: start;
+}
+.blog-index-main,
+.blog-index-sidebar-column {
+  min-width: 0;
+}
+/* Keep in sync with BLOG_SIDEBAR_BREAKPOINT in blog-sidebar.js. */
+@media (max-width: 1099px) {
+  .blog-index-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.blog-sidebar[data-sidebar-locked] {
+  position: fixed;
+  z-index: 20;
+  left: var(--sidebar-left);
+  /* Fallback matches MIN_SIDEBAR_BOTTOM_GAP before JS sets the variable. */
+  bottom: var(--sidebar-bottom-gap, 4px);
+  width: var(--sidebar-width);
+}
+
 .blog-sidebar .blog-categories h2 {
   margin: 0;
   padding: 0 0 0.7rem;
@@ -174,7 +221,7 @@ header.nav-bar .nav-bar__group--right #search-switch {
   align-items: center;
   gap: 1rem;
   margin-inline: -0.35rem;
-  padding: 0.7rem 0.35rem 0.7rem 1.75rem;
+  padding: 0.55rem 0.35rem 0.55rem 1.75rem;
   border-radius: 6px;
   color: inherit;
   font-size: 0.875rem;
@@ -194,6 +241,83 @@ header.nav-bar .nav-bar__group--right #search-switch {
   opacity: 0.55;
   font-size: inherit;
   font-variant-numeric: tabular-nums;
+}
+
+/* Copy of BLOG_SIDEBAR_BREAKPOINT; media queries cannot read JS. */
+@media (max-width: 1099px) {
+  .blog-sidebar[data-sidebar-locked] {
+    position: static;
+    width: auto;
+  }
+}
+
+.blog-sidebar > [data-sidebar-bottom-gap-source] > .recent-writing--compact {
+  margin: 0;
+}
+.blog-sidebar
+  > [data-sidebar-bottom-gap-source]
+  > .recent-writing--compact::before {
+  display: none;
+}
+.blog-sidebar
+  > [data-sidebar-bottom-gap-source]
+  > .recent-writing--compact
+  .recent-writing__header
+  h2 {
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  opacity: 0.65;
+}
+.blog-sidebar .recent-writing--compact .recent-writing__timeline {
+  margin-top: 0.85rem;
+}
+.blog-sidebar .recent-writing--compact .recent-writing__timeline::before {
+  left: 0;
+  top: 0;
+  bottom: 0.2rem;
+}
+.blog-sidebar .recent-writing--compact .recent-writing__item {
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 0.65rem;
+  align-items: baseline;
+  padding: 0 0 0.75rem 0.85rem;
+}
+.blog-sidebar .recent-writing--compact .recent-writing__link {
+  color: color-mix(in srgb, var(--c-text) 76%, transparent);
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 400;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.blog-sidebar
+  .recent-writing--compact
+  .recent-writing__item--latest
+  .recent-writing__link {
+  color: var(--c-text);
+  font-weight: 500;
+  text-shadow: 0 0 0.45rem
+    color-mix(in srgb, var(--timeline-accent) 52%, transparent);
+  background: color-mix(in srgb, var(--timeline-accent) 11%, var(--c-bg));
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+html.dark
+  .blog-sidebar
+  .recent-writing--compact
+  .recent-writing__item--latest
+  .recent-writing__link {
+  background: color-mix(in srgb, var(--timeline-accent) 18%, var(--c-bg));
+}
+.blog-sidebar .recent-writing--compact .recent-writing__date {
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  white-space: nowrap;
+  text-align: right;
 }
 
 /* Editorial profile: the same open layout in both site themes. */

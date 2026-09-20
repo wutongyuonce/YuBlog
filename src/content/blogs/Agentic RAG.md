@@ -2,6 +2,7 @@
 title: 传统向量 RAG 已死？— PageIndex&Claude Code 的选择
 description: RAG 已死？PageIndex，下一代无向量、基于推理的 RAG；Claude Code 用 Grep 证明 Agent 时代新的搜索范式
 pubDate: 2026-05-15
+category: 技术向
 tags: [RAG, PageIndex, Grep]
 toc: true
 search: true

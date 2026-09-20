@@ -1,6 +1,6 @@
 import { matchesAllTags, normalizePostTags } from './blog-tag-filter.js'
 
-export const BLOG_PAGE_SIZE = 6
+export const BLOG_PAGE_SIZE = 7
 
 /** @typedef {{category: string, tags: string[], page: number}} BlogQuery */
 

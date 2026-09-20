@@ -26,7 +26,12 @@ const posts = await getRecentBlogPosts()
         const dateTime = data.pubDate.toISOString()
 
         return (
-          <li class="recent-writing__item">
+          <li
+            class:list={[
+              'recent-writing__item',
+              { 'recent-writing__item--latest': index === 0 },
+            ]}
+          >
             {!compact && (
               <span class="recent-writing__number" aria-hidden="true">
                 {String(index + 1).padStart(2, '0')}
@@ -36,7 +41,7 @@ const posts = await getRecentBlogPosts()
             <div class="recent-writing__content">
               <a
                 class="recent-writing__link"
-                href={withBasePath(`/blogs/${id}/`)}
+                href={data.redirect || withBasePath(`/blogs/${id}/`)}
               >
                 {data.title}
               </a>
@@ -265,48 +270,6 @@ const posts = await getRecentBlogPosts()
       padding-top: 0;
       font-size: 0.82rem;
     }
-  }
-  .recent-writing--compact {
-    margin: 0;
-  }
-  .recent-writing--compact::before {
-    display: none;
-  }
-  .recent-writing--compact .recent-writing__header h2 {
-    font-family: inherit;
-    font-size: 0.9rem;
-    font-weight: 500;
-    letter-spacing: 0;
-    opacity: 0.65;
-  }
-  .recent-writing--compact .recent-writing__timeline {
-    margin-top: 0.85rem;
-  }
-  .recent-writing--compact .recent-writing__timeline::before {
-    left: 0;
-    top: 0;
-    bottom: 0.2rem;
-  }
-  .recent-writing--compact .recent-writing__item {
-    grid-template-columns: minmax(0, 1fr) auto;
-    column-gap: 0.65rem;
-    align-items: baseline;
-    padding: 0 0 0.75rem 0.85rem;
-  }
-  .recent-writing--compact .recent-writing__link {
-    font-family: inherit;
-    font-size: 0.92rem;
-    font-weight: 400;
-    line-height: 1.55;
-    overflow-wrap: anywhere;
-  }
-  .recent-writing--compact .recent-writing__date {
-    padding: 0;
-    font-family: inherit;
-    font-size: 0.75rem;
-    line-height: 1.55;
-    white-space: nowrap;
-    text-align: right;
   }
 </style>
 

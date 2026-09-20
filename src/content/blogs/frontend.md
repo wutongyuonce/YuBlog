@@ -2,6 +2,7 @@
 title: "从多页到混合：Web 应用架构演进的完整图谱(个人站点部署+国内访问)"
 description: "From Multi-page to Hybrid: A Complete Map of Web Application Architecture Evolution"
 pubDate: 2026-03-16
+category: 技术向
 lastModDate: ''
 tags: [Web 架构, SSR, SSG]
 toc: true
@@ -757,8 +758,8 @@ SSG之前介绍了，我之前有使用过[Hexo](https://hexo.io/)、[Hugo](http
 
 进入阿里云，打开域名控制台修改DNS服务器地址
 
-1. 前往[域名产品控制台](https://dc.console.aliyun.com/?spm=5176.28197678_55416700.console-base_help.18.63045b8eO61o25)，在域名列表中找到目标域名，单击操作列的 **管理** 按钮![image.png](/deploy-img-img/p751347.png)
-2. 在左侧导航栏选择 **DNS管理** 下的 **DNS修改** 菜单，单击 **修改DNS服务器** 按钮![image.png](/deploy-img-img/p751353.png)
+1. 前往[域名产品控制台](https://dc.console.aliyun.com/?spm=5176.28197678_55416700.console-base_help.18.63045b8eO61o25)，在域名列表中找到目标域名，单击操作列的 **管理** 按钮![image.png](/blogs/deploy-img/p751347.png)
+2. 在左侧导航栏选择 **DNS管理** 下的 **DNS修改** 菜单，单击 **修改DNS服务器** 按钮![image.png](/blogs/deploy-img/p751353.png)
 3. 输入 **云解析 DNS** 分配的DNS服务器地址，例如：`vip1.alidns.com`、`vip2.alidns.com`，提交变更。![image](/blogs/deploy-img/p852184.png)
 
 完成之后回到 Cloudflare 的域名Overview，可以 Check nameservers now，阿里云那边生效之后，这个页面会刷新：

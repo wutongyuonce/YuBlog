@@ -9,8 +9,10 @@ const tabs = entries
 
 const IntroContent = intro ? (await render(intro)).Content : null
 const panels = await Promise.all(
-  tabs.map(async (entry) => ({
+  tabs.map(async (entry, index) => ({
     id: entry.id,
+    tabId: `about-tab-${index}`,
+    panelId: `about-panel-${index}`,
     title: entry.data.title,
     Content: (await render(entry)).Content,
   }))
@@ -31,9 +33,9 @@ const panels = await Promise.all(
           <button
             type="button"
             role="tab"
-            id={`about-tab-${panel.id}`}
+            id={panel.tabId}
             data-about-tab={panel.id}
-            aria-controls={`about-panel-${panel.id}`}
+            aria-controls={panel.panelId}
             aria-selected={index === 0 ? 'true' : 'false'}
             tabindex={index === 0 ? 0 : -1}
           >
@@ -45,9 +47,9 @@ const panels = await Promise.all(
         <div
           class="about-panel prose"
           role="tabpanel"
-          id={`about-panel-${panel.id}`}
+          id={panel.panelId}
           data-about-panel={panel.id}
-          aria-labelledby={`about-tab-${panel.id}`}
+          aria-labelledby={panel.tabId}
           hidden={index !== 0}
         >
           <panel.Content />
@@ -79,18 +81,45 @@ const panels = await Promise.all(
         .forEach((panel) => {
           panel.hidden = panel.dataset.aboutPanel !== current
         })
-      if (location.hash.slice(1) !== current)
-        history.replaceState(null, '', `#${current}`)
+      const nextHash = `#${encodeURIComponent(current)}`
+      if (location.hash !== nextHash)
+        history.replaceState(history.state, '', nextHash)
     }
 
     tabs.forEach((tab) => {
+      if (tab.dataset.aboutBound) return
+      tab.dataset.aboutBound = 'true'
+
       tab.addEventListener('click', () => {
         const id = tab.dataset.aboutTab
         if (id) select(id)
       })
+
+      tab.addEventListener('keydown', (event) => {
+        const index = tabs.indexOf(tab)
+        let nextIndex: number | undefined
+        if (event.key === 'ArrowRight') nextIndex = (index + 1) % tabs.length
+        else if (event.key === 'ArrowLeft')
+          nextIndex = (index - 1 + tabs.length) % tabs.length
+        else if (event.key === 'Home') nextIndex = 0
+        else if (event.key === 'End') nextIndex = tabs.length - 1
+        if (nextIndex === undefined) return
+
+        event.preventDefault()
+        const nextTab = tabs[nextIndex]
+        const id = nextTab.dataset.aboutTab
+        nextTab.focus()
+        if (id) select(id)
+      })
     })
 
-    select(decodeURIComponent(location.hash.slice(1)))
+    let selectedId = ''
+    try {
+      selectedId = decodeURIComponent(location.hash.slice(1))
+    } catch {
+      // An invalid URL fragment falls back to the first tab.
+    }
+    select(selectedId)
   }
 
   document.addEventListener('astro:page-load', setupAboutTabs)

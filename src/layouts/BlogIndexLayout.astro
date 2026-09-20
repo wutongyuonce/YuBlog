@@ -2,27 +2,128 @@
 import BlogSidebar from '~/components/blog/BlogSidebar.astro'
 ---
 
-<div class="blog-index-layout">
+<div class="blog-index-layout" data-blog-index-layout>
   <div class="blog-index-main">
     <slot />
   </div>
-  <BlogSidebar />
+  <div class="blog-index-sidebar-column" data-blog-sidebar-column>
+    <BlogSidebar />
+  </div>
 </div>
-<style>
-  .blog-index-layout {
-    max-width: var(--blog-shell-width);
-    margin: 1rem auto 0;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 264px;
-    gap: 56px;
-    align-items: start;
-  }
-  .blog-index-main {
-    min-width: 0;
-  }
-  @media (max-width: 1099px) {
-    .blog-index-layout {
-      grid-template-columns: minmax(0, 1fr);
+<script>
+  import {
+    getSidebarBottomGap,
+    shouldLockSidebar,
+  } from '~/utils/blog-sidebar.js'
+
+  const noop = (): void => undefined
+
+  const setupBlogSidebar = (layout: HTMLElement) => {
+    const column = layout.querySelector<HTMLElement>(
+      '[data-blog-sidebar-column]'
+    )
+    const sidebar = column?.querySelector<HTMLElement>('[data-blog-sidebar]')
+    if (!column || !sidebar) return noop
+
+    let frame = 0
+    let locked = false
+
+    const readSidebarBottomGap = () => {
+      const bottomGapSource = sidebar.querySelector<HTMLElement>(
+        '[data-sidebar-bottom-gap-source]'
+      )
+      if (!bottomGapSource) return null
+      return getSidebarBottomGap(bottomGapSource.offsetHeight)
+    }
+
+    const updateFixedMetrics = (sidebarBottomGap: number) => {
+      const rect = column.getBoundingClientRect()
+      sidebar.style.setProperty('--sidebar-left', `${rect.left}px`)
+      sidebar.style.setProperty('--sidebar-width', `${rect.width}px`)
+      sidebar.style.setProperty('--sidebar-bottom-gap', `${sidebarBottomGap}px`)
+    }
+
+    const setLocked = (next: boolean, sidebarBottomGap?: number | null) => {
+      if (next && sidebarBottomGap != null) {
+        if (!locked) {
+          locked = true
+          column.style.minHeight = `${sidebar.offsetHeight}px`
+          sidebar.dataset.sidebarLocked = ''
+        }
+        updateFixedMetrics(sidebarBottomGap)
+        return
+      }
+
+      if (!locked) return
+      locked = false
+      delete sidebar.dataset.sidebarLocked
+      sidebar.style.removeProperty('--sidebar-left')
+      sidebar.style.removeProperty('--sidebar-width')
+      sidebar.style.removeProperty('--sidebar-bottom-gap')
+      column.style.minHeight = ''
+    }
+
+    const update = () => {
+      frame = 0
+      const columnRect = column.getBoundingClientRect()
+      const sidebarHeight = sidebar.offsetHeight
+      const header = document.querySelector<HTMLElement>('[data-site-header]')
+      const headerHeight = header?.offsetHeight ?? null
+      const sidebarBottomGap = readSidebarBottomGap()
+
+      if (
+        !shouldLockSidebar({
+          viewportWidth: window.innerWidth,
+          sidebarHeight,
+          viewportHeight: window.innerHeight,
+          headerHeight,
+          columnTop: columnRect.top,
+          columnBottom: columnRect.bottom,
+          sidebarBottomGap,
+        })
+      ) {
+        setLocked(false)
+        return
+      }
+
+      if (locked) column.style.minHeight = `${sidebarHeight}px`
+      setLocked(true, sidebarBottomGap)
+    }
+
+    const scheduleUpdate = () => {
+      if (frame) return
+      frame = requestAnimationFrame(update)
+    }
+
+    const resizeObserver = new ResizeObserver(scheduleUpdate)
+    resizeObserver.observe(sidebar)
+    window.addEventListener('scroll', scheduleUpdate, { passive: true })
+    window.addEventListener('resize', scheduleUpdate)
+    scheduleUpdate()
+
+    return () => {
+      if (frame) cancelAnimationFrame(frame)
+      resizeObserver.disconnect()
+      window.removeEventListener('scroll', scheduleUpdate)
+      window.removeEventListener('resize', scheduleUpdate)
+      setLocked(false)
     }
   }
-</style>
+
+  let cleanup = noop
+
+  const mountBlogSidebar = () => {
+    cleanup()
+    const layout = document.querySelector<HTMLElement>(
+      '[data-blog-index-layout]'
+    )
+    cleanup = layout ? setupBlogSidebar(layout) : noop
+  }
+
+  document.addEventListener('astro:before-swap', () => {
+    cleanup()
+    cleanup = noop
+  })
+  document.addEventListener('astro:page-load', mountBlogSidebar)
+  mountBlogSidebar()
+</script>

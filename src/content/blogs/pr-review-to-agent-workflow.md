@@ -2,6 +2,7 @@
 title: "从一次 PR 复盘到可执行的 Agent 工作流"
 description: "复盘复杂 PR 中的设计漂移、模块归属与测试累积，并将经验整理为 AGENTS.md 规则和 pr-lifecycle Skill。"
 pubDate: 2026-09-16
+category: 技术向
 lastModDate: 2026-09-16
 tags: [Agent, Skill, PR, 软件工程]
 titleImage: /blog-title-images/bocchi.png

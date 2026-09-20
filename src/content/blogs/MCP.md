@@ -2,6 +2,7 @@
 title: MCP（Model Context Protocol）
 description: MCP tutorial
 pubDate: 2026-05-15
+category: 技术向
 tags: [MCP]
 toc: true
 search: true

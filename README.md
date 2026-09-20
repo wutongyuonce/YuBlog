@@ -38,14 +38,13 @@
 
 | 路由 | 说明 |
 | :--- | :--- |
-| `/` | 首页。文章列表（分类、日期、阅读时间、标题、摘要、可选配图），六篇分页。右栏：名片、近期文章、分类。 |
+| `/` | 首页。文章列表（分类、日期、阅读时间、标题、摘要、可选配图），七篇分页。右栏：名片、近期文章、分类。 |
 | `/tags/` | 标签页。标签可按数量或名称排序；多选为 AND。未选标签时不显示列表。 |
 | `/archives/` | 归档。按年份时间线列出全部文章。 |
 | `/projects/` | 项目。按分类网格展示，数据来自 JSON。 |
 | `/about/#use` | 关于。顶部介绍 + Use / Hobby / Soul 三个 Markdown 标签。无背景特效。 |
 | `/friends/` | 友链。卡片列表 + 申请说明 + `friend.txt` 参考模板。 |
 | `/blogs/[slug]/` | 文章详情。右侧 TOC，点击 TOC 可固定。 |
-| `/blogs/` | 旧索引，跳转首页并保留查询串。 |
 | `/rss.xml` | RSS。 |
 
 顶栏：`WutongRain's Blog`、首页 / 标签 / 归档 / 项目 / 关于 / 友链，右侧 GitHub、X、Instagram、B 站、小红书、搜索、主题。当前页加粗。
@@ -56,7 +55,7 @@
 
 | 路径 | 用途 |
 | :--- | :--- |
-| `src/content/blogs/**/*.{md,mdx}` | 文章。`title`、`pubDate` 必填；`category` 可选，支持任意非空字符串，未填写时默认为 `技术向`。配图用 `titleImage: /blog-title-images/...`。 |
+| `src/content/blogs/**/*.{md,mdx}` | 文章。`title`、`pubDate`、`category` 必填；`category` 为任意非空字符串。配图用 `titleImage: /blog-title-images/...`。 |
 | `src/content/about/*.md` | 关于页。`intro.md` 是顶部介绍（`tab: false`）；其余文件按 `title`、`order` 成为标签。 |
 | `src/content/projects/data.json` | 项目卡片。 |
 | `src/content/friends/data.json` | 友链卡片。 |
@@ -90,6 +89,7 @@ pnpm check                 # Astro 类型与内容检查
 pnpm build                 # 生产构建（含 Pagefind）
 pnpm preview
 pnpm test:blog-browser     # 分页与 URL
+pnpm test:blog-sidebar     # 右栏锁定阈值
 pnpm test:blog-tags        # 标签 AND 筛选
 pnpm test:blog-stats       # 名片统计
 pnpm test:recent-post-date # 近期文章日期

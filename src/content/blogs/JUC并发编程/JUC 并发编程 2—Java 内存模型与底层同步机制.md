@@ -2,6 +2,7 @@
 title: JUC 并发编程 2——Java 内存模型与底层同步机制
 description: JUC Concurrent programming——Java Memory Model and Low-Level Synchronization Mechanisms
 pubDate: 2026-03-01
+category: 技术向
 lastModDate: ''
 tags: [Java, JUC, Java 内存模型]
 toc: true

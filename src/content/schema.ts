@@ -1,5 +1,4 @@
 import { z } from 'astro:content' // 导入 Zod 验证库
-import type { SchemaContext } from 'astro:content' // 导入类型定义
 
 /* =====================================================
    文章 Schema - 用于博客文章
@@ -28,9 +27,8 @@ const isTitleImagePath = (value: string) => {
   )
 }
 
-export const postSchema = ({ image }: SchemaContext) =>
-  z
-    .object({
+export const postSchema = z
+  .object({
       // 文章标题（必填，最多60字符）
       title: z
         .string()
@@ -58,30 +56,13 @@ export const postSchema = ({ image }: SchemaContext) =>
         .string()
         .trim()
         .min(1, '文章分类不能为空。')
-        .default('技术向')
-        .describe('文章分类。支持任意非空字符串，未填写时默认为技术向。'),
+        .describe('文章分类。必填，任意非空字符串。'),
 
       // 标签列表
       tags: z
         .array(z.string()) // 字符串数组
         .default([])
         .describe('文章标签。不需要时留空数组或删除。'),
-
-      // 封面图片
-      // 接收一个 SchemaContext 类型的参数
-      // 从中解构出 image 函数
-      // 用 image() 创建一个验证器，用于验证本地图片路径
-      // 允许 cover 字段接受本地图片路径或远程 URL
-      cover: z
-        .union([image(), z.string().url()])
-        .default('')
-        .describe('封面图片。可以是 URL 或当前目录的相对路径。不需要时留空。'),
-
-      // 封面图片的 alt 文本（无障碍访问）
-      coverAlt: z
-        .string()
-        .default('')
-        .describe('封面图片的 alt 文本。不需要时留空。'),
 
       // 标题图片（存放在 public/blog-title-images 下）
       titleImage: z
@@ -256,64 +237,14 @@ export const friendSchema = z.object({
     .describe('同组内排序值，数值越小越靠前。'),
 })
 
-/* =====================================================
-   Insight Schema - 用于语录/启发/哲理内容
-   ===================================================== */
-export const insightSchema = z.object({
-  title: z
-    .string()
-    .describe('**必填**。Insight 标题。')
-    .transform((value) => value.trim()),
-
-  description: z
-    .string()
-    .default('')
-    .describe('简短描述，用于 SEO 或列表摘要。')
-    .transform((value) => value.trim()),
-
-  pubDate: z.coerce.date().describe('**必填**。Insight 的记录日期。'),
-
-  category: z
-    .string()
-    .describe('**必填**。Insight 的分类标签。')
-    .transform((value) => value.trim()),
-
-  image: z
-    .string()
-    .default('')
-    .describe(
-      'Insight 右侧展示图片，使用 /public 下的路径。为空表示不展示图片。'
-    )
-    .transform((value) => value.trim()),
-
-  imageAlt: z
-    .string()
-    .default('')
-    .describe('图片的替代文本。无图时可留空。')
-    .transform((value) => value.trim()),
-
-  author: z
-    .string()
-    .default('')
-    .describe('语录或观点的作者。为空表示不标注作者。')
-    .transform((value) => value.trim()),
-
-  sourceUrl: z
-    .union([z.string().url('无效的 URL 格式。'), z.literal('')])
-    .default('')
-    .describe('语录来源链接。为空表示不提供来源链接。'),
-
-  draft: z
-    .boolean()
-    .default(false)
-    .describe('标记为草稿。true 时仅在开发环境可见，生产构建时会被排除。'),
-})
-
 export const aboutSchema = z.object({
   title: z
     .string()
     .describe('标签按钮上的名字。intro 可随便填。')
     .transform((value) => value.trim()),
   order: z.number().default(0).describe('标签排序，数值越小越靠前。'),
-  tab: z.boolean().default(true).describe('false 时作为关于页顶部介绍，不进标签栏。'),
+  tab: z
+    .boolean()
+    .default(true)
+    .describe('false 时作为关于页顶部介绍，不进标签栏。'),
 })

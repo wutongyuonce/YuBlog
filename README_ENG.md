@@ -38,14 +38,13 @@ Live: [https://www.wutongyu.site/](https://www.wutongyu.site/)
 
 | Route | What it is |
 | :--- | :--- |
-| `/` | Home. Post list (category, date, reading time, title, summary, optional image), six per page. Sidebar: profile, recent posts, categories. |
+| `/` | Home. Post list (category, date, reading time, title, summary, optional image), seven per page. Sidebar: profile, recent posts, categories. |
 | `/tags/` | Tags. Sort by count or name. Multi-select is AND. No list until a tag is selected. |
 | `/archives/` | Archive timeline grouped by year. |
 | `/projects/` | Project grid from JSON. |
 | `/about/#use` | About. Intro plus Use / Hobby / Soul markdown tabs. No background effect. |
 | `/friends/` | Friend links, apply notes, and a `friend.txt` template. |
 | `/blogs/[slug]/` | Post. Right TOC; click TOC to pin. |
-| `/blogs/` | Legacy index; redirects home and keeps the query string. |
 | `/rss.xml` | RSS. |
 
 Nav: `WutongRain's Blog`, Home / Tags / Archive / Projects / About / Friends, then GitHub, X, Instagram, Bilibili, Xiaohongshu, search, theme. The current page is bold.
@@ -56,7 +55,7 @@ Home, tags, archive, projects, about, and friends share `BlogIndexLayout` and th
 
 | Path | Purpose |
 | :--- | :--- |
-| `src/content/blogs/**/*.{md,mdx}` | Posts. `title` and `pubDate` are required; `category` is optional and accepts any non-empty string, defaulting to `技术向`. Title images use `titleImage: /blog-title-images/...`. |
+| `src/content/blogs/**/*.{md,mdx}` | Posts. `title`, `pubDate`, and `category` are required; `category` is any non-empty string. Title images use `titleImage: /blog-title-images/...`. |
 | `src/content/about/*.md` | About. `intro.md` is the top copy (`tab: false`); other files become tabs via `title` and `order`. |
 | `src/content/projects/data.json` | Project cards. |
 | `src/content/friends/data.json` | Friend-link cards. |
@@ -90,6 +89,7 @@ pnpm check                 # Astro type and content checks
 pnpm build                 # production build (includes Pagefind)
 pnpm preview
 pnpm test:blog-browser     # pagination and URLs
+pnpm test:blog-sidebar     # sidebar lock threshold
 pnpm test:blog-tags        # tag AND filtering
 pnpm test:blog-stats       # profile stats
 pnpm test:recent-post-date # recent-post dates

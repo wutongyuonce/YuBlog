@@ -52,8 +52,6 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site)
 
 `Astro.site` 来自配置里的 `site`。用的是 `pathname`，所以查询串不会进 canonical。
 
-例外：旧列表 `/blogs/` 已经不是内容页。它自己写 canonical 指向首页，并加 `noindex`，避免搜索引擎把跳转页当正文。
-
 自己检查：打开任意文章 → 查看源代码 → 搜 `rel="canonical"`，应看到完整 `https://www.wutongyu.site/...`。
 
 ## 3. Sitemap：给爬虫的目录

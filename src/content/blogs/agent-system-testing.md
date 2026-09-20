@@ -2,6 +2,7 @@
 title: Agent 上线前常用的系统测试方法总述
 description: 从功能正确性、回复质量、鲁棒安全性、性能稳定性和上线验证五个维度，系统梳理 Agent 上线前的测试方法。
 pubDate: 2026-08-23
+category: 技术向
 tags: [Agent, Eval]
 toc: true
 search: true

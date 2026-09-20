@@ -32,8 +32,8 @@ Avatar: ${friendInfo.avatar}`
       </li>
     </ol>
     <p class="friends-apply__hint">
-      在仓库的 <code>{dataFilePath}</code> 数组末尾追加一条对象，补上上一项的逗号，然后提交
-      Pull Request。
+      在仓库的 <code>{dataFilePath}</code>{' '}
+      数组末尾追加一条对象，补上上一项的逗号，然后提交 Pull Request。
     </p>
     <Link href={prUrl} external={true} class="friends-apply__pr">
       在 GitHub 提交 PR
@@ -45,7 +45,9 @@ Avatar: ${friendInfo.avatar}`
     <div class="friends-apply__editor">
       <header class="friends-apply__titlebar">
         <span class="friends-apply__dots" aria-hidden="true">
-          <i></i><i></i><i></i>
+          <i></i>
+          <i></i>
+          <i></i>
         </span>
         <span class="friends-apply__filename">friend.txt</span>
         <button
@@ -62,24 +64,44 @@ Avatar: ${friendInfo.avatar}`
 </aside>
 
 <script>
-  document
-    .querySelectorAll<HTMLButtonElement>('[data-copy-target]')
-    .forEach((button) => {
-      button.addEventListener('click', async () => {
-        const target = document.getElementById(button.dataset.copyTarget ?? '')
-        if (!target) return
+  const setupCopyButtons = () => {
+    document
+      .querySelectorAll<HTMLButtonElement>('[data-copy-target]')
+      .forEach((button) => {
+        if (button.dataset.copyBound) return
+        button.dataset.copyBound = 'true'
+        let resetTimer: number | undefined
+        let copyAttempt = 0
+        button.addEventListener('click', async () => {
+          const currentAttempt = ++copyAttempt
+          if (resetTimer !== undefined) {
+            window.clearTimeout(resetTimer)
+            resetTimer = undefined
+          }
 
-        try {
-          await navigator.clipboard.writeText(target.textContent ?? '')
-          button.textContent = '已复制'
-        } catch {
-          button.textContent = '复制失败'
-        }
-        setTimeout(() => {
-          button.textContent = '复制'
-        }, 1600)
+          const target = document.getElementById(
+            button.dataset.copyTarget ?? ''
+          )
+          if (!target) return
+
+          try {
+            await navigator.clipboard.writeText(target.textContent ?? '')
+            button.textContent = '已复制'
+          } catch {
+            button.textContent = '复制失败'
+          }
+
+          if (currentAttempt !== copyAttempt) return
+          resetTimer = window.setTimeout(() => {
+            button.textContent = '复制'
+            resetTimer = undefined
+          }, 1600)
+        })
       })
-    })
+  }
+
+  document.addEventListener('astro:page-load', setupCopyButtons)
+  setupCopyButtons()
 </script>
 
 <style>

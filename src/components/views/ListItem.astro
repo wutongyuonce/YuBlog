@@ -10,8 +10,8 @@ interface Props {
 const {
   item: { id, data, minutesRead },
 } = Astro.props
-const image = data.titleImage || data.cover
-const alt = data.titleImage ? data.titleImageAlt : data.coverAlt
+const image = data.titleImage
+const alt = data.titleImageAlt
 const href = data.redirect || withBasePath(`/blogs/${id}/`)
 ---
 

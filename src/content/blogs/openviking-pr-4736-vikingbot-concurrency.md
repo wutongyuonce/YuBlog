@@ -2,6 +2,7 @@
 title: "OpenViking PR #4736：VikingBot 跨会话有界并发实现报告"
 description: 从事件循环、消息队列、Task 调度、会话锁与全局 semaphore，拆解 VikingBot 的跨会话并发实现。
 pubDate: 2026-09-06
+category: 技术向
 tags: [OpenViking, Memory, PR]
 toc: true
 search: true

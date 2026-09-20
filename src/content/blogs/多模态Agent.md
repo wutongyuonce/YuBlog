@@ -2,6 +2,7 @@
 title: 多模态 Agent
 description: 梳理 Voice Agent 三种架构、GUI Agent 的动作与安全设计，以及跨模态的快慢解耦原则。
 pubDate: 2026-09-12
+category: 技术向
 tags: [Agent, 多模态]
 titleImage: /blog-title-images/anime.webp
 titleImageAlt: 二次元动漫场景壁纸

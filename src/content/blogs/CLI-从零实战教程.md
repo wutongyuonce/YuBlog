@@ -2,6 +2,7 @@
 title: 从零写 CLI：Python 与 JavaScript / TypeScript 实战教程
 description: 从命令设计、参数解析到测试与发布，系统梳理 Python 和 JavaScript / TypeScript CLI 的实战方法。
 pubDate: 2026-08-06
+category: 技术向
 tags: [CLI]
 toc: true
 search: true

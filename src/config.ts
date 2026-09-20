@@ -88,7 +88,6 @@ export const UI: Ui = {
   },
   postView: {
     postMetaStyle: 'minimal',
-    useCoverAltAsCaption: true,
   },
   groupView: {
     maxGroupColumns: 3,
