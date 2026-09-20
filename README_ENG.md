@@ -56,7 +56,7 @@ Home, tags, archive, projects, about, and friends share `BlogIndexLayout` and th
 
 | Path | Purpose |
 | :--- | :--- |
-| `src/content/blogs/**/*.{md,mdx}` | Posts. `title` and `pubDate` required; `category` is `技术向` or `工具向`. Title images use `titleImage: /blog-title-images/...`. |
+| `src/content/blogs/**/*.{md,mdx}` | Posts. `title` and `pubDate` are required; `category` is optional and accepts any non-empty string, defaulting to `技术向`. Title images use `titleImage: /blog-title-images/...`. |
 | `src/content/about/*.md` | About. `intro.md` is the top copy (`tab: false`); other files become tabs via `title` and `order`. |
 | `src/content/projects/data.json` | Project cards. |
 | `src/content/friends/data.json` | Friend-link cards. |

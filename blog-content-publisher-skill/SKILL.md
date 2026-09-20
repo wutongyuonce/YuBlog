@@ -39,7 +39,7 @@ description: >
 1. 文件名短而稳。子目录会进 slug。**不要擅自改已有文件名**（会改 URL）。
 2. `title`（最多 60 字）和 `pubDate`（`YYYY-MM-DD`）必填。
 3. 用户没说发布就 `draft: true`。只有明确要上线才 `false` 或删掉。
-4. `category` 只有 `技术向`（默认）和 `工具向`。`tags` 是独立话题数组。
+4. `category` 可使用任意非空字符串；未填写时默认为 `技术向`。`tags` 是独立话题数组。
 5. `description` 短、事实。极短文才 `toc: false`。不进搜索才 `search: false`。
 6. 正文图：放到 `public/blogs/<短名>-img/`，Markdown 用 `/blogs/<短名>-img/文件.png`。现有目录：`Astro-img`、`MCP-img`、`RAG-img`、`agent-skill-img`、`cloud-agent-img`、`deploy-img`、`jianquan-img`、`juc-img`、`kv-prefix-prompt-semantic-caching-img`、`memu-img`、`prompt-caching-img`、`多模态Agent-img`。新文章新建 `public/blogs/<短名>-img/`，不要写回 `public/` 根目录。
 7. 列表/标题块配图：放 `public/blog-title-images/`，frontmatter：

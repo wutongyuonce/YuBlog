@@ -56,7 +56,7 @@
 
 | 路径 | 用途 |
 | :--- | :--- |
-| `src/content/blogs/**/*.{md,mdx}` | 文章。`title`、`pubDate` 必填；`category` 为 `技术向` 或 `工具向`。配图用 `titleImage: /blog-title-images/...`。 |
+| `src/content/blogs/**/*.{md,mdx}` | 文章。`title`、`pubDate` 必填；`category` 可选，支持任意非空字符串，未填写时默认为 `技术向`。配图用 `titleImage: /blog-title-images/...`。 |
 | `src/content/about/*.md` | 关于页。`intro.md` 是顶部介绍（`tab: false`）；其余文件按 `title`、`order` 成为标签。 |
 | `src/content/projects/data.json` | 项目卡片。 |
 | `src/content/friends/data.json` | 友链卡片。 |
