@@ -63,7 +63,7 @@ Minami 在公司练习时会拼命想拿第一。她说这不是为了证明自�
 
 希望每个被困在优绩怪圈、爱而不得的人，都能找到属于自己的爱与原野。
 
-<img src="/blogs/east-asian-meritocracy-img/01.webp" alt="两位女孩在列车车厢中的画面" style="zoom: 45%;" loading="lazy" />
+<img src="/blogs/east-asian-meritocracy-img/01.webp" alt="两位女孩在列车车厢中的画面" style="zoom: 40%;" loading="lazy" />
 
 <img src="/blogs/east-asian-meritocracy-img/02.webp" alt="两位女孩在校园道路间活动的画面" style="zoom: 40%;" loading="lazy" />
 
