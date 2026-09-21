@@ -3,7 +3,7 @@ title: 东亚的孩子，能不能不靠成绩来换爱？
 description: 从精英教育与优绩主义谈起，再看 RESCENE 两位成员的故乡影像，思考成绩之外的成长与爱。
 pubDate: 2026-09-21
 category: 思考向
-tags: [优绩主义, 精英教育, 东亚教育, 空心人, RESCENE]
+tags: [优绩主义, 东亚, RESCENE]
 titleImage: /blog-title-images/east-asian-meritocracy-cover.webp
 titleImageAlt: 两位穿校服的女孩坐在列车座位上休息
 toc: true
