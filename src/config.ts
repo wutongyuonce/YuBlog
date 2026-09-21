@@ -5,6 +5,8 @@ export const SITE: Site = {
   base: '/',
   title: 'Wutong Yu',
   description: 'WutongRain 的技术文章、工具笔记与项目记录。',
+  socialImage: '/icon-512.png',
+  socialImageAlt: 'Wutong Yu 的头像',
   author: 'Wutong Yu',
   lang: 'zh-CN',
   imageDomains: [],

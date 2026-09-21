@@ -37,6 +37,16 @@ export interface Site {
   description: string
 
   /**
+   * Specifies the default image used for social sharing when a page has no image.
+   */
+  socialImage: Path
+
+  /**
+   * Describes the default social sharing image for assistive technologies.
+   */
+  socialImageAlt: string
+
+  /**
    * Specifies your name for meta tags, found in `src/components/base/Head.astro`.
    */
   author: string

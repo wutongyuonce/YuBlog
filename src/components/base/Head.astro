@@ -9,16 +9,31 @@ interface Props {
   description?: string
   pubDate?: string
   lastModDate?: string
+  socialImage?: string
+  socialImageAlt?: string
 }
 
-const { title, description, pubDate, lastModDate } = Astro.props
+const {
+  title,
+  description,
+  pubDate,
+  lastModDate,
+  socialImage,
+  socialImageAlt,
+} = Astro.props
 
 const pageTitle =
   title && title !== SITE.title ? `${title} - ${SITE.title}` : SITE.title
 
 const pageDescription = description || SITE.description
+const socialTitle = title || SITE.title
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site)
+const socialImageURL = new URL(
+  withBasePath(socialImage || SITE.socialImage),
+  Astro.site
+)
+const resolvedSocialImageAlt = socialImageAlt || SITE.socialImageAlt
 
 // https://jsonld.com/blog-post/
 const blogPostingData = {
@@ -60,6 +75,22 @@ const webPageData = {
 <meta name="title" content={pageTitle} />
 <meta name="description" content={pageDescription} />
 <meta name="author" content={SITE.author} />
+
+<!-- Social sharing metadata -->
+<meta property="og:type" content={pubDate ? 'article' : 'website'} />
+<meta property="og:site_name" content={SITE.title} />
+<meta property="og:locale" content={SITE.lang.replace('-', '_')} />
+<meta property="og:title" content={socialTitle} />
+<meta property="og:description" content={pageDescription} />
+<meta property="og:url" content={canonicalURL} />
+<meta property="og:image" content={socialImageURL} />
+<meta property="og:image:alt" content={resolvedSocialImageAlt} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={socialTitle} />
+<meta name="twitter:description" content={pageDescription} />
+<meta name="twitter:url" content={canonicalURL} />
+<meta name="twitter:image" content={socialImageURL} />
+<meta name="twitter:image:alt" content={resolvedSocialImageAlt} />
 
 <!-- Color -->
 <meta name="color-scheme" content="" />

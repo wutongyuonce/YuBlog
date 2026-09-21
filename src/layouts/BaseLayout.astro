@@ -23,10 +23,19 @@ interface Props {
   bgType?: BgType | false
   pubDate?: string
   lastModDate?: string
+  socialImage?: string
+  socialImageAlt?: string
 }
 
-const { title, description, bgType, pubDate, lastModDate } =
-  Astro.props
+const {
+  title,
+  description,
+  bgType,
+  pubDate,
+  lastModDate,
+  socialImage,
+  socialImageAlt,
+} = Astro.props
 const pathname = Astro.url.pathname
 const isHomePage = pathname === withBasePath('/')
 const isTagsPage = pathname === resolvePath('/tags')
@@ -65,7 +74,14 @@ if (hasCustomCursor) style['--external-link-cursor'] = cursorType
 <!doctype html>
 <html lang={SITE.lang}>
   <head>
-    <Head {title} {description} {pubDate} {lastModDate} />
+    <Head
+      {title}
+      {description}
+      {pubDate}
+      {lastModDate}
+      {socialImage}
+      {socialImageAlt}
+    />
   </head>
 
   <body

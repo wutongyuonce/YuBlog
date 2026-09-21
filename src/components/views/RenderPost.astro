@@ -58,7 +58,14 @@ in production. Set the post's <code>draft</code> property in
 frontmatter to <code>false</code> or remove it to publish the post.`
 ---
 
-<BaseLayout {title} {description} {pubDate} {lastModDate}>
+<BaseLayout
+  {title}
+  {description}
+  {pubDate}
+  {lastModDate}
+  socialImage={titleImage}
+  socialImageAlt={titleImageAlt}
+>
   <StandardLayout
     {title}
     {subtitle}
