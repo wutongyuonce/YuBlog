@@ -155,5 +155,14 @@
     "desc": "爱吃柠檬",
     "category": "Friends",
     "order": 17
+  },
+  {
+    "id": "pleasure1234",
+    "name": "Pleasure1234",
+    "link": "https://you-find.me",
+    "avatar": "https://you-find.me/profile/me.png",
+    "desc": "不足之处 敬请谅解 🙏",
+    "category": "Friends",
+    "order": 18
   }
 ]
