@@ -185,7 +185,7 @@ order: 2
 * [欧卡2](https://zh.wikipedia.org/wiki/欧洲卡车模拟2)
 * 生化危机系列：
   * [生化危机2](https://zh.wikipedia.org/wiki/生化危机2)
-  * [生化危机3](https://zh.wikipedia.org/wiki/生化危机3_重制版)（重制版）
+  * [生化危机3](https://zh.wikipedia.org/wiki/生化危机3_重制版)
   * [生化危机4](https://zh.wikipedia.org/wiki/生化危机4)
   * [生化危机7](https://zh.wikipedia.org/wiki/生化危机7)
 * 地平线系列：
