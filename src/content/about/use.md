@@ -5,19 +5,30 @@ order: 1
 
 #### 我的电子设备
 
-- **PC：** Macbook Pro M5 24+512、天选4 r9 4070 16+1T、Samsung T7 固态 1T
-- **Phone：** Honor Magic7 24+512、小米金沙江磁吸充电宝
-- **Headphones / Audio：** ARPTICAL 拉斐尔、Sony SRS-XB100、Airpods Pro 2
-- **Mouse：** Razer V3pro、Logi M650
-- **Keyboard：** Lofree FLOW2
+- **💻 PC：** Macbook Pro M5 24+512、天选4 r9 4070 16+1T、Samsung T7 固态 1T
+- **📱 Phone：** Honor Magic7 24+512、小米金沙江磁吸充电宝
+- **🎧 Headphones / Audio：** ARPTICAL 拉斐尔 + EPZ TP35 Pro、Sony SRS-XB100、Airpods Pro 2
+- **🖱️ Mouse：** Razer V3pro、Logi M650
+- **🎮 Controller：** 盖世小鸡 G7Pro
+- **⌨️ Keyboard：** Lofree FLOW2
+
+#### 我的 AI 服务
+
+* GPT Plus * 3
+
+  <img src="/about/use/PixPin_2026-09-24_01-30-49.png" alt="GPT" width="300"/>
+
+* Supergrok
+
+* deepseek API
 
 #### 我的 Mac 软件
 
-- **笔记：** Typora、飞书、语雀
+- **笔记：** Typora、Obsidian、飞书、语雀
 - **浏览器：** Safari、ego lite、Chrome
-- **播放器：** Sleeve、Apple Music、QQ 音乐、网易云音乐
-- **终端：** Ghostty
-- **代码及其工具：** ChatGPT、Memoh、Zed、VS Code、Multica、Grok Bot、CodexBar、Trajex、cockpit tools、ExcalidrawZ、Navicat、Bruno、Apifox、Postman、Docker
+- **播放器：** QQ 音乐、网易云音乐、Apple Music、Sleeve
+- **AI工具：** ChatGPT、Ghostty + pi + herdr、Memoh、Multica、Grok Bot、CodexBar、Trajex、cockpit tools
+- **代码工具：** Zed、VS Code、Navicat、Bruno、Apifox、Postman、Docker
 - **社交：** Telegram、Discord
 - **工作：** 钉钉、腾讯会议
 - **邮箱：** 网易邮箱大师
@@ -28,7 +39,7 @@ order: 1
 
 * 微信、豆包输入法
 * 社交媒体：vx、qq、zfb、wb、X、ins、Github、telegram、discord、twitch、Proton Authenticator（密钥）
-* 视频影视播客小说：b站、youtube、dy、豆瓣、小宇宙、起点、番茄、bilibili漫画、知乎、腾讯体育、咪咕、腾讯视频
+* 视频影视播客小说：b站、youtube、dy、豆瓣、小宇宙、起点、番茄、LOFTER、POSTYPE、bilibili漫画、知乎、腾讯体育、咪咕、腾讯视频
 * 音乐：qq音乐、wyy、apple music、spotify
 * 邮箱：qq邮箱、gmail、网易邮箱
 * 游戏：steam、小黑盒、oopz
