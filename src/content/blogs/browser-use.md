@@ -3,9 +3,9 @@ title: 从浏览器自动化到 Browser Agent
 description: 从网页表示与浏览器控制讲起，梳理 Playwright、视觉操作和 Browser Agent 的决策循环、选型与安全边界。
 pubDate: 2026-09-23
 category: 技术向
-tags: [Agent, Browser Automation, GUI]
+tags: [Agent, Browser Use]
 titleImage: /blog-title-images/browser-agent.webp
-titleImageAlt: 抽象城市天际线与飞鸟，呈现智能体穿行数字环境的意象
+titleImageAlt: ego（lite）官网首页截图：左边是“为 AI Agent 打造的浏览器”文案与下载入口，右边是浏览器窗口与终端中运行的自动化脚本
 ---
 
 > 核对日期：2026-09-23。本文先解释相对稳定的浏览器原理，再说明项目定位。项目内部实现以文末所列提交为观察点；安装命令和 API 会随版本变化，实际运行前以对应版本的官方文档为准。
