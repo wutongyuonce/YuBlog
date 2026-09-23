@@ -3,7 +3,7 @@ title: Hobby
 order: 2
 ---
 
-一些我喜欢的 kpop，我觉得值得看的动漫、影视、小说和游戏。持续整理更新中。
+我喜欢 kpop，喜欢看动漫、影视、小说，玩游戏。以下是我的推荐单，持续整理更新中。
 
 #### Kpop 团体/Solo
 
@@ -98,6 +98,7 @@ order: 2
 * [小偷家族](https://zh.wikipedia.org/wiki/小偷家族)
 * [寄生虫](https://zh.wikipedia.org/wiki/寄生上流)
 * [分手的决心](https://zh.wikipedia.org/wiki/分手的决心)
+* [如花束般的恋爱](https://zh.wikipedia.org/zh-cn/她和他的戀愛花期)
 * [惊天魔盗团](https://zh.wikipedia.org/wiki/出神入化)
 * [这个杀手不太冷](https://zh.wikipedia.org/wiki/終極追殺令)
 * [环太平洋](https://zh.wikipedia.org/wiki/环太平洋_(电影))
@@ -126,6 +127,7 @@ order: 2
 
 * [怪奇物语](https://zh.wikipedia.org/wiki/怪奇物語)
 * [权力的游戏](https://zh.wikipedia.org/wiki/权力的游戏_(电视剧))
+* [龙之家族](https://zh.wikipedia.org/wiki/龙之家族)
 * [七王国的骑士](https://zh.wikipedia.org/wiki/七王國的騎士_(電視劇))
 * [绝命毒师](https://zh.wikipedia.org/wiki/绝命毒师)、[风骚律师](https://zh.wikipedia.org/wiki/风骚律师)
 * [星期三](https://zh.wikipedia.org/wiki/星期三_(电视剧))
@@ -158,6 +160,7 @@ order: 2
 * [酒鬼都市女人们](https://zh.wikipedia.org/wiki/酒鬼都市女人们)
 * [善意的竞争](https://zh.wikipedia.org/wiki/善意的競爭)
 * [黑暗荣耀](https://zh.wikipedia.org/wiki/黑暗荣耀)
+* [请回答 1988](https://zh.wikipedia.org/wiki/请回答1988)
 
 国产剧：
 
@@ -167,6 +170,10 @@ order: 2
 * [觉醒年代](https://zh.wikipedia.org/wiki/觉醒年代)
 * [繁花](https://zh.wikipedia.org/wiki/繁花_(电视剧))
 * [隐秘的角落](https://zh.wikipedia.org/wiki/隐秘的角落)
+* [沉默的真相](https://zh.wikipedia.org/wiki/沉默的真相)
+* [狂飙](https://zh.wikipedia.org/wiki/狂飙)
+* [大明王朝1556](https://zh.wikipedia.org/wiki/大明王朝1566)
+* [梦华录](https://zh.wikipedia.org/wiki/梦华录)
 
 #### 综艺
 

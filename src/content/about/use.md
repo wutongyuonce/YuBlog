@@ -9,16 +9,16 @@ order: 1
 - **📱 Phone：** Honor Magic7 24+512、小米金沙江磁吸充电宝
 - **🎧 Headphones / Audio：** ARPTICAL 拉斐尔 + EPZ TP35 Pro、Sony SRS-XB100、Airpods Pro 2
 - **🖱️ Mouse：** Razer V3pro、Logi M650
-- **🎮 Controller：** 盖世小鸡 G7Pro
+- **🎮 Controller：** 盖世小鸡 G7 Pro
 - **⌨️ Keyboard：** Lofree FLOW2
 
 #### 我的 AI 服务
 
-* GPT Plus * 3
+* GPT Plus * 3：GPT-6 Astra/Sol/luna
 
   <img src="/about/use/PixPin_2026-09-24_01-30-49.png" alt="GPT" width="300"/>
 
-* Supergrok
+* Supergrok：Grok 4.7
 
 * deepseek API
 
