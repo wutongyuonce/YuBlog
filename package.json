@@ -12,6 +12,7 @@
     "check": "astro check",
     "build": "astro build",
     "preview": "astro preview",
+    "test": "node --test",
     "test:blog-browser": "node --test test/blog-browser.test.mjs",
     "test:blog-sidebar": "node --test test/blog-sidebar.test.mjs",
     "test:rss-feed": "node --test test/rss-feed.test.mjs",
