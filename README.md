@@ -8,12 +8,15 @@
 [![Pagefind](https://img.shields.io/badge/Pagefind-search-4b32c3)](https://pagefind.app)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-*梧桐雨* 的个人站点：Astro 5 静态生成，黑白主题，文章浏览为主。
+*梧桐雨* 的个人站点：Astro 5 静态生成，黑白主题，文章浏览、标签分类、统一归档、项目展示、个人简介、友链信息。
 
 线上地址：[https://www.wutongyu.site/](https://www.wutongyu.site/)
 
 ## 预览
 
+<video controls preload="metadata" width="100%" src="public/yublog-promo-4k.mp4">
+  <a href="public/yublog-promo-4k.mp4">下载 preview.mp4</a>
+</video>
 ### 首页
 
 ![image-20260918220616992](README-img/image-20260918220616992.png)

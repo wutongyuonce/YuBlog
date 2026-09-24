@@ -8,11 +8,13 @@
 [![Pagefind](https://img.shields.io/badge/Pagefind-search-4b32c3)](https://pagefind.app)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-*WutongRain*’s personal site: Astro 5, static, black-and-white, built around reading posts.
-
-Live: [https://www.wutongyu.site/](https://www.wutongyu.site/)
+*WutongRain*’s personal site: Astro 5, static, black-and-white, built around article browsing, tag classification, unified archiving, project display, personal profile and friend link information.
 
 ## Preview
+
+<video controls preload="metadata" width="100%" src="public/yublog-promo-4k.mp4">
+  <a href="public/yublog-promo-4k.mp4">下载 preview.mp4</a>
+</video>
 
 ### Home
 

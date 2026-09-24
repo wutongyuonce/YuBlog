@@ -1,7 +1,7 @@
 {
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist", "node_modules", ".local"],
+  "exclude": ["dist", "node_modules", ".local", "video"],
   "compilerOptions": {
     "baseUrl": ".",
     "resolveJsonModule": true,

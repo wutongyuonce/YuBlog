@@ -13,3 +13,7 @@ prs.mdx
 
 # avoid whitespace affecting style
 Link.astro
+
+# standalone video render artifacts
+video/out/
+video/.venv/
