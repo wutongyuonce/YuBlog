@@ -164,5 +164,24 @@
     "desc": "不足之处 敬请谅解 🙏",
     "category": "Friends",
     "order": 18
+  },
+  {
+    "id": "vinking",
+    "name": "Viking",
+    "link": "https://www.vinking.top/",
+    "avatar": "https://cdn.vinking.top/avatar.webp",
+    "desc": "愿星光永远偏爱你的梦境",
+    "category": "Friends",
+    "siteLabel": "Vinking",
+    "order": 19
+  },
+  {
+    "id": "yuxbao",
+    "name": "YuxBao",
+    "link": "https://yux-bao.site",
+    "avatar": "https://yux-bao.site/avatar.webp",
+    "desc": "一程山水，一念清欢",
+    "category": "Friends",
+    "order": 20
   }
 ]

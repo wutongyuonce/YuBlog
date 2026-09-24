@@ -20,6 +20,7 @@
     "test:progress-stats": "node --test test/progress-stats.test.mjs",
     "test:recent-post-date": "node --test test/recent-post-date.test.mjs",
     "test:cjk-emphasis": "node --test test/cjk-emphasis.test.mjs",
+    "og:cover": "node ./scripts/gen-og-cover.mjs",
     "format": "prettier . --check --ignore-unknown",
     "format:write": "prettier . --write --ignore-unknown --cache",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0 --cache",
