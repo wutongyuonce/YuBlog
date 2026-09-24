@@ -332,11 +332,7 @@ export interface ResponsiveSocialItem extends BaseSocialItem {
 export type SocialLink = TextSocialItem | IconSocialItem | ResponsiveSocialItem
 
 type NavBarComponentType =
-  | 'internalNavs'
-  | 'socialLinks'
-  | 'searchButton'
-  | 'themeButton'
-  | 'hr'
+  'internalNavs' | 'socialLinks' | 'searchButton' | 'themeButton' | 'hr'
 
 export interface NavBarLayout {
   /**

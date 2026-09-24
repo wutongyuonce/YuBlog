@@ -1,5 +1,4 @@
 ---
-
 ---
 
 <button
@@ -52,7 +51,10 @@
 
     if (navPanel) {
       const observer = new MutationObserver(syncExpanded)
-      observer.observe(navPanel, { attributes: true, attributeFilter: ['class'] })
+      observer.observe(navPanel, {
+        attributes: true,
+        attributeFilter: ['class'],
+      })
       syncExpanded()
     }
 

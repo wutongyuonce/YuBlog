@@ -6,10 +6,7 @@ interface Props {
 const { class: className } = Astro.props
 ---
 
-<hr
-  class:list={['divider', className]}
-  aria-hidden={true}
-/>
+<hr class:list={['divider', className]} aria-hidden={true} />
 
 <style>
   .divider {

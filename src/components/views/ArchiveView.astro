@@ -15,8 +15,7 @@ const groups = await getGroupedPostsByYear('blogs')
       </header>
       <ol class="archive-year__posts">
         {group.items.map((item) => {
-          const href =
-            item.data.redirect || withBasePath(`/blogs/${item.id}/`)
+          const href = item.data.redirect || withBasePath(`/blogs/${item.id}/`)
           const dateTime = item.data.pubDate.toISOString()
 
           return (
@@ -25,7 +24,7 @@ const groups = await getGroupedPostsByYear('blogs')
               <span class="archive-post__mark" aria-hidden="true"></span>
               <a
                 class="archive-post__title"
-                href={href}
+                {href}
                 {...(item.data.redirect
                   ? { target: '_blank', rel: 'noopener noreferrer' }
                   : {})}

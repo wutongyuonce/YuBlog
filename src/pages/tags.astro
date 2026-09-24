@@ -6,7 +6,11 @@ import ListView from '~/components/views/ListView.astro'
 import { withBasePath } from '~/utils/path'
 ---
 
-<BaseLayout title="标签" description="按标签浏览 WutongRain 的文章" bgType="dot">
+<BaseLayout
+  title="标签"
+  description="按标签浏览 WutongRain 的文章"
+  bgType="dot"
+>
   <BlogIndexLayout>
     <TagFilter />
     <ListView basePath={withBasePath('/tags/')} requireTags />

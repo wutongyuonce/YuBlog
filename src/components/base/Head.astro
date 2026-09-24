@@ -147,20 +147,18 @@ const webPageData = {
 <link rel="stylesheet" href={withBasePath('/shell.css')} />
 
 <!-- Google JSON-LD Structured Data -->
-{
-  pubDate ? (
-    <script
-      is:inline
-      type="application/ld+json"
-      set:html={JSON.stringify(blogPostingData)}
-    />
-  ) : (
-    <script
-      is:inline
-      type="application/ld+json"
-      set:html={JSON.stringify(webPageData)}
-    />
-  )
-}
+{pubDate ? (
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={JSON.stringify(blogPostingData)}
+  ></script>
+) : (
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={JSON.stringify(webPageData)}
+  ></script>
+)}
 
 <ClientRouter />

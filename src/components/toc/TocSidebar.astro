@@ -24,11 +24,16 @@ const specHeadings = generateToc(headings, minHeadingLevel, maxHeadingLevel)
   aria-label="Table of contents"
   data-display-mode={displayMode}
 >
-  <Link href="#skip-toc" class="sr-only focus:(not-sr-only fixed start-1 top-1.5 op-20)">
+  <Link
+    href="#skip-toc"
+    class="sr-only focus:(not-sr-only fixed start-1 top-1.5 op-20)"
+  >
     Skip toc
   </Link>
   <ul class="desktop-toc__list">
-    {specHeadings.map((heading) => <TocItem {heading} />)}
+    {specHeadings.map((heading) => (
+      <TocItem {heading} />
+    ))}
   </ul>
   <div id="skip-toc" class="hidden"></div>
 </nav>

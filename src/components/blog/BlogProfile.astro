@@ -71,10 +71,12 @@ const wordCountValue = wordCountUnit
   import { getInclusiveDayCount } from '~/utils/blog-stats.js'
 
   const paintSiteDays = () => {
-    document.querySelectorAll<HTMLElement>('[data-site-days]').forEach((element) => {
-      const from = element.dataset.from
-      if (from) element.textContent = String(getInclusiveDayCount(from))
-    })
+    document
+      .querySelectorAll<HTMLElement>('[data-site-days]')
+      .forEach((element) => {
+        const from = element.dataset.from
+        if (from) element.textContent = String(getInclusiveDayCount(from))
+      })
   }
 
   document.addEventListener('astro:page-load', paintSiteDays)

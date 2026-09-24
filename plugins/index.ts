@@ -1,21 +1,21 @@
-import { visit } from 'unist-util-visit'  // 遍历 AST 树节点的工具函数
+import { visit } from 'unist-util-visit' // 遍历 AST 树节点的工具函数
 
 // ==================== Remark 插件（Markdown → MDAST） ====================
-import remarkCjkFriendly from 'remark-cjk-friendly'      // CJK 标点旁的 **加粗**（Typora 能渲染，CommonMark 默认不能）
-import remarkDirective from 'remark-directive'           // 支持通用指令语法（::name, :name）
+import remarkCjkFriendly from 'remark-cjk-friendly' // CJK 标点旁的 **加粗**（Typora 能渲染，CommonMark 默认不能）
+import remarkDirective from 'remark-directive' // 支持通用指令语法（::name, :name）
 import remarkDirectiveSugar from 'remark-directive-sugar' // 提供 :badge、:link、:image 等内置指令
-import remarkMath from 'remark-math'                     // 解析数学公式（$...$ 和 $$...$$）
-import remarkReadingTime from './remark-reading-time'    // 计算文章阅读时间（自定义）
+import remarkMath from 'remark-math' // 解析数学公式（$...$ 和 $$...$$）
+import remarkReadingTime from './remark-reading-time' // 计算文章阅读时间（自定义）
 
 // ==================== Rehype 插件（MDAST → HTML） ====================
 import { rehypeHeadingIds } from '@astrojs/markdown-remark' // 为标题自动添加 ID
-import rehypeCallouts from 'rehype-callouts'               // 创建提示框/标注（注、警告等）
-import rehypeKatex from 'rehype-katex'                     // 渲染数学公式（LaTeX → HTML）
-import rehypeExternalLinks from 'rehype-external-links'    // 处理外部链接（新窗口、图标等）
+import rehypeCallouts from 'rehype-callouts' // 创建提示框/标注（注、警告等）
+import rehypeKatex from 'rehype-katex' // 渲染数学公式（LaTeX → HTML）
+import rehypeExternalLinks from 'rehype-external-links' // 处理外部链接（新窗口、图标等）
 import rehypeAutolinkHeadings from 'rehype-autolink-headings' // 标题自动添加锚点链接
-import rehypeWrapAll from './rehype-wrap-all'              // 用 div 包裹指定元素
+import rehypeWrapAll from './rehype-wrap-all' // 用 div 包裹指定元素
 
-import { UI } from '../src/config'                          // 导入项目配置
+import { UI } from '../src/config' // 导入项目配置
 
 import type { RemarkPlugins, RehypePlugins } from 'astro'
 import type { PropertiesFromTextDirective } from 'remark-directive-sugar'
@@ -64,9 +64,9 @@ const externalLinkContentProperties: CreateProperties = (el) => {
   if (hasImage) return null
 
   return {
-    'u-i-carbon-arrow-up-right': true,  // 使用 Carbon 图标集
-    className: ['new-tab-icon'],        // 添加 CSS 类
-    'aria-hidden': 'true',              // 对屏幕阅读器隐藏
+    'u-i-carbon-arrow-up-right': true, // 使用 Carbon 图标集
+    'className': ['new-tab-icon'], // 添加 CSS 类
+    'aria-hidden': 'true', // 对屏幕阅读器隐藏
   }
 }
 
@@ -77,8 +77,8 @@ const externalLinkProperties: CreateProperties = (el) => {
   if (!href || typeof href !== 'string') return props
 
   if (UI.externalLink.newTab) {
-    props.target = '_blank'                    // 新标签页打开
-    props.ariaLabel = 'Open in new tab'        // 无障碍标签
+    props.target = '_blank' // 新标签页打开
+    props.ariaLabel = 'Open in new tab' // 无障碍标签
 
     // 自定义鼠标样式
     if (
@@ -102,11 +102,11 @@ const headingAnchorProperties: BuildProperties = (el) => {
   })
 
   return {
-    className: ['header-anchor'],
-    tabIndex: 0,                      // 可用键盘导航
-    'aria-hidden': 'false',           // 对屏幕阅读器可见
+    'className': ['header-anchor'],
+    'tabIndex': 0, // 可用键盘导航
+    'aria-hidden': 'false', // 对屏幕阅读器可见
     'aria-label': content ? `Link to ${content}` : undefined,
-    'data-pagefind-ignore': '',       // 排除搜索索引
+    'data-pagefind-ignore': '', // 排除搜索索引
   }
 }
 
@@ -116,7 +116,7 @@ export const remarkPlugins: RemarkPlugins = [
   remarkCjkFriendly,
 
   // 1. 基础指令支持
-  remarkDirective,  // 解析 :::warning 这类自定义指令
+  remarkDirective, // 解析 :::warning 这类自定义指令
 
   // 2. 指令糖插件（提供开箱即用的指令）
   [
@@ -125,9 +125,9 @@ export const remarkPlugins: RemarkPlugins = [
       // 2.1 徽章指令
       badge: {
         presets: {
-          n: { text: 'NEW' },     // :badge[n] → 显示 NEW
+          n: { text: 'NEW' }, // :badge[n] → 显示 NEW
           a: { text: 'ARTICLE' }, // :badge[a] → 显示 ARTICLE
-          v: { text: 'VIDEO' },   // :badge[v] → 显示 VIDEO
+          v: { text: 'VIDEO' }, // :badge[v] → 显示 VIDEO
         },
       },
       // 2.2 链接指令（自动添加网站图标）
@@ -139,17 +139,16 @@ export const remarkPlugins: RemarkPlugins = [
       },
       // 2.3 图片指令
       image: {
-        stripParagraph: false,  // 保留图片周围的 <p> 标签
+        stripParagraph: false, // 保留图片周围的 <p> 标签
       },
     },
   ],
 
   // 3. 数学公式支持
-  remarkMath,  // 解析 $inline$ 和 $$block$$ 语法
+  remarkMath, // 解析 $inline$ 和 $$block$$ 语法
 
   // 4. 阅读时间计算
-  remarkReadingTime,  // 统计文章字数，计算预计阅读时间
-
+  remarkReadingTime, // 统计文章字数，计算预计阅读时间
 ]
 
 // ==================== 导出 Rehype 插件配置 ====================
@@ -159,13 +158,13 @@ export const rehypePlugins: RehypePlugins = [
   [rehypeHeadingIds, { headingIdCompat: true }],
 
   // 2. 渲染数学公式（使用 KaTeX）
-  rehypeKatex,  // 将 LaTeX 公式转换为 HTML/CSS
+  rehypeKatex, // 将 LaTeX 公式转换为 HTML/CSS
 
   // 3. 提示框/标注组件
   [
     rehypeCallouts,
     {
-      theme: 'vitepress',  // 使用 VitePress 风格的提示框样式
+      theme: 'vitepress', // 使用 VitePress 风格的提示框样式
     },
   ],
 
@@ -191,7 +190,7 @@ export const rehypePlugins: RehypePlugins = [
   [
     rehypeAutolinkHeadings,
     {
-      behavior: 'append',  // 在标题内容后追加链接
+      behavior: 'append', // 在标题内容后追加链接
 
       // 锚点链接属性
       properties: headingAnchorProperties,
@@ -208,8 +207,8 @@ export const rehypePlugins: RehypePlugins = [
   [
     rehypeWrapAll,
     {
-      selector: 'table',   // 选择所有 <table> 元素
-      wrapper: 'div',      // 用 <div> 包裹
+      selector: 'table', // 选择所有 <table> 元素
+      wrapper: 'div', // 用 <div> 包裹
     },
   ],
 ]

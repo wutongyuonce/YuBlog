@@ -1,4 +1,4 @@
 interface:
-  display_name: "博客内容发布"
-  short_description: "发布博客文章与维护 Friends 友链内容的工作流"
-  default_prompt: "Use $blog-content-publisher to publish a blog post or update a Friends link in this Astro site."
+  display_name: '博客内容发布'
+  short_description: '发布博客文章与维护 Friends 友链内容的工作流'
+  default_prompt: 'Use $blog-content-publisher to publish a blog post or update a Friends link in this Astro site.'

@@ -14,8 +14,8 @@ export async function getStaticPaths() {
   // 将每篇文章映射成一个路由路径和 props
   // 返回的格式：{ params: { slug: 'xxx' }, props: { post: {...} } }
   return posts.map((post) => ({
-    params: { slug: post.id },   // params: 决定 URL，如 /blogs/hello-world
-    props: { post },              // props: 传递给页面组件的数据
+    params: { slug: post.id }, // params: 决定 URL，如 /blogs/hello-world
+    props: { post }, // props: 传递给页面组件的数据
   }))
 }
 

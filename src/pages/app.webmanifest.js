@@ -6,8 +6,7 @@ export async function GET() {
     id: withBasePath('/'),
     name: 'Wutong Yu',
     short_name: 'Wutong',
-    description:
-      'A streamlined blog and project showcase built with Astro.',
+    description: 'A streamlined blog and project showcase built with Astro.',
     icons: [
       {
         src: withBasePath('icon-192.png'),

@@ -16,7 +16,12 @@ async function cleanupPagefindUiFiles() {
       removedCount++
     }
   } catch (error) {
-    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      error.code === 'ENOENT'
+    ) {
       console.log('Pagefind output not found, skip cleanup.')
       return
     }

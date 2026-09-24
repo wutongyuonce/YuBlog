@@ -17,36 +17,34 @@ const { minHeadingLevel, maxHeadingLevel } = toc[1]
 const specHeadings = generateToc(headings, minHeadingLevel, maxHeadingLevel)
 ---
 
-{
-  specHeadings.length > 0 && (
-    <mobile-toc-control class="mobile-toc-control print:hidden">
-      <button
-        type="button"
-        class="mobile-toc-control__toggle"
-        aria-expanded="false"
-        aria-controls="mobile-toc-panel"
-        aria-label="Toggle table of contents"
-        title="Table of contents"
-      >
-        <span u-i-ri-menu-line></span>
-      </button>
+{specHeadings.length > 0 && (
+  <mobile-toc-control class="mobile-toc-control print:hidden">
+    <button
+      type="button"
+      class="mobile-toc-control__toggle"
+      aria-expanded="false"
+      aria-controls="mobile-toc-panel"
+      aria-label="Toggle table of contents"
+      title="Table of contents"
+    >
+      <span u-i-ri-menu-line></span>
+    </button>
 
-      <nav
-        id="mobile-toc-panel"
-        class="mobile-toc-control__panel"
-        aria-label="Table of contents"
-        hidden
-      >
-        <div class="mobile-toc-control__header">Table of Contents</div>
-        <ul class="mobile-toc-control__list">
-          {specHeadings.map((heading) => (
-            <TocItem {heading} />
-          ))}
-        </ul>
-      </nav>
-    </mobile-toc-control>
-  )
-}
+    <nav
+      id="mobile-toc-panel"
+      class="mobile-toc-control__panel"
+      aria-label="Table of contents"
+      hidden
+    >
+      <div class="mobile-toc-control__header">Table of Contents</div>
+      <ul class="mobile-toc-control__list">
+        {specHeadings.map((heading) => (
+          <TocItem {heading} />
+        ))}
+      </ul>
+    </nav>
+  </mobile-toc-control>
+)}
 
 <style>
   .mobile-toc-control {

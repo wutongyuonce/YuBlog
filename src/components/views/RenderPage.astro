@@ -15,4 +15,5 @@ const content = await getEntry(collectionType, id)
 if (!content) throw new Error(`Entry not found: ${collectionType}/${id}`)
 const { Content } = await render(content)
 ---
+
 <Content />

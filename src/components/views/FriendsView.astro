@@ -12,68 +12,66 @@ const isEmpty = friends.length === 0
 ---
 
 <section class="friends-page">
-  {
-    isEmpty ? (
-      <section class="friends-shell slide-enter">
-        <div class="friends-empty">
-          <span class="friends-chip">Friends</span>
-          <h2>友链系统已经接入完成</h2>
-          <p>
-            当前还没有友链数据，直接编辑{' '}
-            <code>src/content/friends/data.json</code> 即可开始添加站点卡片。
-          </p>
-        </div>
+  {isEmpty ? (
+    <section class="friends-shell slide-enter">
+      <div class="friends-empty">
+        <span class="friends-chip">Friends</span>
+        <h2>友链系统已经接入完成</h2>
+        <p>
+          当前还没有友链数据，直接编辑{' '}
+          <code>src/content/friends/data.json</code> 即可开始添加站点卡片。
+        </p>
+      </div>
 
-        <FriendsApplyPanel />
-      </section>
-    ) : (
-      <section class="friends-shell slide-enter">
-        <div class="friends-board">
-          <div class="friends-grid">
-            {friends.map((item) => (
-              <Link
-                href={item.data.link}
-                external={true}
-                class="friend-card"
-                title={item.data.desc}
-              >
-                <div class="friend-card__avatar-wrap" aria-hidden="true">
-                  {item.data.avatar ? (
-                    <img
-                      class="friend-card__avatar"
-                      src={item.data.avatar}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      referrerpolicy="no-referrer"
-                    />
-                  ) : (
-                    <span class="friend-card__avatar-fallback">
-                      {getInitial(item.data.name)}
-                    </span>
-                  )}
+      <FriendsApplyPanel />
+    </section>
+  ) : (
+    <section class="friends-shell slide-enter">
+      <div class="friends-board">
+        <div class="friends-grid">
+          {friends.map((item) => (
+            <Link
+              href={item.data.link}
+              external={true}
+              class="friend-card"
+              title={item.data.desc}
+            >
+              <div class="friend-card__avatar-wrap" aria-hidden="true">
+                {item.data.avatar ? (
+                  <img
+                    class="friend-card__avatar"
+                    src={item.data.avatar}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    referrerpolicy="no-referrer"
+                  />
+                ) : (
+                  <span class="friend-card__avatar-fallback">
+                    {getInitial(item.data.name)}
+                  </span>
+                )}
+              </div>
+
+              <div class="friend-card__body">
+                <div class="friend-card__topline">
+                  <h3>{item.data.name}</h3>
                 </div>
 
-                <div class="friend-card__body">
-                  <div class="friend-card__topline">
-                    <h3>{item.data.name}</h3>
-                  </div>
+                {item.data.siteLabel && (
+                  <p class="friend-card__label">{item.data.siteLabel}</p>
+                )}
 
-                  {item.data.siteLabel && (
-                    <p class="friend-card__label">{item.data.siteLabel}</p>
-                  )}
-
-                  <p class="friend-card__desc">{item.data.desc}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
+                <p class="friend-card__desc">{item.data.desc}</p>
+              </div>
+            </Link>
+          ))}
         </div>
+      </div>
 
-        <FriendsApplyPanel />
-      </section>
-    )
-  }
+      <FriendsApplyPanel />
+    </section>
+  )}
 </section>
 
 <style>

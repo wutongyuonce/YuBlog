@@ -108,16 +108,11 @@ if (hasCustomCursor) style['--external-link-cursor'] = cursorType
     <main id="main" class="px-7 pt-4 pb-10">
       <!-- Content -->
       <slot />
-      {
-        !hideBackLink && (
-          <footer
-            class:list={footerClasses}
-            style={footerStyle}
-          >
-            <BackLink />
-          </footer>
-        )
-      }
+      {!hideBackLink && (
+        <footer class:list={footerClasses} style={footerStyle}>
+          <BackLink />
+        </footer>
+      )}
     </main>
 
     <!-- Footer -->

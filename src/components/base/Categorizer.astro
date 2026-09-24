@@ -19,7 +19,7 @@ const slug = (value: string) =>
 ---
 
 <div
-  {...needId ? { id: slug(text) } : {}}
+  {...(needId ? { id: slug(text) } : {})}
   class={`categorizer toc-heading relative h-20
     pointer-events-none select-none
     ${wide ? 'categorizer--wide' : ''}
@@ -29,13 +29,11 @@ const slug = (value: string) =>
     '--wide-left': maxGroupColumns === 3 ? '-1rem' : '14%',
   }}
 >
-  {
-    !wide ? (
-      <span class="categorizer__label">{text}</span>
-    ) : (
-      <span class="categorizer__label">{text}</span>
-    )
-  }
+  {!wide ? (
+    <span class="categorizer__label">{text}</span>
+  ) : (
+    <span class="categorizer__label">{text}</span>
+  )}
 </div>
 
 <style>

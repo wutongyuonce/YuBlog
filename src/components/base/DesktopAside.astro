@@ -15,23 +15,21 @@ const tocPosition = Array.isArray(toc) && toc[0] && toc[1].displayPosition
 const tocDisplayMode = Array.isArray(toc) && toc[0] && toc[1].displayMode
 ---
 
-{
-  headings.length > 0 && (
-    <aside id="desktop-aside" class="desktop-aside" data-position={tocPosition}>
-      <button
-        type="button"
-        class="desktop-aside__trigger"
-        aria-label="固定目录"
-        aria-pressed="false"
-        title="点击固定目录"
-        data-display-mode={tocDisplayMode}
-      >
-        TOC
-      </button>
-      <TocSidebar headings={headings} />
-    </aside>
-  )
-}
+{headings.length > 0 && (
+  <aside id="desktop-aside" class="desktop-aside" data-position={tocPosition}>
+    <button
+      type="button"
+      class="desktop-aside__trigger"
+      aria-label="固定目录"
+      aria-pressed="false"
+      title="点击固定目录"
+      data-display-mode={tocDisplayMode}
+    >
+      TOC
+    </button>
+    <TocSidebar {headings} />
+  </aside>
+)}
 
 <script>
   const setupTocPin = () => {
