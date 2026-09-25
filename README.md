@@ -14,9 +14,10 @@
 
 ## 预览
 
-<video controls preload="metadata" width="100%" src="public/yublog-promo-4k.mp4">
-  <a href="public/yublog-promo-4k.mp4">下载 preview.mp4</a>
-</video>
+[![YuBlog 页面演示动图](README-img/yublog-promo.gif)](https://github.com/wutongyuonce/YuBlog/blob/main/public/yublog-promo-4k.mp4)
+
+GitHub 不支持在 Markdown 里内嵌 `<video>`，所以这里放 8 秒动图。点图或[下载完整 4K 演示（30 秒，55 MB）](https://github.com/wutongyuonce/YuBlog/blob/main/public/yublog-promo-4k.mp4)。
+
 ### 首页
 
 ![image-20260918220616992](README-img/image-20260918220616992.png)

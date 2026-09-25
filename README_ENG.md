@@ -12,9 +12,9 @@
 
 ## Preview
 
-<video controls preload="metadata" width="100%" src="public/yublog-promo-4k.mp4">
-  <a href="public/yublog-promo-4k.mp4">下载 preview.mp4</a>
-</video>
+[![YuBlog demo](README-img/yublog-promo.gif)](https://github.com/wutongyuonce/YuBlog/blob/main/public/yublog-promo-4k.mp4)
+
+GitHub does not render `<video>` in Markdown, so this is an 8-second GIF. Click it, or [download the full 4K demo (30s, 55 MB)](https://github.com/wutongyuonce/YuBlog/blob/main/public/yublog-promo-4k.mp4).
 
 ### Home
 
