@@ -183,5 +183,14 @@
     "desc": "一程山水，一念清欢",
     "category": "Friends",
     "order": 20
+  },
+  {
+    "id": "xxxuuu",
+    "name": "x³u³",
+    "link": "https://xxxuuu.me/",
+    "avatar": "https://github.com/xxxuuu.png?size=96",
+    "desc": "Life is an append-only log",
+    "category": "Friends",
+    "order": 21
   }
 ]
