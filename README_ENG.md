@@ -79,7 +79,7 @@ Edit page copy and data with `blog-content-publisher-skill/SKILL.md` (one page a
 
 ## Run
 
-Node.js `18.20.8` / `20.9+` / `22` / `24`, and `pnpm@12.4.1`.
+Node.js `18.20.8` / `20.9+` / `22` / `24`, and `pnpm@12.6.0`.
 
 ```bash
 pnpm install
