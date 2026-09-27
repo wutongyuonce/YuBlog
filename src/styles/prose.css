@@ -1,5 +1,5 @@
 .prose {
-  max-width: 65ch;
+  max-width: var(--blog-prose-width);
   font-size: var(--blog-reading-size);
   line-height: 1.75;
 }
@@ -14,6 +14,7 @@
   color: var(--fg-deeper);
   text-decoration: none;
   font-weight: inherit;
+  overflow-wrap: anywhere;
 }
 .prose strong {
   color: var(--fg-deep);
@@ -318,6 +319,11 @@
 }
 
 /* Article pages use a denser reading rhythm than landing pages. */
+.prose.post-header,
+.prose.post-content {
+  max-width: var(--blog-article-width);
+}
+
 .prose.post-content {
   font-size: 1rem;
   line-height: 1.65;
@@ -325,13 +331,6 @@
 
 .prose.post-header {
   font-size: 1rem;
-}
-
-@media (min-width: 1280px) {
-  .prose.post-header,
-  .prose.post-content {
-    max-width: 70ch;
-  }
 }
 
 .prose.post-content h1 {

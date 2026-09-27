@@ -3,8 +3,17 @@
   --c-scrollbar: #ddd;
   --c-scrollbar-hover: #bbb;
   --c-text: #000;
-  --blog-shell-width: 1072px;
+  --blog-shell-width: 858px;
+  --blog-prose-width: 52ch;
+  --blog-article-width: 65ch;
   --blog-reading-size: 1.0625rem;
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --blog-prose-width: 56ch;
+    --blog-article-width: 70ch;
+  }
 }
 
 :root.dark {
@@ -367,13 +376,12 @@ mark.pagefind-highlight {
 
 #toc-sidebar ul > li > a {
   display: block;
-  overflow-x: hidden;
 
   border-bottom: 0px;
 
   color: var(--c-text);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
 
   opacity: 0.75;
 
