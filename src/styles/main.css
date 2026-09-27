@@ -5,12 +5,14 @@
   --c-text: #000;
   --blog-shell-width: 858px;
   --blog-prose-width: 52ch;
+  --blog-article-width: 65ch;
   --blog-reading-size: 1.0625rem;
 }
 
 @media (min-width: 1280px) {
   :root {
     --blog-prose-width: 56ch;
+    --blog-article-width: 70ch;
   }
 }
 

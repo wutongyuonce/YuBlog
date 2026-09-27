@@ -318,6 +318,11 @@
 }
 
 /* Article pages use a denser reading rhythm than landing pages. */
+.prose.post-header,
+.prose.post-content {
+  max-width: var(--blog-article-width);
+}
+
 .prose.post-content {
   font-size: 1rem;
   line-height: 1.65;
