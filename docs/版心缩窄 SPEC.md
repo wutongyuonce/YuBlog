@@ -51,3 +51,8 @@
 - 首页与筛选后的标签页卡片在 1440px 视口内，文字列约 359px（原约 344px）、配图列约 215px；390/320px 仍为单栏且无水平溢出。
 - 归档页标签与标题分行，长标签在主栏内换行；OpenViking 文章的多级长目录标题在 1440px 和 1200px 视口内完整换行，目录仍可独立滚动。
 - 复审修复了正文完整 URL 在 320px 视口造成的 52px 页面溢出；重新构建后的 OpenViking 文章在 320px 和 390px 均无水平溢出。
+
+## PR 状态
+
+- [PR #75：调整博客版心与文章目录排版](https://github.com/wutongyuonce/YuBlog/pull/75) 已提交；截至 2026-09-27 仍为 Open，尚未合并。
+- 提交 PR 后的 GitHub CI（format、lint、test、check、build）与 Vercel 预览均已通过。后续提交会重新触发检查；审查、检查和合并的实时状态以 PR 页面为准。
