@@ -376,13 +376,12 @@ mark.pagefind-highlight {
 
 #toc-sidebar ul > li > a {
   display: block;
-  overflow-x: hidden;
 
   border-bottom: 0px;
 
   color: var(--c-text);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
 
   opacity: 0.75;
 
