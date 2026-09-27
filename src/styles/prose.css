@@ -324,6 +324,11 @@
   max-width: var(--blog-article-width);
 }
 
+/* The back link is a sibling footer. Match the article column so it lines up with the title. */
+main:has(.post-content) > footer.prose {
+  max-width: var(--blog-article-width);
+}
+
 .prose.post-content {
   font-size: 1rem;
   line-height: 1.65;

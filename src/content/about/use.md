@@ -7,7 +7,7 @@ order: 1
 
 - **💻 PC：** Macbook Pro M5 24+512、天选4 r9 4070 16+1T、Samsung T7 固态 1T
 - **📱 Phone：** Honor Magic7 24+512、小米金沙江磁吸充电宝
-- **🎧 Headphones / Audio：** ARPTICAL 拉斐尔 + EPZ TP35 Pro、Sony SRS-XB100、Airpods Pro 2
+- **🎧 Headphones / Audio：** Airpods Pro 2、ARPTICAL 拉斐尔 + EPZ TP35 Pro、Sony SRS-XB100
 - **🖱️ Mouse：** Razer V3pro、Logi M650
 - **🎮 Controller：** 盖世小鸡 G7 Pro
 - **⌨️ Keyboard：** Lofree FLOW2
@@ -32,7 +32,7 @@ order: 1
 - **社交：** Telegram、Discord
 - **工作：** 钉钉、腾讯会议
 - **邮箱：** 网易邮箱大师
-- **媒体、信息：** Folo、OBS、剪映专业版、IINA、Downie4、小宇宙
+- **媒体、信息：** Folo（RSS 订阅器）、Readest（阅读器）、OBS、剪映专业版（剪辑）、ArcTime Pro（字幕）、IINA（视频播放器）、Downie4（视频下载器）、小宇宙（播客）
 - **小工具：** RunCatNeo（Mac 监控）、Deck（剪切板）、PixPin（截图）、Pearcleaner / App Cleaner（清理）、Slidepad（右侧浏览器）、TopNotch（遮挡刘海）、超级右键、CleanMyKeyboard、Mos（鼠标）、Bob（翻译）
 
 #### 我的手机软件
