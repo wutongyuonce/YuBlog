@@ -8,7 +8,7 @@ toc: true
 search: true
 ---
 
-本指南面向已经能编写 FastAPI 接口的读者，讨论项目结构、业务校验、数据库和测试的维护实践。基础用法与运行原理见 [FastAPI 学习笔记](/blogs/FastAPI/)。
+本指南面向已经能编写 FastAPI 接口的读者，讨论项目结构、业务校验、数据库和测试的维护实践。基础用法与运行原理见 [FastAPI 学习笔记](/blogs/fastapi/)。
 
 内容基于 [zhanymkanov/fastapi-best-practices](https://github.com/zhanymkanov/fastapi-best-practices) 作者在初创公司的生产经验，包含通用实践和团队约定，应结合适用条件选择。
 
@@ -181,7 +181,7 @@ def get_settings() -> Config:
 
 ### 2.1 依赖项可以承担共享的业务校验
 
-资源存在性和权限检查可以抽成依赖，避免每个端点重复查询、验证和测试。主笔记的[链式依赖示例](/blogs/FastAPI/#95-用链式依赖完成业务校验)已演示文章查询、作者身份和账号状态检查；这里把查询交给服务层，让多个路由复用结果。
+资源存在性和权限检查可以抽成依赖，避免每个端点重复查询、验证和测试。主笔记的[链式依赖示例](/blogs/fastapi/#95-用链式依赖完成业务校验)已演示文章查询、作者身份和账号状态检查；这里把查询交给服务层，让多个路由复用结果。
 
 下面是项目片段，假设已经提供异步 `service.get_by_id`、`service.update` 和 `reviews_service.get_by_post_id`，以及对应的请求、响应模型：
 
@@ -293,7 +293,7 @@ FastAPI 会在线程池执行普通 `def` 依赖。只做轻量内存计算、�
 
 ### 3.1 充分使用 Pydantic，同时区分校验边界
 
-长度、数值、枚举、邮箱、URL 及 `field_validator` 的用法见主笔记[字段约束与校验](/blogs/FastAPI/#65-把字段约束写进模型)。项目中的规则按职责归位：
+长度、数值、枚举、邮箱、URL 及 `field_validator` 的用法见主笔记[字段约束与校验](/blogs/fastapi/#65-把字段约束写进模型)。项目中的规则按职责归位：
 
 | 规则 | 合适的位置 |
 | --- | --- |
@@ -388,7 +388,7 @@ async def get_profile(profile_id: int):
 
 ### 4.1 根据调用的库选择路由写法
 
-事件循环与线程池的原理见主笔记[运行机制总览](/blogs/FastAPI/#运行机制总览python-协程与-fastapi)，项目中按实际工作选择：
+事件循环与线程池的原理见主笔记[运行机制总览](/blogs/fastapi/#运行机制总览python-协程与-fastapi)，项目中按实际工作选择：
 
 | 主要工作 | 实践选择 |
 | --- | --- |
@@ -402,7 +402,7 @@ async def get_profile(profile_id: int):
 
 ### 4.2 同步 SDK 的调用边界
 
-同步库调用可交给工作线程，完整代码见主笔记[线程池示例](/blogs/FastAPI/#在异步路由中调用同步-sdk)：
+同步库调用可交给工作线程，完整代码见主笔记[线程池示例](/blogs/fastapi/#在异步路由中调用同步-sdk)：
 
 ```python
 # 项目片段：client 和 data 由业务提供
@@ -786,4 +786,4 @@ ruff check src tests
 ruff format --check src tests
 ```
 
-`pre-commit` 可选，简单项目用脚本和 CI 即可；避免多个 formatter 反复处理同一批文件。环境与依赖管理见 [Python 笔记](/blogs/Python-notes/)，Ruff 规则见[官方配置文档](https://docs.astral.sh/ruff/configuration/)。
+`pre-commit` 可选，简单项目用脚本和 CI 即可；避免多个 formatter 反复处理同一批文件。环境与依赖管理见 [Python 笔记](/blogs/python-notes/)，Ruff 规则见[官方配置文档](https://docs.astral.sh/ruff/configuration/)。
