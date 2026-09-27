@@ -591,9 +591,7 @@ html.dark .progress-stat--day .progress-stat__bar::after {
 .archive-year__head,
 .archive-post {
   display: grid;
-  grid-template-columns:
-    var(--archive-date) var(--archive-mark) minmax(0, 1fr)
-    minmax(0, 8rem);
+  grid-template-columns: var(--archive-date) var(--archive-mark) minmax(0, 1fr);
   column-gap: var(--archive-gap);
   align-items: start;
 }
@@ -665,14 +663,12 @@ html.dark .progress-stat--day .progress-stat__bar::after {
   overflow-wrap: anywhere;
 }
 .archive-post__tags {
-  margin: 0;
-  overflow: hidden;
+  grid-column: 3;
+  margin: 0.15rem 0 0;
   color: color-mix(in srgb, var(--c-text) 42%, transparent);
   font-size: 0.75rem;
   line-height: 1.55;
-  text-align: right;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 .archive-post:hover .archive-post__mark::after {
   width: 2px;
@@ -717,18 +713,6 @@ html.dark .progress-stat--day .progress-stat__bar::after {
   .archive-timeline {
     --archive-date: 3.1rem;
     --archive-mark: 1rem;
-  }
-  .archive-year__head,
-  .archive-post {
-    grid-template-columns: var(--archive-date) var(--archive-mark) minmax(
-        0,
-        1fr
-      );
-  }
-  .archive-post__tags {
-    grid-column: 3;
-    text-align: left;
-    white-space: normal;
   }
 }
 
