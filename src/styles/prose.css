@@ -14,6 +14,7 @@
   color: var(--fg-deeper);
   text-decoration: none;
   font-weight: inherit;
+  overflow-wrap: anywhere;
 }
 .prose strong {
   color: var(--fg-deep);
