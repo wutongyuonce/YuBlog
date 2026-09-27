@@ -53,7 +53,7 @@ const tocDisplayMode = Array.isArray(toc) && toc[0] && toc[1].displayMode
 <style>
   .desktop-aside {
     /* Match .prose.post-content max-width so the gutter math stays aligned. */
-    --article-width: 65ch;
+    --article-width: var(--blog-prose-width);
     --toc-inset-start: calc(clamp(3.25rem, 6.5vw, 8.5rem) - 1.4rem);
     --toc-inset-end: calc(1.2rem + 1.4rem);
     --desktop-toc-width: calc(
@@ -69,12 +69,6 @@ const tocDisplayMode = Array.isArray(toc) && toc[0] && toc[1].displayMode
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-  }
-
-  @media (min-width: 1280px) {
-    .desktop-aside {
-      --article-width: 70ch;
-    }
   }
 
   .desktop-aside[data-position='left'] {
