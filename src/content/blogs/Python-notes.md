@@ -1,7 +1,7 @@
 ---
 title: Python
 description: 涵盖 Python 语言基础、标准库、类型标注、环境与依赖管理、代码质量、构建发布和自动化实践。
-pubDate: 2026-09-27
+pubDate: 2026-03-12
 category: 技术向
 tags: [Python]
 toc: true
@@ -3165,4 +3165,3 @@ python -m pip install --index-url https://test.pypi.org/simple/ your-package-nam
 ```
 
 安装验证应使用新的测试环境，并核对导入路径与版本，而不是沿用本地 editable 安装。TestPyPI 可能缺少依赖：可先从正式 PyPI 安装已知依赖，再用 TestPyPI 配合 `--no-deps` 安装自己的测试包。TestPyPI 需要单独的账号/令牌。
-

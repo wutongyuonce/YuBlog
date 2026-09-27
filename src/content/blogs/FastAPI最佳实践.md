@@ -1,7 +1,7 @@
 ---
 title: FastAPI 项目开发实践
 description: 围绕模块结构、依赖设计、数据校验、异步任务、数据库迁移、API 约定与测试，整理 FastAPI 项目的工程实践。
-pubDate: 2026-09-27
+pubDate: 2026-03-19
 category: 技术向
 tags: [Python, FastAPI]
 toc: true
