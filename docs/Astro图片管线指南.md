@@ -44,7 +44,7 @@ src/content/about/
 | 位置 | 规则 |
 | :--- | :--- |
 | 文章封面 `PostHero` | `<Image width={706} priority>`。706 来自 `ARTICLE_COLUMN_WIDTH`，不要改成 `layout="full-width"`，否则 `sizes` 变成 `100vw`。 |
-| 列表卡片 `ListItem` | `widths={[274, 548, 822]}`，`sizes="(min-width: 1100px) 274px, (min-width: 768px) 37.5vw, 100vw"`。 |
+| 列表卡片 `ListItem` | `widths={[274, 548, 822]}`，`sizes="(min-width: 1100px) 274px, (min-width: 768px) 37.5vw, 100vw"`。首页第一张用 `priority`，其余 `loading="lazy"`。 |
 | 分享图 `RenderPost` | `getImage()` 单独生成 1200px JPEG，再拼成绝对 URL。不要把封面原图直接放进 `og:image`。 |
 
 `titleImage` 用 schema 工厂里的 `image().optional()`。Astro 5 不能 `import { image } from 'astro:content'`。

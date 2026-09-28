@@ -3,7 +3,6 @@ import {
   presetWind3,
   presetAttributify,
   presetIcons,
-  presetWebFonts,
   transformerDirectives,
   transformerVariantGroup,
 } from 'unocss'
@@ -46,11 +45,21 @@ export default defineConfig({
 
   // will be deep-merged to the default theme
   extendTheme: (theme) => {
+    const current = theme as {
+      breakpoints?: Record<string, string>
+      fontFamily?: Record<string, string>
+    }
     return {
       ...theme,
       breakpoints: {
-        ...theme.breakpoints,
+        ...current.breakpoints,
         lgp: '1128px',
+      },
+      fontFamily: {
+        ...current.fontFamily,
+        sans: 'Inter, ui-sans-serif, system-ui, sans-serif',
+        mono: '"DM Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+        condensed: 'ui-sans-serif, system-ui, sans-serif',
       },
     }
   },
@@ -86,14 +95,6 @@ export default defineConfig({
         'height': '1.2em',
         'width': '1.2em',
         'vertical-align': 'text-bottom',
-      },
-    }),
-    presetWebFonts({
-      fonts: {
-        sans: 'Inter:400,600,800',
-        mono: 'DM Mono:400,600',
-        condensed: 'Roboto Condensed',
-        logo: 'Great Vibes',
       },
     }),
   ],

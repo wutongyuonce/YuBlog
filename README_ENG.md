@@ -74,6 +74,7 @@ Edit page copy and data with `blog-content-publisher-skill/SKILL.md` (one page a
 - Astro 5 + TypeScript, Markdown / MDX Content Collections
 - Content images go through Astro's image pipeline: relative paths plus a `|w` width marker, automatic WebP, `srcset`, dimensions and lazy loading; `public/` holds site-level assets only
 - Article title font is subset to the glyphs actually used (7.65 MB → 73 KiB)
+- Body font Inter and code font DM Mono are local Latin subsets in `public/fonts/`, not Google Fonts
 - KaTeX CSS and fonts are bundled locally (no CDN) and shipped as woff2 only
 - UnoCSS + `public/shell.css` (nav, sidebar, archive, about tabs, pagination — one owner for chrome styles)
 - Pagefind indexes blogs only, and loads only when search is opened

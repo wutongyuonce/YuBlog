@@ -75,6 +75,7 @@ GitHub 不支持在 Markdown 里内嵌 `<video>`，所以这里放 8 秒动图�
 - Astro 5 + TypeScript，Markdown / MDX Content Collections
 - 内容图片走 Astro 图片管线：相对路径 + `|w` 宽度标记，自动 WebP、`srcset`、宽高与懒加载；`public/` 只放站点级资源
 - 文章标题字体构子集：只下载实际用到的字形（7.65 MB → 73 KiB）
+- 正文 Inter、代码 DM Mono 使用 `public/fonts/` 里的拉丁子集，不请求 Google Fonts
 - KaTeX 样式与字体本地打包（不依赖 CDN），产物只留 woff2
 - UnoCSS + `public/shell.css`（导航、右栏、归档、关于标签、分页等壳层样式集中一个属主）
 - Pagefind 只索引博客，且仅在打开搜索时加载

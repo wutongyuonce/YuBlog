@@ -77,13 +77,13 @@ const firstPagePaginationHtml = showFirstPagePagination
   <p class="sr-only" data-status aria-live="polite"></p>
   <div data-list-panel hidden={requireTags}>
     <div data-post-list>
-      {posts.map((item) => (
+      {posts.map((item, index) => (
         <div
           data-blog-item
           data-category={item.data.category}
           data-tags={JSON.stringify(item.data.tags)}
         >
-          <ListItem {item} />
+          <ListItem {item} priority={index === 0 && !requireTags} />
         </div>
       ))}
     </div>
