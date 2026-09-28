@@ -115,12 +115,8 @@ const tocPosition = Array.isArray(toc) && toc[0] && toc[1].displayPosition
     pointer-events: none;
   }
 
-  /* 悬停正文（目录在正文内部）、鼠标在目录内部、或键盘焦点进入时临时显示；
-     点「目录」按钮是常显（data-open）。关掉状态下用 visibility 隐藏，因此
-     不会被 Tab 聚焦。 */
-  :global(.slide-enter-content:hover) :global(.desktop-toc),
-  .desktop-aside:hover :global(.desktop-toc),
-  .desktop-aside:focus-within :global(.desktop-toc),
+  /* 只有点「目录」按钮（或直接点目录里的链接）时才显示：关闭时用 visibility
+     隐藏，因此不会被 Tab 聚焦，也不会因悬停而自动出现。 */
   .desktop-aside[data-open='true'] :global(.desktop-toc) {
     visibility: visible;
     pointer-events: auto;

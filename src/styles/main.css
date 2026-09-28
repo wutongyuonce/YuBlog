@@ -291,9 +291,10 @@ html.theme-switching.dark::view-transition-new(root) {
   --toc-rail-width: 2px;
   --toc-rail-gap: 0.55rem;
   --toc-rail-inset: calc(var(--toc-rail-width) + var(--toc-rail-gap));
-  --toc-rail: color-mix(in srgb, var(--c-text) 28%, transparent);
-  --toc-item-bg: color-mix(in srgb, var(--c-text) 7%, transparent);
-  --toc-item-bg-active: color-mix(in srgb, var(--c-text) 12%, transparent);
+  /* 目录是配角，色彩整体压淡：轨道、悬停底、选中底都比正文弱一档。 */
+  --toc-rail: color-mix(in srgb, var(--c-text) 16%, transparent);
+  --toc-item-bg: color-mix(in srgb, var(--c-text) 5%, transparent);
+  --toc-item-bg-active: color-mix(in srgb, var(--c-text) 8%, transparent);
   background-image: linear-gradient(var(--toc-rail), var(--toc-rail));
   background-repeat: no-repeat;
   background-size: var(--toc-rail-width) 100%;
@@ -338,7 +339,7 @@ html.theme-switching.dark::view-transition-new(root) {
   text-decoration: none;
   overflow-wrap: anywhere;
   white-space: normal;
-  opacity: 0.72;
+  opacity: 0.55;
   transition:
     background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
     opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -367,7 +368,7 @@ html.theme-switching.dark::view-transition-new(root) {
   inset-inline-start: calc(var(--toc-rail-inset) * -1);
   width: var(--toc-rail-width);
   border-radius: 999px;
-  background: var(--c-text);
+  background: color-mix(in srgb, var(--c-text) 55%, transparent);
   opacity: 0;
   pointer-events: none;
   transition: opacity 160ms ease;
@@ -375,13 +376,13 @@ html.theme-switching.dark::view-transition-new(root) {
 
 #toc-sidebar .desktop-toc__list a:hover {
   background: var(--toc-item-bg);
-  opacity: 0.92;
+  opacity: 0.78;
 }
 
 #toc-sidebar .desktop-toc__list a[aria-current='true'] {
   background: var(--toc-item-bg-active);
   font-weight: 600;
-  opacity: 1;
+  opacity: 0.9;
 }
 
 #toc-sidebar .desktop-toc__list a[aria-current='true']::before {
