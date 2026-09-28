@@ -1,11 +1,16 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { readFile } from 'node:fs/promises'
+import vm from 'node:vm'
 import {
+  BLOG_PAGE_SIZE,
   parseBlogQuery,
   serializeBlogQuery,
   selectBlogPage,
   buildCategorySummary,
   getPageNumbers,
+  blogFirstPaintCss,
+  blogFirstPaintBootSource,
 } from '../src/utils/blog-browser.js'
 
 const posts = Array.from({ length: 13 }, (_, id) => ({
@@ -15,6 +20,73 @@ const posts = Array.from({ length: 13 }, (_, id) => ({
     tags: id % 2 ? ['Agent', '测试'] : ['Agent'],
   },
 }))
+
+test('first paint hides every post outside the requested unfiltered page', () => {
+  assert.equal(
+    blogFirstPaintCss('', BLOG_PAGE_SIZE),
+    blogFirstPaintCss('?page=1', BLOG_PAGE_SIZE)
+  )
+  for (const page of ['0', '-1', '1.5', 'NaN', 'foo']) {
+    assert.equal(
+      blogFirstPaintCss(`?page=${page}`, BLOG_PAGE_SIZE),
+      blogFirstPaintCss('', BLOG_PAGE_SIZE)
+    )
+  }
+  const second = blogFirstPaintCss('?page=2', BLOG_PAGE_SIZE)
+  assert.match(
+    second,
+    /:not\(:nth-child\(n\+8\):nth-child\(-n\+14\)\)\{display:none!important}/
+  )
+  assert.match(
+    second,
+    /:nth-child\(n\+8\):nth-child\(-n\+14\)\{display:block!important}/
+  )
+  assert.equal(
+    blogFirstPaintCss('?tag=', BLOG_PAGE_SIZE),
+    blogFirstPaintCss('', BLOG_PAGE_SIZE)
+  )
+  for (const search of [
+    '?category=技术向',
+    '?tag=Agent',
+    '?category=工具向&page=3',
+  ]) {
+    assert.match(
+      blogFirstPaintCss(search, BLOG_PAGE_SIZE),
+      /\[data-blog-item\]\{display:none!important}$/
+    )
+  }
+  const style = {
+    setAttribute() {
+      return undefined
+    },
+    parentNode: null,
+  }
+  vm.runInNewContext(blogFirstPaintBootSource(), {
+    URLSearchParams,
+    Number,
+    String,
+    Error,
+    document: {
+      createElement: () => style,
+      head: {
+        querySelector: () => null,
+        appendChild(node) {
+          node.parentNode = this
+        },
+      },
+    },
+    location: { search: '?page=2' },
+  })
+  assert.equal(style.textContent, second)
+})
+
+test('the no-script fallback hides the same first page the pager does', async () => {
+  const source = await readFile(
+    new URL('../src/components/views/ListView.astro', import.meta.url),
+    'utf8'
+  )
+  assert.match(source, new RegExp(`nth-child\\(n \\+ ${BLOG_PAGE_SIZE + 1}\\)`))
+})
 
 test('shared URLs preserve Chinese filters and AND tags without duplicate values', () => {
   const query = parseBlogQuery(
@@ -85,9 +157,52 @@ test('custom categories remain filterable and included in the summary', () => {
   ])
 })
 
-test('page links keep endpoints and current neighbors with gaps indicated', () => {
+test('short pagination lists show every page without ellipses', () => {
   assert.deepEqual(getPageNumbers(1, 0), [])
+  assert.deepEqual(getPageNumbers(1, 1), [1])
   assert.deepEqual(getPageNumbers(2, 3), [1, 2, 3])
-  assert.deepEqual(getPageNumbers(5, 10), [1, '…', 4, 5, 6, '…', 10])
-  assert.deepEqual(getPageNumbers(10, 10), [1, '…', 9, 10])
+  assert.deepEqual(getPageNumbers(6, 6), [1, 2, 3, 4, 5, 6])
+})
+
+test('six-slot pagination shows edge windows and looks ahead in the middle', () => {
+  const cases = [
+    [1, 7, [1, 2, 3, 4, '…', 7]],
+    [4, 7, [1, 2, 3, 4, '…', 7]],
+    [5, 7, [1, '…', 4, 5, 6, 7]],
+    [4, 8, [1, 2, 3, 4, '…', 8]],
+    [5, 8, [1, '…', 5, 6, 7, 8]],
+    [1, 10, [1, 2, 3, 4, '…', 10]],
+    [4, 10, [1, 2, 3, 4, '…', 10]],
+    [5, 10, [1, '…', 5, 6, '…', 10]],
+    [6, 10, [1, '…', 6, 7, '…', 10]],
+    [7, 10, [1, '…', 7, 8, 9, 10]],
+    [10, 10, [1, '…', 7, 8, 9, 10]],
+  ]
+  for (const [page, count, expected] of cases) {
+    assert.deepEqual(getPageNumbers(page, count), expected)
+  }
+})
+
+test('pagination never hides a single page or loses the current page and endpoints', () => {
+  for (let count = 1; count <= 50; count++) {
+    for (let page = 1; page <= count; page++) {
+      const items = getPageNumbers(page, count)
+      assert.equal(items.length, Math.min(count, 6))
+      assert.equal(items[0], 1)
+      assert.equal(items.at(-1), count)
+      assert(items.includes(page))
+      if (count > 1) {
+        assert(items.includes(page - 1) || items.includes(page + 1))
+      }
+      for (let i = 1; i < items.length; i++) {
+        if (items[i] === '…') {
+          assert.equal(typeof items[i - 1], 'number')
+          assert.equal(typeof items[i + 1], 'number')
+          assert(items[i + 1] - items[i - 1] >= 3)
+        } else if (typeof items[i - 1] === 'number') {
+          assert.equal(items[i] - items[i - 1], 1)
+        }
+      }
+    }
+  }
 })

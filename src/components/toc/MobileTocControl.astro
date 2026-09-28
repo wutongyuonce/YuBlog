@@ -207,8 +207,24 @@ const specHeadings = generateToc(headings, minHeadingLevel, maxHeadingLevel)
       this.#close()
     }
 
+    #onDocumentKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      if (!this.#panel || this.#panel.hidden) return
+
+      this.#close()
+      this.#toggle?.focus()
+    }
+
     #onResize = () => {
+      this.#syncHeaderOffset()
       if (window.matchMedia('(min-width: 1200px)').matches) this.#close()
+    }
+
+    #onPanelClick = (event: MouseEvent) => {
+      const target = event.target
+      if (!(target instanceof Element) || !target.closest('a[href^="#"]'))
+        return
+      this.#close()
     }
 
     connectedCallback() {
@@ -216,15 +232,29 @@ const specHeadings = generateToc(headings, minHeadingLevel, maxHeadingLevel)
       this.#panel = this.querySelector('.mobile-toc-control__panel')
       if (!this.#toggle || !this.#panel) return
 
+      this.#syncHeaderOffset()
       this.#toggle.addEventListener('click', this.#onToggle)
+      this.#panel.addEventListener('click', this.#onPanelClick)
       document.addEventListener('click', this.#onDocumentClick)
+      document.addEventListener('keydown', this.#onDocumentKeyDown)
       window.addEventListener('resize', this.#onResize)
     }
 
     disconnectedCallback() {
       this.#toggle?.removeEventListener('click', this.#onToggle)
+      this.#panel?.removeEventListener('click', this.#onPanelClick)
       document.removeEventListener('click', this.#onDocumentClick)
+      document.removeEventListener('keydown', this.#onDocumentKeyDown)
       window.removeEventListener('resize', this.#onResize)
+    }
+
+    #syncHeaderOffset = () => {
+      const header = document.querySelector('[data-site-header]')
+      if (!(header instanceof HTMLElement)) return
+      document.documentElement.style.setProperty(
+        '--site-header-height',
+        `${header.getBoundingClientRect().height}px`
+      )
     }
 
     #onToggle = () => {

@@ -486,14 +486,6 @@ export interface TocConfig {
    * Sets the position of TOC on the page (left or right).
    */
   displayPosition: 'left' | 'right'
-
-  /**
-   * Controls how the TOC is displayed. Allowed values:
-   * - `'always'`: TOC is always visible.
-   * - `'content'`: TOC shows when hovering over the content area (element with class 'prose').
-   * - `'hover'`: TOC shows only when hovering over the TOC itself.
-   */
-  displayMode: 'always' | 'content' | 'hover'
 }
 
 interface SearchConfig {

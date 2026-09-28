@@ -20,15 +20,10 @@ const panels = await Promise.all(
 ---
 
 <section class="about-page">
-  {IntroContent && (
-    <div class="about-intro prose">
-      <IntroContent />
-    </div>
-  )}
-
   {panels.length > 0 && (
     <>
       <div class="about-tabs" role="tablist" aria-label="关于">
+        <span class="about-tabs__indicator" aria-hidden="true" />
         {panels.map((panel, index) => (
           <button
             type="button"
@@ -43,6 +38,11 @@ const panels = await Promise.all(
           </button>
         ))}
       </div>
+      {IntroContent && (
+        <div class="about-intro prose">
+          <IntroContent />
+        </div>
+      )}
       {panels.map((panel, index) => (
         <div
           class="about-panel prose"
@@ -60,31 +60,56 @@ const panels = await Promise.all(
 </section>
 
 <script>
-  const setupAboutTabs = () => {
-    const tabs = [
-      ...document.querySelectorAll<HTMLButtonElement>('[data-about-tab]'),
-    ]
-    if (tabs.length === 0) return
+  import { placeSlidingIndicator } from '~/utils/sliding-indicator.js'
 
-    const select = (id: string) => {
-      const exists = tabs.some((tab) => tab.dataset.aboutTab === id)
-      const current = exists ? id : tabs[0].dataset.aboutTab
-      if (!current) return
+  const placeAboutIndicator = (animate: boolean) => {
+    const list = document.querySelector<HTMLElement>('.about-tabs')
+    if (!list) return
+    const indicator = list.querySelector<HTMLElement>('.about-tabs__indicator')
+    const current = list.querySelector<HTMLElement>('[aria-selected="true"]')
+    placeSlidingIndicator({ indicator, target: current, animate })
+    if (indicator?.dataset.ready === 'true') list.dataset.ready = 'true'
+  }
 
-      tabs.forEach((tab) => {
-        const on = tab.dataset.aboutTab === current
-        tab.setAttribute('aria-selected', on ? 'true' : 'false')
-        tab.tabIndex = on ? 0 : -1
-      })
-      document
-        .querySelectorAll<HTMLElement>('[data-about-panel]')
-        .forEach((panel) => {
-          panel.hidden = panel.dataset.aboutPanel !== current
-        })
-      const nextHash = `#${encodeURIComponent(current)}`
-      if (location.hash !== nextHash)
-        history.replaceState(history.state, '', nextHash)
+  const tabsOf = () => [
+    ...document.querySelectorAll<HTMLButtonElement>('[data-about-tab]'),
+  ]
+
+  const hashTabId = () => {
+    try {
+      return decodeURIComponent(location.hash.slice(1))
+    } catch {
+      // An invalid URL fragment falls back to the first tab.
+      return ''
     }
+  }
+
+  const selectAboutTab = (id: string) => {
+    const tabs = tabsOf()
+    if (tabs.length === 0) return
+    const exists = tabs.some((tab) => tab.dataset.aboutTab === id)
+    const current = exists ? id : tabs[0].dataset.aboutTab
+    if (!current) return
+
+    tabs.forEach((tab) => {
+      const on = tab.dataset.aboutTab === current
+      tab.setAttribute('aria-selected', on ? 'true' : 'false')
+      tab.tabIndex = on ? 0 : -1
+    })
+    document
+      .querySelectorAll<HTMLElement>('[data-about-panel]')
+      .forEach((panel) => {
+        panel.hidden = panel.dataset.aboutPanel !== current
+      })
+    placeAboutIndicator(true)
+    const nextHash = `#${encodeURIComponent(current)}`
+    if (location.hash !== nextHash)
+      history.replaceState(history.state, '', nextHash)
+  }
+
+  const setupAboutTabs = () => {
+    const tabs = tabsOf()
+    if (tabs.length === 0) return
 
     tabs.forEach((tab) => {
       if (tab.dataset.aboutBound) return
@@ -92,7 +117,7 @@ const panels = await Promise.all(
 
       tab.addEventListener('click', () => {
         const id = tab.dataset.aboutTab
-        if (id) select(id)
+        if (id) selectAboutTab(id)
       })
 
       tab.addEventListener('keydown', (event) => {
@@ -109,17 +134,19 @@ const panels = await Promise.all(
         const nextTab = tabs[nextIndex]
         const id = nextTab.dataset.aboutTab
         nextTab.focus()
-        if (id) select(id)
+        if (id) selectAboutTab(id)
       })
     })
 
-    let selectedId = ''
-    try {
-      selectedId = decodeURIComponent(location.hash.slice(1))
-    } catch {
-      // An invalid URL fragment falls back to the first tab.
-    }
-    select(selectedId)
+    selectAboutTab(hashTabId())
+    document.fonts?.ready.then(() => placeAboutIndicator(false))
+  }
+
+  if (!document.documentElement.dataset.aboutIndicatorListeners) {
+    document.documentElement.dataset.aboutIndicatorListeners = 'true'
+    window.addEventListener('resize', () => placeAboutIndicator(false))
+    // 同页面内只改片段时不会重新加载，也不会触发 astro:page-load。
+    window.addEventListener('hashchange', () => selectAboutTab(hashTabId()))
   }
 
   document.addEventListener('astro:page-load', setupAboutTabs)
