@@ -3,41 +3,9 @@ import { matchesAllTags, normalizePostTags } from './blog-tag-filter.js'
 export const BLOG_PAGE_SIZE = 7
 
 /**
- * CSS applied before the deferred pager runs. Self-contained so it can be
- * inlined into a blocking script; it must not close over other bindings.
- * Filtered URLs hide the list instead of painting the unfiltered first page.
- * @param {string} search @param {number} pageSize
- */
-export function blogFirstPaintCss(search, pageSize) {
-  const size = Number(pageSize)
-  if (!Number.isSafeInteger(size) || size < 1) {
-    throw new Error(`Invalid blog page size: ${pageSize}`)
-  }
-  const params = new URLSearchParams(String(search ?? ''))
-  const category = (params.get('category') ?? '').trim()
-  const hasTag = params.getAll('tag').some((tag) => tag.trim())
-  const root = '[data-blog-browser]:not([data-paged])'
-  if (category || hasTag) {
-    return `${root} [data-blog-item]{display:none!important}`
-  }
-  const raw = params.get('page') ?? '1'
-  const parsed = /^\d+$/.test(raw) ? Number(raw) : 1
-  const page = Number.isSafeInteger(parsed) && parsed > 0 ? parsed : 1
-  const start = (page - 1) * size + 1
-  const end = page * size
-  const item = `${root} [data-post-list]>[data-blog-item]`
-  // The stylesheet fallback hides every item after the first page. The visible
-  // window has to win that rule, or page 2+ would paint blank until JS runs.
-  return (
-    `${item}:not(:nth-child(n+${start}):nth-child(-n+${end})){display:none!important}` +
-    `${item}:nth-child(n+${start}):nth-child(-n+${end}){display:block!important}`
-  )
-}
-
-/**
  * Blocking script for the list. The body is a string, not function.toString(),
  * so the bundler cannot rewrite it into a closure over other bindings.
- * Keep the CSS in lockstep with blogFirstPaintCss; the boot test checks that.
+ * Filtered URLs hide the list instead of painting the unfiltered first page.
  * @param {number} [pageSize]
  */
 export function blogFirstPaintBootSource(pageSize = BLOG_PAGE_SIZE) {

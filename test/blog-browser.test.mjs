@@ -2,13 +2,11 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import vm from 'node:vm'
 import {
-  BLOG_PAGE_SIZE,
   parseBlogQuery,
   serializeBlogQuery,
   selectBlogPage,
   buildCategorySummary,
   getPageNumbers,
-  blogFirstPaintCss,
   blogFirstPaintBootSource,
 } from '../src/utils/blog-browser.js'
 
@@ -20,40 +18,7 @@ const posts = Array.from({ length: 13 }, (_, id) => ({
   },
 }))
 
-test('first paint hides every post outside the requested unfiltered page', () => {
-  assert.equal(
-    blogFirstPaintCss('', BLOG_PAGE_SIZE),
-    blogFirstPaintCss('?page=1', BLOG_PAGE_SIZE)
-  )
-  for (const page of ['0', '-1', '1.5', 'NaN', 'foo']) {
-    assert.equal(
-      blogFirstPaintCss(`?page=${page}`, BLOG_PAGE_SIZE),
-      blogFirstPaintCss('', BLOG_PAGE_SIZE)
-    )
-  }
-  const second = blogFirstPaintCss('?page=2', BLOG_PAGE_SIZE)
-  assert.match(
-    second,
-    /:not\(:nth-child\(n\+8\):nth-child\(-n\+14\)\)\{display:none!important}/
-  )
-  assert.match(
-    second,
-    /:nth-child\(n\+8\):nth-child\(-n\+14\)\{display:block!important}/
-  )
-  assert.equal(
-    blogFirstPaintCss('?tag=', BLOG_PAGE_SIZE),
-    blogFirstPaintCss('', BLOG_PAGE_SIZE)
-  )
-  for (const search of [
-    '?category=技术向',
-    '?tag=Agent',
-    '?category=工具向&page=3',
-  ]) {
-    assert.match(
-      blogFirstPaintCss(search, BLOG_PAGE_SIZE),
-      /\[data-blog-item\]\{display:none!important}$/
-    )
-  }
+test('the injected first-paint script hides posts outside the requested page', () => {
   assert.doesNotMatch(blogFirstPaintBootSource(), /toString|parseBlogQuery/)
   const paintOf = (search) => {
     const style = {
@@ -81,15 +46,42 @@ test('first paint hides every post outside the requested unfiltered page', () =>
     })
     return { css: style.textContent, paint: root.dataset.blogPaint }
   }
-  assert.equal(paintOf('?page=2').css, second)
-  assert.equal(paintOf('?page=2').paint, '2')
-  assert.equal(paintOf('').paint, '1')
-  assert.equal(paintOf('?page=0').paint, '1')
-  assert.equal(paintOf('?category=技术向').paint, 'filter')
-  assert.equal(
-    paintOf('?category=技术向').css,
-    blogFirstPaintCss('?category=技术向', BLOG_PAGE_SIZE)
+  const first = paintOf('')
+  assert.equal(first.paint, '1')
+  assert.match(
+    first.css,
+    /:nth-child\(n\+1\):nth-child\(-n\+7\)\{display:block!important}/
   )
+  assert.equal(paintOf('?page=1').css, first.css)
+  for (const page of ['0', '-1', '1.5', 'NaN', 'foo', '9007199254740992']) {
+    assert.equal(paintOf(`?page=${page}`).css, first.css)
+    assert.equal(paintOf(`?page=${page}`).paint, '1')
+  }
+  assert.equal(paintOf('?tag=').css, first.css)
+
+  const second = paintOf('?page=2')
+  assert.equal(second.paint, '2')
+  assert.match(
+    second.css,
+    /:not\(:nth-child\(n\+8\):nth-child\(-n\+14\)\)\{display:none!important}/
+  )
+  assert.match(
+    second.css,
+    /:nth-child\(n\+8\):nth-child\(-n\+14\)\{display:block!important}/
+  )
+
+  for (const search of [
+    '?category=技术向',
+    '?tag=Agent',
+    '?category=工具向&page=3',
+  ]) {
+    const result = paintOf(search)
+    assert.equal(result.paint, 'filter')
+    assert.equal(
+      result.css,
+      '[data-blog-browser]:not([data-paged]) [data-blog-item]{display:none!important}'
+    )
+  }
 })
 
 test('shared URLs preserve Chinese filters and AND tags without duplicate values', () => {

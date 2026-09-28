@@ -394,7 +394,8 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
     // 不经过面板，挂在面板上就永远触发不到。
     #handlePanelTab = (event: KeyboardEvent) => {
       if (event.key !== 'Tab') return
-      if (this.classList.contains('hidden')) return
+      // Closing returns focus to the search button before the fade-out finishes.
+      if (this.classList.contains('hidden') || this.classList.contains('fade-out')) return
 
       // 只算真正可见、可聚焦的控件：隐藏的「加载更多/全部」按钮参与进来的话，
       // first/last 会指向看不见的节点，循环边界就错了。结果项是 tabindex="-1"，
