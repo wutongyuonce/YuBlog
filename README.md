@@ -80,7 +80,7 @@ GitHub 不支持在 Markdown 里内嵌 `<video>`，所以这里放 8 秒动图�
 - Pagefind 只索引博客，且仅在打开搜索时加载
 - `astro-expressive-code` 代码块
 - 明暗主题、ClientRouter 转场
-- 背景：`dot` / `rose` / `snow`，按页配置；关于页关闭；canvas 背景响应 `prefers-reduced-motion`（闸门在 `src/utils/reduced-motion.js`）
+- 背景：`dot` / `rose` / `snow`，按页配置；关于页关闭。点阵按透明度分 6 档描边；大屏间距按约 8000 点放大（边缘补点会略超，不是硬上限），1440×900 仍是 15px。canvas 背景响应 `prefers-reduced-motion`（闸门在 `src/utils/reduced-motion.js`）
 
 ## 本地运行
 

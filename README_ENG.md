@@ -79,7 +79,7 @@ Edit page copy and data with `blog-content-publisher-skill/SKILL.md` (one page a
 - Pagefind indexes blogs only, and loads only when search is opened
 - `astro-expressive-code`
 - Light / dark theme, ClientRouter
-- Backgrounds `dot` / `rose` / `snow` per page; about turns them off; canvas backgrounds respect `prefers-reduced-motion` (shared gate in `src/utils/reduced-motion.js`)
+- Backgrounds `dot` / `rose` / `snow` per page; about turns them off. The dot field batches strokes into 6 alpha buckets and widens spacing on large screens toward about 8000 points (edge padding can exceed that; it is not a hard cap). 1440×900 stays at 15px. Canvas backgrounds respect `prefers-reduced-motion` (shared gate in `src/utils/reduced-motion.js`)
 
 ## Run
 
