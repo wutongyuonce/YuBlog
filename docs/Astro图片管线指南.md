@@ -1,0 +1,71 @@
+# Astro 图片管线指南
+
+内容图片放在 `src/content/`，由 Astro 图片管线生成 WebP、`srcset`、宽高和懒加载。`public/` 只放站点级资源。本文只描述当前写法；迁移过程和测量记录不在这里。
+
+## 放哪里
+
+```text
+src/content/blogs/
+  代码库搜索.md
+  代码库搜索-img/                 这一篇的正文图
+  _title-images/                  全部文章封面
+  算法笔记/
+    算法 1（数组、链表）.md
+    algo-img/                     组内共享正文图，必须在文章目录内
+
+src/content/about/
+  use.md  hobby.md
+  use/  hobby/                    关于页配图，与对应 md 同级
+```
+
+`night-lantern.webp`、`yae-miko.webp` 暂无文章引用，保留为备用封面。
+
+## 怎么写
+
+| 场景 | 写法 |
+| :--- | :--- |
+| 正文图 | `![说明](./代码库搜索-img/file.png)` |
+| 组内共享图 | `![说明](./algo-img/file.png)` |
+| 限制宽度 | `![说明\|w353](./图.png)` |
+| 顶层文章封面 | `titleImage: ./_title-images/foo.webp` |
+| 组内文章封面 | `titleImage: ../_title-images/foo.webp` |
+| 关于页配图 | `![说明\|w300](./use/file.png)` |
+
+有封面时同时写 `titleImageAlt`。
+
+## 宽度
+
+`|w353` 只表示 353 像素，不接受百分比。正文列宽约 706px，半宽写 `|w353`。标记由 `plugins/remark-image-width.ts` 从 alt 剥离，转成图片节点的 `width`。
+
+必须用 `width`，不要用 CSS 限宽。管线按 `width` 生成 `srcset` 和 `sizes`；只写 CSS 时浏览器仍按原图宽度选图。不写标记时，管线按原图宽度出变体，显示上仍会被列宽限制。源图比目标宽度更宽时才需要标记；图本身已经更窄时不必写。
+
+## 三处渲染
+
+| 位置 | 规则 |
+| :--- | :--- |
+| 文章封面 `PostHero` | `<Image width={706} priority>`。706 来自 `ARTICLE_COLUMN_WIDTH`，不要改成 `layout="full-width"`，否则 `sizes` 变成 `100vw`。 |
+| 列表卡片 `ListItem` | `widths={[274, 548, 822]}`，`sizes="(min-width: 1100px) 274px, (min-width: 768px) 37.5vw, 100vw"`。 |
+| 分享图 `RenderPost` | `getImage()` 单独生成 1200px JPEG，再拼成绝对 URL。不要把封面原图直接放进 `og:image`。 |
+
+`titleImage` 用 schema 工厂里的 `image().optional()`。Astro 5 不能 `import { image } from 'astro:content'`。
+
+## 硬规则
+
+1. 正文图必须在该文章所在目录或其子目录内，路径以 `./` 开头。`../` 会让构建报 `ImageNotFound`。封面可以 `./` 或 `../`。
+2. 原始 `<img>` 不进管线。本地图不要写 HTML 标签。
+3. 远程图保持原始 `<img>`。现有 4 张外链（leetcode.cn、assets.leetcode.com、hello-algo.com）不纳入构建期抓取。
+4. 代码块里的 `<img>` 是示例，不迁移。`Astro.md` 里有 1 处。
+5. GIF 走管线，输出保留帧的动画 WebP，HTML 宽高按单帧计算。多档宽度会生成多份动画文件。
+6. 产物在 `/_astro/`，文件名带内容哈希，不可手写。旧的 `/blogs/<名>-img/`、`/blog-title-images/`、`/about/<栏>/` 不再部署，会 404，不做重定向。
+7. 源图不降采样。管线减少的是访客下载量，不是仓库体积。
+
+宽度标记若写进 URL（`![](./x.webp|w480)`），构建不报错，产物会留下不可见的 `<img __ASTRO_IMAGE_="...">`。改 remark / rehype 插件后要删 `node_modules/.astro/`，否则会构建出缓存的旧 HTML。
+
+## 不改什么
+
+- 不改文章 URL 或 slug。
+- 不把图片优化理由用于改 `cssCodeSplit` 或 `inlineStylesheets`。
+- RSS 不含图片。`scripts/gen-og-cover.mjs` 只生成 `public/og/default.png`。
+- 站点图标、头像、字体留在 `public/`。友链头像是远程 URL。
+
+模块归属见 `docs/项目解析.md` §4.8。作者步骤见 `blog-content-publisher-skill/SKILL.md`。

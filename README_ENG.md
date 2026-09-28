@@ -135,7 +135,7 @@ Fork it and turn it into your own site. You can point an AI at this README and t
    - About: `src/content/about/`, images `src/content/about/<tab>/`
    - Projects / friends: the matching `data.json`
 
-   Content images go through Astro's image pipeline (WebP, `srcset`, dimensions, lazy loading) and are referenced with relative paths — no more `public/` copies. Use the `|w480` alt suffix to cap a body image's width. See `docs/图片管线 SPEC.md` for the contract.
+   Content images go through Astro's image pipeline (WebP, `srcset`, dimensions, lazy loading) and are referenced with relative paths — no more `public/` copies. Use the `|w480` alt suffix to cap a body image's width. See `docs/Astro图片管线指南.md` for the contract.
 3. Avatar: `public/avatar.webp`. The friends apply template (`friendInfo` in `FriendsApplyPanel.astro`) is not the same as `SITE`.
 4. Chrome (nav, sidebar, archive line): read the authority table and seams in `docs/项目解析.md`. Edit `public/shell.css` only — the same selector must not also live in a component `<style>`, which `test/css-ownership.test.mjs` fails on.
 5. New index pages that need the sidebar should use `BlogIndexLayout`; do not copy the sidebar.

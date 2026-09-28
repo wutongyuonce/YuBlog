@@ -123,7 +123,7 @@ src/
   styles/         正文与 Markdown
   utils/          列表、统计、筛选、路径
 public/shell.css  跨页保留的壳层样式
-docs/             项目解析（架构）、图片管线 SPEC、Astro 语法、SEO 教程
+docs/             项目解析（架构）、图片管线指南、Astro 语法、SEO 教程
 ```
 
 ## 个人二次开发
@@ -136,7 +136,7 @@ docs/             项目解析（架构）、图片管线 SPEC、Astro 语法、
    - 关于：`src/content/about/`，图 `src/content/about/<栏>/`
    - 项目 / 友链：对应 `data.json`
 
-   内容图片都走 Astro 图片管线（自动 WebP、`srcset`、宽高、懒加载），用相对路径引用，不要再放进 `public/`。正文需要限制宽度时用 alt 后缀 `|w480`。约定见 `docs/图片管线 SPEC.md`。
+   内容图片都走 Astro 图片管线（自动 WebP、`srcset`、宽高、懒加载），用相对路径引用，不要再放进 `public/`。正文需要限制宽度时用 alt 后缀 `|w480`。约定见 `docs/Astro图片管线指南.md`。
 3. 换头像：`public/avatar.webp`。友链申请模板里的站名和链接在 `FriendsApplyPanel.astro` 的 `friendInfo`，和 `SITE` 不是同一处。
 4. 改版式、顶栏、右栏、归档线：先读 `docs/项目解析.md` 的权威表和 seam。壳层 CSS 只改 `public/shell.css`，不要只写在组件 `<style>` 里。
 5. 新索引页要带右栏：套 `BlogIndexLayout`，不要复制侧栏。
