@@ -70,8 +70,17 @@
       syncTheme(matches)
     })
 
-  /* Handle user toggle button */
-  document.addEventListener('astro:page-load', () => {
+  /* Handle user toggle button.
+     Bind immediately: the first astro:page-load waits for window load, so a
+     click-only listener there is dead while images and fonts are still loading. */
+  const bindThemeToggle = () => {
+    const toggleThemeButton = getThemeSwitchButton()
+    if (!toggleThemeButton || toggleThemeButton.dataset.themeBound) return
+    toggleThemeButton.dataset.themeBound = 'true'
+
+    let isDark = document.documentElement.classList.contains('dark')
+    updateAria(isDark, toggleThemeButton)
+
     const handleToggle = (event: MouseEvent) => {
       const currentTarget = event.currentTarget
       if (!(currentTarget instanceof HTMLElement)) return
@@ -125,9 +134,9 @@
       })
     }
 
-    const toggleThemeButton = getThemeSwitchButton()
-    let isDark = document.documentElement.classList.contains('dark')
-    updateAria(isDark, toggleThemeButton)
-    toggleThemeButton?.addEventListener('click', handleToggle)
-  })
+    toggleThemeButton.addEventListener('click', handleToggle)
+  }
+
+  document.addEventListener('astro:page-load', bindThemeToggle)
+  bindThemeToggle()
 </script>

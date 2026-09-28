@@ -20,13 +20,17 @@
 </style>
 
 <script>
-  document.addEventListener('astro:page-load', () => {
-    const handleClick = () => {
-      window.scrollTo({ top: 0 })
-    }
+  const bindToTop = () => {
     const toTopButton = document.getElementById('to-top-button')
-    toTopButton?.addEventListener('click', handleClick)
-  })
+    if (!toTopButton || toTopButton.dataset.topBound) return
+    toTopButton.dataset.topBound = 'true'
+    toTopButton.addEventListener('click', () => {
+      window.scrollTo({ top: 0 })
+    })
+  }
+
+  document.addEventListener('astro:page-load', bindToTop)
+  bindToTop()
 
   const handleScroll = () => {
     const scrollThreshold = 300

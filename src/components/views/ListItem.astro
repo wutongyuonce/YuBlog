@@ -6,8 +6,10 @@ import { serializeBlogQuery } from '~/utils/blog-browser.js'
 import type { GroupedBlogItem } from '~/utils/data'
 interface Props {
   item: GroupedBlogItem
+  priority?: boolean
 }
 const {
+  priority = false,
   item: { id, data, minutesRead },
 } = Astro.props
 const image = data.titleImage
@@ -69,7 +71,8 @@ const href = data.redirect || withBasePath(`/blogs/${id}/`)
           {alt}
           widths={[274, 548, 822]}
           sizes="(min-width: 1100px) 274px, (min-width: 768px) 37.5vw, 100vw"
-          loading="lazy"
+          loading={priority ? undefined : 'lazy'}
+          {priority}
         />
       </a>
     )}

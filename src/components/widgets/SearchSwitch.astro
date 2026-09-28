@@ -145,8 +145,13 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
 <script>
   import { toggleFadeEffect } from '~/utils/misc'
 
-  /* Open the search panel when the search switch is clicked. */
-  document.addEventListener('astro:page-load', () => {
+  /* Open the search panel when the search switch is clicked.
+     Bind immediately: the first astro:page-load waits for window load. */
+  const bindSearchOpen = () => {
+    const searchSwitch = document.getElementById('search-switch')
+    if (!searchSwitch || searchSwitch.dataset.searchBound) return
+    searchSwitch.dataset.searchBound = 'true'
+
     const handleOpen = () => {
       toggleFadeEffect('backdrop', true, 'hidden')
       toggleFadeEffect('search-panel', true, 'hidden')
@@ -158,14 +163,20 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
       // Do not steal focus back if the panel was closed before this frame.
       requestAnimationFrame(() => {
         const panel = document.getElementById('search-panel')
-        if (panel?.classList.contains('fade-out') || panel?.classList.contains('hidden')) return
+        if (
+          panel?.classList.contains('fade-out') ||
+          panel?.classList.contains('hidden')
+        )
+          return
         document.getElementById('search-input')?.focus()
       })
     }
 
-    const searchSwitch = document.getElementById('search-switch')
-    searchSwitch?.addEventListener('click', handleOpen)
-  })
+    searchSwitch.addEventListener('click', handleOpen)
+  }
+
+  document.addEventListener('astro:page-load', bindSearchOpen)
+  bindSearchOpen()
 </script>
 
 <script>

@@ -23,11 +23,17 @@
     return false
   }
 
-  document.addEventListener('astro:page-load', () => {
-    document.getElementById('backdrop')?.addEventListener('click', () => {
+  const bindBackdrop = () => {
+    const backdrop = document.getElementById('backdrop')
+    if (!backdrop || backdrop.dataset.backdropBound) return
+    backdrop.dataset.backdropBound = 'true'
+    backdrop.addEventListener('click', () => {
       if (!closeOpenPanel()) toggleFadeEffect('backdrop', false, 'hidden')
     })
-  })
+  }
+
+  document.addEventListener('astro:page-load', bindBackdrop)
+  bindBackdrop()
 
   /* 'Tab' is trapped by SearchSwitch while the dialog is open. */
   document.addEventListener('keyup', (event: KeyboardEvent) => {
