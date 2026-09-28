@@ -306,7 +306,7 @@ header.nav-bar .nav-bar__pages a {
   transition: color 220ms ease;
 }
 
-header.nav-bar .nav-bar__pages a:not([aria-current='page']):hover::before {
+header.nav-bar .nav-bar__pages a:not([data-nav-current]):hover::before {
   content: '';
   position: absolute;
   z-index: -1;
@@ -318,8 +318,11 @@ header.nav-bar .nav-bar__pages a:not([aria-current='page']):hover::before {
   background: color-mix(in srgb, var(--c-text) 14%, var(--c-bg));
 }
 
-header.nav-bar .nav-bar__pages a[aria-current='page'],
-header.nav-bar .nav-bar__pages a[aria-current='page']:hover {
+/* Keyed on the pill's own target, not on aria-current: during a navigation
+   preview the pill leads the page, and a label left in the page color would be
+   unreadable on the opaque pill for the whole fetch. */
+header.nav-bar .nav-bar__pages a[data-nav-current],
+header.nav-bar .nav-bar__pages a[data-nav-current]:hover {
   color: var(--c-bg);
   background: transparent;
 }

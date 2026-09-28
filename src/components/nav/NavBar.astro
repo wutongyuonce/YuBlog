@@ -77,6 +77,12 @@ const home = withBasePath('/')
     )
   }
 
+  /**
+   * The pill paints an opaque background, so the link under it has to flip its own
+   * color. That pairing is a visual fact, not a navigation fact: `aria-current`
+   * keeps naming the page the user is actually on, while `data-nav-current` names
+   * the item the pill is drawn on — which leads the page during a preview.
+   */
   const markCurrent = (nav: HTMLElement, current: HTMLAnchorElement | null) => {
     linksOf(nav).forEach((link) => {
       if (link === current) link.setAttribute('aria-current', 'page')
@@ -84,13 +90,29 @@ const home = withBasePath('/')
     })
   }
 
+  const markIndicatorTarget = (
+    nav: HTMLElement,
+    target: HTMLAnchorElement | null
+  ) => {
+    linksOf(nav).forEach((link) => {
+      if (link === target) link.setAttribute('data-nav-current', '')
+      else link.removeAttribute('data-nav-current')
+    })
+  }
+
+  let pendingLink: HTMLAnchorElement | null = null
+  /** Pathname when the preview started, to tell a landed load from a stale one. */
+  let pendingFrom: string | null = null
+
   const placeIndicator = (animate: boolean) => {
     const nav = pages()
     if (!nav) return
     const indicator = nav.querySelector<HTMLElement>('.nav-bar__indicator')
     const current = currentLink(nav)
+    const target = pendingLink?.isConnected ? pendingLink : current
     markCurrent(nav, current)
-    placeSlidingIndicator({ indicator, target: current, animate })
+    markIndicatorTarget(nav, target)
+    placeSlidingIndicator({ indicator, target, animate })
   }
 
   const start = () => {
@@ -98,13 +120,53 @@ const home = withBasePath('/')
     if (!nav || nav.dataset.indicatorBound === 'true') return
     nav.dataset.indicatorBound = 'true'
     placeIndicator(false)
-    document.fonts?.ready.then(() => placeIndicator(false))
+    document.fonts?.ready.then(() => placeIndicator(Boolean(pendingLink)))
   }
 
   if (!document.documentElement.dataset.navIndicatorListeners) {
     document.documentElement.dataset.navIndicatorListeners = 'true'
-    document.addEventListener('astro:page-load', () => placeIndicator(true))
-    window.addEventListener('resize', () => placeIndicator(false))
+    // Astro only emits this for navigations it actually intercepts (not new tabs,
+    // modified clicks, downloads or external links). The old page stays readable.
+    document.addEventListener('astro:before-preparation', (event) => {
+      const nav = pages()
+      const source = event.sourceElement
+      if (!(source instanceof HTMLAnchorElement) || !nav) return
+      const link = nav.contains(source)
+        ? source
+        : source.matches('a.nav-bar__brand')
+          ? linksOf(nav).find((item) => linkPath(item) === linkPath(source))
+          : null
+      if (!link || link === currentLink(nav)) return
+
+      pendingLink = link
+      pendingFrom = normalize(location.pathname)
+      placeIndicator(true)
+      const rollback = () => {
+        if (pendingLink !== link) return
+        pendingLink = null
+        pendingFrom = null
+        placeIndicator(true)
+      }
+      event.signal.addEventListener('abort', rollback, { once: true })
+      queueMicrotask(() => {
+        if (event.defaultPrevented || event.signal.aborted) rollback()
+      })
+    })
+    document.addEventListener('astro:page-load', () => {
+      // Astro also fires this from window load and from a previous navigation's
+      // completion. Those are not this navigation landing, so keep the preview
+      // instead of snapping the pill back to the page the user is leaving.
+      if (pendingLink && normalize(location.pathname) === pendingFrom) {
+        placeIndicator(true)
+        return
+      }
+      pendingLink = null
+      pendingFrom = null
+      placeIndicator(true)
+    })
+    window.addEventListener('resize', () =>
+      placeIndicator(Boolean(pendingLink))
+    )
   }
   start()
 </script>
