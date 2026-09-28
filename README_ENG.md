@@ -12,9 +12,9 @@
 
 ## Preview
 
-[![YuBlog demo](README-img/yublog-promo.gif)](https://github.com/wutongyuonce/YuBlog/blob/main/public/yublog-promo-4k.mp4)
+[![YuBlog demo](README-img/yublog-promo.gif)](https://github.com/wutongyuonce/YuBlog/blob/main/README-img/yublog-promo-4k.mp4)
 
-GitHub does not render `<video>` in Markdown, so this is an 8-second GIF. Click it, or [download the full 4K demo (30s, 55 MB)](https://github.com/wutongyuonce/YuBlog/blob/main/public/yublog-promo-4k.mp4).
+GitHub does not render `<video>` in Markdown, so this is an 8-second GIF. Click it, or [download the full 4K demo (30s, 55 MB)](https://github.com/wutongyuonce/YuBlog/blob/main/README-img/yublog-promo-4k.mp4).
 
 ### Home
 
@@ -44,7 +44,7 @@ GitHub does not render `<video>` in Markdown, so this is an 8-second GIF. Click 
 | `/tags/` | Tags. Sort by count or name. Multi-select is AND. No list until a tag is selected. |
 | `/archives/` | Archive timeline grouped by year. |
 | `/projects/` | Project grid from JSON. |
-| `/about/#use` | About. Intro plus Use / Hobby / Soul markdown tabs. No background effect. |
+| `/about/` | About. About / Use / Hobby / Soul tabs, About selected by default. No background effect. |
 | `/friends/` | Friend links, apply notes, and a `friend.txt` template. |
 | `/blogs/[slug]/` | Post. Right TOC; click TOC to pin. |
 | `/rss.xml` | RSS. |
@@ -57,13 +57,14 @@ Home, tags, archive, projects, about, and friends share `BlogIndexLayout` and th
 
 | Path | Purpose |
 | :--- | :--- |
-| `src/content/blogs/**/*.{md,mdx}` | Posts. `title`, `pubDate`, and `category` are required; `category` is any non-empty string. Title images use `titleImage: /blog-title-images/...`. |
-| `src/content/about/*.md` | About. `intro.md` is the top copy (`tab: false`); other files become tabs via `title` and `order`. |
+| `src/content/blogs/**/*.{md,mdx}` | Posts. `title`, `pubDate`, and `category` are required; `category` is any non-empty string. Title images use `titleImage: ./_title-images/...`. |
+| `src/content/about/*.md` | About. Each file becomes a tab via `title` and `order`; `about.md` is the default first tab. `tab: false` stays out of the tab row. |
 | `src/content/projects/data.json` | Project cards. |
 | `src/content/friends/data.json` | Friend-link cards. |
-| `public/blog-title-images/` | List and title-block images |
-| `public/blogs/<name>-img/` | In-article images |
-| `public/about/<tab>/` | About-tab images |
+| `public/` | 站点级资源：`favicon`、`icon-*.png`、`avatar.webp`、`og/default.png`、`fonts/` |
+| `src/content/blogs/_title-images/` | List and title-block images (shared by all posts) |
+| `src/content/blogs/<name>-img/` | In-article images, referenced as `./<name>-img/file.png` |
+| `src/content/about/<tab>/` | About-tab images |
 | `src/config.ts` | Site, nav, socials, TOC / search flags |
 
 Edit page copy and data with `blog-content-publisher-skill/SKILL.md` (one page at a time). Architecture and seams: `docs/项目解析.md`.
@@ -71,11 +72,14 @@ Edit page copy and data with `blog-content-publisher-skill/SKILL.md` (one page a
 ## Stack
 
 - Astro 5 + TypeScript, Markdown / MDX Content Collections
-- UnoCSS + `public/shell.css` (nav, sidebar, archive, about tabs — survives ClientRouter)
-- Pagefind indexes blogs only
+- Content images go through Astro's image pipeline: relative paths plus a `|w` width marker, automatic WebP, `srcset`, dimensions and lazy loading; `public/` holds site-level assets only
+- Article title font is subset to the glyphs actually used (7.65 MB → 73 KiB)
+- KaTeX CSS and fonts are bundled locally (no CDN) and shipped as woff2 only
+- UnoCSS + `public/shell.css` (nav, sidebar, archive, about tabs, pagination — one owner for chrome styles)
+- Pagefind indexes blogs only, and loads only when search is opened
 - `astro-expressive-code`
 - Light / dark theme, ClientRouter
-- Backgrounds `dot` / `rose` / `snow` per page; about turns them off
+- Backgrounds `dot` / `rose` / `snow` per page; about turns them off; canvas backgrounds respect `prefers-reduced-motion` (shared gate in `src/utils/reduced-motion.js`)
 
 ## Run
 
@@ -97,6 +101,10 @@ pnpm test:blog-stats       # profile stats
 pnpm test:recent-post-date # recent-post dates
 pnpm test:progress-stats   # day-of-year and progress
 pnpm test:cjk-emphasis     # emphasis next to CJK punctuation
+pnpm test:toc-active       # current-heading picker
+pnpm test:css-ownership    # one owner per global selector
+pnpm test:canvas-size      # canvas backing store & DPR cap
+pnpm test:reduced-motion   # reduced-motion gate
 pnpm lint
 pnpm format
 ```
@@ -111,7 +119,7 @@ src/
   pages/          routes
   styles/         prose and Markdown
   utils/          lists, stats, filters, paths
-public/shell.css  chrome styles that persist across pages
+public/shell.css  one owner for chrome styles (nav, sidebar, archives, tabs)
 docs/             architecture, Astro notes, SEO tutorial
 ```
 
@@ -121,11 +129,13 @@ Fork it and turn it into your own site. You can point an AI at this README and t
 
 1. Fork / clone, then edit `SITE` (URL, title, description, author, language) and `UI` (nav labels, social links) in `src/config.ts`.
 2. Swap content before touching layout:
-   - Posts: `src/content/blogs/`, body images `public/blogs/<name>-img/`, title images `public/blog-title-images/`
-   - About: `src/content/about/`, images `public/about/<tab>/`
+   - Posts: `src/content/blogs/`, body images `src/content/blogs/<name>-img/`, title images `src/content/blogs/_title-images/`
+   - About: `src/content/about/`, images `src/content/about/<tab>/`
    - Projects / friends: the matching `data.json`
+
+   Content images go through Astro's image pipeline (WebP, `srcset`, dimensions, lazy loading) and are referenced with relative paths — no more `public/` copies. Use the `|w480` alt suffix to cap a body image's width. See `docs/图片管线 SPEC.md` for the contract.
 3. Avatar: `public/avatar.webp`. The friends apply template (`friendInfo` in `FriendsApplyPanel.astro`) is not the same as `SITE`.
-4. Chrome (nav, sidebar, archive line): read the authority table and seams in `docs/项目解析.md`. Edit `public/shell.css` only — do not put those rules solely in component `<style>` tags.
+4. Chrome (nav, sidebar, archive line): read the authority table and seams in `docs/项目解析.md`. Edit `public/shell.css` only — the same selector must not also live in a component `<style>`, which `test/css-ownership.test.mjs` fails on.
 5. New index pages that need the sidebar should use `BlogIndexLayout`; do not copy the sidebar.
 6. After changes: `pnpm check`, then `pnpm build` if needed.
 

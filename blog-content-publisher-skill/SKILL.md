@@ -17,7 +17,7 @@ description: >
 
 | 用户在说 | 页面 | 改哪里 |
 | :--- | :--- | :--- |
-| 发文章、改正文、改封面/标题图、改分类标签、草稿 | 首页列表 + 标签 + 归档 + 详情 + RSS | 文：`src/content/blogs/`；正文图：`public/blogs/<名>-img/`；封面：`public/blog-title-images/` + `titleImage` |
+| 发文章、改正文、改封面/标题图、改分类标签、草稿 | 首页列表 + 标签 + 归档 + 详情 + RSS | 文：`src/content/blogs/`；正文图：`src/content/blogs/<名>-img/`；封面：`src/content/blogs/_title-images/` + `titleImage` |
 | 改标签展示（标签名来自文章） | 标签页 | 改各篇 `tags:`，不要手写标签页数组 |
 | 归档多一条/少一条 | 归档 | 同上，靠 `pubDate` |
 | 项目卡片 | 项目 | `src/content/projects/data.json` |
@@ -41,18 +41,25 @@ description: >
 3. 用户没说发布就 `draft: true`。只有明确要上线才 `false` 或删掉。
 4. `category` 必填，任意非空字符串；不写或写空会构建失败。现有值有 `技术向`、`工具向`、`思考向`，沿用已有分类，用户指定了再新开。没有默认分类。`tags` 是独立话题数组。
 5. `description` 短、事实。极短文才 `toc: false`。不进搜索才 `search: false`。
-6. 正文图：放到 `public/blogs/<短名>-img/`，Markdown 用 `/blogs/<短名>-img/文件.png`。现有目录：`Astro-img`、`MCP-img`、`RAG-img`、`agent-skill-img`、`deploy-img`、`harness-engineering-img`、`jianquan-img`、`juc-img`、`kv-prefix-prompt-semantic-caching-img`、`memu-img`、`prompt-caching-img`、`代码库搜索-img`、`多模态Agent-img`。新文章新建 `public/blogs/<短名>-img/`，不要写回 `public/` 根目录。
-7. 列表和详情标题块的封面**只有一条路**：文件放 `public/blog-title-images/`，frontmatter 用 `titleImage` / `titleImageAlt`。
+6. 正文图：放到 `src/content/blogs/<短名>-img/`（与文章同级；分组文章放同组目录下，例如 `src/content/blogs/算法笔记/algo-img/`）。Markdown 用**相对路径**：`![说明](./<短名>-img/文件.png)`。
+
+   - 图片必须位于该文章所在目录或其子目录内。正文图片**不能用 `../` 向上越级**，否则构建直接报 `ImageNotFound`。
+   - 图片一律走 Astro 图片管线：自动转 WebP、生成 `srcset`、注入宽高、懒加载。**不要手工压缩源图**，也不要再放进 `public/`。
+   - 必要时用 alt 后缀声明显示宽度：`![说明|w480](./<短名>-img/文件.png)`。正文列宽约 706px，所以「半宽」写 `|w353`；不写标记就是原图宽度（超过列宽时按列宽显示）。
+   - **不要用原始 `<img>` 标签**：它完全不进管线，浏览器会直接 404。代码块里的示例除外。
+   - 远程图片（外链到别人的站）目前仍是原始 `<img>`，不受管线管。
+
+7. 列表和详情标题块的封面**只有一条路**：文件放 `src/content/blogs/_title-images/`，frontmatter 用 `titleImage` / `titleImageAlt`。
 
    ```yaml
-   titleImage: /blog-title-images/night-lantern.webp
+   titleImage: ./_title-images/night-lantern.webp
    titleImageAlt: 夜晚提灯的动漫场景
    ```
 
    - **不要写 `cover` / `coverAlt`**，字段已删除；列表也不会再 fallback。
    - 有 `titleImage` 必须有 `titleImageAlt`。没封面就两行都别写，列表对应位置空着。
-   - 路径必须是 `/blog-title-images/<文件>`，不要 `..`、空格、查询串。文件名短、ASCII，如 `night-lantern.webp`。
-   - 优先 WebP，宽不必超过 1600px。用户丢来超大 jpg 时先压再引用，不要原样提交 4K/8K。
+   - 路径是相对于本文件的：文章在 `src/content/blogs/` 下写 `./_title-images/<文件>`，在组目录里写 `../_title-images/<文件>`。文件名短、ASCII，如 `night-lantern.webp`。
+   - 封面同样进管线，会按列表卡片与文章封面的尺寸自动转 WebP，不必手工压缩。
    - 不要把同一张封面再当正文第一张，除非正文真的还要用。
 8. 正文不要再写一个 `# 标题`，frontmatter 的 `title` 已经是页标题。从 `##` 开始。
 9. 不编造引用、日期、数据。
@@ -64,7 +71,7 @@ description: 给列表和 RSS 的一句摘要。
 pubDate: 2026-09-18
 category: 技术向
 tags: [Astro]
-titleImage: /blog-title-images/foo.webp
+titleImage: ./_title-images/foo.webp
 titleImageAlt: 一句能读的描述
 ---
 ```
@@ -93,25 +100,25 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 | 文件 | 页面上的位置 |
 | :--- | :--- |
-| `intro.md` | 顶部介绍。必须 `tab: false` |
+| `about.md` | 按钮 About，默认第一项 |
 | `use.md` | 按钮 Use |
 | `hobby.md` | 按钮 Hobby |
 | `soul.md` | 按钮 Soul |
 
-frontmatter：`title`（按钮字）、`order`（越小越靠前）、`tab`（介绍为 false）。
+frontmatter：`title`（按钮字）、`order`（越小越靠前，第一项默认选中）。`tab: false` 才不进按钮。
 
 加一栏：同目录新 `.md`，写 `title`、`order`，不要改 `AboutView.astro`。
 
-配图放 `public/about/<标签>/`，不要放在 `src/content/about/` 旁边：
+配图放 `src/content/about/<标签>/`，与对应 md 同级：
 
 ```text
-public/about/intro/
-public/about/use/
-public/about/hobby/
-public/about/soul/
+src/content/about/about/
+src/content/about/use/
+src/content/about/hobby/
+src/content/about/soul/
 ```
 
-Markdown 用站点根路径：`![说明](/about/hobby/foo.jpg)`。
+Markdown 用相对路径：`![说明](./hobby/foo.jpg)`。需要控制宽度时加后缀，例如 `![电影|w300](./hobby/foo.jpg)`。
 
 用户给原文就照写，只做必要的 Markdown 结构（标题层级、列表）。不扩写、不改人设。
 
