@@ -2,68 +2,46 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   BLOG_SIDEBAR_BREAKPOINT,
-  MIN_SIDEBAR_BOTTOM_GAP,
-  SIDEBAR_BOTTOM_GAP_REDUCTION,
-  SIDEBAR_BOTTOM_GAP_SCALE,
   getSidebarBottomGap,
-  shouldLockSidebar,
+  shouldStickSidebar,
 } from '../src/utils/blog-sidebar.js'
 
-test('sidebar bottom gap follows source height and keeps a minimum', () => {
+const metrics = {
+  viewportWidth: 1440,
+  sidebarHeight: 900,
+  viewportHeight: 800,
+  headerHeight: 56,
+  columnStart: 80,
+  sidebarBottomGap: 215,
+}
+
+test('sidebar keeps the original gap derived from the recent-writing block', () => {
+  assert.equal(getSidebarBottomGap(343), 215)
+  assert.equal(getSidebarBottomGap(20), 4)
+})
+
+test('tall sidebar sticks at its original threshold without scroll-driven locking', () => {
+  assert.equal(shouldStickSidebar(metrics), true)
   assert.equal(
-    getSidebarBottomGap(280),
-    Math.round((280 - SIDEBAR_BOTTOM_GAP_REDUCTION) * SIDEBAR_BOTTOM_GAP_SCALE)
+    shouldStickSidebar({
+      ...metrics,
+      sidebarHeight:
+        metrics.viewportHeight - metrics.columnStart - metrics.sidebarBottomGap,
+    }),
+    false
   )
-  assert.equal(getSidebarBottomGap(20), MIN_SIDEBAR_BOTTOM_GAP)
 })
 
-test('sidebar locks only after the tall sidebar reaches its bottom threshold', () => {
-  const metrics = {
-    viewportWidth: 1440,
-    sidebarHeight: 900,
-    viewportHeight: 800,
-    headerHeight: 56,
-    columnTop: 80,
-    columnBottom: 760,
-    sidebarBottomGap: 100,
-  }
-
-  assert.equal(shouldLockSidebar(metrics), false)
-  assert.equal(shouldLockSidebar({ ...metrics, columnBottom: 700 }), true)
-})
-
-test('sidebar stays unlocked when its header or measurement anchor is missing', () => {
-  const metrics = {
-    viewportWidth: 1440,
-    sidebarHeight: 900,
-    viewportHeight: 800,
-    headerHeight: 56,
-    columnTop: 80,
-    columnBottom: 700,
-    sidebarBottomGap: 100,
-  }
-
-  assert.equal(shouldLockSidebar({ ...metrics, headerHeight: null }), false)
-  assert.equal(shouldLockSidebar({ ...metrics, sidebarBottomGap: null }), false)
-})
-
-test('sidebar stays in normal flow when it fits or the layout is narrow', () => {
-  const metrics = {
-    viewportWidth: 1440,
-    sidebarHeight: 400,
-    viewportHeight: 800,
-    headerHeight: 56,
-    columnTop: 80,
-    columnBottom: 500,
-    sidebarBottomGap: 100,
-  }
-
-  assert.equal(shouldLockSidebar(metrics), false)
+test('sidebar stays in normal flow without measurements or on narrow layouts', () => {
+  assert.equal(shouldStickSidebar({ ...metrics, headerHeight: null }), false)
   assert.equal(
-    shouldLockSidebar({
+    shouldStickSidebar({ ...metrics, sidebarBottomGap: null }),
+    false
+  )
+  assert.equal(
+    shouldStickSidebar({
       ...metrics,
       viewportWidth: BLOG_SIDEBAR_BREAKPOINT,
-      sidebarHeight: 900,
     }),
     false
   )

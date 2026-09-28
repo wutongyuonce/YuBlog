@@ -2,7 +2,7 @@
 // （每个 7–8 MiB）。
 //
 // 作为 Astro 集成挂在 `astro:build:done` 上，而不是放在 npm 的 postbuild 里：
-// `src/styles/main.css` 的第一顺位 `src` 就指向这些子集文件，所以任何构建都必须
+// `public/shell.css` 的第一顺位 `src` 就指向这些子集文件，所以任何构建都必须
 // 产出它们。postbuild 可以被跳过（例如直接跑 `astro build`），那会让 CSS 引用
 // 一个不存在的文件、浏览器静默回退到全量字体——正是这一项要消除的成本。
 //
@@ -118,25 +118,17 @@ async function subsetTitleFonts(distDir: string) {
 
 /** CSS 第一顺位引用的子集文件必须真的存在，否则访客会静默取到全量字体。 */
 async function assertSubsetFontsExist(distDir: string) {
-  const referenced = new Set<string>()
-  const assetsDir = join(distDir, '_astro')
-  const cssFiles = (await readdir(assetsDir, { withFileTypes: true })).filter(
-    (entry) => entry.isFile() && entry.name.endsWith('.css')
+  const css = await readFile(join(distDir, 'shell.css'), 'utf8')
+  const referenced = new Set(
+    [...css.matchAll(/url\(['"]?\/fonts\/([^)'"]+-title\.woff2)['"]?\)/g)].map(
+      ([, name]) => name
+    )
   )
 
-  for (const entry of cssFiles) {
-    const css = await readFile(join(assetsDir, entry.name), 'utf8')
-    for (const [, name] of css.matchAll(
-      /url\(\/fonts\/([^)]+-title\.woff2)\)/g
-    )) {
-      referenced.add(name)
+  for (const [, name] of TARGETS) {
+    if (!referenced.has(name)) {
+      throw new Error(`[fonts] shell.css 缺少标题子集字体引用：${name}`)
     }
-  }
-
-  if (referenced.size === 0) {
-    throw new Error(
-      '[fonts] 产物 CSS 里没有任何标题子集字体引用，main.css 的子集优先规则可能被改掉了'
-    )
   }
 
   for (const name of referenced) {

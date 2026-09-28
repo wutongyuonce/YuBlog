@@ -6,6 +6,28 @@
    must not be defined here and in a component style — test/css-ownership.test.mjs
    enforces that. */
 
+/* Title subsets are generated after Vite builds CSS; keep these font URLs in
+   the static sheet so Vite does not try to resolve files that do not exist yet. */
+@font-face {
+  font-family: 'WoHuiBaNiJiaoZuoAiQing-2';
+  src:
+    url('/fonts/WoHuiBaNiJiaoZuoAiQing-title.woff2') format('woff2'),
+    url('/fonts/WoHuiBaNiJiaoZuoAiQing-2.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'LXGWWenKai-Regular';
+  src:
+    url('/fonts/LXGWWenKai-title.woff2') format('woff2'),
+    url('/fonts/LXGWWenKai-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 header.nav-bar {
   position: sticky;
   top: 0;
@@ -425,6 +447,9 @@ header.nav-bar .nav-bar__group--right #search-switch {
 .blog-index-sidebar-column {
   min-width: 0;
 }
+.blog-index-sidebar-column {
+  align-self: stretch;
+}
 /* Keep in sync with BLOG_SIDEBAR_BREAKPOINT in blog-sidebar.js. */
 @media (max-width: 1099px) {
   .blog-index-layout {
@@ -432,13 +457,9 @@ header.nav-bar .nav-bar__group--right #search-switch {
   }
 }
 
-.blog-sidebar[data-sidebar-locked] {
-  position: fixed;
-  z-index: 20;
-  left: var(--sidebar-left);
-  /* Fallback matches MIN_SIDEBAR_BOTTOM_GAP before JS sets the variable. */
-  bottom: var(--sidebar-bottom-gap, 4px);
-  width: var(--sidebar-width);
+.blog-sidebar[data-sidebar-sticky] {
+  position: sticky;
+  top: calc(100vh - var(--sidebar-height) - var(--sidebar-bottom-gap));
 }
 
 .blog-sidebar .blog-categories h2 {
@@ -486,14 +507,6 @@ header.nav-bar .nav-bar__group--right #search-switch {
   opacity: 0.55;
   font-size: inherit;
   font-variant-numeric: tabular-nums;
-}
-
-/* Copy of BLOG_SIDEBAR_BREAKPOINT; media queries cannot read JS. */
-@media (max-width: 1099px) {
-  .blog-sidebar[data-sidebar-locked] {
-    position: static;
-    width: auto;
-  }
 }
 
 .blog-sidebar > [data-sidebar-bottom-gap-source] > .recent-writing--compact {
@@ -919,10 +932,6 @@ html.dark
   text-decoration-color: color-mix(in srgb, var(--c-text) 38%, transparent);
 }
 @media (prefers-reduced-motion: no-preference) {
-  .archive-post {
-    animation: archive-in 420ms ease both;
-    animation-delay: calc(var(--i, 0) * 16ms);
-  }
   .archive-post__mark::after,
   .archive-post__title {
     transition:
@@ -932,16 +941,6 @@ html.dark
       width 180ms ease,
       height 180ms ease,
       border-radius 180ms ease;
-  }
-}
-@keyframes archive-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
   }
 }
 @media (max-width: 767px) {

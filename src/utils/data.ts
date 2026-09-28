@@ -104,7 +104,6 @@ export async function getBlogStats(): Promise<BlogStats> {
 }
 
 export interface GroupedBlogItem {
-  idx: number
   year: string
   id: CollectionEntry<'blogs'>['id']
   data: CollectionEntry<'blogs'>['data']
@@ -133,12 +132,11 @@ export async function getBlogListItems(
   const sortedPosts = getSortedPosts(items)
 
   const enrichedPosts = await Promise.all(
-    sortedPosts.map(async (item, idx) => {
+    sortedPosts.map(async (item) => {
       const { data, id } = item
       const { remarkPluginFrontmatter } = await render(item)
 
       return {
-        idx,
         year: getYear(data.pubDate).toString(),
         id,
         data,

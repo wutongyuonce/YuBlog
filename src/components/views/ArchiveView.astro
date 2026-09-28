@@ -19,7 +19,7 @@ const groups = await getGroupedPostsByYear('blogs')
           const dateTime = item.data.pubDate.toISOString()
 
           return (
-            <li class="archive-post" style={`--i: ${item.idx}`}>
+            <li class="archive-post">
               <time datetime={dateTime}>{dateTime.slice(5, 10)}</time>
               <span class="archive-post__mark" aria-hidden="true"></span>
               <a

@@ -2,7 +2,6 @@
 export const BLOG_SIDEBAR_BREAKPOINT = 1099
 export const SIDEBAR_BOTTOM_GAP_REDUCTION = 20
 export const SIDEBAR_BOTTOM_GAP_SCALE = 2 / 3
-/** CSS `bottom` fallback on `.blog-sidebar[data-sidebar-locked]` must match. */
 export const MIN_SIDEBAR_BOTTOM_GAP = 4
 
 /** @param {number} sourceHeight measured from `[data-sidebar-bottom-gap-source]` */
@@ -23,12 +22,11 @@ export function getSidebarBottomGap(sourceHeight) {
  *   sidebarHeight: number,
  *   viewportHeight: number,
  *   headerHeight: number | null,
- *   columnTop: number,
- *   columnBottom: number,
+ *   columnStart: number, // column top in document coordinates, not viewport coordinates
  *   sidebarBottomGap: number | null,
  * }} metrics
  */
-export function shouldLockSidebar(metrics) {
+export function shouldStickSidebar(metrics) {
   const { headerHeight, sidebarBottomGap } = metrics
   if (headerHeight == null || sidebarBottomGap == null) return false
   if (metrics.viewportWidth <= BLOG_SIDEBAR_BREAKPOINT) return false
@@ -36,11 +34,8 @@ export function shouldLockSidebar(metrics) {
   const canFitInViewport =
     metrics.sidebarHeight <=
     metrics.viewportHeight -
-      Math.max(headerHeight, metrics.columnTop) -
+      Math.max(headerHeight, metrics.columnStart) -
       sidebarBottomGap
 
-  return (
-    !canFitInViewport &&
-    metrics.columnBottom <= metrics.viewportHeight - sidebarBottomGap
-  )
+  return !canFitInViewport
 }

@@ -43,7 +43,7 @@ const firstPagePaginationHtml = showFirstPagePagination
   data-require-tags={requireTags ? '' : undefined}
   aria-label="文章列表"
 >
-  <Fragment set:html={`<script>${firstPaintBoot}</script>`} />
+  <script is:inline set:html={firstPaintBoot}></script>
   {!requireTags && (
     <>
       <header class="blog-category-header" data-category-header hidden>
