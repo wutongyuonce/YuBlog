@@ -1,5 +1,6 @@
 @import 'rehype-callouts/theme/vitepress';
-@import url('https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css');
+/* 从本地包引入，交给 Vite 打包：不再依赖第三方 CDN，也不会和渲染用的 katex 版本错配。 */
+@import 'katex/dist/katex.min.css';
 
 /* Prose Complement */
 .prose {

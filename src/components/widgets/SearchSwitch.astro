@@ -32,10 +32,7 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
 <search-panel
   role="dialog"
   id="search-panel"
-  class={`hidden z-200 fixed top-15% lt-lgp:(top-10%) left-50% translate-x--50%
-    grid grid-rows-[auto_1fr_auto]
-    w-42rem lt-lgp:(w-90%) max-h-70vh lt-lgp:(max-h-80vh) p-3 lt-lgp:(pb-1) rounded-lg
-    text-[var(--c-text)] bg-[var(--c-bg)] shadow-custom_0_0_10_0`}
+  class="hidden"
   aria-modal="true"
   aria-labelledby="search-label"
   aria-keyshortcuts="ArrowUp,ArrowDown,Enter,Esc"
@@ -56,10 +53,6 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
             <button
               type="button"
               role="tab"
-              class="px-1.5 py-0.5 rounded
-                bg-[#88888816] dark:bg-[#88888823]
-                aria-[selected=false]:op-40 aria-[selected=true]:op-100
-                aria-[selected=false]:hover:op-70 op-transition cursor-pointer"
               data-type={item.toLowerCase()}
             >
               {item.charAt(0).toUpperCase() + item.slice(1)}
@@ -69,11 +62,7 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
       )
     }
     <!-- Search Bar -->
-    <div
-      class="grid grid-cols-[auto_1fr] items-center
-        h-10 px-3 rounded-md
-        bg-[#88888811] dark:bg-[#88888818]"
-    >
+    <div class="search-bar">
       <div u-i-grommet-icons-search></div>
       <label for="search-input" id="search-label" class="sr-only"></label>
       <input
@@ -103,7 +92,7 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
     <!-- Results -->
     <div id="search-content"></div>
     <!-- Feedback -->
-    <div id="search-feedback" class="hidden py-3 text-center text-sm op-40">
+    <div id="search-feedback" class="hidden py-3 text-center text-sm">
     </div>
     <!-- Pagination -->
     <div
@@ -112,14 +101,14 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
       class="items-center justify-center gap-4 pt-4 pb-3 text-xs"
     >
       <button
-        class="flex items-center justify-center gap-1 op-40 hover:op-100 op-transition"
+        class="flex items-center justify-center gap-1"
         data-action="more"
       >
         <div u-i-material-symbols-arrow-cool-down></div>
         <span></span>
       </button>
       <button
-        class="flex items-center justify-center gap-1 op-40 hover:op-100 op-transition"
+        class="flex items-center justify-center gap-1"
         data-action="all"
       >
         <div u-i-material-symbols-expand-all></div>
@@ -129,11 +118,7 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
   </div>
   <!-- Shortcuts Footer -->
   <footer role="note" aria-label="Keyboard shortcuts">
-    <ul
-      class="flex flex-wrap items-center gap-4.5 lt-md:hidden
-        pt-3 border-t border-[#7d7d7d4d]
-        text-xs op-40 select-none"
-    >
+    <ul class="search-shortcuts">
       <li class="flex items-center gap-1">
         <kbd class="search-kbd-key">
           <div u-i-material-symbols-arrow-upward></div>
@@ -165,6 +150,10 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
     const handleOpen = () => {
       toggleFadeEffect('backdrop', true, 'hidden')
       toggleFadeEffect('search-panel', true, 'hidden')
+
+      // 面板一打开就开始拉 pagefind，用户敲第一个字时通常已经就绪。
+      // @ts-expect-error (ensurePagefind 由生产环境的 inline 脚本注入)
+      window.ensurePagefind?.()
 
       // auto-focus the search input after panel becomes visible
       requestAnimationFrame(() => {
@@ -258,6 +247,7 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
       this.#initPagination()
 
       this.#input?.addEventListener('input', this.#handleInput)
+      document.addEventListener('keydown', this.#handlePanelTab)
 
       this.#content?.addEventListener('click', this.#handleResultClick)
       this.#content?.addEventListener(
@@ -270,6 +260,7 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
 
     disconnectedCallback() {
       this.#input?.removeEventListener('input', this.#handleInput)
+      document.removeEventListener('keydown', this.#handlePanelTab)
 
       this.#content?.removeEventListener('click', this.#handleResultClick)
       this.#content?.removeEventListener(
@@ -338,6 +329,10 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
 
           this.#showLoading(requestId)
 
+          // 保底：若 pagefind 还没就绪（例如面板刚打开就输入），先等它加载完。
+          // @ts-expect-error (ensurePagefind 由生产环境的 inline 脚本注入)
+          await window.ensurePagefind?.()
+
           // @ts-expect-error (for Cannot find name 'pagefind'.ts(2304))
           const res = await pagefind.debouncedSearch(value, options, 300)
           // a more recent search call has been made, nothing to do
@@ -364,13 +359,14 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
         }
         for (const result of fakeResults) {
           this.#content.innerHTML += `
-            <a href="${this.#results?.dataset.base}" class="search-result-item">
+            <a href="${this.#results?.dataset.base}" id="${this.#nextOptionId()}" class="search-result-item">
               <div class="search-result-title">${result.meta.title}</div>
               <div class="search-result-excerpt">${result.excerpt}</div>
             </a>`
         }
         this.#selectedItem = this.#content.querySelector('a')
         this.#selectedItem?.setAttribute('aria-selected', 'true')
+        this.#syncActiveDescendant()
       }
     }
 
@@ -388,6 +384,44 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
       if (!link) return
 
       this.#updateSlectedItem(link)
+    }
+
+    // 面板声明为 aria-modal，所以 Tab 必须在面板内循环：否则焦点会跑到被遮罩
+    // 盖住的页面内容上，与 aria-modal 的承诺不符（退出面板用 Escape 或点击遮罩）。
+    //
+    // 挂在 document 上而不是面板上：点面板空白处会让焦点落到 body，那时 keydown
+    // 不经过面板，挂在面板上就永远触发不到。
+    #handlePanelTab = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return
+      if (this.classList.contains('hidden')) return
+
+      // 只算真正可见、可聚焦的控件：隐藏的「加载更多/全部」按钮参与进来的话，
+      // first/last 会指向看不见的节点，循环边界就错了。结果项是 tabindex="-1"，
+      // 用方向键选择，不进 Tab 序列。
+      const focusables = Array.from(
+        this.querySelectorAll<HTMLElement>(
+          'input, button:not([disabled]), a[href]:not([tabindex="-1"])'
+        )
+      ).filter((el) => el.getClientRects().length > 0)
+      if (focusables.length === 0) return
+
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      const active = document.activeElement as HTMLElement | null
+
+      if (!active || !this.contains(active)) {
+        event.preventDefault()
+        first.focus()
+        return
+      }
+
+      if (event.shiftKey && active === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
 
     #handleResultsKeyDown = (event: KeyboardEvent) => {
@@ -517,6 +551,7 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
             const a = document.createElement('a')
             a.href = subResults[s].url
             a.className = 'search-result-item'
+            a.id = this.#nextOptionId()
             a.setAttribute('role', 'option')
             a.setAttribute('tabindex', '-1')
 
@@ -525,6 +560,7 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
               if (this.#selectedItem)
                 this.#selectedItem.setAttribute('aria-selected', 'false')
               this.#selectedItem = a
+              this.#syncActiveDescendant()
             } else {
               a.setAttribute('aria-selected', 'false')
             }
@@ -585,6 +621,7 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
       this.#allResults = []
       this.#renderedCount = 0
       this.#selectedItem = null
+      this.#syncActiveDescendant()
 
       if (this.#batchSize) {
         this.#batchLoading = false
@@ -642,12 +679,25 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
       return event.target instanceof HTMLElement && event.target.closest('a')
     }
 
+    // 选项需要 id，才能用 aria-activedescendant 告诉读屏器当前高亮项。
+    #optionSeq = 0
+    #nextOptionId = () => `search-option-${++this.#optionSeq}`
+
+    #syncActiveDescendant = () => {
+      if (!this.#input) return
+
+      const id = this.#selectedItem?.id
+      if (id) this.#input.setAttribute('aria-activedescendant', id)
+      else this.#input.removeAttribute('aria-activedescendant')
+    }
+
     #updateSlectedItem = (next: HTMLAnchorElement) => {
       if (!this.#selectedItem || this.#selectedItem === next) return
 
       this.#selectedItem.setAttribute('aria-selected', 'false')
       this.#selectedItem = next
       this.#selectedItem.setAttribute('aria-selected', 'true')
+      this.#syncActiveDescendant()
     }
 
     #isItem = (el: Element | null): el is HTMLAnchorElement => {
@@ -703,14 +753,25 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
       window.pagefind = pagefind
     }
 
-    if (!window.pagefind) loadPagefind()
+    // 按需加载：搜索面板打开时才拉 pagefind（含 worker）。
+    // 没用搜索的访问不会再下这 ~35KB，也不会启动 worker。
+    let pagefindPromise
+    function ensurePagefind() {
+      // 失败后清掉 memo，下次打开面板/输入时可以重试；否则一次网络抖动就会把搜索锁死到刷新。
+      pagefindPromise ??= loadPagefind().catch((error) => {
+        pagefindPromise = undefined
+        throw error
+      })
+      return pagefindPromise
+    }
+
+    window.ensurePagefind = ensurePagefind
   </script>}
 
 {import.meta.env.PROD && navHighlight &&
   <script is:inline define:vars={{scriptUrl: withBasePath('/pagefind/pagefind-highlight.js')}}>
     async function loadPagefindHighlight() {
       await import(scriptUrl)
-
       const PagefindHighlight = window.PagefindHighlight
       if (!PagefindHighlight) return
       const pagefindHighlight = new PagefindHighlight({
@@ -728,16 +789,34 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
       window.pagefindHighlight = pagefindHighlight
     }
 
-    if (!window.pagefindHighlight) loadPagefindHighlight()
+    // 供类型检查看得见的显式全局：页面切换时由 ensurePagefindHighlight 调用。
+    window.loadPagefindHighlight = loadPagefindHighlight
   </script>}
 
 {import.meta.env.PROD && navHighlight &&
   <script>
-    document.addEventListener('astro:page-load', () => {
-      const params = new URLSearchParams(location.search)
-      if(!params.has('search')) return
+    // 高亮只服务于带 ?search= 的落地页，按需加载，并在每次页面切换后重新调用。
+    type HighlightWindow = Window & {
+      loadPagefindHighlight?: () => Promise<void>
+      pagefindHighlight?: { highlight: () => void }
+    }
 
-      // @ts-expect-error (for Cannot find name 'pagefindHighlight'.ts(2304))
-      pagefindHighlight.highlight()
+    let highlightPromise: Promise<void> | undefined
+
+    async function ensurePagefindHighlight() {
+      const w = window as HighlightWindow
+      if (w.pagefindHighlight) return w.pagefindHighlight
+      if (!w.loadPagefindHighlight) return undefined
+      highlightPromise ??= w.loadPagefindHighlight()
+      await highlightPromise
+      return w.pagefindHighlight
+    }
+
+    document.addEventListener('astro:page-load', async () => {
+      const params = new URLSearchParams(location.search)
+      if (!params.has('search')) return
+
+      const pagefindHighlight = await ensurePagefindHighlight()
+      pagefindHighlight?.highlight()
     })
   </script>}
