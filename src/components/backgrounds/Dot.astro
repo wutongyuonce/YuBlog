@@ -8,6 +8,7 @@
 
 <script>
   import { sizeCanvasForViewport } from '~/utils/canvas-size.js'
+  import { getDotGrid } from '~/utils/dot-grid.js'
   import { createReducedMotionGate } from '~/utils/reduced-motion.js'
 
   class BgDotElement extends HTMLElement {
@@ -21,11 +22,7 @@
 
     static readonly SCALE = 200
     static readonly LENGTH = 10
-    static readonly SPACING = 15
     static readonly FPS = 20
-    // 超大视口下的点数上限：每帧的成本与点数成正比，4K 屏按 15px 间距会产生
-    // 三万多个点。超过上限时等比放大间距，常规笔记本尺寸不受影响。
-    static readonly MAX_POINTS = 8000
     // 按透明度分档批量描边，避免逐点 beginPath / stroke。
     static readonly ALPHA_BUCKETS = 6
 
@@ -88,22 +85,11 @@
       const height = window.innerHeight
       const points: { x: number; y: number; opacity: number }[] = []
 
-      // 每帧成本与点数成正比，而点数是按面积增长的（4K 屏按 15px 间距会有三万多
-      // 个点）。超过 MAX_POINTS 时等比放大间距，常规笔记本尺寸不受影响。
-      const columns = Math.ceil(
-        (width + BgDotElement.SPACING) / BgDotElement.SPACING
-      )
-      const rows = Math.ceil(
-        (height + BgDotElement.SPACING) / BgDotElement.SPACING
-      )
-      const spacing = Math.max(
-        BgDotElement.SPACING,
-        BgDotElement.SPACING *
-          Math.sqrt((columns * rows) / BgDotElement.MAX_POINTS)
-      )
-
-      for (let x = -spacing / 2; x < width + spacing; x += spacing) {
-        for (let y = -spacing / 2; y < height + spacing; y += spacing) {
+      const { spacing, columns, rows } = getDotGrid(width, height)
+      for (let column = 0; column < columns; column++) {
+        const x = (column - 0.5) * spacing
+        for (let row = 0; row < rows; row++) {
+          const y = (row - 0.5) * spacing
           points.push({ x, y, opacity: Math.random() * 0.5 + 0.5 })
         }
       }

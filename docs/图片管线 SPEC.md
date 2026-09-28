@@ -74,7 +74,7 @@ defineCollection({
 | 正文 Markdown `![]()` 引用 | 117 |
 | 正文原始 `<img>` 标签 | 275（其中 199 张指向 `algo-img`） |
 | 原始 `<img>` 带 `style="zoom:X%"` | 272 / 275 |
-| 封面引用 / 文件 | 10 / 12（`night-lantern.webp`、`yae-miko.webp` 只出现在 skill 文档的示例里，未使用） |
+| 封面引用 / 文件 | 10 / 12（`night-lantern.webp`、`yae-miko.webp` 暂无文章引用，按作者决定保留为备用素材） |
 | 关于页图片 | 2 处，同样是原始 `<img>` |
 | 正文图片目录 | 19 个：17 个只被 1 篇文章引用，2 个共享（`algo-img` → 5 篇 / 58 MiB；`juc-img` → 2 篇） |
 | 文章目录分组 | `算法笔记/`、`JUC并发编程/` 两个子目录 |
@@ -200,6 +200,7 @@ src/content/about/
 | `src/utils/data.ts` | 透传 `titleImage` 字符串 | 确认类型注解不假设 string（`BlogListItem` 等） | 待查 |
 | `src/styles/markdown.css` / `prose.css` | `.prose img` 无宽度规则 | **不改**：尺寸由插件注入的 `width` 表达，不新增 CSS | 不改 |
 | `plugins/remark-image-width.ts` | 不存在 | 新增：解析 alt 尾部像素标记，剥离标记并把 `width` 交给图片管线 | 已完成 |
+| `test/remark-image-width.test.mjs` | 不存在 | 验证标记从 alt 剥离、转换成 `width`，同时保留原节点属性 | 已完成 |
 
 ### 4.2 文档
 
@@ -211,13 +212,12 @@ src/content/about/
 | `blog-content-publisher-skill/SKILL.md` | 第 44–67 行与 105–111 行：新目录约定、新写法、示例、禁止 `<img>`；封面示例文件名 |
 | `docs/Astro.md` | 如含图片写法说明则同步 |
 | `docs/Canonical URL、Sitemap、RSS.md` | 「相对 `/blogs/foo/` 站内 `<a>`、图片」一句需要澄清：图片改为 hashed 绝对资源路径 |
-| `docs/首页博客卡片图片放大 SPEC.md` | 文内引用的 `/blog-title-images/browser-agent.webp` 属历史记录，注明或更新 |
 
 ### 4.3 明确不改
 
 - `src/pages/rss.xml.js`：RSS 不含图片。
 - `scripts/gen-og-cover.mjs`：生成的是站点默认分享图 `public/og/default.png`，与内容图无关。
-- `test/*.mjs`：现有测试不打图片路径（已确认）。
+- 其他现有 `test/*.mjs`：不承担图片路径迁移验证；宽度标记的单元测试单列在上表。
 - `src/pages/app.webmanifest.js`、`favicon`、`avatar.webp`、`PostMeta.astro` / `BlogProfile.astro` 的头像：站点级资源，留在 `public/`。
 - 友链头像：`friends/data.json` 里是远程 URL，不在本次范围。
 - `astro.config.ts` 的 `image` 与 `vite` 配置：保持不变（`inlineStylesheets: 'never'`、`cssCodeSplit: false` 是壳层样式的既定约束，不要为图片优化改回去）。
@@ -294,7 +294,7 @@ src/content/about/
 | P4 | 原始 `<img>` 迁移（265 处）：codemod 按 `min(基准宽 × zoom, 706)` 写入宽度标记，改写为 Markdown | 全站 HTML 中不再出现指向本地路径的原始 `<img>`；逐篇图片数与迁移前一致 | ✅ 完成 |
 | P5 | 关于页图片（2 处） | 关于页三个标签内图片正常 | ✅ 完成 |
 | P6 | 文档同步（第 4.2 节全部文件） | 文档描述的路径与代码、内容一致 | ✅ 完成 |
-| P7 | 清理 | 删除孤儿封面；`public/blogs`、`public/blog-title-images`、`public/about` 移除；核对 `dist` 体积与首页/文章页下载量 | 部分完成（目录已移除，孤儿待定） |
+| P7 | 清理 | `public/blogs`、`public/blog-title-images`、`public/about` 移除；保留 2 张备用封面；核对 `dist` 体积与首页/文章页下载量 | ✅ 完成（备用素材按作者决定保留） |
 
 每阶段结束跑：`pnpm check`、`pnpm lint`、`pnpm format`、`pnpm test`。
 

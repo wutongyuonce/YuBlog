@@ -1,8 +1,8 @@
 /* Static shell CSS: one owner for shell chrome (nav, sidebar, archives, about
    tabs, pagination), loaded as a real <link> so it does not depend on the
    component style pipeline. It is not a fallback for vanished styles: the site
-   ships one external stylesheet (cssCodeSplit off), so component <style> blocks
-   do survive ClientRouter swaps. See docs/项目解析.md §4.4. The same selector
+   ships one bundled stylesheet (cssCodeSplit off) plus this shell.css, so
+   component <style> blocks do survive ClientRouter swaps. See docs/项目解析.md §4.4. The same selector
    must not be defined here and in a component style — test/css-ownership.test.mjs
    enforces that. */
 

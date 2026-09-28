@@ -10,39 +10,27 @@
     { id: 'search-panel', button: 'search-switch', hiddenClass: 'hidden' },
   ]
 
-  /* Close panel when user click on backdrop */
-  document.addEventListener('astro:page-load', () => {
-    const handleClick = () => {
-      for (const { id, hiddenClass } of PANELS) {
-        const panel = document.getElementById(id)
-        if (panel && !panel.classList.contains(hiddenClass)) {
-          toggleFadeEffect(id, false, hiddenClass)
-          break
-        }
-      }
+  const closeOpenPanel = () => {
+    for (const { id, button, hiddenClass } of PANELS) {
+      const panel = document.getElementById(id)
+      if (!panel || panel.classList.contains(hiddenClass)) continue
+
+      toggleFadeEffect(id, false, hiddenClass)
       toggleFadeEffect('backdrop', false, 'hidden')
+      document.getElementById(button)?.focus()
+      return true
     }
-    const backdrop = document.getElementById('backdrop')
-    backdrop?.addEventListener('click', handleClick)
+    return false
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    document.getElementById('backdrop')?.addEventListener('click', () => {
+      if (!closeOpenPanel()) toggleFadeEffect('backdrop', false, 'hidden')
+    })
   })
 
-  /* Close panel and backdrop on 'Escape', and give focus back to the switch.
-    'Tab' 不需要在这里处理：面板在 SearchSwitch 里自己把焦点关在内部。 */
-  const handleKeyUp = (event: KeyboardEvent) => {
-    if (event.key !== 'Escape') return
-
-    const focusEl = document.activeElement
-    PANELS.forEach(({ id, button, hiddenClass }) => {
-      const panel = document.getElementById(id)
-
-      if (panel && !panel.classList.contains(hiddenClass)) {
-        toggleFadeEffect(id, false, hiddenClass)
-        toggleFadeEffect('backdrop', false, 'hidden')
-        if (panel.contains(focusEl)) {
-          document.getElementById(button)?.focus()
-        }
-      }
-    })
-  }
-  document.addEventListener('keyup', handleKeyUp)
+  /* 'Tab' is trapped by SearchSwitch while the dialog is open. */
+  document.addEventListener('keyup', (event: KeyboardEvent) => {
+    if (event.key === 'Escape') closeOpenPanel()
+  })
 </script>

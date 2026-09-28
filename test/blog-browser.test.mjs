@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { readFile } from 'node:fs/promises'
 import vm from 'node:vm'
 import {
   BLOG_PAGE_SIZE,
@@ -91,14 +90,6 @@ test('first paint hides every post outside the requested unfiltered page', () =>
     paintOf('?category=技术向').css,
     blogFirstPaintCss('?category=技术向', BLOG_PAGE_SIZE)
   )
-})
-
-test('the no-script fallback hides the same first page the pager does', async () => {
-  const source = await readFile(
-    new URL('../src/components/views/ListView.astro', import.meta.url),
-    'utf8'
-  )
-  assert.match(source, new RegExp(`nth-child\\(n \\+ ${BLOG_PAGE_SIZE + 1}\\)`))
 })
 
 test('shared URLs preserve Chinese filters and AND tags without duplicate values', () => {

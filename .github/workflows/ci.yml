@@ -40,3 +40,6 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Verify built pagination
+        run: pnpm test:built-pagination

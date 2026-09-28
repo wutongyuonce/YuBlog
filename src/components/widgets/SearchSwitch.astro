@@ -155,10 +155,11 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
       // @ts-expect-error (ensurePagefind 由生产环境的 inline 脚本注入)
       window.ensurePagefind?.()
 
-      // auto-focus the search input after panel becomes visible
+      // Do not steal focus back if the panel was closed before this frame.
       requestAnimationFrame(() => {
-        const input = document.getElementById('search-input')
-        if (input) input.focus()
+        const panel = document.getElementById('search-panel')
+        if (panel?.classList.contains('fade-out') || panel?.classList.contains('hidden')) return
+        document.getElementById('search-input')?.focus()
       })
     }
 

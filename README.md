@@ -48,7 +48,7 @@ GitHub 不支持在 Markdown 里内嵌 `<video>`，所以这里放 8 秒动图�
 | `/projects/` | 项目。按分类网格展示，数据来自 JSON。 |
 | `/about/` | 关于。About / Use / Hobby / Soul 四个标签，默认 About。无背景特效。 |
 | `/friends/` | 友链。卡片列表 + 申请说明 + `friend.txt` 参考模板。 |
-| `/blogs/[slug]/` | 文章详情。右侧 TOC，点击 TOC 可固定。 |
+| `/blogs/[slug]/` | 文章详情。点击右侧 TOC 按钮显示目录，再点隐藏。 |
 | `/rss.xml` | RSS。 |
 
 顶栏：`WutongRain's Blog`、首页 / 标签 / 归档 / 项目 / 关于 / 友链，右侧 GitHub、X、Instagram、B 站、小红书、搜索、主题。当前页加粗。
@@ -94,7 +94,9 @@ pnpm dev
 ```bash
 pnpm check                 # Astro 类型与内容检查
 pnpm build                 # 生产构建（含 Pagefind）
+pnpm test:built-pagination # 检查构建后的首页分页与无 JS 回退
 pnpm preview
+pnpm test                  # 运行全部单元测试
 pnpm test:blog-browser     # 分页与 URL
 pnpm test:blog-sidebar     # 右栏锁定阈值
 pnpm test:blog-tags        # 标签 AND 筛选

@@ -46,7 +46,7 @@ GitHub does not render `<video>` in Markdown, so this is an 8-second GIF. Click 
 | `/projects/` | Project grid from JSON. |
 | `/about/` | About. About / Use / Hobby / Soul tabs, About selected by default. No background effect. |
 | `/friends/` | Friend links, apply notes, and a `friend.txt` template. |
-| `/blogs/[slug]/` | Post. Right TOC; click TOC to pin. |
+| `/blogs/[slug]/` | Post. Click the right TOC button to show or hide the outline. |
 | `/rss.xml` | RSS. |
 
 Nav: `WutongRain's Blog`, Home / Tags / Archive / Projects / About / Friends, then GitHub, X, Instagram, Bilibili, Xiaohongshu, search, theme. The current page is bold.
@@ -93,7 +93,9 @@ pnpm dev
 ```bash
 pnpm check                 # Astro type and content checks
 pnpm build                 # production build (includes Pagefind)
+pnpm test:built-pagination # check built pagination and the no-JS fallback
 pnpm preview
+pnpm test                  # all unit tests
 pnpm test:blog-browser     # pagination and URLs
 pnpm test:blog-sidebar     # sidebar lock threshold
 pnpm test:blog-tags        # tag AND filtering
