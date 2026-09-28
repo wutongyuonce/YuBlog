@@ -986,6 +986,7 @@ html.dark
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.28rem;
   min-height: 32px;
   margin: 0;
   padding: 0.28rem 0.7rem;
@@ -998,6 +999,12 @@ html.dark
   white-space: nowrap;
   cursor: pointer;
   transition: color 220ms ease;
+}
+/* 覆盖 presetIcons 的 1.2em，四个图标用同一盒子。 */
+.about-tabs button .about-tabs__icon {
+  flex: none;
+  width: 15px;
+  height: 15px;
 }
 .about-tabs button:not([aria-selected='true']):hover::before {
   content: '';

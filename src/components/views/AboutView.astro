@@ -8,12 +8,21 @@ const tabs = entries
   .sort((a, b) => a.data.order - b.data.order || a.id.localeCompare(b.id))
 
 const IntroContent = intro ? (await render(intro)).Content : null
+/** 与 src/content/about 的文件名对应。同一套 Remix line，尺寸由 shell.css 固定。 */
+const tabIcons: Record<string, string> = {
+  about: 'i-ri-user-3-line',
+  use: 'i-ri-apps-line',
+  hobby: 'i-ri-heart-line',
+  soul: 'i-ri-ghost-line',
+}
+
 const panels = await Promise.all(
   tabs.map(async (entry, index) => ({
     id: entry.id,
     tabId: `about-tab-${index}`,
     panelId: `about-panel-${index}`,
     title: entry.data.title,
+    icon: tabIcons[entry.id],
     Content: (await render(entry)).Content,
   }))
 )
@@ -34,6 +43,12 @@ const panels = await Promise.all(
             aria-selected={index === 0 ? 'true' : 'false'}
             tabindex={index === 0 ? 0 : -1}
           >
+            {panel.icon && (
+              <span
+                class:list={['about-tabs__icon', panel.icon]}
+                aria-hidden="true"
+              />
+            )}
             {panel.title}
           </button>
         ))}

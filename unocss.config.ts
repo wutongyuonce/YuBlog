@@ -119,6 +119,10 @@ export default defineConfig({
     /* Toc */
     'i-ri-menu-2-fill',
     'i-ri-menu-3-fill',
+    'i-ri-user-3-line',
+    'i-ri-apps-line',
+    'i-ri-heart-line',
+    'i-ri-ghost-line',
 
     /* Rose background */
     'z--1',
