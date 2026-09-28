@@ -34,18 +34,53 @@ export function blogFirstPaintCss(search, pageSize) {
   )
 }
 
-/** @param {number} [pageSize] */
+/**
+ * Blocking script for the list. The body is a string, not function.toString(),
+ * so the bundler cannot rewrite it into a closure over other bindings.
+ * Keep the CSS in lockstep with blogFirstPaintCss; the boot test checks that.
+ * @param {number} [pageSize]
+ */
 export function blogFirstPaintBootSource(pageSize = BLOG_PAGE_SIZE) {
   const size = Number(pageSize)
   if (!Number.isSafeInteger(size) || size < 1) {
     throw new Error(`Invalid blog page size: ${pageSize}`)
   }
   return `(() => {
+    const params = new URLSearchParams(location.search)
+    const category = (params.get('category') ?? '').trim()
+    const hasTag = params.getAll('tag').some((tag) => tag.trim())
+    const root = '[data-blog-browser]:not([data-paged])'
+    let page = 1
+    let css
+    if (category || hasTag) {
+      css = root + ' [data-blog-item]{display:none!important}'
+    } else {
+      const raw = params.get('page') ?? '1'
+      const parsed = /^[0-9]+$/.test(raw) ? Number(raw) : 1
+      page = Number.isSafeInteger(parsed) && parsed > 0 ? parsed : 1
+      const start = (page - 1) * ${size} + 1
+      const end = page * ${size}
+      const item = root + ' [data-post-list]>[data-blog-item]'
+      css =
+        item +
+        ':not(:nth-child(n+' +
+        start +
+        '):nth-child(-n+' +
+        end +
+        ')){display:none!important}' +
+        item +
+        ':nth-child(n+' +
+        start +
+        '):nth-child(-n+' +
+        end +
+        '){display:block!important}'
+    }
+    document.documentElement.dataset.blogPaint = category || hasTag ? 'filter' : String(page)
     const style =
       document.head.querySelector('[data-blog-first-paint]') ||
       document.createElement('style')
     style.setAttribute('data-blog-first-paint', '')
-    style.textContent = (${blogFirstPaintCss.toString()})(location.search, ${size})
+    style.textContent = css
     if (!style.parentNode) document.head.appendChild(style)
   })()`
 }

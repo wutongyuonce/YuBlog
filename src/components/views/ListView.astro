@@ -1,7 +1,12 @@
 ---
 import ListItem from './ListItem.astro'
 import { getBlogListItems } from '~/utils/data'
-import { blogFirstPaintBootSource } from '~/utils/blog-browser.js'
+import {
+  BLOG_PAGE_SIZE,
+  blogFirstPaintBootSource,
+  getPageNumbers,
+  serializeBlogQuery,
+} from '~/utils/blog-browser.js'
 import { withBasePath } from '~/utils/path'
 
 interface Props {
@@ -12,6 +17,24 @@ interface Props {
 const { basePath = withBasePath('/'), requireTags = false } = Astro.props
 const posts = await getBlogListItems()
 const firstPaintBoot = blogFirstPaintBootSource()
+const firstPageCount = Math.ceil(posts.length / BLOG_PAGE_SIZE)
+const showFirstPagePagination = !requireTags && firstPageCount > 1
+const pageHref = (page: number) =>
+  `${basePath}${serializeBlogQuery({ category: '', tags: [], page })}`
+const firstPagePaginationHtml = showFirstPagePagination
+  ? `<span aria-label="上一页" aria-disabled="true"><span aria-hidden="true">‹</span></span><div>${getPageNumbers(
+      1,
+      firstPageCount
+    )
+      .map((number) =>
+        number === '…'
+          ? '<span class="pagination-ellipsis" aria-hidden="true">…</span>'
+          : `<a href="${pageHref(number)}"${number === 1 ? ' aria-current="page"' : ''}>${number}</a>`
+      )
+      .join(
+        ''
+      )}</div><a href="${pageHref(2)}" aria-label="下一页"><span aria-hidden="true">›</span></a>`
+  : ''
 ---
 
 <section
@@ -64,7 +87,12 @@ const firstPaintBoot = blogFirstPaintBootSource()
     <p data-empty hidden>
       没有符合条件的文章。<a href={basePath}>清空筛选</a>
     </p>
-    <nav data-pagination aria-label="文章分页" hidden></nav>
+    <nav
+      data-pagination
+      aria-label="文章分页"
+      hidden={!showFirstPagePagination}
+      set:html={firstPagePaginationHtml}
+    />
   </div>
 </section>
 <style is:global>
@@ -81,6 +109,13 @@ const firstPaintBoot = blogFirstPaintBootSource()
   [data-blog-browser]:not([data-paged])
     [data-post-list]
     > [data-blog-item]:nth-child(n + 8) {
+    display: none;
+  }
+  /* Page-1 controls are in the HTML. Hide them until the pager runs when the
+     URL is not that page, so a filtered or later page does not flash them. */
+  html[data-blog-paint]:not([data-blog-paint='1'])
+    [data-blog-browser]:not([data-paged])
+    [data-pagination] {
     display: none;
   }
   [data-blog-browser][data-require-tags] [data-list-panel]:not([hidden]) {

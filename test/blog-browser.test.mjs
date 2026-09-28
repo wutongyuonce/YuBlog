@@ -55,29 +55,42 @@ test('first paint hides every post outside the requested unfiltered page', () =>
       /\[data-blog-item\]\{display:none!important}$/
     )
   }
-  const style = {
-    setAttribute() {
-      return undefined
-    },
-    parentNode: null,
-  }
-  vm.runInNewContext(blogFirstPaintBootSource(), {
-    URLSearchParams,
-    Number,
-    String,
-    Error,
-    document: {
-      createElement: () => style,
-      head: {
-        querySelector: () => null,
-        appendChild(node) {
-          node.parentNode = this
+  assert.doesNotMatch(blogFirstPaintBootSource(), /toString|parseBlogQuery/)
+  const paintOf = (search) => {
+    const style = {
+      setAttribute() {
+        return undefined
+      },
+      parentNode: null,
+    }
+    const root = { dataset: {} }
+    vm.runInNewContext(blogFirstPaintBootSource(), {
+      URLSearchParams,
+      Number,
+      String,
+      document: {
+        documentElement: root,
+        createElement: () => style,
+        head: {
+          querySelector: () => null,
+          appendChild(node) {
+            node.parentNode = this
+          },
         },
       },
-    },
-    location: { search: '?page=2' },
-  })
-  assert.equal(style.textContent, second)
+      location: { search },
+    })
+    return { css: style.textContent, paint: root.dataset.blogPaint }
+  }
+  assert.equal(paintOf('?page=2').css, second)
+  assert.equal(paintOf('?page=2').paint, '2')
+  assert.equal(paintOf('').paint, '1')
+  assert.equal(paintOf('?page=0').paint, '1')
+  assert.equal(paintOf('?category=技术向').paint, 'filter')
+  assert.equal(
+    paintOf('?category=技术向').css,
+    blogFirstPaintCss('?category=技术向', BLOG_PAGE_SIZE)
+  )
 })
 
 test('the no-script fallback hides the same first page the pager does', async () => {
