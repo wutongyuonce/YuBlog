@@ -1090,7 +1090,7 @@ html.dark
     color 160ms ease,
     background-color 160ms ease;
 }
-[data-pagination] a:hover {
+[data-pagination] a:hover:not([aria-current='page']) {
   color: var(--c-text);
   background: color-mix(in srgb, var(--c-text) 10%, var(--c-bg));
 }
