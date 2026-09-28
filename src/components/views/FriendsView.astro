@@ -124,7 +124,7 @@ const isEmpty = friends.length === 0
   }
 
   .friends-chip {
-    color: var(--friends-subtle);
+    color: var(--accent);
     font-size: 0.82rem;
     letter-spacing: 0.02em;
   }
@@ -155,8 +155,12 @@ const isEmpty = friends.length === 0
 
   .friend-card:hover {
     transform: translateY(-1px);
-    border-color: var(--friends-border-strong);
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
     background: var(--friends-card-hover);
+  }
+
+  .friend-card:hover .friend-card__avatar-wrap {
+    box-shadow: 0 0 12px 3px color-mix(in srgb, var(--accent) 28%, transparent);
   }
 
   .friend-card__avatar-wrap {

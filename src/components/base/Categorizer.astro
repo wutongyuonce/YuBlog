@@ -56,6 +56,17 @@ const slug = (value: string) =>
     line-height: 1;
   }
 
+  .categorizer--wide .categorizer__label::before {
+    content: '';
+    display: inline-block;
+    width: 1.1rem;
+    height: 2px;
+    margin-right: 0.45rem;
+    vertical-align: middle;
+    border-radius: 999px;
+    background: var(--accent);
+  }
+
   .categorizer--wide .categorizer__label {
     position: static;
     display: block;

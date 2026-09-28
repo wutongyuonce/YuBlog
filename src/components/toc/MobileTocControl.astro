@@ -179,6 +179,10 @@ const specHeadings = generateToc(headings, minHeadingLevel, maxHeadingLevel)
     opacity: 1;
   }
 
+  .mobile-toc-control__list :global([aria-current='true']) {
+    color: var(--accent);
+  }
+
   .mobile-toc-control__list > :global(li > a) {
     font-weight: 600;
   }

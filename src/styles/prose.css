@@ -55,7 +55,7 @@
   content: counter(list-item, var(--list-counter-style, decimal)) '.';
   position: absolute;
   font-weight: 400;
-  color: #6b7280;
+  color: var(--accent);
   left: 0;
 }
 .prose ul > li {
@@ -65,7 +65,7 @@
 .prose ul > li::before {
   content: '';
   position: absolute;
-  background-color: #d1d5db;
+  background-color: var(--accent-soft);
   border-radius: 50%;
   width: 0.375em;
   height: 0.375em;
@@ -82,7 +82,7 @@
   font-style: italic;
   color: inherit;
   border-left-width: 0.25rem;
-  border-color: rgba(125, 125, 125, 0.3);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
   quotes: '\201C' '\201D' '\2018' '\2019';
   margin-top: 1.6em;
   margin-bottom: 1.6em;

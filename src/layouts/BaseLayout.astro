@@ -137,9 +137,22 @@ if (hasCustomCursor) style['--external-link-cursor'] = cursorType
         return bar
       }
 
+      let hideTimer: number | undefined
+      let shownAt = 0
+      const minVisibleMs = 480
+
       const setProgressState = (loading: boolean) => {
         const bar = getProgressBar()
-        bar.dataset.loading = loading ? 'true' : 'false'
+        window.clearTimeout(hideTimer)
+        if (loading) {
+          shownAt = Date.now()
+          bar.dataset.loading = 'true'
+          return
+        }
+        const wait = Math.max(0, minVisibleMs - (Date.now() - shownAt))
+        hideTimer = window.setTimeout(() => {
+          bar.dataset.loading = 'false'
+        }, wait)
       }
 
       document.addEventListener('astro:before-preparation', () => {

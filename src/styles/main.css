@@ -3,6 +3,9 @@
   --c-scrollbar: #ddd;
   --c-scrollbar-hover: #bbb;
   --c-text: #000;
+  /* Same dusty rose as the sidebar day-count and timeline. */
+  --accent: #ad526c;
+  --accent-soft: #c98299;
   --blog-shell-width: 858px;
   --blog-prose-width: 52ch;
   --blog-article-width: 65ch;
@@ -27,6 +30,8 @@
   --c-scrollbar: #222;
   --c-scrollbar-hover: #444;
   --c-text: #fff;
+  --accent: #e7a1b5;
+  --accent-soft: color-mix(in srgb, #d58ba3 82%, var(--c-text) 18%);
 }
 
 html {
@@ -45,7 +50,8 @@ body {
 }
 
 ::selection {
-  background: #8884;
+  color: var(--c-text);
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 :focus-visible:not(input) {
@@ -55,7 +61,7 @@ body {
 /* Page progress bar */
 #page-progress-bar {
   pointer-events: none;
-  z-index: 50;
+  z-index: 180;
   position: fixed;
   top: 0;
   left: 0;
@@ -63,8 +69,8 @@ body {
   width: 100%;
   height: 2px;
 
-  background: #888;
-  opacity: 0.75;
+  background: var(--accent);
+  opacity: 0.9;
   transform: scaleX(0);
   transform-origin: left;
   transition:
@@ -271,6 +277,16 @@ html.theme-switching.dark::view-transition-new(root) {
   margin-bottom: 0;
 }
 
+.prose.post-header h1.page-title::after {
+  content: '';
+  display: block;
+  width: 2.75rem;
+  height: 2px;
+  margin-top: 0.7rem;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
 .prose.post-header .post-subtitle {
   margin-top: 0.95rem;
   margin-bottom: 0;
@@ -386,6 +402,7 @@ html.theme-switching.dark::view-transition-new(root) {
 }
 
 #toc-sidebar .desktop-toc__list a[aria-current='true']::before {
+  background: var(--accent);
   opacity: 1;
 }
 

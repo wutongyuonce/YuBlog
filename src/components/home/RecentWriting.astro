@@ -79,7 +79,7 @@ const posts = await getRecentBlogPosts()
 
 <style>
   .recent-writing {
-    --timeline-accent: #c98299;
+    --timeline-accent: var(--accent-soft);
     --timeline-line: color-mix(in srgb, var(--c-text) 14%, transparent);
     --timeline-number-bg: color-mix(in srgb, var(--c-bg) 95%, var(--c-text) 5%);
     --timeline-number-border: color-mix(in srgb, var(--c-text) 7%, transparent);
@@ -100,7 +100,6 @@ const posts = await getRecentBlogPosts()
   }
 
   :global(.dark) .recent-writing {
-    --timeline-accent: color-mix(in srgb, #d58ba3 82%, var(--c-text) 18%);
     --timeline-line: color-mix(in srgb, var(--c-text) 20%, transparent);
     --timeline-number-bg: color-mix(
       in srgb,

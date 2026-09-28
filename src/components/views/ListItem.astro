@@ -89,6 +89,12 @@ const href = data.redirect || withBasePath(`/blogs/${id}/`)
     font-size: 0.75rem;
     color: color-mix(in srgb, var(--c-text) 60%, transparent);
   }
+  .post-preview__meta time {
+    color: var(--accent);
+  }
+  .post-preview__meta span[aria-hidden='true'] {
+    color: var(--accent-soft);
+  }
   .post-preview a {
     color: inherit;
     text-decoration: none;

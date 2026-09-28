@@ -7,11 +7,11 @@ const copyrightText = `© ${currentYear} ${SITE.author}`
 ---
 
 <footer class="slide-enter animate-delay-1600! px-7 mt-auto mb-8">
-  <div class="prose mx-auto op-50">
+  <div class="prose mx-auto">
     <div class="flex lt-sm:flex-col items-center text-sm whitespace-nowrap">
-      <span>{copyrightText}</span>
-      <span class="lt-sm:hidden">&nbsp;|&nbsp;</span>
-      <span>
+      <span class="op-50">{copyrightText}</span>
+      <span class="footer-mark lt-sm:hidden" aria-hidden="true"></span>
+      <span class="op-50">
         Built with
         <Link
           class="op-100! color-[--fg]!"
@@ -24,3 +24,15 @@ const copyrightText = `© ${currentYear} ${SITE.author}`
     </div>
   </div>
 </footer>
+
+<style>
+  .footer-mark {
+    flex: none;
+    width: 0.38rem;
+    height: 0.38rem;
+    margin-inline: 0.55rem;
+    border-radius: 999px;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+</style>
