@@ -24,16 +24,16 @@ order: 1
 
 #### 我的 Mac 软件
 
-- **笔记：** Typora、Obsidian、飞书、语雀
+- **笔记、日程管理：** Typora、Obsidian、飞书、语雀、滴答清单、Pomodoro
 - **浏览器：** Safari、ego lite、Chrome
 - **播放器：** QQ 音乐、网易云音乐、Apple Music、Sleeve
-- **AI工具：** ChatGPT、Ghostty + pi + herdr、Memoh、Multica、Grok Bot、CodexBar、Trajex、cockpit tools
-- **代码工具：** Zed、VS Code、Navicat、Bruno、Apifox、Postman、Docker
+- **AI工具：** ChatGPT、Ghostty + pi + herdr、Paseo、Memoh、CodexBar、Trajex、cockpit tools
+- **代码工具：** Zed、VS Code、Navicat、Medis、Bruno、Apifox、Postman、Docker、WhatThePort、Excalidraw（画图）
 - **社交：** Telegram、Discord
 - **工作：** 钉钉、腾讯会议
 - **邮箱：** 网易邮箱大师
-- **媒体、信息：** Folo（RSS 订阅器）、Readest（阅读器）、OBS、剪映专业版（剪辑）、ArcTime Pro（字幕）、IINA（视频播放器）、Downie4（视频下载器）、小宇宙（播客）
-- **小工具：** RunCatNeo（Mac 监控）、Deck（剪切板）、PixPin（截图）、Pearcleaner / App Cleaner（清理）、Slidepad（右侧浏览器）、TopNotch（遮挡刘海）、超级右键、CleanMyKeyboard、Mos（鼠标）、Bob（翻译）
+- **媒体、信息：** Folo/NetNewsWire（RSS 订阅器）、Readest（阅读器）、OBS、剪映专业版（剪辑）、ArcTime Pro（字幕）、IINA（视频播放器）、Downie4（视频下载器）、小宇宙（播客）
+- **其他工具：** RunCatNeo（Mac 监控）、Deck（最好用的 Mac 剪切板历史）、PixPin（截图）、Pearcleaner / App Cleaner（清理）、Slidepad（右侧浏览器）、TopNotch（遮挡刘海）、FineTune（音频控制）、超级右键、CleanMyKeyboard、Mos（鼠标）、Bob（翻译）
 
 #### 我的手机软件
 
@@ -44,7 +44,7 @@ order: 1
 * 邮箱：qq邮箱、gmail、网易邮箱
 * 游戏：steam、小黑盒、oopz
 * 梯子：clash verge
-* 统计记录：有数、滴答清单、时间日志
+* 统计、日程管理：有数、滴答清单、时间日志
 * 支付金融：中国/建设/招商/鄞州银行、跨境购、数字人民币、云闪付、同花顺
 * 运动健康：Sigma、米家
 * 交通：美团、哈啰、小遛、滴滴、曹操、高德地图、腾讯地图、googlemap、12306、12123
