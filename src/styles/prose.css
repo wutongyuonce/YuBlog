@@ -354,6 +354,10 @@ main:has(.post-content) > footer.prose :is(a, span) {
   margin-bottom: 0.75em;
 }
 
+.prose.post-content :is(h1, h2, h3, h4, h5, h6) {
+  scroll-margin-top: calc(var(--site-header-height, 4.5rem) + 0.75rem);
+}
+
 .prose.post-content h2 {
   font-size: 1.6em;
   font-weight: 600;

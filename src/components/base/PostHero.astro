@@ -1,11 +1,14 @@
 ---
-import { withBasePath } from '~/utils/path'
+import { Image } from 'astro:assets'
 import PostMeta from '~/components/base/PostMeta.astro'
+import { ARTICLE_COLUMN_WIDTH } from '~/utils/misc'
+
+import type { ImageMetadata } from 'astro'
 
 interface Props {
   title: string
   subtitle: string
-  titleImage: string
+  titleImage: ImageMetadata
   titleImageAlt: string
   pubDate: string
   lastModDate: string | undefined
@@ -26,12 +29,12 @@ const {
 ---
 
 <section class="post-hero" aria-labelledby="post-hero-title">
-  <img
+  <Image
     class="post-hero__image"
-    src={withBasePath(titleImage)}
+    src={titleImage}
     alt={titleImageAlt}
-    fetchpriority="high"
-    decoding="async"
+    width={ARTICLE_COLUMN_WIDTH}
+    priority
   />
   <div class="post-hero__content">
     <h1 id="post-hero-title" class="post-hero__title">

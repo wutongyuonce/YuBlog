@@ -1542,7 +1542,7 @@ platform.node()           # 主机名
 
 用于**获取底层平台/操作系统的标识信息**。
 
-<img src="/blogs/Python-notes-img/image-20260529203935868.png" alt="image-20260529203935868" style="zoom:50%;" />
+![image-20260529203935868|w599](./Python-notes-img/image-20260529203935868.png)
 
 ### re：正则表达式
 
@@ -2004,7 +2004,7 @@ console.print(table)
 
 在 Agent 开发中，Pydantic 用于定义字段约束、校验工具入参，以及序列化模型数据。它保证数据符合已声明的规则，不负责验证事实真伪。
 
-<img src="/blogs/Python-notes-img/image-20260717125117196.png" alt="image-20260717125117196" style="zoom:50%;" />
+![image-20260717125117196|w681](./Python-notes-img/image-20260717125117196.png)
 
 第三方库示例需先安装对应依赖，例如 `uv add pydantic`；依赖管理详见第九章。
 
@@ -2469,7 +2469,7 @@ uv python install 3.11.6    # 安装指定小版本
 uv python install pypy3.10  # 安装 PyPy
 ```
 
-<img src="/blogs/Python-notes-img/image-20260423163923427.png" alt="image-20260423163923427" style="zoom:50%;" />
+![image-20260423163923427|w497](./Python-notes-img/image-20260423163923427.png)
 
 这张图记录的是当时本机的解释器分布，不能仅凭 `python3` / `python3.12` 的名字判断来源。可用 `command -v python3`、`uv python find 3.12` 或 `python3 -c "import sys; print(sys.executable)"` 核对。
 
@@ -2553,7 +2553,7 @@ uv python pin 3.11
 
 如果新版本与 `requires-python` 冲突，先确认代码和依赖确实支持目标版本，再一致地调整配置，而不是只改数字绕过约束：
 
-<img src="/blogs/Python-notes-img/image-20260423111210589.png" alt="image-20260423111210589" style="zoom:50%;" />
+![image-20260423111210589|w363](./Python-notes-img/image-20260423111210589.png)
 
 再执行：
 

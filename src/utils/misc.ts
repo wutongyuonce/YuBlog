@@ -1,4 +1,12 @@
 /**
+ * 正文列宽（CSS 像素）。
+ *
+ * 镜像 `src/styles/main.css` 里的 `--blog-article-width: 70ch`：在 ≥1280px
+ * 视口下实测约 706px。组件需要具体像素时才用它，不要另写一个数字。
+ */
+export const ARTICLE_COLUMN_WIDTH = 706
+
+/**
  * Locks the scroll position of the document.
  */
 export function lockScroll() {

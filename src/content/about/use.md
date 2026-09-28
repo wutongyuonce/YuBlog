@@ -16,7 +16,7 @@ order: 1
 
 * GPT Plus * 3：GPT-6 Astra/Sol/luna
 
-  <img src="/about/use/PixPin_2026-09-24_01-30-49.png" alt="GPT" width="300"/>
+  ![GPT|w300](./use/PixPin_2026-09-24_01-30-49.png)
 
 * Supergrok：Grok 4.7
 

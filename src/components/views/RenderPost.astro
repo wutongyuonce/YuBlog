@@ -1,5 +1,6 @@
 ---
 import { render } from 'astro:content'
+import { getImage } from 'astro:assets'
 
 import BaseLayout from '~/layouts/BaseLayout.astro'
 import StandardLayout from '~/layouts/StandardLayout.astro'
@@ -41,6 +42,19 @@ const isDraft = frontmatter.draft
 const titleImage = frontmatter.titleImage
 const titleImageAlt = frontmatter.titleImageAlt
 
+// 社交分享图需要绝对 URL，并且不能直接拿封面原图（可能是 4K）。
+// 单独生成一张 1200px 宽的 JPEG，兼容各平台。
+const socialImage = titleImage
+  ? (
+      await getImage({
+        src: titleImage,
+        width: 1200,
+        format: 'jpeg',
+        quality: 'high',
+      })
+    ).src
+  : undefined
+
 const tocEnabled = Array.isArray(toc) && toc[0] && frontmatter.toc
 const haveHeadings = tocEnabled && headings.length > 0
 
@@ -63,7 +77,7 @@ frontmatter to <code>false</code> or remove it to publish the post.`
   {description}
   {pubDate}
   {lastModDate}
-  socialImage={titleImage}
+  {socialImage}
   socialImageAlt={titleImageAlt}
 >
   <StandardLayout
@@ -101,7 +115,7 @@ frontmatter to <code>false</code> or remove it to publish the post.`
     <Fragment slot="article">
       {isDraft && <Warning html={WARNING} />}
       {haveHeadings && (
-        <Toc isArticle={true}>
+        <Toc>
           <DesktopAside {headings} />
           <MobileTocControl {headings} />
         </Toc>

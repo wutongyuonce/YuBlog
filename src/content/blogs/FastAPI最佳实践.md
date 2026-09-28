@@ -306,7 +306,7 @@ FastAPI 会在线程池执行普通 `def` 依赖。只做轻量内存计算、�
 
 请求模型校验器的 `ValueError` 会由 Pydantic 收集，再由 FastAPI 返回 422。历史响应截图如下，具体格式以当前版本和异常处理器为准：
 
-<img src="/blogs/FastAPI最佳实践-img/value_error_response.png" width="400" height="auto">
+![|w400](./FastAPI最佳实践-img/value_error_response.png)
 
 任意业务异常不等于请求参数错误；响应模型校验失败通常是服务端返回值违反接口约定，应修复服务端。
 
@@ -661,7 +661,7 @@ async def create_post(data: PostCreate):
 
 以下历史截图展示多种响应的文档布局，状态码与上例不完全对应：
 
-<img src="/blogs/FastAPI最佳实践-img/custom_responses.png" width="400" height="auto">
+![|w400](./FastAPI最佳实践-img/custom_responses.png)
 
 ## 7. 测试与代码质量
 

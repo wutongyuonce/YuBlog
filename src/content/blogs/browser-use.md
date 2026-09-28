@@ -4,7 +4,7 @@ description: 从网页表示与浏览器控制讲起，梳理 Playwright、视�
 pubDate: 2026-09-23
 category: 技术向
 tags: [Agent, Browser Use]
-titleImage: /blog-title-images/browser-agent.webp
+titleImage: ./_title-images/browser-agent.webp
 titleImageAlt: ego（lite）官网首页截图：左边是“为 AI Agent 打造的浏览器”文案与下载入口，右边是浏览器窗口与终端中运行的自动化脚本
 ---
 
