@@ -9,6 +9,9 @@
 </bg-snow>
 
 <script>
+  import { sizeCanvasForViewport } from '~/utils/canvas-size.js'
+  import { createReducedMotionGate } from '~/utils/reduced-motion.js'
+
   interface Snowflake {
     x: number
     y: number
@@ -28,11 +31,14 @@
     lastFrameAt = 0
     flakes: Snowflake[] = []
     cleanupResize: (() => void) | null = null
+    motionGate: { start: () => void; stop: () => void } | null = null
 
     static readonly FPS = 40
     static readonly BASE_DENSITY = 1000
     static readonly MIN_FLAKES = 85
     static readonly MAX_FLAKES = 880
+    // 单帧静态画面按 60fps 的一帧步长推进，免得雪花堆在同一点。
+    static readonly STATIC_FRAME_STEP_MS = 16
 
     connectedCallback() {
       this.canvas = this.querySelector('canvas')
@@ -42,15 +48,28 @@
       const resize = () => {
         this.resizeCanvas()
         this.rebuildFlakes()
-        this.draw(performance.now(), 16)
+        this.draw(performance.now(), BgSnowElement.STATIC_FRAME_STEP_MS)
       }
 
       window.addEventListener('resize', resize)
       this.cleanupResize = () => window.removeEventListener('resize', resize)
 
       resize()
-      this.lastFrameAt = performance.now()
-      this.tick(this.lastFrameAt)
+
+      // 减少动态效果时只画一帧静态背景，不启动循环；系统设置变化时启停。
+      this.motionGate = createReducedMotionGate({
+        onStatic: () => {
+          if (this.rafId !== null) cancelAnimationFrame(this.rafId)
+          this.rafId = null
+          this.draw(performance.now(), BgSnowElement.STATIC_FRAME_STEP_MS)
+        },
+        onAnimate: () => {
+          if (this.rafId !== null) return
+          this.lastFrameAt = performance.now()
+          this.tick(this.lastFrameAt)
+        },
+      })
+      this.motionGate.start()
     }
 
     disconnectedCallback() {
@@ -58,6 +77,8 @@
       this.rafId = null
       this.cleanupResize?.()
       this.cleanupResize = null
+      this.motionGate?.stop()
+      this.motionGate = null
       this.flakes = []
       this.ctx = null
       this.canvas = null
@@ -66,15 +87,13 @@
     resizeCanvas() {
       if (!this.canvas || !this.ctx) return
 
-      const width = window.innerWidth
-      const height = window.innerHeight
-      const dpr = Math.min(window.devicePixelRatio || 1, 2)
-
-      this.canvas.width = Math.floor(width * dpr)
-      this.canvas.height = Math.floor(height * dpr)
-      this.canvas.style.width = `${width}px`
-      this.canvas.style.height = `${height}px`
-      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      sizeCanvasForViewport(
+        this.canvas,
+        this.ctx,
+        window.innerWidth,
+        window.innerHeight,
+        window.devicePixelRatio
+      )
     }
 
     clamp(value: number, min: number, max: number) {

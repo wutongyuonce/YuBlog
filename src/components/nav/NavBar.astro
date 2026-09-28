@@ -20,7 +20,8 @@ const home = withBasePath('/')
         )}
         {navBarLayout[side].map((key) =>
           key === 'internalNavs' ? (
-            <div class="nav-bar__pages">
+            <div class="nav-bar__pages" transition:persist="nav-pages">
+              <span class="nav-bar__indicator" aria-hidden="true" />
               {internalNavs.map((item) => (
                 <NavItem type="internal" {item} />
               ))}
@@ -43,3 +44,67 @@ const home = withBasePath('/')
     ))}
   </nav>
 </header>
+<script>
+  import { placeSlidingIndicator } from '~/utils/sliding-indicator.js'
+
+  const normalize = (pathname: string) =>
+    pathname.endsWith('/') ? pathname : `${pathname}/`
+
+  const pages = () => document.querySelector<HTMLElement>('.nav-bar__pages')
+
+  const linksOf = (nav: HTMLElement) =>
+    Array.from(nav.querySelectorAll<HTMLAnchorElement>('a'))
+
+  const linkPath = (link: HTMLAnchorElement) =>
+    normalize(new URL(link.href).pathname)
+
+  const homePath = () => {
+    const brand = document.querySelector<HTMLAnchorElement>('a.nav-bar__brand')
+    return brand ? linkPath(brand) : '/'
+  }
+
+  const currentLink = (nav: HTMLElement) => {
+    const path = normalize(location.pathname)
+    const home = homePath()
+    return (
+      linksOf(nav).find((link) => {
+        const target = linkPath(link)
+        return (
+          target === path ||
+          (target === home && path.startsWith(`${home}blogs/`))
+        )
+      }) ?? null
+    )
+  }
+
+  const markCurrent = (nav: HTMLElement, current: HTMLAnchorElement | null) => {
+    linksOf(nav).forEach((link) => {
+      if (link === current) link.setAttribute('aria-current', 'page')
+      else link.removeAttribute('aria-current')
+    })
+  }
+
+  const placeIndicator = (animate: boolean) => {
+    const nav = pages()
+    if (!nav) return
+    const indicator = nav.querySelector<HTMLElement>('.nav-bar__indicator')
+    const current = currentLink(nav)
+    markCurrent(nav, current)
+    placeSlidingIndicator({ indicator, target: current, animate })
+  }
+
+  const start = () => {
+    const nav = pages()
+    if (!nav || nav.dataset.indicatorBound === 'true') return
+    nav.dataset.indicatorBound = 'true'
+    placeIndicator(false)
+    document.fonts?.ready.then(() => placeIndicator(false))
+  }
+
+  if (!document.documentElement.dataset.navIndicatorListeners) {
+    document.documentElement.dataset.navIndicatorListeners = 'true'
+    document.addEventListener('astro:page-load', () => placeIndicator(true))
+    window.addEventListener('resize', () => placeIndicator(false))
+  }
+  start()
+</script>

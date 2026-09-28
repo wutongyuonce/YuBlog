@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import vm from 'node:vm'
 import {
   parseBlogQuery,
   serializeBlogQuery,
   selectBlogPage,
   buildCategorySummary,
   getPageNumbers,
+  blogFirstPaintBootSource,
 } from '../src/utils/blog-browser.js'
 
 const posts = Array.from({ length: 13 }, (_, id) => ({
@@ -15,6 +17,72 @@ const posts = Array.from({ length: 13 }, (_, id) => ({
     tags: id % 2 ? ['Agent', '测试'] : ['Agent'],
   },
 }))
+
+test('the injected first-paint script hides posts outside the requested page', () => {
+  assert.doesNotMatch(blogFirstPaintBootSource(), /toString|parseBlogQuery/)
+  const paintOf = (search) => {
+    const style = {
+      setAttribute() {
+        return undefined
+      },
+      parentNode: null,
+    }
+    const root = { dataset: {} }
+    vm.runInNewContext(blogFirstPaintBootSource(), {
+      URLSearchParams,
+      Number,
+      String,
+      document: {
+        documentElement: root,
+        createElement: () => style,
+        head: {
+          querySelector: () => null,
+          appendChild(node) {
+            node.parentNode = this
+          },
+        },
+      },
+      location: { search },
+    })
+    return { css: style.textContent, paint: root.dataset.blogPaint }
+  }
+  const first = paintOf('')
+  assert.equal(first.paint, '1')
+  assert.match(
+    first.css,
+    /:nth-child\(n\+1\):nth-child\(-n\+7\)\{display:block!important}/
+  )
+  assert.equal(paintOf('?page=1').css, first.css)
+  for (const page of ['0', '-1', '1.5', 'NaN', 'foo', '9007199254740992']) {
+    assert.equal(paintOf(`?page=${page}`).css, first.css)
+    assert.equal(paintOf(`?page=${page}`).paint, '1')
+  }
+  assert.equal(paintOf('?tag=').css, first.css)
+
+  const second = paintOf('?page=2')
+  assert.equal(second.paint, '2')
+  assert.match(
+    second.css,
+    /:not\(:nth-child\(n\+8\):nth-child\(-n\+14\)\)\{display:none!important}/
+  )
+  assert.match(
+    second.css,
+    /:nth-child\(n\+8\):nth-child\(-n\+14\)\{display:block!important}/
+  )
+
+  for (const search of [
+    '?category=技术向',
+    '?tag=Agent',
+    '?category=工具向&page=3',
+  ]) {
+    const result = paintOf(search)
+    assert.equal(result.paint, 'filter')
+    assert.equal(
+      result.css,
+      '[data-blog-browser]:not([data-paged]) [data-blog-item]{display:none!important}'
+    )
+  }
+})
 
 test('shared URLs preserve Chinese filters and AND tags without duplicate values', () => {
   const query = parseBlogQuery(
@@ -85,9 +153,52 @@ test('custom categories remain filterable and included in the summary', () => {
   ])
 })
 
-test('page links keep endpoints and current neighbors with gaps indicated', () => {
+test('short pagination lists show every page without ellipses', () => {
   assert.deepEqual(getPageNumbers(1, 0), [])
+  assert.deepEqual(getPageNumbers(1, 1), [1])
   assert.deepEqual(getPageNumbers(2, 3), [1, 2, 3])
-  assert.deepEqual(getPageNumbers(5, 10), [1, '…', 4, 5, 6, '…', 10])
-  assert.deepEqual(getPageNumbers(10, 10), [1, '…', 9, 10])
+  assert.deepEqual(getPageNumbers(6, 6), [1, 2, 3, 4, 5, 6])
+})
+
+test('six-slot pagination shows edge windows and looks ahead in the middle', () => {
+  const cases = [
+    [1, 7, [1, 2, 3, 4, '…', 7]],
+    [4, 7, [1, 2, 3, 4, '…', 7]],
+    [5, 7, [1, '…', 4, 5, 6, 7]],
+    [4, 8, [1, 2, 3, 4, '…', 8]],
+    [5, 8, [1, '…', 5, 6, 7, 8]],
+    [1, 10, [1, 2, 3, 4, '…', 10]],
+    [4, 10, [1, 2, 3, 4, '…', 10]],
+    [5, 10, [1, '…', 5, 6, '…', 10]],
+    [6, 10, [1, '…', 6, 7, '…', 10]],
+    [7, 10, [1, '…', 7, 8, 9, 10]],
+    [10, 10, [1, '…', 7, 8, 9, 10]],
+  ]
+  for (const [page, count, expected] of cases) {
+    assert.deepEqual(getPageNumbers(page, count), expected)
+  }
+})
+
+test('pagination never hides a single page or loses the current page and endpoints', () => {
+  for (let count = 1; count <= 50; count++) {
+    for (let page = 1; page <= count; page++) {
+      const items = getPageNumbers(page, count)
+      assert.equal(items.length, Math.min(count, 6))
+      assert.equal(items[0], 1)
+      assert.equal(items.at(-1), count)
+      assert(items.includes(page))
+      if (count > 1) {
+        assert(items.includes(page - 1) || items.includes(page + 1))
+      }
+      for (let i = 1; i < items.length; i++) {
+        if (items[i] === '…') {
+          assert.equal(typeof items[i - 1], 'number')
+          assert.equal(typeof items[i + 1], 'number')
+          assert(items[i + 1] - items[i - 1] >= 3)
+        } else if (typeof items[i - 1] === 'number') {
+          assert.equal(items[i] - items[i - 1], 1)
+        }
+      }
+    }
+  }
 })

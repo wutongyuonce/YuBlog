@@ -13,7 +13,7 @@ search: true
 
 Prompt Caching 的核心不在于“是不是同一个会话”，而在于：**新请求的 token 序列，是否与已缓存内容拥有足够长、足够稳定的共同前缀。**
 
-<img src="/blogs/prompt-caching-img/image-20260724184135579.png" alt="image-20260724184135579" style="zoom:50%;" />
+![image-20260724184135579|w578](./prompt-caching-img/image-20260724184135579.png)
 
 ## LLM 推理框架缓存机制设计视角：树状会话与前缀缓存的矛盾
 
@@ -150,7 +150,7 @@ Prompt Caching 的核心不在于“是不是同一个会话”，而在于：**
   - **W（Writes）**：累计写入缓存的 token 数。通常代表首次预填充或新追加内容被缓存。
   - **CH（Cache Hit）**：最近一次请求的缓存命中率，通常可理解为“本次输入中有多少比例按缓存读取”。
 
-  <img src="/blogs/prompt-caching-img/image-20260724184135579.png" alt="image-20260724184135579" style="zoom:50%;" />
+  ![image-20260724184135579|w578](./prompt-caching-img/image-20260724184135579.png)
 
 * **必要时才压缩，并明确提示用户这是一次缓存重置**
 

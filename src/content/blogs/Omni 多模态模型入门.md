@@ -4,7 +4,7 @@ description: 梳理 ASR、TTS、VLM 和 Omni 模型分别解决什么问题，�
 pubDate: 2026-09-12
 category: 技术向
 tags: [多模态, ASR, TTS, VLM]
-titleImage: /blog-title-images/darling-in-the-franxx.webp
+titleImage: ./_title-images/darling-in-the-franxx.webp
 titleImageAlt: Darling in the Franxx 动漫壁纸
 ---
 

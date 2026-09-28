@@ -5,6 +5,8 @@ import astroExpressiveCode from 'astro-expressive-code' // 代码块美化插件
 import mdx from '@astrojs/mdx' // MDX 支持（在 Markdown 中使用 JSX 组件）
 
 import { remarkPlugins, rehypePlugins } from './plugins' // 自定义 Markdown 处理插件
+import { katexWoff2Only } from './plugins/postcss-katex-woff2-only' // 只保留 KaTeX 的 woff2 字体
+import { subsetTitleFontsIntegration } from './plugins/astro-subset-title-fonts' // 标题字体子集化 + 产物校验
 import { SITE } from './src/config' // 导入站点配置（从 config.ts 导入）
 
 /**
@@ -35,6 +37,7 @@ export default defineConfig({
     }),
     astroExpressiveCode(), // 代码块美化（支持主题、行号、标题等）
     mdx(), // 启用 MDX 支持
+    subsetTitleFontsIntegration(), // 任何构建都产出标题字体子集，并校验引用
   ],
 
   // ==================== Markdown 配置 ====================
@@ -62,6 +65,8 @@ export default defineConfig({
 
   // ==================== Vite 配置（底层构建工具） ====================
   vite: {
+    // 在生成产物前裁掉 KaTeX 的 woff / ttf，字体与 CSS 哈希都一致
+    css: { postcss: { plugins: [katexWoff2Only()] } },
     build: {
       cssCodeSplit: false, // 全站一份 CSS，避免硬刷新某个页面时丢掉顶栏/侧栏样式
       chunkSizeWarningLimit: 1200, // 代码块大小警告阈值（KB），超过提示优化

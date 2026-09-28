@@ -4,7 +4,7 @@ description: 从精英教育与优绩主义谈起，再看 RESCENE 两位成员�
 pubDate: 2026-09-21
 category: 思考向
 tags: [优绩主义, 东亚, RESCENE]
-titleImage: /blog-title-images/east-asian-meritocracy-cover.webp
+titleImage: ./_title-images/east-asian-meritocracy-cover.webp
 titleImageAlt: 两位穿校服的女孩坐在列车座位上休息
 toc: true
 search: true
@@ -63,12 +63,12 @@ Minami 在公司练习时会拼命想拿第一。她说这不是为了证明自�
 
 希望每个被困在优绩怪圈、爱而不得的人，都能找到属于自己的爱与原野。
 
-<img src="/blogs/east-asian-meritocracy-img/01.webp" alt="两位女孩在列车车厢中的画面" style="zoom: 40%;" loading="lazy" />
+![两位女孩在列车车厢中的画面|w480](./east-asian-meritocracy-img/01.webp)
 
-<img src="/blogs/east-asian-meritocracy-img/02.webp" alt="两位女孩在校园道路间活动的画面" style="zoom: 40%;" loading="lazy" />
+![两位女孩在校园道路间活动的画面|w480](./east-asian-meritocracy-img/02.webp)
 
-<img src="/blogs/east-asian-meritocracy-img/03.webp" alt="校园建筑与街道场景" style="zoom: 40%;" loading="lazy" />
+![校园建筑与街道场景|w480](./east-asian-meritocracy-img/03.webp)
 
-<img src="/blogs/east-asian-meritocracy-img/04.webp" alt="两位女孩在列车上的旅途片段" style="zoom: 40%;" loading="lazy" />
+![两位女孩在列车上的旅途片段|w480](./east-asian-meritocracy-img/04.webp)
 
-<img src="/blogs/east-asian-meritocracy-img/05.webp" alt="夜色中的铁路道口与两人背影" style="zoom: 40%;" loading="lazy" />
+![夜色中的铁路道口与两人背影|w480](./east-asian-meritocracy-img/05.webp)

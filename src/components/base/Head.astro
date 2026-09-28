@@ -54,12 +54,13 @@ const blogPostingData = {
 // https://jsonld.com/web-page/
 const webPageData = {
   '@context': 'https://schema.org',
-  '@type': 'webPage',
+  '@type': 'WebPage',
   'name': `${title || SITE.title}`,
   ...(description && { description: description }),
   'publisher': {
-    '@type': 'ProfilePage',
-    'name': `${SITE.author}'s Personal Website`,
+    '@type': 'Person',
+    'name': SITE.author,
+    'url': SITE.website,
   },
 }
 ---
@@ -143,7 +144,7 @@ const webPageData = {
   href={withBasePath('/rss.xml')}
 />
 
-<!-- Shell UI: real stylesheet so hard refresh and ClientRouter share one CSS path -->
+<!-- Shell UI: one stylesheet for shell chrome (nav, sidebar, archives, tabs) -->
 <link rel="stylesheet" href={withBasePath('/shell.css')} />
 
 <!-- Google JSON-LD Structured Data -->

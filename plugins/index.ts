@@ -4,6 +4,7 @@ import { visit } from 'unist-util-visit' // 遍历 AST 树节点的工具函数
 import remarkCjkFriendly from 'remark-cjk-friendly' // CJK 标点旁的 **加粗**（Typora 能渲染，CommonMark 默认不能）
 import remarkDirective from 'remark-directive' // 支持通用指令语法（::name, :name）
 import remarkDirectiveSugar from 'remark-directive-sugar' // 提供 :badge、:link、:image 等内置指令
+import remarkImageWidth from './remark-image-width' // 正文图片宽度标记（|w353）
 import remarkMath from 'remark-math' // 解析数学公式（$...$ 和 $$...$$）
 import remarkReadingTime from './remark-reading-time' // 计算文章阅读时间（自定义）
 
@@ -149,6 +150,9 @@ export const remarkPlugins: RemarkPlugins = [
 
   // 4. 阅读时间计算
   remarkReadingTime, // 统计文章字数，计算预计阅读时间
+
+  // 5. 正文图片宽度标记（在图片被图片管线接管前剥离标记）
+  remarkImageWidth,
 ]
 
 // ==================== 导出 Rehype 插件配置 ====================

@@ -15,7 +15,7 @@ const alt = data.titleImageAlt
 const href = data.redirect || withBasePath(`/blogs/${id}/`)
 ---
 
-<article class="post-preview">
+<article class:list={['post-preview', { 'post-preview--with-image': !!image }]}>
   <div>
     <div class="post-preview__meta">
       <a
@@ -64,11 +64,13 @@ const href = data.redirect || withBasePath(`/blogs/${id}/`)
   >
     {image && (
       <a {href} tabindex="-1" aria-hidden="true">
-        {typeof image === 'string' ? (
-          <img src={image} {alt} width="640" height="360" loading="lazy" />
-        ) : (
-          <Image src={image} {alt} width={640} loading="lazy" />
-        )}
+        <Image
+          src={image}
+          {alt}
+          widths={[274, 548, 822]}
+          sizes="(min-width: 1100px) 274px, (min-width: 768px) 37.5vw, 100vw"
+          loading="lazy"
+        />
       </a>
     )}
   </div>
@@ -79,7 +81,6 @@ const href = data.redirect || withBasePath(`/blogs/${id}/`)
     grid-template-columns: minmax(0, 5fr) minmax(0, 3fr);
     gap: 28px;
     padding: 0 0 24px;
-    border-bottom: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
   }
   .post-preview__meta {
     display: flex;
@@ -144,6 +145,16 @@ const href = data.redirect || withBasePath(`/blogs/${id}/`)
     height: 100%;
     object-fit: cover;
     object-position: center;
+  }
+  @media (min-width: 768px) {
+    .post-preview__media {
+      align-self: center;
+    }
+  }
+  @media (min-width: 1100px) {
+    .post-preview--with-image {
+      grid-template-columns: minmax(0, 15fr) minmax(0, 11fr);
+    }
   }
   @media (max-width: 767px) {
     .post-preview {

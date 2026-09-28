@@ -4,7 +4,7 @@ description: 梳理 Voice Agent 三种架构、GUI Agent 的动作与安全设�
 pubDate: 2026-09-12
 category: 技术向
 tags: [Agent, 多模态]
-titleImage: /blog-title-images/anime.webp
+titleImage: ./_title-images/anime.webp
 titleImageAlt: 二次元动漫场景壁纸
 ---
 
@@ -14,7 +14,7 @@ titleImageAlt: 二次元动漫场景壁纸
 
 最经典的 pipeline 方案：
 
-<img src="/blogs/多模态Agent-img/image-20260912205548454.png" alt="Cascaded 级联架构：VAD、ASR、LLM、TTS 流水线" style="zoom:50%;" />
+![Cascaded 级联架构：VAD、ASR、LLM、TTS 流水线|w586](./多模态Agent-img/image-20260912205548454.png)
 
 - **VAD**（Voice Activity Detection）：检测用户是否在说话
 - **ASR**（Automatic Speech Recognition）：语音转文本
@@ -32,7 +32,7 @@ titleImageAlt: 二次元动漫场景壁纸
 
 单一多模态模型直接处理音频输入、产生音频输出：
 
-<img src="/blogs/多模态Agent-img/image-20260912205607474.png" alt="Omni 端到端架构：音频直接进出模型" style="zoom:50%;" />
+![Omni 端到端架构：音频直接进出模型|w390](./多模态Agent-img/image-20260912205607474.png)
 
 工程特点：
 
@@ -48,7 +48,7 @@ titleImageAlt: 二次元动漫场景壁纸
 
 模拟人类对话：可以被打断、可以边听边说、可以在对方说话时思考。
 
-<img src="/blogs/多模态Agent-img/image-20260912214023992.png" alt="Full-duplex 全双工架构：可打断的双向对话" style="zoom:50%;" />
+![Full-duplex 全双工架构：可打断的双向对话|w402](./多模态Agent-img/image-20260912214023992.png)
 
 工程特点：
 
@@ -126,7 +126,7 @@ LLM 回复："click(324, 178)"
 
 GUI Agent 直接操作用户界面，安全问题比 API 调用严重得多：
 
-<img src="/blogs/多模态Agent-img/image-20260912213841119.png" alt="GUI Agent 安全边界：隔离、权限、审批与验证" style="zoom:50%;" />
+![GUI Agent 安全边界：隔离、权限、审批与验证|w372](./多模态Agent-img/image-20260912213841119.png)
 
 关键安全措施：
 
@@ -161,7 +161,7 @@ Voice Agent 和 GUI Agent 看起来是完全不同的场景，但它们面临同
 
 ### Voice Agent 中的快慢解耦
 
-<img src="/blogs/多模态Agent-img/image-20260912211118427.png" alt="Voice Agent 快慢解耦：填充词快通道与推理慢通道并行" style="zoom:50%;" />
+![Voice Agent 快慢解耦：填充词快通道与推理慢通道并行|w652](./多模态Agent-img/image-20260912211118427.png)
 
 - **快通道**：识别到用户说完，立即给出填充词或短确认，维持对话节奏
 - **慢通道**：同时启动完整的语义理解、工具调用、回复生成
@@ -169,7 +169,7 @@ Voice Agent 和 GUI Agent 看起来是完全不同的场景，但它们面临同
 
 ### GUI Agent 中的快慢解耦
 
-<img src="/blogs/多模态Agent-img/image-20260912211129393.png" alt="GUI Agent 快慢解耦：快速执行与定期重规划" style="zoom:50%;" />
+![GUI Agent 快慢解耦：快速执行与定期重规划|w706](./多模态Agent-img/image-20260912211129393.png)
 
 - **快通道**：按已有计划快速执行下一个动作（不重新思考整体策略）
 - **慢通道**：每隔 N 步或检测到异常时，做全局状态评估，必要时重新规划

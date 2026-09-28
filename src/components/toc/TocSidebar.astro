@@ -14,16 +14,11 @@ const { headings } = Astro.props
 
 const { toc } = FEATURES
 if (!toc || (Array.isArray(toc) && !toc[0])) return
-const { minHeadingLevel, maxHeadingLevel, displayMode } = toc[1]
+const { minHeadingLevel, maxHeadingLevel } = toc[1]
 const specHeadings = generateToc(headings, minHeadingLevel, maxHeadingLevel)
 ---
 
-<nav
-  id="toc-sidebar"
-  class="desktop-toc"
-  aria-label="Table of contents"
-  data-display-mode={displayMode}
->
+<nav id="toc-sidebar" class="desktop-toc" aria-label="Table of contents">
   <Link
     href="#skip-toc"
     class="sr-only focus:(not-sr-only fixed start-1 top-1.5 op-20)"
@@ -43,29 +38,15 @@ const specHeadings = generateToc(headings, minHeadingLevel, maxHeadingLevel)
     display: flex;
     flex-direction: column;
     width: 100%;
+    min-width: 0;
     max-height: 66vh;
     overflow: hidden;
     font-size: calc(var(--blog-reading-size) * 0.9);
-    opacity: 0;
-    transition: opacity 0.7s ease-in-out;
-  }
-
-  .desktop-toc[data-display-mode='always'] {
-    opacity: 0.6;
-  }
-
-  .desktop-toc[data-display-mode='hover']:hover {
-    opacity: 0.6;
-  }
-
-  :global(.slide-enter-content:hover) .desktop-toc[data-display-mode='content'],
-  :global(.group\/content:hover) .desktop-toc[data-display-mode='content'] {
-    opacity: 0.6;
   }
 
   .desktop-toc__list {
     height: 100%;
+    min-height: 0;
     overflow-y: auto;
-    margin-top: -0.5rem;
   }
 </style>

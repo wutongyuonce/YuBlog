@@ -173,10 +173,11 @@ Head 里挂上总目录：
 
 | | 例子 | 用在 |
 | :--- | :--- | :--- |
-| 绝对 | `https://www.wutongyu.site/blogs/foo/` | canonical、sitemap、RSS、给站外的分享 |
-| 相对 | `/blogs/foo/` | 站内 `<a>`、图片、`withBasePath` |
+| 绝对 | `https://www.wutongyu.site/blogs/foo/` | canonical、sitemap、RSS、给站外的分享、`og:image` |
+| 相对 | `/blogs/foo/` | 站内 `<a>`、`withBasePath` |
+| 内容图片 | `./图片目录/文件.png`（源文件）→ `/_astro/<hash>.webp`（产物） | Markdown / frontmatter 写相对路径，产物地址由 Astro 图片管线生成，不可手写 |
 
-`withBasePath` 在 `src/utils/path.ts`，负责接上 `SITE.base`（若部署在子目录）。站内跳转走它；站外协议走 `SITE.website` 或 `Astro.site`。
+`withBasePath` 在 `src/utils/path.ts`，负责接上 `SITE.base`（若部署在子目录）。站内跳转走它；站外协议走 `SITE.website` 或 `Astro.site`。文章页的 `og:image` 是运行时由图片管线生成后再拼成绝对 URL 的（见 `RenderPost.astro`）。
 
 ## 6. Head 里其它和「被搜到」有关的
 

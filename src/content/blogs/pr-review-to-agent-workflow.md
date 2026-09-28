@@ -5,7 +5,7 @@ pubDate: 2026-09-16
 category: 技术向
 lastModDate: 2026-09-16
 tags: [Agent, Skill, PR, 软件工程]
-titleImage: /blog-title-images/bocchi.png
+titleImage: ./_title-images/bocchi.png
 titleImageAlt: 孤独摇滚 波奇酱
 toc: true
 search: true

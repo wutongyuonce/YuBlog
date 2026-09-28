@@ -97,7 +97,11 @@
         Math.max(y, innerHeight - y)
       )
 
+      document.documentElement.classList.add('theme-switching')
       const transition = document.startViewTransition(() => toggle())
+      transition.finished.finally(() => {
+        document.documentElement.classList.remove('theme-switching')
+      })
 
       transition.ready.then(() => {
         const clipPath = [

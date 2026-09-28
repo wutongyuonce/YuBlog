@@ -27,6 +27,7 @@ const { maxGroupColumns, showGroupItemColorOnHover } = UI.groupView
         class="group-card"
         href={item.link}
         external={true}
+        style="opacity: 1"
       >
         {item.icon && (
           <div class="group-card__icon-wrap" aria-hidden="true">
@@ -113,7 +114,8 @@ const { maxGroupColumns, showGroupItemColorOnHover } = UI.groupView
   }
 
   .group-card__desc {
-    opacity: 0.5;
+    color: color-mix(in srgb, var(--c-text) 65%, transparent);
+    opacity: 1;
     font-size: 0.875rem;
     font-weight: 400;
     line-height: 1.4;

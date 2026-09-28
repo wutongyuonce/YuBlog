@@ -213,4 +213,4 @@ order: 2
 
 ...
 
-<img src="/about/hobby/464284973.jpg" alt="电影" width="300">
+![电影|w300](./hobby/464284973.jpg)

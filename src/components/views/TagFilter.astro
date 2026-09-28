@@ -94,12 +94,33 @@ const tags = buildTagSummary(
     cursor: pointer;
   }
   .tags-sort {
-    border: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
+    position: relative;
+    display: inline-grid;
+    grid-template-columns: repeat(2, 1fr);
+    isolation: isolate;
+    border: 1px solid color-mix(in srgb, var(--c-text) 18%, transparent);
     border-radius: 6px;
     padding: 2px;
+    background: var(--c-bg);
+  }
+  .tags-sort[hidden] {
+    display: none;
+  }
+  .tags-sort::before {
+    content: '';
+    position: absolute;
+    inset: 2px auto 2px 2px;
+    width: calc((100% - 4px) / 2);
+    z-index: -1;
+    border-radius: 4px;
+    background: var(--c-text);
+    transition: transform 220ms ease;
+  }
+  .tags-sort:has([data-sort='name'][aria-pressed='true'])::before {
+    transform: translateX(100%);
   }
   .tags-sort button {
-    padding: 0.28rem 0.6rem;
+    padding: 0.22rem 0.55rem;
     border-radius: 4px;
     color: inherit;
     background: transparent;
@@ -107,9 +128,25 @@ const tags = buildTagSummary(
     font-size: 0.8125rem;
     line-height: 1.4;
     cursor: pointer;
+    transition: color 220ms ease;
   }
-  .tags-sort [aria-pressed='true'] {
-    background: color-mix(in srgb, var(--c-text) 8%, transparent);
+  .tags-sort button:not([aria-pressed='true']):hover {
+    background: color-mix(in srgb, var(--c-text) 14%, var(--c-bg));
+  }
+  .tags-sort [aria-pressed='true'],
+  .tags-sort [aria-pressed='true']:hover {
+    color: var(--c-bg);
+    background: transparent;
+  }
+  .tags-sort button:focus-visible {
+    outline: 2px solid var(--c-text);
+    outline-offset: 3px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tags-sort::before,
+    .tags-sort button {
+      transition: none;
+    }
   }
   .tags-list {
     display: flex;
@@ -251,6 +288,9 @@ const tags = buildTagSummary(
         if (selected.size === 0) return
         selected.clear()
         syncPressed()
+        // 清空后「已选」区域会隐藏（“清空”按钮就在里面），不搬焦点的话
+        // 键盘用户会被丢到 body。落到第一个标签按钮上，位置稳定。
+        buttons[0]?.focus()
         queueCommit()
       })
     window.addEventListener('popstate', syncFromUrl)

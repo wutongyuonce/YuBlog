@@ -4,7 +4,7 @@ description: 从输入准备、自注意力与前馈网络的核心计算，到�
 pubDate: 2026-07-10
 category: 技术向
 tags: [Transformer, LLM]
-titleImage: /blog-title-images/transformer-llm.webp
+titleImage: ./_title-images/transformer-llm.webp
 titleImageAlt: 经典 Transformer 架构图，含编码器—解码器结构、多头注意力与缩放点积注意力的展开
 ---
 
@@ -46,7 +46,7 @@ P(next_token | previous_tokens, parameters)
 > * Transformer 在训练阶段的并行性非常好，因为整个输入序列可以同时经过线性变换、同时计算 attention score、同时做前馈网络。这使得它更适配 GPU/TPU 这种大规模并行硬件；
 > * trade-off 是注意力的计算随序列长度增长会带来较高的时间与显存开销，这也是长上下文、KV Cache、prefix cache 等工程优化出现的背景。
 
-<img src="/blogs/transformer-llm-img/image-20260526145457348.png" alt="image-20260526145457348" style="zoom:40%;" />
+![image-20260526145457348|w422](./transformer-llm-img/image-20260526145457348.png)
 
 ## 阶段一：输入准备
 
@@ -62,7 +62,7 @@ P(next_token | previous_tokens, parameters)
 * **正余弦位置编码**
 * **RoPE**（旋转位置编码）：不是给 token 加一个位置向量，而是通过 **旋转矩阵** 来修改 query 和 key 向量，使得内积结果自动包含**相对位置信息**。优点是**更适合外推到更长上下文**。
 
-<img src="/blogs/transformer-llm-img/image-20260908191409648.png" alt="image-20260908191409648" style="zoom:30%;" />
+![image-20260908191409648|w702](./transformer-llm-img/image-20260908191409648.png)
 
 > [Transformer为什么需要位置编码](https://www.bilibili.com/video/BV1DLbj6ME1e)
 >
@@ -113,9 +113,9 @@ Attention(Q, K, V) = softmax(Q K^T / √d_k) V
 
 其中 Q, K, V 是分别将各 token 的 q, k, v 堆叠成的矩阵。
 
-<img src="/blogs/transformer-llm-img/image-20260908180212017.png" alt="image-20260908180212017" style="zoom:30%;" />
+![image-20260908180212017|w604](./transformer-llm-img/image-20260908180212017.png)
 
-<img src="/blogs/transformer-llm-img/image-20260908180939824.png" alt="image-20260908180939824" style="zoom:43%;" />
+![image-20260908180939824|w507](./transformer-llm-img/image-20260908180939824.png)
 
 > 误区：“得到自己新的 v，给下一个 token 用”
 >
@@ -340,7 +340,7 @@ Attention(Q, K, V) = softmax(Q K^T / √d_k) V
   - **关键动作**：模型把输出的“我”**拼接到输入末尾**，变成 `[<start>, 我]`，重新跑一遍整个解码器。第二次前向传播，只取位置 2 的 logits，输出“爱”。
   - **本质**：推理时，模型**必须使用自己上一步的输出**作为下一步的输入，因为没有任何标准答案可以提供。
 
-<img src="/blogs/transformer-llm-img/PixPin_2026-09-07_14-49-45.png" alt="PixPin_2026-09-07_14-49-45" style="zoom:50%;" />
+![PixPin_2026-09-07_14-49-45|w255](./transformer-llm-img/PixPin_2026-09-07_14-49-45.png)
 
 ### Encoder-Decoder 架构
 
@@ -362,7 +362,7 @@ Softmax → 得到概率分布
 最终输出（训练时是完整序列 logits，推理时是一个 token）
 ```
 
-<img src="/blogs/transformer-llm-img/PixPin_2026-09-07_13-41-35.png" alt="PixPin_2026-09-07_13-41-35" style="zoom:30%;" />
+![PixPin_2026-09-07_13-41-35|w313](./transformer-llm-img/PixPin_2026-09-07_13-41-35.png)
 
 ## 训练和推理
 
@@ -403,7 +403,7 @@ Softmax → 得到概率分布
 
 ## 推理机制与采样参数
 
-![image-20260526204404225](/blogs/transformer-llm-img/image-20260526204404225.png)
+![image-20260526204404225](./transformer-llm-img/image-20260526204404225.png)
 
 一次完整生成通常是循环式的：输入上下文，模型算出 logits，解码器根据采样策略选 token，把新 token 再追加到上下文里，然后继续下一轮。直到命中停止条件，比如生成到终止符、达到最大 token 数、输出完整结构、或者工具调用流程结束。
 
@@ -445,7 +445,7 @@ Softmax → 得到概率分布
 2. **选择（Token Selector）**：根据上一步计算出的得分，DSA 只挑选出**得分最高的 K 个 Token**。这里的 K 远小于总序列长度 L。
 3. **计算**：标准的注意力机制仅在**这 K 个被选中的 Token** 上执行。
 
-<img src="/blogs/transformer-llm-img/image-20260908181524802.png" alt="image-20260908181524802" style="zoom:33%;" />
+![image-20260908181524802|w686](./transformer-llm-img/image-20260908181524802.png)
 
 **MSA** Minimax Sparse Attention：通过将长序列划分为 KV 块，只为每个 GQA 组动态挑选出最重要的 Top-K 个块进行精确计算，从而将标准注意力的复杂度从 O(L²) 降至 O(L·K)。
 
@@ -485,9 +485,9 @@ Softmax → 得到概率分布
 
 [MoE为什么这么快 —— 从小学数学到MoE 大模型进化史](https://www.bilibili.com/video/BV1CgZABxEcy)
 
-<img src="/blogs/transformer-llm-img/PixPin_2026-09-07_19-32-01.png" alt="PixPin_2026-09-07_19-32-01" style="zoom:25%;" />
+![PixPin_2026-09-07_19-32-01|w670](./transformer-llm-img/PixPin_2026-09-07_19-32-01.png)
 
-<img src="/blogs/transformer-llm-img/PixPin_2026-09-07_19-33-23.png" alt="PixPin_2026-09-07_19-33-23" style="zoom:28%;" />
+![PixPin_2026-09-07_19-33-23|w704](./transformer-llm-img/PixPin_2026-09-07_19-33-23.png)
 
 ## Thinking 不是外挂的算法，是模型在训练里多走的一步
 
@@ -509,4 +509,4 @@ Anthropic Messages API 的 thinking 配置：
 
 控制。
 
-<img src="/blogs/transformer-llm-img/image-20260908203321897.png" alt="image-20260908203321897" style="zoom:33%;" />
+![image-20260908203321897|w706](./transformer-llm-img/image-20260908203321897.png)

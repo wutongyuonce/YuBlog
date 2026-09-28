@@ -12,7 +12,6 @@ const { headings } = Astro.props
 
 const { toc } = FEATURES
 const tocPosition = Array.isArray(toc) && toc[0] && toc[1].displayPosition
-const tocDisplayMode = Array.isArray(toc) && toc[0] && toc[1].displayMode
 ---
 
 {headings.length > 0 && (
@@ -20,10 +19,10 @@ const tocDisplayMode = Array.isArray(toc) && toc[0] && toc[1].displayMode
     <button
       type="button"
       class="desktop-aside__trigger"
-      aria-label="固定目录"
-      aria-pressed="false"
-      title="点击固定目录"
-      data-display-mode={tocDisplayMode}
+      aria-label="目录"
+      aria-expanded="false"
+      aria-controls="toc-sidebar"
+      title="显示目录"
     >
       TOC
     </button>
@@ -37,12 +36,18 @@ const tocDisplayMode = Array.isArray(toc) && toc[0] && toc[1].displayMode
     const trigger = aside?.querySelector<HTMLButtonElement>(
       '.desktop-aside__trigger'
     )
-    if (!aside || !trigger || trigger.dataset.pinBound) return
-    trigger.dataset.pinBound = 'true'
+    if (!aside || !trigger || trigger.dataset.openBound) return
+    trigger.dataset.openBound = 'true'
     trigger.addEventListener('click', () => {
-      const on = aside.dataset.pinned !== 'true'
-      aside.dataset.pinned = on ? 'true' : 'false'
-      trigger.setAttribute('aria-pressed', String(on))
+      const on = aside.dataset.open !== 'true'
+      aside.dataset.open = on ? 'true' : 'false'
+      // The accessible name stays put; `aria-expanded` announces the state.
+      // `title` still follows the action for the mouse tooltip.
+      trigger.setAttribute('aria-expanded', String(on))
+      trigger.title = on ? '隐藏目录' : '显示目录'
+      if (on) {
+        aside.dispatchEvent(new CustomEvent('toc-reveal', { bubbles: true }))
+      }
     })
   }
 
@@ -88,37 +93,33 @@ const tocDisplayMode = Array.isArray(toc) && toc[0] && toc[1].displayMode
     color: var(--c-text);
     font-size: var(--blog-reading-size);
     font-weight: 500;
-    opacity: 0.55;
+    opacity: 0.82;
     cursor: pointer;
     transition:
       opacity 0.25s ease,
       background-color 0.25s ease,
-      font-weight 0.25s ease,
-      transform 0.25s ease;
+      font-weight 0.25s ease;
   }
 
-  .desktop-aside__trigger[data-display-mode='always'] {
-    opacity: 0.82;
-  }
-
-  .desktop-aside:hover .desktop-aside__trigger[data-display-mode='hover'],
-  :global(.slide-enter-content:hover)
-    .desktop-aside__trigger[data-display-mode='content'],
-  :global(.group\/content:hover)
-    .desktop-aside__trigger[data-display-mode='content'] {
-    opacity: 0.82;
-  }
-
-  .desktop-aside[data-pinned='true'] .desktop-aside__trigger {
-    font-weight: 600;
+  .desktop-aside__trigger:hover,
+  .desktop-aside[data-open='true'] .desktop-aside__trigger {
     opacity: 1;
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.18em;
   }
 
-  .desktop-aside[data-pinned='true'] :global(.desktop-toc) {
-    opacity: 0.82;
+  .desktop-aside[data-open='true'] .desktop-aside__trigger {
+    font-weight: 600;
+  }
+
+  .desktop-aside :global(.desktop-toc) {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* 只有点「目录」按钮（或直接点目录里的链接）时才显示：关闭时用 visibility
+     隐藏，因此不会被 Tab 聚焦，也不会因悬停而自动出现。 */
+  .desktop-aside[data-open='true'] :global(.desktop-toc) {
+    visibility: visible;
+    pointer-events: auto;
   }
 
   @media (max-width: 1199.9px) {

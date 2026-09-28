@@ -1,6 +1,10 @@
-/* Static shell CSS. Loaded as a real <link rel="stylesheet"> so hard refresh
-   and ClientRouter navigation share one path. Vite-injected <style> tags are
-   not persisted across Astro swaps and can disappear after a full reload. */
+/* Static shell CSS: one owner for shell chrome (nav, sidebar, archives, about
+   tabs, pagination), loaded as a real <link> so it does not depend on the
+   component style pipeline. It is not a fallback for vanished styles: the site
+   ships one bundled stylesheet (cssCodeSplit off) plus this shell.css, so
+   component <style> blocks do survive ClientRouter swaps. See docs/项目解析.md §4.4. The same selector
+   must not be defined here and in a component style — test/css-ownership.test.mjs
+   enforces that. */
 
 header.nav-bar {
   position: sticky;
@@ -13,10 +17,10 @@ header.nav-bar {
 
 header.nav-bar .nav-bar__inner {
   max-width: var(--blog-shell-width);
-  min-height: 56px;
+  min-height: 48px;
   width: calc(100% - 56px);
   margin: auto;
-  padding: 0.375rem 0;
+  padding: 0.25rem 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -61,12 +65,192 @@ header.nav-bar .nav-bar__group--right {
 }
 
 #search-panel {
+  --search-muted: color-mix(in srgb, var(--c-text) 65%, var(--c-bg));
   position: fixed;
   inset: 15vh auto auto 50%;
   translate: -50% 0;
   width: min(42rem, 90vw);
   max-height: 70vh;
   z-index: 200;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  padding: 1rem;
+  border: 1px solid color-mix(in srgb, var(--c-text) 18%, var(--c-bg));
+  border-radius: 14px;
+  color: var(--c-text);
+  background: var(--c-bg);
+  box-shadow:
+    0 24px 80px #0003,
+    0 4px 16px #0002;
+}
+
+#search-panel.hidden {
+  display: none;
+}
+
+#backdrop {
+  background: #0006;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.dark #backdrop {
+  background: #000a;
+}
+
+.search-bar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  height: 3rem;
+  padding-inline: 0.875rem;
+  border: 1px solid color-mix(in srgb, var(--c-text) 20%, var(--c-bg));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--c-text) 4%, var(--c-bg));
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.search-bar:focus-within {
+  border-color: color-mix(in srgb, var(--c-text) 55%, var(--c-bg));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--c-text) 8%, transparent);
+}
+
+#search-input {
+  min-width: 0;
+  color: var(--c-text);
+}
+
+#search-input:focus {
+  outline: none;
+}
+
+#search-input::placeholder {
+  color: var(--search-muted);
+  opacity: 1;
+}
+
+#search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+#search-results {
+  min-height: 0;
+  overscroll-behavior: contain;
+}
+
+.search-tabs button,
+#search-pagination button {
+  padding: 0.3rem 0.5rem;
+  border-radius: 5px;
+  color: var(--search-muted);
+  cursor: pointer;
+  transition:
+    color 180ms ease,
+    background-color 180ms ease;
+}
+
+.search-tabs button[aria-selected='true'],
+.search-tabs button:hover,
+#search-pagination button:hover {
+  color: var(--c-text);
+  background: color-mix(in srgb, var(--c-text) 10%, var(--c-bg));
+}
+
+#search-feedback,
+.search-result-excerpt {
+  color: var(--search-muted);
+}
+
+.search-result-h1 {
+  padding: 0 0.625rem 0.375rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--c-text) 16%, var(--c-bg));
+  margin: 0.75rem 0 0.375rem;
+  color: var(--search-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1rem;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.search-result-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.65rem 0.625rem;
+  border-radius: 6px;
+  color: var(--c-text);
+  background: transparent;
+  outline: none;
+  overflow-wrap: anywhere;
+  font-size: 1rem;
+  transition: background-color 180ms ease;
+}
+
+.search-result-item:first-child {
+  margin-top: 8px;
+}
+
+.search-result-item[aria-selected='true'],
+.search-result-item:hover {
+  background: color-mix(in srgb, var(--c-text) 10%, var(--c-bg));
+  box-shadow: inset 3px 0 var(--c-text);
+}
+
+.search-result-title {
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.search-result-excerpt {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.search-result-excerpt mark,
+mark.pagefind-highlight {
+  color: var(--c-text);
+  background: color-mix(in srgb, var(--c-text) 18%, var(--c-bg));
+}
+
+.search-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--c-text) 16%, var(--c-bg));
+  color: var(--search-muted);
+  font-size: 0.75rem;
+  user-select: none;
+}
+
+.search-kbd-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.25rem;
+  padding: 0 0.375rem;
+  border: 1px solid color-mix(in srgb, var(--c-text) 24%, var(--c-bg));
+  border-radius: 0.375rem;
+  color: var(--c-text);
+  background: color-mix(in srgb, var(--c-text) 4%, var(--c-bg));
+  font-size: 0.625rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-bar,
+  .search-tabs button,
+  .search-result-item,
+  #search-pagination button {
+    transition: none;
+  }
 }
 
 @media (max-width: 767px) {
@@ -76,29 +260,68 @@ header.nav-bar .nav-bar__group--right {
   }
 }
 
+header.nav-bar .nav-bar__pages {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  flex: none;
+  gap: 0;
+  --nav-pad: 2px;
+  border-radius: 8px;
+  padding: var(--nav-pad);
+}
+
+header.nav-bar .nav-bar__indicator {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  border-radius: 6px;
+  background: var(--c-text);
+  pointer-events: none;
+  transition:
+    transform 220ms ease,
+    width 220ms ease;
+}
+
+header.nav-bar .nav-bar__indicator:not([data-ready]) {
+  opacity: 0;
+}
+
 header.nav-bar .nav-bar__pages a {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
-  padding: 0.5rem 0.65rem;
-  border-radius: 8px;
+  min-height: 32px;
+  padding: 0.28rem 0.7rem;
+  border-radius: 6px;
   color: inherit;
+  background: transparent;
   text-decoration: none;
-  opacity: 0.7;
-  transition:
-    background-color 150ms,
-    opacity 150ms;
+  opacity: 1;
+  transition: color 220ms ease;
 }
 
-header.nav-bar .nav-bar__pages a:hover {
-  background: color-mix(in srgb, var(--c-text) 8%, transparent);
-  opacity: 1;
+header.nav-bar .nav-bar__pages a:not([aria-current='page']):hover::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: calc(var(--nav-pad) * -1);
+  right: 0;
+  bottom: calc(var(--nav-pad) * -1);
+  left: 0;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--c-text) 14%, var(--c-bg));
 }
-header.nav-bar .nav-bar__pages a[aria-current='page'] {
-  background: color-mix(in srgb, var(--c-text) 14%, transparent);
-  opacity: 1;
-  font-weight: 600;
+
+header.nav-bar .nav-bar__pages a[aria-current='page'],
+header.nav-bar .nav-bar__pages a[aria-current='page']:hover {
+  color: var(--c-bg);
+  background: transparent;
 }
 
 header.nav-bar .nav-bar__social a,
@@ -120,7 +343,7 @@ header.nav-bar .nav-bar__group--right #search-switch {
       'pages pages';
     align-items: center;
     gap: 0.15rem 0.5rem;
-    padding: 0.4rem 0;
+    padding: 0.25rem 0;
     width: calc(100% - 32px);
   }
 
@@ -144,20 +367,22 @@ header.nav-bar .nav-bar__group--right #search-switch {
 
   header.nav-bar .nav-bar__pages {
     grid-area: pages;
-    justify-content: space-between;
     width: 100%;
-    gap: 0;
   }
 
   header.nav-bar .nav-bar__pages a {
-    padding-inline: 0.7rem;
+    flex: 1;
+    padding-inline: 0.35rem;
   }
 }
 
 @media (max-width: 600px) {
   header.nav-bar .nav-bar__inner {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: 'brand' 'tools' 'pages';
+    grid-template-areas: 'tools' 'pages';
+  }
+
+  header.nav-bar a.nav-bar__brand {
+    display: none;
   }
 
   header.nav-bar .nav-bar__group--right {
@@ -166,11 +391,12 @@ header.nav-bar .nav-bar__group--right #search-switch {
   }
 
   header.nav-bar .nav-bar__pages a {
-    padding-inline: 0.5rem;
+    padding-inline: 0.2rem;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  header.nav-bar .nav-bar__indicator,
   header.nav-bar .nav-bar__pages a,
   header.nav-bar a.nav-bar__brand {
     transition: none;
@@ -720,31 +946,87 @@ html.dark .progress-stat--day .progress-stat__bar::after {
   color: color-mix(in srgb, var(--c-text) 72%, transparent);
 }
 .about-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.15rem;
-  margin: 1.35rem 0 1.5rem;
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  max-width: 100%;
+  gap: 0;
+  --about-pad: 2px;
+  margin: 0 0 1.5rem;
+  padding: var(--about-pad);
+  border-radius: 8px;
+}
+.about-tabs__indicator {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  border-radius: 6px;
+  background: var(--c-text);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 220ms ease,
+    width 220ms ease;
+}
+.about-tabs[data-ready] .about-tabs__indicator {
+  opacity: 1;
 }
 .about-tabs button {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
   margin: 0;
-  padding: 0.4rem 0.8rem;
-  border: 1px solid color-mix(in srgb, var(--c-text) 6%, transparent);
+  padding: 0.28rem 0.7rem;
+  border: 0;
   border-radius: 6px;
-  background: color-mix(in srgb, var(--c-text) 3%, transparent);
-  color: color-mix(in srgb, var(--c-text) 62%, transparent);
+  background: transparent;
+  color: inherit;
   font: inherit;
-  font-size: 0.95rem;
   line-height: 1.4;
+  white-space: nowrap;
   cursor: pointer;
+  transition: color 220ms ease;
 }
-.about-tabs button:hover {
-  background: color-mix(in srgb, var(--c-text) 7%, transparent);
-  color: color-mix(in srgb, var(--c-text) 82%, transparent);
+.about-tabs button:not([aria-selected='true']):hover::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: calc(var(--about-pad) * -1);
+  right: 0;
+  bottom: calc(var(--about-pad) * -1);
+  left: 0;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--c-text) 14%, var(--c-bg));
 }
 .about-tabs button[aria-selected='true'] {
-  border-color: transparent;
   background: var(--c-text);
   color: var(--c-bg);
+}
+/* 定位块就绪后由指示器画背景，按钮自身不再画。 */
+.about-tabs[data-ready] button[aria-selected='true'] {
+  background: transparent;
+}
+@media (max-width: 520px) {
+  .about-tabs {
+    display: flex;
+    width: 100%;
+  }
+  .about-tabs button {
+    flex: 1;
+    padding-inline: 0.35rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .about-tabs__indicator,
+  .about-tabs button {
+    transition: none;
+  }
 }
 .about-panel {
   min-width: 0;
@@ -753,40 +1035,93 @@ html.dark .progress-stat--day .progress-stat__bar::after {
   display: none;
 }
 
-.post-preview__tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem 0.65rem;
-  margin: 0 0 0.45rem;
-  padding: 0;
-  list-style: none;
-  font-size: 0.75rem;
-  color: color-mix(in srgb, var(--c-text) 50%, transparent);
+/* 分页：一行，两端箭头，当前页填充块，无外框。首页与标签页共用。 */
+[data-pagination] {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  /* 列表不再画末尾分割线，分页占用那条线的位置：与上一篇文章的距离
+     就是卡片自带的 24px padding-bottom。 */
+  margin: 0 auto;
+  /* 排版由容器统一给出：页码继承，两端箭头单独放大。 */
+  color: color-mix(in srgb, var(--c-text) 68%, transparent);
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
-[data-pagination] a {
+[data-pagination] > :first-child,
+[data-pagination] > :last-child {
+  color: color-mix(in srgb, var(--c-text) 80%, transparent);
+  font-size: 1.125rem;
+}
+[data-pagination] > :last-child {
+  justify-self: end;
+}
+[data-pagination] > :first-child {
+  justify-self: start;
+}
+[data-pagination] div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  min-width: 0;
+}
+[data-pagination] a,
+[data-pagination] span[aria-disabled],
+[data-pagination] .pagination-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding-inline: 0.25rem;
+  border-radius: 8px;
+  background: transparent;
+  text-decoration: none;
   transition:
-    background-color 160ms ease,
-    border-color 160ms ease,
     color 160ms ease,
-    box-shadow 160ms ease,
-    transform 160ms ease;
+    background-color 160ms ease;
 }
 [data-pagination] a:hover {
-  background: color-mix(in srgb, var(--c-text) 8%, transparent);
-  border-color: color-mix(in srgb, var(--c-text) 28%, transparent);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--c-text) 10%, transparent);
-  transform: translateY(-1px);
+  color: var(--c-text);
+  background: color-mix(in srgb, var(--c-text) 10%, var(--c-bg));
 }
-[data-pagination] [aria-current]:hover {
-  background: var(--c-text);
-  color: var(--c-bg);
-  box-shadow: 0 6px 16px color-mix(in srgb, var(--c-text) 22%, transparent);
+[data-pagination] [aria-current='page'] {
+  color: var(--c-text);
+  background: color-mix(in srgb, var(--c-text) 14%, var(--c-bg));
+  font-weight: 600;
+}
+[data-pagination] .pagination-ellipsis {
+  color: color-mix(in srgb, var(--c-text) 38%, transparent);
+}
+[data-pagination] [aria-disabled] {
+  opacity: 0.35;
+  pointer-events: none;
+}
+@media (max-width: 480px) {
+  [data-pagination] {
+    gap: 0.25rem;
+    font-size: 0.875rem;
+  }
+  [data-pagination] div {
+    gap: 0;
+  }
+  [data-pagination] > :first-child,
+  [data-pagination] > :last-child {
+    font-size: 1rem;
+  }
+  [data-pagination] a,
+  [data-pagination] span[aria-disabled],
+  [data-pagination] .pagination-ellipsis {
+    min-width: 1.9rem;
+    height: 1.9rem;
+    padding-inline: 0.15rem;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   [data-pagination] a {
     transition: none;
-  }
-  [data-pagination] a:hover {
-    transform: none;
   }
 }

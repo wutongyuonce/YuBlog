@@ -1,36 +1,37 @@
 ---
 import { FEATURES } from '~/config'
 
-interface Props {
-  isArticle: boolean
-}
-
-const { isArticle } = Astro.props
-
 const { toc } = FEATURES
 if (!toc || (Array.isArray(toc) && !toc[0])) return
-const { minHeadingLevel, maxHeadingLevel } = toc[1]
 ---
 
-<table-of-contents
-  data-min-h={isArticle ? minHeadingLevel : undefined}
-  data-max-h={isArticle ? maxHeadingLevel : undefined}
-  data-pagefind-ignore="all"
->
+<table-of-contents data-pagefind-ignore="all">
   <slot />
 </table-of-contents>
 
 <script>
+  import { pickActiveHeadingIndex } from '~/utils/toc-active'
+
   class Toc extends HTMLElement {
-    #minH: number | undefined
-    #maxH: number | undefined
-    #observer: IntersectionObserver | null = null
     #headingMapToc = new Map<Element, HTMLAnchorElement[]>()
+    #headings: Element[] = []
     #currentActiveHeading: Element | null = null
     #previousActiveLinks: HTMLAnchorElement[] = []
+    #frame = 0
+    #shiftObserver: ResizeObserver | null = null
 
     connectedCallback() {
-      this.#onIdle(() => this.#init())
+      this.#init()
+      this.#schedule()
+      window.addEventListener('scroll', this.#schedule, { passive: true })
+      window.addEventListener('resize', this.#schedule)
+      this.addEventListener('toc-reveal', this.#onReveal)
+      // Lazy images and webfonts move the headings without scrolling. Without
+      // this, the highlight keeps pointing at wherever the reader was before
+      // the shift until they happen to scroll again. Observed on <body>: the
+      // root element stays viewport-tall and never reports the growth.
+      this.#shiftObserver = new ResizeObserver(this.#schedule)
+      this.#shiftObserver.observe(document.body)
     }
 
     disconnectedCallback() {
@@ -38,86 +39,143 @@ const { minHeadingLevel, maxHeadingLevel } = toc[1]
     }
 
     #init = () => {
-      this.#minH = this.#getHeadingLevel(this.dataset.minH)
-      this.#maxH = this.#getHeadingLevel(this.dataset.maxH)
-
       const tocLinks = this.#getElements(
         '[data-toc-link]',
         false
       ) as HTMLAnchorElement[]
       this.#generateHeadingMapToc(tocLinks)
-
-      const headings =
-        this.#minH && this.#maxH
-          ? this.#getElements(
-              this.#getTocHeadingsSelector(this.#minH, this.#maxH)
-            )
-          : this.#getElements('.toc-heading')
-
-      this.#observer = new IntersectionObserver(this.#onIntersect, {
-        root: null,
-        rootMargin: '0% 0% -75% 0%',
-        threshold: 0,
-      })
-
-      for (const headingEl of headings) this.#observer.observe(headingEl)
+      this.#headings = this.#orderedHeadings()
     }
 
-    #onIdle = (cb: IdleRequestCallback) =>
-      (window.requestIdleCallback || ((fn) => setTimeout(fn, 1)))(cb)
+    #schedule = () => {
+      if (this.#frame) return
+      this.#frame = requestAnimationFrame(() => {
+        this.#frame = 0
+        this.#sync()
+      })
+    }
 
-    #onIntersect = (entries: IntersectionObserverEntry[]) => {
-      if (!entries.length) return
+    #onReveal = () => {
+      this.#sync()
+      for (const link of this.#previousActiveLinks) this.#revealLink(link)
+    }
 
-      let latest = entries[0]
-      for (let i = 1; i < entries.length; i++) {
-        if (entries[i].time > latest.time) latest = entries[i]
-      }
+    #sync = () => {
+      const laidOut = this.#headings.filter(
+        (heading) => heading.getClientRects().length > 0
+      )
+      if (!laidOut.length) return
 
-      const latestTriggerHeading = latest.target
-      if (!latestTriggerHeading) return
+      const index = pickActiveHeadingIndex(
+        laidOut.map((heading) => heading.getBoundingClientRect().top),
+        this.#activationLine(laidOut[0]),
+        this.#isAtBottom()
+      )
+      const next = laidOut[index]
+      if (!next) return
+      this.#setActive(next)
+    }
 
-      const isLocatedBelow =
-        latest.boundingClientRect.top > window.innerHeight / 4
-      const targetHeading = isLocatedBelow
-        ? this.#getPreviousHeading(this.#headingMapToc, latestTriggerHeading)
-        : latestTriggerHeading
+    #setActive = (heading: Element) => {
+      if (heading === this.#currentActiveHeading) return
 
-      if (!targetHeading || targetHeading === this.#currentActiveHeading) return
-
-      const newLinks = this.#headingMapToc.get(targetHeading) ?? []
-
+      const newLinks = this.#headingMapToc.get(heading) ?? []
       for (const tocLinkEl of this.#previousActiveLinks) {
         tocLinkEl.removeAttribute('aria-current')
       }
-
       for (const tocLinkEl of newLinks) {
         tocLinkEl.setAttribute('aria-current', 'true')
-        if (this.#isVisible(tocLinkEl)) {
-          tocLinkEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        }
+        this.#revealLink(tocLinkEl)
       }
 
-      this.#currentActiveHeading = targetHeading
+      this.#currentActiveHeading = heading
       this.#previousActiveLinks = newLinks
     }
 
-    #getHeadingLevel = (level: string | undefined) =>
-      level ? parseInt(level, 10) : undefined
+    #activationLine = (heading: Element) => {
+      const margin = parseFloat(getComputedStyle(heading).scrollMarginTop)
+      if (Number.isFinite(margin)) return margin + 1
+
+      const header = document.querySelector('[data-site-header]')
+      const headerHeight =
+        header instanceof HTMLElement
+          ? header.getBoundingClientRect().height
+          : 72
+      return headerHeight + 12 + 1
+    }
+
+    #isAtBottom = () => {
+      const maxScroll =
+        document.documentElement.scrollHeight - window.innerHeight
+      if (maxScroll <= 2) return false
+      return window.scrollY >= maxScroll - 2
+    }
+
+    #revealLink = (link: HTMLAnchorElement) => {
+      const list = this.#scrollContainerOf(link)
+      if (!list || !this.#isListShown(list)) return
+
+      const listRect = list.getBoundingClientRect()
+      const linkRect = link.getBoundingClientRect()
+      const pad = 8
+      if (
+        linkRect.top >= listRect.top + pad &&
+        linkRect.bottom <= listRect.bottom - pad
+      ) {
+        return
+      }
+
+      const top =
+        linkRect.top -
+        listRect.top +
+        list.scrollTop -
+        (list.clientHeight - linkRect.height) / 2
+      const reduce = window.matchMedia(
+        '(prefers-reduced-motion: reduce)'
+      ).matches
+      list.scrollTo({
+        top: Math.max(0, top),
+        behavior: reduce ? 'auto' : 'smooth',
+      })
+    }
+
+    /**
+     * The nearest scrollable ancestor, not the nearest `ul`: a nested item's
+     * own `ul` does not scroll, so centering against it would silently do
+     * nothing and leave the highlight off screen. Returns null when nothing
+     * scrolls, i.e. every item already fits.
+     */
+    #scrollContainerOf = (el: Element) => {
+      let node: Element | null = el.parentElement
+      while (node && node !== this) {
+        if (node instanceof HTMLElement) {
+          const { overflowY } = getComputedStyle(node)
+          if (
+            (overflowY === 'auto' || overflowY === 'scroll') &&
+            node.scrollHeight > node.clientHeight
+          ) {
+            return node
+          }
+        }
+        node = node.parentElement
+      }
+      return null
+    }
+
+    #isListShown = (list: HTMLElement) => {
+      if (list.closest('[hidden]')) return false
+      const style = getComputedStyle(list)
+      return (
+        style.display !== 'none' &&
+        style.visibility !== 'hidden' &&
+        list.clientHeight > 0
+      )
+    }
 
     #getElements = (selector: string, fromDocument = true) =>
       fromDocument
         ? Array.from(document.querySelectorAll(selector))
         : Array.from(this.querySelectorAll(selector))
-
-    #isVisible = (el: HTMLElement) => {
-      const style = window.getComputedStyle(el)
-      return (
-        style.display !== 'none' &&
-        style.visibility !== 'hidden' &&
-        el.getClientRects().length > 0
-      )
-    }
 
     #generateHeadingMapToc = (tocLinks: HTMLAnchorElement[]) => {
       for (const link of tocLinks) {
@@ -132,37 +190,25 @@ const { minHeadingLevel, maxHeadingLevel } = toc[1]
       }
     }
 
-    #getTocHeadingsSelector = (
-      minH: number,
-      maxH: number,
-      baseSelector = ''
-    ) => {
-      const levelSelectors = []
-      for (let i = minH; i <= maxH; i++) {
-        levelSelectors.push(baseSelector ? `${baseSelector} h${i}` : `h${i}`)
-      }
-
-      return levelSelectors.join(', ')
-    }
-
-    #getPreviousHeading = (
-      headingMapToc: Map<Element, HTMLAnchorElement[]>,
-      curHeading: Element
-    ) => {
-      let prevHeading = null
-
-      for (const heading of headingMapToc.keys()) {
-        if (heading === curHeading) return prevHeading
-        prevHeading = heading
-      }
-
-      return null
-    }
+    #orderedHeadings = () =>
+      [...this.#headingMapToc.keys()].sort((a, b) => {
+        if (a === b) return 0
+        const pos = a.compareDocumentPosition(b)
+        if (pos & Node.DOCUMENT_POSITION_FOLLOWING) return -1
+        if (pos & Node.DOCUMENT_POSITION_PRECEDING) return 1
+        return 0
+      })
 
     #cleanup = () => {
-      this.#observer?.disconnect()
-      this.#observer = null
+      if (this.#frame) cancelAnimationFrame(this.#frame)
+      this.#frame = 0
+      window.removeEventListener('scroll', this.#schedule)
+      window.removeEventListener('resize', this.#schedule)
+      this.removeEventListener('toc-reveal', this.#onReveal)
+      this.#shiftObserver?.disconnect()
+      this.#shiftObserver = null
       this.#headingMapToc.clear()
+      this.#headings = []
       this.#currentActiveHeading = null
       this.#previousActiveLinks = []
     }

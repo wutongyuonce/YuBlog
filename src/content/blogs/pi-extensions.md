@@ -5,7 +5,7 @@ pubDate: 2026-09-10
 category: 技术向
 lastModDate: ''
 tags: [Pi, Agent]
-titleImage: /blog-title-images/doll-leaves.jpg
+titleImage: ./_title-images/doll-leaves.jpg
 titleImageAlt: 可爱玩偶与地面落叶
 toc: true
 search: true

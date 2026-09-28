@@ -4,7 +4,7 @@ description: 关于 Agent 工具延迟加载：Anthropic、OpenAI 如何把工�
 pubDate: 2026-09-19
 category: 技术向
 tags: [Agent, Tools, KV Cache]
-titleImage: /blog-title-images/eva.webp
+titleImage: ./_title-images/eva.webp
 titleImageAlt: EVA 动漫壁纸
 toc: true
 search: true

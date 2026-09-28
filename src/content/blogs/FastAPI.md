@@ -881,7 +881,7 @@ def single_basic_info(patient_id):
 
 其中 url 中的5便是路径参数：
 
-![img](/blogs/FastAPI-img/2d5c94db55374cd6a712056bfd9b3651.png)
+![img](./FastAPI-img/2d5c94db55374cd6a712056bfd9b3651.png)
 
 ### 5.2 查询参数
 
@@ -893,7 +893,7 @@ def single_basic_info(patient_id: str):
     return {"patient_id": patient_id}
 ```
 
-![img](/blogs/FastAPI-img/0cd5c0ca878e44cda32ba6b0ebcb7ff8.png)
+![img](./FastAPI-img/0cd5c0ca878e44cda32ba6b0ebcb7ff8.png)
 
 ## 6.Pydantic 模型
 
@@ -907,7 +907,7 @@ def single_basic_info(patient_id: str):
 
 ### 6.3 基础使用
 
-![img](/blogs/FastAPI-img/8c17a89c59e34b20b7f45d6412e083bb.png)
+![img](./FastAPI-img/8c17a89c59e34b20b7f45d6412e083bb.png)
 
 #### a. 接收并验证 form-data 数据
 
@@ -956,15 +956,15 @@ def create_user(data:UserSchema):
 
 `data: UserSchema` 让 FastAPI 将 JSON 请求体解析为模型，函数内通过 `data.name` 等属性取值。下面用 Postman 对比成功、类型错误和缺少字段三种情况：
 
-![img](/blogs/FastAPI-img/58fb6d20344643c897cbb486a51283be.png)
+![img](./FastAPI-img/58fb6d20344643c897cbb486a51283be.png)
 
 当我们发送错误数据时（将 name 的值改为数字5进行传递）：
 
-![img](/blogs/FastAPI-img/23f20817eaa74bf2866bcb4ecb3c37e9.png)
+![img](./FastAPI-img/23f20817eaa74bf2866bcb4ecb3c37e9.png)
 
 当我们缺少字段时（缺少 name 字段）：
 
-![img](/blogs/FastAPI-img/7c2905ecfc894498a2499af44f310a53.png)
+![img](./FastAPI-img/7c2905ecfc894498a2499af44f310a53.png)
 
 配置管理的 `BaseSettings` 用法见第 2 章。
 
@@ -1120,7 +1120,7 @@ async def login(username: str = Form(...), password: str = Form(...)):
     }
 ```
 
-![img](/blogs/FastAPI-img/8268bb7ba82249689af9d7bf4111d127.png)
+![img](./FastAPI-img/8268bb7ba82249689af9d7bf4111d127.png)
 
 ### 7.3 获取文件
 
@@ -1142,9 +1142,9 @@ async def upload_file(file: bytes = File(...)):
     return {"file_size": file_size, "file_type": file_type}
 ```
 
-![img](/blogs/FastAPI-img/d324062a5b4d4d618ffed50312e38315.png)
+![img](./FastAPI-img/d324062a5b4d4d618ffed50312e38315.png)
 
-![img](/blogs/FastAPI-img/c4276b60fb1a493c8ce9371f53f6c0f3.png)
+![img](./FastAPI-img/c4276b60fb1a493c8ce9371f53f6c0f3.png)
 
 #### b. 使用 UploadFile
 
@@ -1172,7 +1172,7 @@ async def upload_file_by_uploadfile(file: UploadFile = File(...)):
     }
 ```
 
-![img](/blogs/FastAPI-img/64fc7044aa524e86a5bca3cd0ef32817.png)
+![img](./FastAPI-img/64fc7044aa524e86a5bca3cd0ef32817.png)
 
 #### c. 接收文件加表单数据
 
@@ -1210,7 +1210,7 @@ def upload_files(files: list[UploadFile] = File(...)):
 
 这里只读取元数据，不需要读取内容或重置指针。需要在异步路由中处理内容时，使用 `await file.read()`，再次读取前用 `await file.seek(0)`；同步路由则可操作 `file.file`。
 
-![img](/blogs/FastAPI-img/f803d7884707473bbd21d2ce16d045e8.png)
+![img](./FastAPI-img/f803d7884707473bbd21d2ce16d045e8.png)
 
 #### e. 接收多个不同名文件
 
@@ -1227,7 +1227,7 @@ def upload_multiple_files(avatar: UploadFile = File(...), document: UploadFile =
     }
 ```
 
-![img](/blogs/FastAPI-img/d91713043e8d4bfaa0a358d52706bdad.png)
+![img](./FastAPI-img/d91713043e8d4bfaa0a358d52706bdad.png)
 
 2.使用字典动态接收
 
@@ -1267,7 +1267,7 @@ async def upload_dynamic_files(request: Request):
 
 上面的动态示例按字段名返回一个文件信息，适用于不同名文件；同名多文件应使用 `getlist()` 或 `multi_items()` 并按列表收集，避免后一个值覆盖前一个。
 
-![img](/blogs/FastAPI-img/c857e90f33e548a18e35f922ca684c4e.png)
+![img](./FastAPI-img/c857e90f33e548a18e35f922ca684c4e.png)
 
 ### 7.4 获取 json 数据
 
@@ -2005,17 +2005,17 @@ def get_persons(db, query_params: dict):
 | 包含关键字   | `User.name.like('%张%')` | `WHERE name LIKE '%张%'` |
 | 单个字符匹配 | `User.name.like('张_')`  | `WHERE name LIKE '张_'`  |
 
-![img](/blogs/FastAPI-img/d0b10f24393b446380e9401376e18dfb.png)
+![img](./FastAPI-img/d0b10f24393b446380e9401376e18dfb.png)
 
 #### b. 根据页码与每页显示数进行分页查询
 
 不分页的总数据
 
-![img](/blogs/FastAPI-img/d0510590d2a340ae916d2178b5157279.png)
+![img](./FastAPI-img/d0510590d2a340ae916d2178b5157279.png)
 
 每页一条数据，第二页
 
-![img](/blogs/FastAPI-img/85202c64224343818474b248dbf1775f.png)
+![img](./FastAPI-img/85202c64224343818474b248dbf1775f.png)
 
 ## 11.用户认证
 
@@ -2058,7 +2058,7 @@ async def verify_token(token: str = Depends(oauth2_scheme)):
 
 ### 11.3 JWT 认证
 
-![img](/blogs/FastAPI-img/0f7c676acf10423caf951be144653e0b.png)
+![img](./FastAPI-img/0f7c676acf10423caf951be144653e0b.png)
 
 JWT 全称是 `Json Web Token`，在 python 中我们一般使用 `PyJWT` 这个包实现 JWT 的编解码操作
 
@@ -2187,19 +2187,19 @@ def get_person_self(current_user: Annotated[User, Depends(get_current_user)], db
 
 未携带令牌（即未携带 Authorization 请求头）：
 
-![img](/blogs/FastAPI-img/a744b109489743a7a044ae01e4c783b3.png)
+![img](./FastAPI-img/a744b109489743a7a044ae01e4c783b3.png)
 
 携带过期令牌（距发放令牌时间已超过设置的时间）：
 
-![img](/blogs/FastAPI-img/fb5ea07482174107bc5dd89bdf50dce0.png)
+![img](./FastAPI-img/fb5ea07482174107bc5dd89bdf50dce0.png)
 
 携带正确未过期令牌：
 
-![img](/blogs/FastAPI-img/fa28ee7d5e3b4392897464098148dfc2.png)
+![img](./FastAPI-img/fa28ee7d5e3b4392897464098148dfc2.png)
 
 携带错误令牌（令牌被篡改）：
 
-![img](/blogs/FastAPI-img/968edd67d5ef4a4182b8eb2b443aea7d.png)
+![img](./FastAPI-img/968edd67d5ef4a4182b8eb2b443aea7d.png)
 
 ### 11.4 Refresh_token
 
@@ -2300,11 +2300,11 @@ def get_access_token(data: RefreshToken):
 
 登录：
 
-![img](/blogs/FastAPI-img/67ab928379de4decbb7257421ab45d1e.png)
+![img](./FastAPI-img/67ab928379de4decbb7257421ab45d1e.png)
 
 获取新访问令牌：
 
-![img](/blogs/FastAPI-img/9174168ca8d342ae830e35b2295d1935.png)
+![img](./FastAPI-img/9174168ca8d342ae830e35b2295d1935.png)
 
 ## 12.中间件
 
@@ -2312,7 +2312,7 @@ def get_access_token(data: RefreshToken):
 
 中间件是在请求到达路由前、响应返回客户端前执行的通用逻辑，适合记录日志、计算耗时、处理跨域等。多个中间件形成栈：请求从外向内进入，响应按相反顺序返回。
 
-![img](/blogs/FastAPI-img/240aea74024747f889ce73fdc7253db2.png)
+![img](./FastAPI-img/240aea74024747f889ce73fdc7253db2.png)
 
 ### 12.2 基本使用
 
@@ -2377,7 +2377,7 @@ app.add_middleware(SecondMiddleware)
 
 ## 13.权限控制
 
-![img](/blogs/FastAPI-img/262c35e6b6db48259cfb154f64a5afac.png)
+![img](./FastAPI-img/262c35e6b6db48259cfb154f64a5afac.png)
 
 ### 13.1 什么是 RBAC？
 
@@ -2613,7 +2613,7 @@ server {
 
 若完成上述步骤后，访问服务发现页面打不开，报下面错误，可能是权限问题
 
-![img](/blogs/FastAPI-img/7f385d00278c4c819ad5ef3ff930f923.png)
+![img](./FastAPI-img/7f385d00278c4c819ad5ef3ff930f923.png)
 
 修改权限：
 
