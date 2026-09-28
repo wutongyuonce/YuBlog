@@ -356,12 +356,6 @@ export interface NavBarLayout {
    * - Use `'hr'` to insert a divider between components.
    */
   right: NavBarComponentType[]
-
-  /**
-   * Controls whether the 'internalNavs' and 'socialLinks' section are combined into
-   * a single navigation menu on mobile, managed through a hamburger icon.
-   */
-  mergeOnMobile: boolean
 }
 
 interface PostView {

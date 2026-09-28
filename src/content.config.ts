@@ -8,10 +8,6 @@ import {
   projectSchema,
 } from '~/content/schema'
 
-const home = defineCollection({
-  loader: glob({ base: './src/content/home', pattern: 'index.{md,mdx}' }),
-})
-
 const blogs = defineCollection({
   loader: glob({ base: './src/content/blogs', pattern: '**/*.{md,mdx}' }),
   schema: postSchema,
@@ -33,7 +29,6 @@ const about = defineCollection({
 })
 
 export const collections = {
-  home,
   blogs,
   projects,
   friends,

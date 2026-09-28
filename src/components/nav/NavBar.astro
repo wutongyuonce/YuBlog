@@ -22,13 +22,13 @@ const home = withBasePath('/')
           key === 'internalNavs' ? (
             <div class="nav-bar__pages">
               {internalNavs.map((item) => (
-                <NavItem type="internal" {item} mergeOnMobile={false} />
+                <NavItem type="internal" {item} />
               ))}
             </div>
           ) : key === 'socialLinks' ? (
             <div class="nav-bar__social">
               {socialLinks.map((item) => (
-                <NavItem type="social" {item} mergeOnMobile={false} />
+                <NavItem type="social" {item} />
               ))}
             </div>
           ) : key === 'searchButton' ? (

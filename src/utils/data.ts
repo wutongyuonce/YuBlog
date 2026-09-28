@@ -123,11 +123,6 @@ export interface GroupedFriendItem {
   data: FriendData
 }
 
-export interface GroupedFriendCategory {
-  category: string
-  items: GroupedFriendItem[]
-}
-
 /**
  * Retrieves date-sorted blog items with reading metadata for list views.
  */
@@ -200,31 +195,4 @@ export async function getSortedFriends(
 
       return a.data.name.localeCompare(b.data.name, 'zh-Hans-CN')
     })
-}
-
-/**
- * Retrieves all friends and groups them by category.
- */
-export async function getGroupedFriendsByCategory(
-  collection: 'friends'
-): Promise<GroupedFriendCategory[]> {
-  const items = await getSortedFriends(collection)
-
-  return items.reduce<GroupedFriendCategory[]>((groups, item) => {
-    const existingGroup = groups.find(
-      (group) => group.category === item.data.category
-    )
-
-    if (existingGroup) {
-      existingGroup.items.push(item)
-      return groups
-    }
-
-    groups.push({
-      category: item.data.category,
-      items: [item],
-    })
-
-    return groups
-  }, [])
 }

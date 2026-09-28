@@ -86,7 +86,6 @@ export const UI: Ui = {
   navBarLayout: {
     left: ['internalNavs'],
     right: ['socialLinks', 'hr', 'searchButton', 'themeButton'],
-    mergeOnMobile: false,
   },
   postView: {
     postMetaStyle: 'minimal',

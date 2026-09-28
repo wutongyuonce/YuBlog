@@ -81,7 +81,6 @@ body {
   }
 
   #search-results,
-  #nav-panel,
   #toc-sidebar > ul {
     scrollbar-width: none;
   }
