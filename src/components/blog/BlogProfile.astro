@@ -19,13 +19,14 @@ const wordCountValue = wordCountUnit
 >
   <ProgressStats />
   <a class="blog-profile__identity" href={withBasePath('/about/')}>
-    <h2 id="blog-profile-name">梧桐雨</h2>
+    <div class="blog-profile__heading">
+      <h2 id="blog-profile-name">梧桐雨</h2>
+      <span class="blog-profile__mbti">INTJ</span>
+    </div>
     <span class="blog-profile__avatar" aria-hidden="true">
       <img src={withBasePath('/avatar.webp')} width="48" height="48" alt="" />
     </span>
-    <p>
-      INTJ <span aria-hidden="true">·</span> Unwavering to the end
-    </p>
+    <p class="blog-profile__motto">Unwavering to the end</p>
   </a>
   <a class="blog-profile__rss" href={withBasePath('/rss.xml')}>
     <span>订阅 RSS</span>

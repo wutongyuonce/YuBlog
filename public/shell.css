@@ -578,7 +578,7 @@ html.dark .blog-profile {
   grid-template-columns: minmax(0, 1fr) 50px;
   grid-template-rows: auto auto;
   align-items: center;
-  gap: 1px 12px;
+  gap: 3px 12px;
   padding-top: 10px;
   color: inherit;
   text-decoration: none;
@@ -601,6 +601,13 @@ html.dark .blog-profile {
   border-radius: 50%;
   object-fit: cover;
 }
+.blog-profile__heading {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  grid-column: 1;
+}
 .blog-profile h2 {
   width: fit-content;
   max-width: 100%;
@@ -613,15 +620,19 @@ html.dark .blog-profile {
   background: linear-gradient(currentColor, currentColor) left bottom / 0 1px
     no-repeat;
 }
-.blog-profile p {
+.blog-profile__mbti {
+  flex: none;
+  font-size: 0.75rem;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  color: var(--profile-muted);
+}
+.blog-profile__motto {
   grid-column: 1;
   margin: 0;
   font-size: 0.75rem;
-  line-height: 1.6;
+  line-height: 1.35;
   color: var(--profile-muted);
-}
-.blog-profile p span {
-  margin-inline: 0.3em;
 }
 .blog-profile__identity:is(:hover, :focus-visible) h2 {
   background-size: 100% 1px;
