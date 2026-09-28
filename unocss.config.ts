@@ -108,8 +108,10 @@ export default defineConfig({
     ...navIcons,
     ...socialIcons,
     ...projectIcons,
+    'i-simple-icons-x',
     'i-simple-icons-instagram',
     'i-simple-icons-bilibili',
+    'i-simple-icons-xiaohongshu',
 
     /* BaseLayout */
     'focus:not-sr-only',

@@ -49,7 +49,7 @@ GitHub does not render `<video>` in Markdown, so this is an 8-second GIF. Click 
 | `/blogs/[slug]/` | Post. Click the right TOC button to show or hide the outline. |
 | `/rss.xml` | RSS. |
 
-Nav: `WutongRain's Blog`, Home / Tags / Archive / Projects / About / Friends, then GitHub, X, Instagram, Bilibili, Xiaohongshu, search, theme. The current page is bold.
+Nav: `WutongRain's Blog`, Home / Tags / Archive / Projects / About / Friends, then the GitHub repo link, search, and theme. The current page is bold. X, Instagram, Bilibili, Xiaohongshu, and the personal GitHub profile are on the About page.
 
 Home, tags, archive, projects, about, and friends share `BlogIndexLayout` and the sidebar. Post pages use a separate layout.
 
@@ -65,7 +65,7 @@ Home, tags, archive, projects, about, and friends share `BlogIndexLayout` and th
 | `src/content/blogs/_title-images/` | List and title-block images (shared by all posts) |
 | `src/content/blogs/<name>-img/` | In-article images, referenced as `./<name>-img/file.png` |
 | `src/content/about/<tab>/` | About-tab images |
-| `src/config.ts` | Site, nav, socials, TOC / search flags |
+| `src/config.ts` | Site, nav, navbar GitHub, TOC / search flags. Personal socials are on the default About tab. |
 
 Edit page copy and data with `blog-content-publisher-skill/SKILL.md` (one page at a time). Architecture and seams: `docs/项目解析.md`.
 
@@ -130,7 +130,7 @@ docs/             architecture, Astro notes, SEO tutorial
 
 Fork it and turn it into your own site. You can point an AI at this README and the docs.
 
-1. Fork / clone, then edit `SITE` (URL, title, description, author, language) and `UI` (nav labels, social links) in `src/config.ts`.
+1. Fork / clone, then edit `SITE` (URL, title, description, author, language) and `UI` (nav labels, navbar GitHub) in `src/config.ts`. Personal socials are in `src/content/about/about.md`.
 2. Swap content before touching layout:
    - Posts: `src/content/blogs/`, body images `src/content/blogs/<name>-img/`, title images `src/content/blogs/_title-images/`
    - About: `src/content/about/`, images `src/content/about/<tab>/`
@@ -149,7 +149,7 @@ Field contract: `src/content/schema.ts`.
 The skill lives at `blog-content-publisher-skill/SKILL.md`.
 
 - Put it in your agent’s skills directory.
-- Say which page to change, e.g. new post, edit Use, add a friend link, change nav socials. The agent should match the page table first, then edit files.
+- Say which page to change, e.g. new post, edit Use, add a friend link, change the navbar GitHub link, or edit About socials. The agent should match the page table first, then edit files.
 - It edits Markdown / JSON / `SITE` and `UI` in `src/config.ts`. Keep `draft: true` unless you asked to publish. Do not push unless you asked to deploy.
 - Do not use this skill for structure, CSS, or pagination logic — use `docs/项目解析.md`.
 

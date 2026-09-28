@@ -9,7 +9,7 @@ order: 0
 
 这个博客是我的工作台：技术向写系统、模型和工程，工具向写自己真正用过的东西... 
 
-欢迎交友 / 聊天：
+欢迎交友 / 聊天：<a href="https://github.com/wutongyuonce" rel="me"><span class="about-social__icon i-uil-github-alt" aria-hidden="true"></span>GitHub</a>、<a href="https://x.com/Yu2002964143523" rel="me"><span class="about-social__icon i-simple-icons-x" aria-hidden="true"></span>X</a>、<a href="https://www.instagram.com/wutongyu0730" rel="me"><span class="about-social__icon i-simple-icons-instagram" aria-hidden="true"></span>Instagram</a>、<a href="https://space.bilibili.com/521627597" rel="me"><span class="about-social__icon i-simple-icons-bilibili" aria-hidden="true"></span>Bilibili</a>、<a href="https://www.xiaohongshu.com/user/profile/64842572000000001f005e63" rel="me"><span class="about-social__icon i-simple-icons-xiaohongshu" aria-hidden="true"></span>小红书</a>
 
 - 微信：Zhang05once（请说明添加理由）
 - 邮件：18896680730@163.com

@@ -51,7 +51,7 @@ GitHub 不支持在 Markdown 里内嵌 `<video>`，所以这里放 8 秒动图�
 | `/blogs/[slug]/` | 文章详情。点击右侧 TOC 按钮显示目录，再点隐藏。 |
 | `/rss.xml` | RSS。 |
 
-顶栏：`WutongRain's Blog`、首页 / 标签 / 归档 / 项目 / 关于 / 友链，右侧 GitHub、X、Instagram、B 站、小红书、搜索、主题。当前页加粗。
+顶栏：`WutongRain's Blog`、首页 / 标签 / 归档 / 项目 / 关于 / 友链，右侧只留 GitHub（本仓库）、搜索、主题。当前页加粗。X、Instagram、B 站、小红书和个人 GitHub 在关于页。
 
 首页、标签、归档、项目、关于、友链共用 `BlogIndexLayout` 和右栏。文章详情单独排版。
 
@@ -66,7 +66,7 @@ GitHub 不支持在 Markdown 里内嵌 `<video>`，所以这里放 8 秒动图�
 | `src/content/blogs/_title-images/` | 列表与标题块配图（全部文章共用） |
 | `src/content/blogs/<名>-img/` | 正文配图，Markdown 写 `./<名>-img/文件.png` |
 | `src/content/about/<tab>/` | 关于页各栏配图 |
-| `src/config.ts` | 站点信息、导航、社交、TOC / 搜索开关。 |
+| `src/config.ts` | 站点信息、导航、顶栏 GitHub、TOC / 搜索开关。个人社交在关于页默认栏。 |
 
 改各页文案和数据，按 `blog-content-publisher-skill/SKILL.md`（按页面分）。架构和 seam 见 `docs/项目解析.md`。
 
@@ -131,7 +131,7 @@ docs/             项目解析（架构）、图片管线指南、Astro 语法�
 
 欢迎 fork 之后改成自己的站，可以让 AI 阅读下文和文档进行改造。
 
-1. Fork / clone，改 `src/config.ts` 的 `SITE`（网址、标题、描述、作者、语言）和 `UI`（导航文案、社交链接）。
+1. Fork / clone，改 `src/config.ts` 的 `SITE`（网址、标题、描述、作者、语言）和 `UI`（导航文案、顶栏 GitHub）。个人社交在 `src/content/about/about.md`。
 2. 换内容，不要先动布局：
    - 文章：`src/content/blogs/`，正文图 `src/content/blogs/<名>-img/`，标题图 `src/content/blogs/_title-images/`
    - 关于：`src/content/about/`，图 `src/content/about/<栏>/`
@@ -150,7 +150,7 @@ docs/             项目解析（架构）、图片管线指南、Astro 语法�
 仓库里是 `blog-content-publisher-skill/SKILL.md`。
 
 - 放到 Agent 的 skills 目录
-- 直接说要改哪一页即可，例如：发博客、改 Use、加友链、改顶栏社交。Agent 应先对表再动文件。
+- 直接说要改哪一页即可，例如：发博客、改 Use、加友链、改顶栏 GitHub、改关于页社交。Agent 应先对表再动文件。
 - 它会改 Markdown / JSON / `src/config.ts` 里的站点信息；用户没说发布就保持 `draft: true`；没说部署就不要 push。
 - 改结构、CSS、分页算法时不要走这个 skill，用 `docs/项目解析.md`。
 

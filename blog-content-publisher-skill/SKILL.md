@@ -2,8 +2,8 @@
 name: blog-content-publisher
 description: >
   维护 YuBlog（Wutong-Yu Astro 站）所有可改内容。按页面改：首页文章与配图、标签/归档所依赖的文章元数据、
-  项目 JSON、关于页 intro/Use/Hobby/Soul、友链 JSON、顶栏导航与社交、友链申请模板文案。
-  触发：发博客、改文章、改封面、改 titleImage、改分类、改关于、改 Use、改 Hobby、改友链、改项目、改导航、改社交链接、改名片站名。
+  项目 JSON、关于页 intro/Use/Hobby/Soul 与个人社交、友链 JSON、顶栏导航与顶栏 GitHub、友链申请模板文案。
+  触发：发博客、改文章、改封面、改 titleImage、改分类、改关于、改 Use、改 Hobby、改友链、改项目、改导航、改顶栏 GitHub、改关于页社交、改名片站名。
   不要用来做布局/CSS 重构；那些看 docs/项目解析.md。
 ---
 
@@ -23,7 +23,8 @@ description: >
 | 项目卡片 | 项目 | `src/content/projects/data.json` |
 | 介绍、Use、Hobby、Soul、关于页加一栏 | 关于 `/about/` | `src/content/about/` |
 | 友链增删改、申请模板里的站名/链接 | 友链 | `data.json` 或 `FriendsApplyPanel.astro` 的 `friendInfo` |
-| 顶栏页面名、社交图标 | 全站顶栏 | `src/config.ts` 的 `UI` |
+| 顶栏页面名、顶栏 GitHub | 全站顶栏 | `src/config.ts` 的 `UI` |
+| 关于页个人社交（名字、链接、图标） | 关于默认栏 | `src/content/about/about.md` |
 | 站点标题、域名 | 全站 SEO | `src/config.ts` 的 `SITE` |
 
 布局、右栏结构、`shell.css` 不是本 skill。用户要改「看起来的结构」时停，指向 `docs/项目解析.md`。
@@ -165,10 +166,12 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --frie
 `src/config.ts`：
 
 - 页面链接：`UI.internalNavs`（path / title / text）
-- 社交：`UI.socialLinks`（link / title / icon）
+- 顶栏 GitHub：`UI.socialLinks`，只留本仓库链接。右侧不再插 `hr`，和搜索、主题连在一起。
 - 站点名、描述、域名：`SITE`
 
-新社交图标若顶栏空白：把 `i-simple-icons-xxx` 加进 `unocss.config.ts` 的 `safelist`。
+个人社交不在 `socialLinks`。改 `src/content/about/about.md` 里「欢迎交友 / 聊天：」那一行。那里的 GitHub 指向个人主页，不要加仓库名。
+
+图标类名构建后若空白：把 `i-simple-icons-xxx` 加进 `unocss.config.ts` 的 `safelist`。关于页图标尺寸在 `public/shell.css` 的 `.about-social__icon`，本 skill 不改 CSS。
 
 ---
 

@@ -1047,6 +1047,12 @@ html.dark
 .about-panel {
   min-width: 0;
 }
+.about-panel .about-social__icon {
+  width: 1em;
+  height: 1em;
+  margin-inline-end: 0.28em;
+  vertical-align: -0.12em;
+}
 .about-panel[hidden] {
   display: none;
 }

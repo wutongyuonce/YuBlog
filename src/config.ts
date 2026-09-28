@@ -58,34 +58,10 @@ export const UI: Ui = {
       displayMode: 'alwaysIcon',
       icon: 'i-uil-github-alt',
     },
-    {
-      link: 'https://x.com/Yu2002964143523',
-      title: 'X',
-      displayMode: 'alwaysIcon',
-      icon: 'i-simple-icons-x',
-    },
-    {
-      link: 'https://www.instagram.com/wutongyu0730',
-      title: 'Instagram',
-      displayMode: 'alwaysIcon',
-      icon: 'i-simple-icons-instagram',
-    },
-    {
-      link: 'https://space.bilibili.com/521627597',
-      title: 'Bilibili',
-      displayMode: 'alwaysIcon',
-      icon: 'i-simple-icons-bilibili',
-    },
-    {
-      link: 'https://www.xiaohongshu.com/user/profile/64842572000000001f005e63',
-      title: 'Xiaohongshu',
-      displayMode: 'alwaysIcon',
-      icon: 'i-simple-icons-xiaohongshu',
-    },
   ],
   navBarLayout: {
     left: ['internalNavs'],
-    right: ['socialLinks', 'hr', 'searchButton', 'themeButton'],
+    right: ['socialLinks', 'searchButton', 'themeButton'],
   },
   postView: {
     postMetaStyle: 'minimal',
