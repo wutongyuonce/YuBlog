@@ -8,7 +8,6 @@
 
 <script>
   import { sizeCanvasForViewport } from '~/utils/canvas-size.js'
-  import { getDotGrid } from '~/utils/dot-grid.js'
   import { createReducedMotionGate } from '~/utils/reduced-motion.js'
 
   class BgDotElement extends HTMLElement {
@@ -22,7 +21,11 @@
 
     static readonly SCALE = 200
     static readonly LENGTH = 10
+    static readonly SPACING = 15
     static readonly FPS = 20
+    // 大屏按面积放大间距，把点数压到约 8000。这是目标，不是硬上限：
+    // 边缘补点后 1080p / 4K 会略超，再精确校准只少几百点，不值得单独一层。
+    static readonly MAX_POINTS = 8000
     // 按透明度分档批量描边，避免逐点 beginPath / stroke。
     static readonly ALPHA_BUCKETS = 6
 
@@ -85,11 +88,20 @@
       const height = window.innerHeight
       const points: { x: number; y: number; opacity: number }[] = []
 
-      const { spacing, columns, rows } = getDotGrid(width, height)
-      for (let column = 0; column < columns; column++) {
-        const x = (column - 0.5) * spacing
-        for (let row = 0; row < rows; row++) {
-          const y = (row - 0.5) * spacing
+      const columns = Math.ceil(
+        (width + BgDotElement.SPACING) / BgDotElement.SPACING
+      )
+      const rows = Math.ceil(
+        (height + BgDotElement.SPACING) / BgDotElement.SPACING
+      )
+      const spacing = Math.max(
+        BgDotElement.SPACING,
+        BgDotElement.SPACING *
+          Math.sqrt((columns * rows) / BgDotElement.MAX_POINTS)
+      )
+
+      for (let x = -spacing / 2; x < width + spacing; x += spacing) {
+        for (let y = -spacing / 2; y < height + spacing; y += spacing) {
           points.push({ x, y, opacity: Math.random() * 0.5 + 0.5 })
         }
       }
