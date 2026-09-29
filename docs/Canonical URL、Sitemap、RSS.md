@@ -136,9 +136,11 @@ Head 里挂上总目录：
 
 ### 本站怎么做
 
-**没有**用 `@astrojs/rss`。实现是 `src/pages/rss.xml.js`：读已发布文章（生产环境不含 `draft`），自己拼 RSS 2.0。
+使用官方 `@astrojs/rss` 输出 RSS 2.0 全文源，入口仍是 `src/pages/rss.xml.js`。沿用生产草稿过滤和日期排序，每篇保留标题、日期、摘要、原 GUID 与链接，并新增 `content:encoded`。
 
-当前输出：channel 的 title / link / description；item 的 title / link / guid / pubDate / 可选 description。链接用 `SITE.website + /blogs/<id>/`。特殊字符走 `escapeXml`。
+正文通过 Astro 的 `render(post)` 和 Container 渲染，复用现有 Markdown 插件与图片管线；`src/utils/rss-content.js` 将结果转换成阅读器可用的 HTML：图片和链接改成绝对地址，代码保留换行，公式以 LaTeX 源码显示，去掉脚本、样式和交互控件。文末保留「阅读原文」。全文不截断、不限制篇数，也不额外复制封面。
+
+`src/utils/rss-feed.js` 负责官方包的字段装配、稳定 GUID、语言和 Atom self 链接。文章配置 redirect 时，条目 link 可以指向外站，但 GUID 和正文地址基准仍是本站文章 URL。任意文章转换失败会使生成失败，不会静默降回摘要。
 
 名片「订阅 RSS」和 Head 都指向 `/rss.xml`：
 
@@ -153,21 +155,11 @@ Head 里挂上总目录：
 
 自己检查：开发服务器打开 `http://127.0.0.1:4321/rss.xml`，应是 XML 而不是 HTML。
 
-### 要不要换成 Astro 官方 `@astrojs/rss`？
+### 官方包负责什么
 
-**不必换。现在够用。**
+`@astrojs/rss` 负责 XML 序列化，正文渲染和图片地址适配由本站负责。它不是在 Astro integrations 中开启就能自动生成全文的插件。具体行为、模块边界和验证记录见 [RSS 全文支持 SPEC](./RSS%20全文支持%20SPEC.md)。
 
-个人站订阅按钮需要的是：稳定链接、标题、日期、摘要、草稿不进源。这些已经有。官方包会帮你生成更标准的 XML（例如 `atom:link`、统一转义），还能选附上全文 HTML。那是「更完整」，不是「现在不能用」。
-
-缺的、以后若要补的：
-
-1. `atom:link rel="self"` 指向 `https://www.wutongyu.site/rss.xml`
-2. `language`（`zh-CN`）
-3. 若希望阅读器内读完全文：`content:encoded`
-
-补这三项可以继续改 `rss.xml.js`，也可以那时再引入 `@astrojs/rss`。在「订阅能用」已经成立时，为完整性换依赖，收益不大。
-
-**不要**在 RSS 里放相对路径 `/blogs/foo/`：Feedly 不知道你的域名。
+全文表示正文信息完整，不代表阅读器复制博客主题或执行客户端组件。当前覆盖仓库的 Markdown 内容；Container 是实验 API，升级 Astro 时必须重跑产物测试。图片使用部署资源，离线缓存由阅读器决定。
 
 ## 5. 绝对路径和相对路径
 
@@ -196,7 +188,7 @@ Head 里挂上总目录：
 2. 记住：站外地址必须是 `https://...`。
 3. 本站三处：`Head.astro`（canonical + 挂 sitemap/RSS）、`@astrojs/sitemap`、`src/pages/rss.xml.js`。
 4. 改域名只动 `SITE.website`。
-5. 想让订阅源带全文或 `atom:link` 时，再改 RSS 或换官方包；不是现在的阻塞项。
+5. `pnpm build` 后运行 `pnpm test:built-markdown`，核对全文、稳定 GUID、代码和图片产物。
 
 ```text
 SITE.website
