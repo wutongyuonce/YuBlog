@@ -30,7 +30,9 @@ function remarkImageWidth() {
       node.data = {
         ...node.data,
         hProperties: {
-          ...node.data?.hProperties,
+          ...(
+            node.data as { hProperties?: Record<string, unknown> } | undefined
+          )?.hProperties,
           width: Number(match[1]),
         },
       }

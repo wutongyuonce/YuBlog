@@ -15,6 +15,7 @@
     "test": "node --test",
     "test:blog-browser": "node --test test/blog-browser.test.mjs",
     "test:built-pagination": "node --test scripts/verify-blog-pagination.mjs",
+    "test:built-markdown": "node --test scripts/verify-markdown-pipeline.mjs",
     "test:blog-sidebar": "node --test test/blog-sidebar.test.mjs",
     "test:rss-feed": "node --test test/rss-feed.test.mjs",
     "test:blog-tags": "node --test test/blog-tag-filter.test.mjs",
@@ -38,8 +39,8 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
-    "@astrojs/markdown-remark": "^6.3.8",
-    "@astrojs/mdx": "^4.3.7",
+    "@astrojs/markdown-remark": "^7.3.1",
+    "@astrojs/mdx": "^8.0.2",
     "@astrojs/sitemap": "^3.6.0",
     "@eslint/js": "^10.0.1",
     "@expressive-code/plugin-collapsible-sections": "^0.44.0",
@@ -52,7 +53,7 @@
     "@typescript-eslint/parser": "^8.70.1",
     "@unocss/astro": "66.10.5",
     "@unocss/reset": "66.10.5",
-    "astro": "^5.14.4",
+    "astro": "^7.3.5",
     "astro-expressive-code": "^0.44.0",
     "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
@@ -82,6 +83,6 @@
     "vfile": "^6.0.3"
   },
   "engines": {
-    "node": "18.20.8 || ^20.9.0 || ^22.0.0 || ^24.0.0"
+    "node": ">=22.12.0"
   }
 }
