@@ -1,6 +1,6 @@
 # RSS 全文支持 SPEC 与实现设计
 
-状态：**已实现并通过本地验证，待独立 code review**。日期：2026-09-30。分支：`codex/rss-full-content`，基于与 `origin/main` 一致的 `f423c06`。
+状态：**已实现并通过本地验证，独立 code review 未发现可执行问题**。日期：2026-09-30。分支：`codex/rss-full-content`，基于与 `origin/main` 一致的 `f423c06`。
 
 本文件是后续实现和验收的唯一功能契约。[选型调研](./RSS%20全文支持调研.md)保留背景与来源；实现机制如需调整，应同步修改本文、代码和测试，不维护两份互相竞争的设计。
 
@@ -195,6 +195,7 @@ GET /rss.xml
 - `pnpm test:built-markdown`：4/4 通过，逐篇核对 feed 与文章 canonical 集合、代码、公式和站外地址，386 个不同的本地图片产物存在；`pnpm test:built-pagination`：1/1 通过。
 - 临时坏文章的生产构建非零退出，日志包含文章 ID 和缺失 TeX annotation 的原因；同一临时文章改为草稿后生产构建成功且 feed 无该条目。临时文件已移除，随后重新完成正常构建。
 - 安装时有仓库原有的 `eslint-plugin-jsx-a11y@6.10.2` 与 ESLint 10 peer 范围提示，两者版本未被本变更调整；lint 实际通过。Pagefind 保留原有中文词干提示，索引生成成功。
-- 未进行真实阅读器验证，未运行托管 CI，未部署或发布。独立 GPT-6 Sol 高推理强度 code review 在实现提交后单独启动；不能将“已发起审查”写作“审查通过”。
+- 独立 GPT-6 Sol 高推理强度 code review 已完成，对 `f423c06...bfcbee2` 未发现可执行 finding。审查方重新通过生产构建、RSS 专项 8/8、Markdown 产物 4/4、分页 1/1，并逐块核对全部 42 篇文章的代码行和空行；没有重跑全量测试、format、lint、check。
+- 未进行真实阅读器验证；本地交付时未运行托管 CI，未部署或发布。托管 CI 以 PR checks 为准，AI 审查不替代仓库要求的人类 approval。
 
 一手参考：[Astro 全文 RSS](https://docs.astro.build/en/recipes/rss/#including-full-post-content)、[Container API（实验）](https://docs.astro.build/en/reference/container-reference/)、[官方 RSS 源码](https://github.com/withastro/astro/blob/main/packages/astro-rss/src/index.ts)、[HAST sanitizer](https://github.com/syntax-tree/hast-util-sanitize)。正文与 code/公式结构依据当前仓库源码及已有构建产物核对；这些结构的升级兼容由产物回归检查承担。
