@@ -16,3 +16,45 @@ test('RSS XML text escapes ampersands and markup characters', () => {
     'A &amp; B &lt;title&gt; &quot;quoted&quot;'
   )
 })
+
+test('official serialization preserves identity separately from redirect and round-trips full HTML', async () => {
+  const { createRssXml } = await import('../src/utils/rss-feed.js')
+  const { XMLParser, XMLValidator } = await import('fast-xml-parser')
+  const options = {
+    site: { title: 'A & B', description: '<介绍>', lang: 'zh-CN' },
+    homeUrl: 'https://example.com/notes/',
+    feedUrl: 'https://example.com/notes/rss.xml',
+    items: [
+      {
+        title: '标题 <&> "]]>',
+        description: '摘要 & <简介>',
+        pubDate: new Date('2026-09-01T00:00:00Z'),
+        link: 'https://external.example/post?x=1&y=2',
+        guid: 'https://example.com/notes/blogs/canonical/',
+        content: '<p>开始 &amp; &lt; &gt; ]]> 结束</p>',
+      },
+    ],
+  }
+  const xml = await createRssXml(options)
+  assert.equal(XMLValidator.validate(xml), true)
+  const { rss } = new XMLParser({ ignoreAttributes: false }).parse(xml)
+  assert.equal(
+    rss['@_xmlns:content'],
+    'http://purl.org/rss/1.0/modules/content/'
+  )
+  assert.equal(rss.channel.title, options.site.title)
+  assert.equal(rss.channel.link, options.homeUrl)
+  assert.equal(rss.channel.language, 'zh-CN')
+  assert.equal(rss.channel['atom:link']['@_href'], options.feedUrl)
+  const item = rss.channel.item
+  assert.equal(item.guid['#text'], options.items[0].guid)
+  assert.equal(item.guid['@_isPermaLink'], 'true')
+  for (const field of ['title', 'description', 'link'])
+    assert.equal(item[field], options.items[0][field])
+  assert.equal(item.pubDate, options.items[0].pubDate.toUTCString())
+  assert.equal(item['content:encoded'], options.items[0].content)
+
+  const empty = await createRssXml({ ...options, items: [] })
+  assert.equal(XMLValidator.validate(empty), true)
+  assert.equal(new XMLParser().parse(empty).rss.channel.item, undefined)
+})

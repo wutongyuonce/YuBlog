@@ -1,6 +1,6 @@
 # RSS 全文支持 SPEC 与实现设计
 
-状态：**设计已确定，功能尚未实现**。日期：2026-09-30。分支：`codex/rss-full-content`，基于与 `origin/main` 一致的 `f423c06`。
+状态：**已实现并通过本地验证，待独立 code review**。日期：2026-09-30。分支：`codex/rss-full-content`，基于与 `origin/main` 一致的 `f423c06`。
 
 本文件是后续实现和验收的唯一功能契约。[选型调研](./RSS%20全文支持调研.md)保留背景与来源；实现机制如需调整，应同步修改本文、代码和测试，不维护两份互相竞争的设计。
 
@@ -24,7 +24,7 @@
 
 ## 2. 背景、事实与目标
 
-当前 `src/pages/rss.xml.js` 手工拼接 XML，只输出标题、链接、GUID、日期和可选摘要。全文订阅缺失，读者必须打开原网页。
+变更前 `src/pages/rss.xml.js` 手工拼接 XML，只输出标题、链接、GUID、日期和可选摘要。此次改为官方包生成全文订阅，读者可以直接在阅读器阅读正文。
 
 当前仓库有 42 篇 Markdown 文章，源文件合计约 1.93 MB；没有博客 MDX 文件。Astro 本地安装版本为 `7.3.5`。正文已经由 `astro.config.ts` 和 `plugins/index.ts` 统一处理本地图片、CJK 强调、代码、数学公式、提示框和指令。文章页通过 `render(post)` 获取 `Content`。
 
@@ -77,6 +77,7 @@
 | 普通代码块 / Expressive Code | 转成基础 `pre > code`，保留代码文本、缩进、逻辑行与空行，保留已有文件名/标题文字；移除复制按钮和行号装饰 |
 | 行内 / 块级公式 | 从 KaTeX 的 `annotation[encoding="application/x-tex"]` 读取源码，分别输出 `code` / `pre > code`；公式只出现一次，不输出重复的 MathML/视觉子树，不引入公式图片服务。识别为 KaTeX 但没有源码时明确失败 |
 | Mermaid | 以代码块保留图表源码；本站当前就是此类代码块，不新增图表渲染器 |
+| 任务列表 | 复选框转为 `[x]` / `[ ]` 文本，保留完成状态，不输出可交互表单 |
 | 折叠内容 | 展开为普通内容，保留摘要标题和隐藏区文字；不能只保留折叠标题 |
 | 嵌入媒体 | 当前正文无此类控件，不新增播放器或 URL 提取适配；清洗去掉不可执行的嵌入，保留已有说明/普通链接，读者可通过文末原文入口访问 |
 | 封面、导航、侧栏、页脚 | 不属于正文；不复制进 feed，不额外调用封面图片生成流程 |
@@ -134,15 +135,15 @@ GET /rss.xml
   → @astrojs/rss 序列化 → Response
 ```
 
-以下是待实施设计，不表示当前代码已经提供这些接口。
+以下接口已实现；本文件描述当前有效实现。
 
 | 规则 / 状态 / 资源 | 唯一属主 | Interface / seam | 调用方与证据 |
 | --- | --- | --- | --- |
 | R1：文章筛选与排序 | 现有 `src/utils/data.ts` | `getFilteredPosts()`、`getSortedPosts()` | endpoint 直接复用，不再写过滤/排序 |
 | R2、R4：base、逐段编码 | 现有 `src/utils/path.ts`、`src/utils/rss-feed.js` 各管自己的路径操作 | `withBasePath()`、`encodePathSegments()` | endpoint 沿用原表达式生成一次 articleUrl |
 | Markdown 插件和源图片解析 | Astro 配置及内容 API | `render(post)` 的 `Content` | endpoint 用公共 Container 转字符串，不接管图片内部实现 |
-| R3–R5：RSS 正文表达、清洗与 URL 策略 | 新增 `src/utils/rss-content.js` | `toRssHtml(html, articleUrl): string`，同步纯转换；错误抛出 | endpoint 唯一生产 caller；小型 HTML fixture 测试 |
-| R2、R6：字段映射、GUID、self、语言 | 现有 `src/utils/rss-feed.js` | 新增 `createRssXml({ site, homeUrl, feedUrl, items }): Promise<string>` | endpoint 提供已准备数据；真实 XML 序列化测试 |
+| R3–R5：RSS 正文表达、清洗与 URL 策略 | `src/utils/rss-content.js` | `toRssHtml(html, articleUrl): string`，同步纯转换；错误抛出 | endpoint 唯一生产 caller；小型 HTML fixture 测试 |
+| R2、R6：字段映射、GUID、self、语言 | 现有 `src/utils/rss-feed.js` | `createRssXml({ site, homeUrl, feedUrl, items }): Promise<string>` | endpoint 提供已准备数据；真实 XML 序列化测试 |
 | XML 格式及 content 编码 | 官方 `@astrojs/rss` | `getRssString()` | `createRssXml()` 只装配官方参数和必要 customData |
 | R7、R8：处理顺序、错误上下文、调用内 Container 生命周期 | 现有 `src/pages/rss.xml.js` | `GET()` | Astro 静态生成/开发请求；生产构建及失败验证 |
 
@@ -151,16 +152,16 @@ GET /rss.xml
 ### 7.1 最小实现机制
 
 1. 依赖新增 `@astrojs/rss`；正文采用 `hast-util-from-html` 解析 fragment，局部遍历转换，`hast-util-sanitize` 清洗，`hast-util-to-html` 输出。复用已安装的 `unist-util-visit` 和已有 HAST 经验，不添加 unified processor 框架或第二套 Markdown parser。
-2. `from-html/to-html` 虽已存在于锁文件的传递依赖，直接 import 后必须列为直接依赖；`hast-util-sanitize` 当前未安装。实际安装版本由实现时与 Astro/Node 兼容的版本及锁文件确定，不能依赖碰巧被 hoist 的包。
+2. 直接声明 `@astrojs/rss@4.0.19`、`hast-util-from-html@2.0.3`、`hast-util-to-html@9.0.5`、`hast-util-sanitize@5.0.2`；XML 测试使用直接开发依赖 `fast-xml-parser@5.11.1`。精确依赖图由锁文件固定，不依赖传递依赖被 hoist。
 3. sanitizer 配置只允许第 4 节所需的基础内容元素及属性，并采用明确协议范围。代码、公式和地址的转换放在同一个正文工具，使用局部小函数，不建立插件注册表或抽象适配器类。不为当前未使用的媒体播放器编写专用转换。
 4. `rss-feed.js` 保留路径编码与 customData 仍需使用的 `escapeXml`；将现有手写 channel/item 模板删除，改用官方 `getRssString()`。关闭官方自动追加尾斜杠，使用本站已准备的文章/首页 URL，避免改写外部 redirect。
 5. endpoint 仅负责集合、URL、Container 生命周期和顺序编排。只渲染 `Content`，不调用 `RenderPost.astro`、不读取已生成页面、不添加 postbuild feed 覆写流程。
 
-预期生产代码仅修改两个已有 RSS 文件并新增一个正文工具，另修改依赖/锁文件。测试复用 `test/rss-feed.test.mjs`，新增一个正文工具测试文件，在既有 `scripts/verify-markdown-pipeline.mjs` 中补产物检查；已有 CI 会运行这些入口，不增加独立 CI job。实现若需要更多模块，必须说明新增复杂度对应哪项义务。
+生产代码仅修改两个已有 RSS 文件并新增一个正文工具，另修改依赖/锁文件。测试复用 `test/rss-feed.test.mjs`，新增一个正文工具测试文件，在既有 `scripts/verify-markdown-pipeline.mjs` 中补产物检查；已有 CI 会运行这些入口，不增加独立 CI job。没有新增 CI job、构建后覆写流程或通用插件框架。
 
 ## 8. 验收与测试映射
 
-不通过测试数量证明完整；每条义务在最直接的接口验证。测试使用 `node:test` 和小 fixture，不引入测试框架。XML 验证使用正式 XML parser；若选择官方包使用的 `fast-xml-parser`，将其声明为直接开发依赖，不从包的内部路径导入。
+不通过测试数量证明完整；每条义务在最直接的接口验证。测试使用 `node:test` 和小 fixture，不引入测试框架。XML 验证使用已声明的 `fast-xml-parser`，不从包的内部路径导入。
 
 | 验收项 | 义务与属主 | 最直接的证据 |
 | --- | --- | --- |
@@ -179,22 +180,21 @@ GET /rss.xml
 
 消融要求：临时去掉 `content`、去掉地址绝对化、把代码行改成整体文本、让 GUID 回退 link 时，对应测试应失败。保留能表达这些义务的测试，不为每个修补位置新增一套重复 fixture。
 
-## 9. 实施顺序与验证门禁
+## 9. 验证门禁
 
-1. **先验证公共渲染链**：在真实 endpoint/生产构建中验证 `render()`、Container 和本地图片产物。通过前不扩大正文转换实现；不兼容时先修正设计，不能靠 Astro 私有函数或摘要回退交付。
-2. **实现身份兼容与最小正文转换**：官方序列化、GUID、self、绝对地址、代码和公式转换；同步 owner-level 测试。
-3. **接完整内容并验收**：所有文章、生产草稿和失败语义、构建产物检查；没有证据要求时不增加并发、缓存或额外配置。
-4. **同步文档与最终审查**：更新《Canonical URL、Sitemap、RSS》的实际行为，本文填写最终验证结果、删除已失效机制。原选型报告保持调研定位。
+项目检查沿用 `.github/workflows/ci.yml`：`pnpm install --frozen-lockfile`、`pnpm format`、`pnpm lint`、`pnpm test`、`pnpm check`、`pnpm build`、`pnpm test:built-pagination`、`pnpm test:built-markdown`。Astro、Expressive Code、RSS 或清洗依赖升级时，必须重新验证真实构建与正文转换，不能仅运行工具单测。
 
-实现完成后的项目检查沿用 `.github/workflows/ci.yml`：`pnpm install --frozen-lockfile`、`pnpm format`、`pnpm lint`、`pnpm test`、`pnpm check`、`pnpm build`、`pnpm test:built-pagination`、`pnpm test:built-markdown`。运行范围、任何失败和跳过必须如实记录，修复后只重跑相关失败及最终门禁所需检查。
+阅读器抽查至少看一篇带图片/代码的文章和一篇带公式的文章。若没有可用的阅读器访问条件，必须写明“未进行真实阅读器验证”，不能用浏览器显示 XML 代替兼容性结论，也不能声称所有阅读器兼容。
 
-阅读器抽查至少看一篇带图片/代码的文章和一篇带公式的文章，确认全文、链接和静态表达。若没有可用的阅读器访问条件，必须写明“未进行真实阅读器验证”，不能用浏览器显示 XML 代替兼容性结论，也不能声称所有阅读器兼容。
+## 10. 当前状态与验证结果
 
-## 10. 当前状态与证据
-
-- 已确认：最新 main 基线、现有 RSS/集合/路径/内容管线/CI；Grilling 所有产品决策按用户授权采用推荐项。
-- 已交付：新分支和本 SPEC；生产实现尚未修改，依赖尚未安装。
-- 待实施验证：Container 真实构建、图片产物、正文转换、XML 迁移、失败路径、完整项目检查和阅读器抽查。不存在待用户批准的设计决策，存在明确的技术验证门禁。
-- SPEC 阶段只需文档格式和 Git diff 检查；不能把此前已有 RSS 测试通过当成新增全文功能的验证结果。
+- 已实现：官方 RSS 序列化、稳定 GUID、原订阅入口、Atom self、全文转换、绝对地址、代码行还原、公式文本、清洗、失败上下文。生产代码为原 endpoint、原 RSS 工具和新增正文工具，没有额外服务、缓存或构建覆写。
+- `pnpm install --frozen-lockfile`、`pnpm format`、`pnpm lint` 通过；`pnpm check` 为 100 个文件、0 错误、0 警告、3 条提示。提示来自测试使用的 `fast-xml-parser` 的 `XMLValidator` 弃用标记；暂复用已依赖包的有效验证接口，没有仅为消除提示再加一个 validator 包。
+- `pnpm test`：71/71 通过，无跳过；其中 RSS 工具与正文专项测试为 8/8。四项受控消融均使对应测试失败：去掉全文、以 redirect 替代 GUID、留下相对地址、将代码行拼接。完成后均恢复生产实现。
+- 完整 `pnpm build` 通过，本地一次最终构建约 8.16 秒；`dist/rss.xml` 包含 42 条全文、2,854,101 字节。这些是当前内容的观测值，不是容量或性能承诺。
+- `pnpm test:built-markdown`：4/4 通过，逐篇核对 feed 与文章 canonical 集合、代码、公式和站外地址，386 个不同的本地图片产物存在；`pnpm test:built-pagination`：1/1 通过。
+- 临时坏文章的生产构建非零退出，日志包含文章 ID 和缺失 TeX annotation 的原因；同一临时文章改为草稿后生产构建成功且 feed 无该条目。临时文件已移除，随后重新完成正常构建。
+- 安装时有仓库原有的 `eslint-plugin-jsx-a11y@6.10.2` 与 ESLint 10 peer 范围提示，两者版本未被本变更调整；lint 实际通过。Pagefind 保留原有中文词干提示，索引生成成功。
+- 未进行真实阅读器验证，未运行托管 CI，未部署或发布。独立 GPT-6 Sol 高推理强度 code review 在实现提交后单独启动；不能将“已发起审查”写作“审查通过”。
 
 一手参考：[Astro 全文 RSS](https://docs.astro.build/en/recipes/rss/#including-full-post-content)、[Container API（实验）](https://docs.astro.build/en/reference/container-reference/)、[官方 RSS 源码](https://github.com/withastro/astro/blob/main/packages/astro-rss/src/index.ts)、[HAST sanitizer](https://github.com/syntax-tree/hast-util-sanitize)。正文与 code/公式结构依据当前仓库源码及已有构建产物核对；这些结构的升级兼容由产物回归检查承担。

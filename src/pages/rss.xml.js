@@ -1,39 +1,39 @@
+import { experimental_AstroContainer as AstroContainer } from 'astro/container'
+import { render } from 'astro:content'
+
 import { SITE } from '~/config'
 import { getFilteredPosts, getSortedPosts } from '~/utils/data'
 import { withBasePath } from '~/utils/path'
-import { encodePathSegments, escapeXml } from '~/utils/rss-feed.js'
+import { createRssXml, encodePathSegments } from '~/utils/rss-feed.js'
+import { toRssHtml } from '~/utils/rss-content.js'
 
 export async function GET() {
   const homeUrl = new URL(withBasePath('/'), SITE.website).href
+  const feedUrl = new URL(withBasePath('/rss.xml'), SITE.website).href
   const posts = getSortedPosts(await getFilteredPosts('blogs'))
-  const items = posts
-    .map((post) => {
-      const articlePath = encodePathSegments(`/blogs/${post.id}/`)
-      const articleUrl = new URL(withBasePath(articlePath), SITE.website).href
-      const link = post.data.redirect || articleUrl
-      const description = post.data.description
-        ? `<description>${escapeXml(post.data.description)}</description>`
-        : ''
-      return `<item>
-<title>${escapeXml(post.data.title)}</title>
-<link>${escapeXml(link)}</link>
-<guid>${escapeXml(articleUrl)}</guid>
-<pubDate>${post.data.pubDate.toUTCString()}</pubDate>
-${description}
-</item>`
-    })
-    .join('')
+  const container = await AstroContainer.create()
+  const items = []
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
-<channel>
-<title>${escapeXml(SITE.title)}</title>
-<link>${escapeXml(homeUrl)}</link>
-<description>${escapeXml(SITE.description)}</description>
-${items}
-</channel>
-</rss>`
+  for (const post of posts) {
+    const articlePath = encodePathSegments(`/blogs/${post.id}/`)
+    const articleUrl = new URL(withBasePath(articlePath), SITE.website).href
+    try {
+      const { Content } = await render(post)
+      const html = await container.renderToString(Content)
+      items.push({
+        title: post.data.title,
+        description: post.data.description,
+        pubDate: post.data.pubDate,
+        link: post.data.redirect || articleUrl,
+        guid: articleUrl,
+        content: toRssHtml(html, articleUrl),
+      })
+    } catch (cause) {
+      throw new Error(`RSS: failed to render article "${post.id}"`, { cause })
+    }
+  }
 
+  const xml = await createRssXml({ site: SITE, homeUrl, feedUrl, items })
   return new Response(xml, {
     headers: { 'Content-Type': 'application/rss+xml; charset=utf-8' },
   })
