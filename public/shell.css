@@ -304,8 +304,8 @@ header.nav-bar .nav-bar__indicator {
   background: var(--c-text);
   pointer-events: none;
   transition:
-    transform 220ms ease,
-    width 220ms ease;
+    transform 320ms ease,
+    width 320ms ease;
 }
 
 header.nav-bar .nav-bar__indicator:not([data-ready]) {
@@ -325,7 +325,7 @@ header.nav-bar .nav-bar__pages a {
   background: transparent;
   text-decoration: none;
   opacity: 1;
-  transition: color 220ms ease;
+  transition: color 320ms ease;
 }
 
 header.nav-bar .nav-bar__pages a:not([data-nav-current]):hover::before {
