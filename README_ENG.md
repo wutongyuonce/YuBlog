@@ -12,29 +12,25 @@
 
 ## Preview
 
-[![YuBlog demo](README-img/yublog-promo.gif)](https://github.com/wutongyuonce/YuBlog/blob/main/README-img/yublog-promo-4k.mp4)
-
-GitHub does not render `<video>` in Markdown, so this is an 8-second GIF. Click it, or [download the full 4K demo (30s, 55 MB)](https://github.com/wutongyuonce/YuBlog/blob/main/README-img/yublog-promo-4k.mp4).
-
 ### Home
 
-![image-20260918220616992](README-img/image-20260918220616992.png)
+![Home: article list, with the profile, recent posts and categories in the sidebar](README-img/home.png)
 
 ### Tags
 
-![PixPin_2026-09-18_22-07-23](README-img/PixPin_2026-09-18_22-07-23.png)
+![Tags: every tag, sortable by count or name](README-img/tags.png)
 
-### Archive
+### Archives
 
-![PixPin_2026-09-18_22-07-59](README-img/PixPin_2026-09-18_22-07-59.png)
+![Archives: every post on a year-by-year timeline](README-img/archives.png)
+
+### Projects
+
+![Projects: cards grouped by Agent / Personal / App / Frontend](README-img/projects.png)
 
 ### About
 
-![PixPin_2026-09-18_22-08-39](README-img/PixPin_2026-09-18_22-08-39.png)
-
-### Friends
-
-![image-20260918220924204](README-img/image-20260918220924204.png)
+![About: the About / Use / Hobby / Soul tabs](README-img/about.png)
 
 ## Pages
 

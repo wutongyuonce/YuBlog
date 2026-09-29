@@ -14,29 +14,25 @@
 
 ## 预览
 
-[![YuBlog 页面演示动图](README-img/yublog-promo.gif)](https://github.com/wutongyuonce/YuBlog/blob/main/README-img/yublog-promo-4k.mp4)
-
-GitHub 不支持在 Markdown 里内嵌 `<video>`，所以这里放 8 秒动图。点图或[下载完整 4K 演示（30 秒，55 MB）](https://github.com/wutongyuonce/YuBlog/blob/main/README-img/yublog-promo-4k.mp4)。
-
 ### 首页
 
-![image-20260918220616992](README-img/image-20260918220616992.png)
+![首页：文章列表，右栏是名片、近期文章与分类](README-img/home.png)
 
 ### 标签
 
-![PixPin_2026-09-18_22-07-23](README-img/PixPin_2026-09-18_22-07-23.png)
+![标签页：全部标签，可按数量或名称排序](README-img/tags.png)
 
 ### 归档
 
-![PixPin_2026-09-18_22-07-59](README-img/PixPin_2026-09-18_22-07-59.png)
+![归档页：全部文章按年份排成时间线](README-img/archives.png)
+
+### 项目
+
+![项目页：按 Agent / Personal / App / Frontend 分类的项目卡片](README-img/projects.png)
 
 ### 关于
 
-![PixPin_2026-09-18_22-08-39](README-img/PixPin_2026-09-18_22-08-39.png)
-
-### 友链
-
-![image-20260918220924204](README-img/image-20260918220924204.png)
+![关于页：About / Use / Hobby / Soul 四个标签](README-img/about.png)
 
 ## 页面
 
