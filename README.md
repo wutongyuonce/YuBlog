@@ -8,7 +8,7 @@
 [![Pagefind](https://img.shields.io/badge/Pagefind-search-4b32c3)](https://pagefind.app)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-*梧桐雨* 的个人站点：Astro 5 静态生成，黑白主题，文章浏览、标签分类、统一归档、项目展示、个人简介、友链信息。
+*梧桐雨* 的个人站点：Astro 7 静态生成，黑白主题，文章浏览、标签分类、统一归档、项目展示、个人简介、友链信息。
 
 线上地址：[https://www.wutongyu.site/](https://www.wutongyu.site/)
 
@@ -68,7 +68,7 @@
 
 ## 技术
 
-- Astro 5 + TypeScript，Markdown / MDX Content Collections
+- Astro 7 + TypeScript，Markdown / MDX Content Collections（保留 unified 的 Remark / Rehype 插件管线）
 - 内容图片走 Astro 图片管线：相对路径 + `|w` 宽度标记，自动 WebP、`srcset`、宽高与懒加载；`public/` 只放站点级资源
 - 文章标题字体构子集：只下载实际用到的字形（7.65 MB → 73 KiB）
 - 正文 Inter、代码 DM Mono 使用 `public/fonts/` 里的拉丁子集，不请求 Google Fonts
@@ -81,7 +81,7 @@
 
 ## 本地运行
 
-需要 Node.js `18.20.8` / `20.9+` / `22` / `24`，以及 `pnpm@12.6.0`。
+需要 Node.js `22.12+`（推荐与 CI 一致的 `24`），以及 `pnpm@12.6.0`。
 
 ```bash
 pnpm install
@@ -92,6 +92,7 @@ pnpm dev
 pnpm check                 # Astro 类型与内容检查
 pnpm build                 # 生产构建（含 Pagefind）
 pnpm test:built-pagination # 检查构建后的首页分页与无 JS 回退
+pnpm test:built-markdown   # 检查构建后图片、阅读时间和 Markdown 插件接线
 pnpm preview
 pnpm test                  # 运行全部单元测试
 pnpm test:blog-browser     # 分页与 URL

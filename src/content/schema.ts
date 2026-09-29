@@ -1,5 +1,5 @@
-import { z } from 'astro:content' // 导入 Zod 验证库
-import type { ImageMetadata } from 'astro'
+import { z } from 'astro/zod' // 导入与 Astro 同版本的 Zod 验证库
+import type { SchemaContext } from 'astro:content'
 
 /* =====================================================
    文章 Schema - 用于博客文章
@@ -8,12 +8,9 @@ import type { ImageMetadata } from 'astro'
 /**
  * Astro 注入的图片助手：把相对图片路径解析成 ImageMetadata。
  *
- * Astro 5 不再允许 `import { image } from 'astro:content'`，只能通过 schema 工厂
- * 函数的参数拿到，所以 postSchema 是一个函数而不是直接的 ZodObject。
+ * 图片助手只能从 schema 工厂函数的参数取得，不能从 `astro:content` 导入。
  */
-type ImageHelper = () => z.ZodType<ImageMetadata, z.ZodTypeDef, unknown>
-
-export const postSchema = ({ image }: { image: ImageHelper }) =>
+export const postSchema = ({ image }: SchemaContext) =>
   z
     .object({
       // 文章标题（必填，最多60字符）
@@ -117,7 +114,7 @@ export const postSchema = ({ image }: { image: ImageHelper }) =>
 
       // 重定向 URL
       redirect: z
-        .union([z.string().url('无效的 URL 格式。'), z.literal('')])
+        .union([z.url({ error: '无效的 URL 格式。' }), z.literal('')])
         .default('')
         .describe('设置重定向目标 URL。不需要时留空。'),
 
@@ -146,8 +143,7 @@ export const projectSchema = z.object({
 
   // 项目链接（必填）
   link: z
-    .string()
-    .url('无效的 URL 格式。') // 必须是有效的 URL
+    .url({ error: '无效的 URL 格式。' }) // 必须是有效的 URL
     .describe('**必填**。项目页面或仓库的链接。'),
 
   // 项目描述（必填）
@@ -186,8 +182,7 @@ export const friendSchema = z.object({
     .transform((value) => value.trim()),
 
   link: z
-    .string()
-    .url('无效的 URL 格式。')
+    .url({ error: '无效的 URL 格式。' })
     .describe('**必填**。友链站点地址。'),
 
   avatar: z

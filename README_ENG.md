@@ -8,7 +8,7 @@
 [![Pagefind](https://img.shields.io/badge/Pagefind-search-4b32c3)](https://pagefind.app)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-*WutongRain*’s personal site: Astro 5, static, black-and-white, built around article browsing, tag classification, unified archiving, project display, personal profile and friend link information.
+*WutongRain*’s personal site: Astro 7, static, black-and-white, built around article browsing, tag classification, unified archiving, project display, personal profile and friend link information.
 
 ## Preview
 
@@ -67,7 +67,7 @@ Edit page copy and data with `blog-content-publisher-skill/SKILL.md` (one page a
 
 ## Stack
 
-- Astro 5 + TypeScript, Markdown / MDX Content Collections
+- Astro 7 + TypeScript, Markdown / MDX Content Collections (retaining the unified Remark / Rehype plugin pipeline)
 - Content images go through Astro's image pipeline: relative paths plus a `|w` width marker, automatic WebP, `srcset`, dimensions and lazy loading; `public/` holds site-level assets only
 - Article title font is subset to the glyphs actually used (7.65 MB → 73 KiB)
 - Body font Inter and code font DM Mono are local Latin subsets in `public/fonts/`, not Google Fonts
@@ -80,7 +80,7 @@ Edit page copy and data with `blog-content-publisher-skill/SKILL.md` (one page a
 
 ## Run
 
-Node.js `18.20.8` / `20.9+` / `22` / `24`, and `pnpm@12.6.0`.
+Node.js `22.12+` (we recommend `24`, as used in CI), and `pnpm@12.6.0`.
 
 ```bash
 pnpm install
@@ -91,6 +91,7 @@ pnpm dev
 pnpm check                 # Astro type and content checks
 pnpm build                 # production build (includes Pagefind)
 pnpm test:built-pagination # check built pagination and the no-JS fallback
+pnpm test:built-markdown   # check images, reading metadata, and Markdown plugins in the build
 pnpm preview
 pnpm test                  # all unit tests
 pnpm test:blog-browser     # pagination and URLs
