@@ -11,6 +11,25 @@ assert.ok(
 const task = await taskSpace(spaceId)
 const page = task.page('p1')
 await page.goto('http://127.0.0.1:4322/')
+await page.mouse.click(100, 120)
+await page.hover('a[aria-label="文稿"]')
+
+// Hover opens the menu without moving focus into it; Escape must still close it.
+await page.keyboard.press('Escape')
+assert.equal(
+  await page.evaluate(
+    () => getComputedStyle(document.querySelector('#nav-menu-blogs')).display
+  ),
+  'none',
+  'Escape also dismisses a pointer-only menu'
+)
+assert.equal(
+  await page.evaluate(() =>
+    document.querySelector('a[aria-label="文稿"]').getAttribute('aria-expanded')
+  ),
+  'false'
+)
+await page.mouse.move(100, 120)
 await page.hover('a[aria-label="文稿"]')
 
 const visibleCategory = () =>

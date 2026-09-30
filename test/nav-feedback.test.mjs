@@ -5,6 +5,7 @@ import vm from 'node:vm'
 import ts from 'typescript'
 
 import { placeSlidingIndicator } from '../src/utils/sliding-indicator.js'
+import { isCurrentNav, normalizeNavPath } from '../src/utils/nav-path.js'
 
 const component = readFileSync(
   new URL('../src/components/nav/NavBar.astro', import.meta.url),
@@ -13,10 +14,7 @@ const component = readFileSync(
 const clientScript = component.match(/<script>([\s\S]*?)<\/script>/)?.[1]
 assert.ok(clientScript, 'NavBar must have a client script')
 const javascript = ts.transpileModule(
-  clientScript.replace(
-    /^\s*import \{ placeSlidingIndicator \} from '[^']+'\s*$/m,
-    ''
-  ),
+  clientScript.replace(/^\s*import\s+\{[^}]+\}\s+from\s+'[^']+'\s*$/gm, ''),
   {
     compilerOptions: {
       target: ts.ScriptTarget.ES2022,
@@ -88,6 +86,8 @@ function createNav() {
     HTMLAnchorElement: Anchor,
     queueMicrotask,
     placeSlidingIndicator,
+    isCurrentNav,
+    normalize: normalizeNavPath,
   })
   const prepare = (
     sourceElement,

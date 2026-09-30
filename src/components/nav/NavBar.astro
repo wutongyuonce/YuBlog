@@ -6,6 +6,7 @@ import NavDropdown from './NavDropdown.astro'
 import Divider from '~/components/base/Divider.astro'
 import { UI } from '~/config'
 import { withBasePath } from '~/utils/path'
+import { getNavSection } from '~/utils/nav-path.js'
 const { internalNavs, socialLinks, navBarLayout } = UI
 const home = withBasePath('/')
 ---
@@ -27,17 +28,16 @@ const home = withBasePath('/')
           key === 'internalNavs' ? (
             <div class="nav-bar__pages" transition:persist="nav-pages">
               <span class="nav-bar__indicator" aria-hidden="true" />
-              {internalNavs.map((item) =>
-                item.path === '/blogs' || item.path === '/interests' ? (
-                  <NavDropdown
-                    kind={item.path === '/blogs' ? 'blogs' : 'interests'}
-                  >
+              {internalNavs.map((item) => {
+                const kind = getNavSection(item.path)
+                return kind ? (
+                  <NavDropdown {kind}>
                     <NavItem type="internal" {item} />
                   </NavDropdown>
                 ) : (
                   <NavItem type="internal" {item} />
                 )
-              )}
+              })}
             </div>
           ) : key === 'socialLinks' ? (
             <div class="nav-bar__social">
@@ -60,8 +60,10 @@ const home = withBasePath('/')
 <script>
   import { placeSlidingIndicator } from '~/utils/sliding-indicator.js'
 
-  const normalize = (pathname: string) =>
-    pathname.endsWith('/') ? pathname : `${pathname}/`
+  import {
+    isCurrentNav,
+    normalizeNavPath as normalize,
+  } from '~/utils/nav-path.js'
 
   const pages = () => document.querySelector<HTMLElement>('.nav-bar__pages')
 
@@ -80,14 +82,8 @@ const home = withBasePath('/')
     const path = normalize(pathname)
     const home = homePath()
     return (
-      linksOf(nav).find((link) => {
-        const target = linkPath(link)
-        return (
-          target === path ||
-          ([`${home}blogs/`, `${home}interests/`].includes(target) &&
-            path.startsWith(target))
-        )
-      }) ?? null
+      linksOf(nav).find((link) => isCurrentNav(path, linkPath(link), home)) ??
+      null
     )
   }
 

@@ -30,6 +30,27 @@ const elements = (tree, predicate) => {
 }
 const hasClass = (node, name) => node.properties.className?.includes(name)
 
+test('section children have the correct parent selected before client scripts run', async () => {
+  const book = await load('interests/book/index.html')
+  for (const [page, href] of [
+    [blogs, '/blogs/'],
+    [article, '/blogs/'],
+    [interests, '/interests/'],
+    [book, '/interests/'],
+  ]) {
+    const current = elements(
+      page,
+      (node) =>
+        'dataNavLink' in node.properties &&
+        node.properties.ariaCurrent === 'page'
+    )
+    assert.deepEqual(
+      current.map((node) => node.properties.href),
+      [href]
+    )
+  }
+})
+
 test('friend recommendations are separate from exchanged links and the removed link is absent', () => {
   const friends = otherPages[3]
   const groups = elements(friends, (node) => hasClass(node, 'friends-group'))

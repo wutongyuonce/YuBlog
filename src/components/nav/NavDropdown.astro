@@ -182,10 +182,6 @@ const menuId = `nav-menu-${kind}`
             event.preventDefault()
             setOpen(true)
             panel.querySelector<HTMLAnchorElement>('a')?.focus()
-          } else if (event.key === 'Escape') {
-            event.preventDefault()
-            link.focus()
-            setOpen(false)
           }
         })
       })
@@ -196,6 +192,17 @@ const menuId = `nav-menu-${kind}`
       !event.target.closest('[data-nav-dropdown]')
     )
       closeDropdowns()
+  })
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return
+    const menu = document.querySelector<HTMLElement>(
+      '[data-nav-dropdown][data-open]'
+    )
+    if (!menu) return
+    event.preventDefault()
+    if (menu.contains(document.activeElement))
+      menu.querySelector<HTMLAnchorElement>('[data-nav-link]')?.focus()
+    closeDropdowns()
   })
   document.addEventListener('astro:before-preparation', closeDropdowns)
   document.addEventListener('astro:page-load', mountDropdowns)

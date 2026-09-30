@@ -44,7 +44,7 @@ export const AUTHOR_LINKS = [
 export const UI: Ui = {
   internalNavs: [
     {
-      path: '/blogs',
+      path: '/blogs/',
       title: '文稿',
       displayMode: 'alwaysText',
       text: '文稿',
@@ -62,7 +62,7 @@ export const UI: Ui = {
       text: '归档',
     },
     {
-      path: '/interests',
+      path: '/interests/',
       title: '拾趣',
       displayMode: 'alwaysText',
       text: '拾趣',
