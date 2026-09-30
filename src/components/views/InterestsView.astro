@@ -1,0 +1,67 @@
+---
+import { getCollection, render } from 'astro:content'
+import { withBasePath } from '~/utils/path'
+import PageHeading from '~/components/base/PageHeading.astro'
+import type { CollectionEntry } from 'astro:content'
+
+interface Props {
+  entry?: CollectionEntry<'interests'>
+}
+const { entry } = Astro.props
+const entries = entry
+  ? []
+  : (await getCollection('interests')).sort(
+      (a, b) => a.data.order - b.data.order
+    )
+const Content = entry ? (await render(entry)).Content : null
+---
+
+<div class="interests-page">
+  <PageHeading
+    title={entry ? entry.data.title : '拾趣'}
+    subtitle={
+      entry ? entry.data.description : '日常在用的东西，与闲暇时喜欢的故事。'
+    }
+  />
+  {entry && Content ? (
+    <article class="prose interests-page__content" data-interest={entry.id}>
+      <Content />
+    </article>
+  ) : (
+    <nav aria-label="拾趣分类" class="interests-page__index">
+      {entries.map(({ id, data }) => (
+        <a href={withBasePath(`/interests/${id}/`)}>
+          <span>{data.title}</span>
+          <small>{data.description}</small>
+        </a>
+      ))}
+    </nav>
+  )}
+</div>
+
+<style>
+  .interests-page__index,
+  .interests-page__content {
+    margin-top: 2rem;
+  }
+  .interests-page__index a {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--c-text) 10%, transparent);
+    color: inherit;
+    text-decoration: none;
+  }
+  .interests-page__index a:hover {
+    color: var(--accent);
+  }
+  .interests-page__index span {
+    min-width: 4rem;
+    font-size: 0.9375rem;
+  }
+  .interests-page__index small {
+    font-size: 0.8125rem;
+    color: color-mix(in srgb, var(--c-text) 55%, var(--c-bg));
+  }
+</style>

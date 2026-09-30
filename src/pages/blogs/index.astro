@@ -1,17 +1,13 @@
 ---
-title: 首页
-description: WutongRain 的技术文章与工具笔记
-bgType: dot
----
-
 import BaseLayout from '~/layouts/BaseLayout.astro'
 import BlogIndexLayout from '~/layouts/BlogIndexLayout.astro'
 import ListView from '~/components/views/ListView.astro'
+---
 
 <BaseLayout
-  title={frontmatter.title}
-  description={frontmatter.description}
-  bgType={frontmatter.bgType}
+  title="文稿"
+  description="梧桐雨的全部文稿，技术与日记"
+  bgType="dot"
 >
   <BlogIndexLayout>
     <ListView />

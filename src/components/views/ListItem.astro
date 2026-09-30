@@ -2,7 +2,7 @@
 import { Image } from 'astro:assets'
 import Link from '~/components/base/Link.astro'
 import { withBasePath } from '~/utils/path'
-import { serializeBlogQuery } from '~/utils/blog-browser.js'
+import { serializeBlogQuery, getBlogCategory } from '~/utils/blog-browser.js'
 import type { GroupedBlogItem } from '~/utils/data'
 interface Props {
   item: GroupedBlogItem
@@ -14,6 +14,7 @@ const {
 } = Astro.props
 const image = data.titleImage
 const alt = data.titleImageAlt
+const category = getBlogCategory(data.category)
 const href = data.redirect || withBasePath(`/blogs/${id}/`)
 ---
 
@@ -21,10 +22,10 @@ const href = data.redirect || withBasePath(`/blogs/${id}/`)
   <div>
     <div class="post-preview__meta">
       <a
-        data-blog-category={data.category}
-        href={`${withBasePath('/')}${serializeBlogQuery({ category: data.category, tags: [], page: 1 })}`}
+        data-blog-category={category}
+        href={`${withBasePath('/blogs/')}${serializeBlogQuery({ category, tags: [], page: 1 })}`}
       >
-        {data.category}
+        {category}
       </a>
       <span aria-hidden="true">·</span>
       <time datetime={data.pubDate.toISOString()}>

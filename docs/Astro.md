@@ -784,7 +784,7 @@ const result = <div class:active={condition}>内容</div>
 2. **布局**
 
    - `src/layouts/BaseLayout.astro`：Head、顶栏、背景、页脚
-   - `src/layouts/BlogIndexLayout.astro`：索引页主栏 + 右栏
+   - `src/layouts/BlogIndexLayout.astro`：导航页面的居中单栏容器
    - `src/layouts/StandardLayout.astro`：文章详情
 
 3. **Markdown 文章**

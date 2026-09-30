@@ -220,7 +220,6 @@ const specHeadings = generateToc(headings, minHeadingLevel, maxHeadingLevel)
     }
 
     #onResize = () => {
-      this.#syncHeaderOffset()
       if (window.matchMedia('(min-width: 1200px)').matches) this.#close()
     }
 
@@ -236,7 +235,6 @@ const specHeadings = generateToc(headings, minHeadingLevel, maxHeadingLevel)
       this.#panel = this.querySelector('.mobile-toc-control__panel')
       if (!this.#toggle || !this.#panel) return
 
-      this.#syncHeaderOffset()
       this.#toggle.addEventListener('click', this.#onToggle)
       this.#panel.addEventListener('click', this.#onPanelClick)
       document.addEventListener('click', this.#onDocumentClick)
@@ -252,15 +250,6 @@ const specHeadings = generateToc(headings, minHeadingLevel, maxHeadingLevel)
       window.removeEventListener('resize', this.#onResize)
     }
 
-    #syncHeaderOffset = () => {
-      const header = document.querySelector('[data-site-header]')
-      if (!(header instanceof HTMLElement)) return
-      document.documentElement.style.setProperty(
-        '--site-header-height',
-        `${header.getBoundingClientRect().height}px`
-      )
-    }
-
     #onToggle = () => {
       if (!this.#toggle || !this.#panel) return
       const expanded = this.#toggle.getAttribute('aria-expanded') === 'true'
@@ -271,6 +260,7 @@ const specHeadings = generateToc(headings, minHeadingLevel, maxHeadingLevel)
       if (!this.#toggle || !this.#panel) return
       this.#toggle.setAttribute('aria-expanded', 'true')
       this.#panel.hidden = false
+      this.dispatchEvent(new CustomEvent('toc-reveal', { bubbles: true }))
     }
 
     #close = () => {

@@ -3,6 +3,7 @@ import { defineCollection } from 'astro:content'
 
 import {
   aboutSchema,
+  interestSchema,
   friendSchema,
   postSchema,
   projectSchema,
@@ -28,7 +29,13 @@ const about = defineCollection({
   schema: aboutSchema,
 })
 
+const interests = defineCollection({
+  loader: glob({ base: './src/content/interests', pattern: '*.{md,mdx}' }),
+  schema: interestSchema,
+})
+
 export const collections = {
+  interests,
   blogs,
   projects,
   friends,

@@ -2,9 +2,11 @@
 import SearchSwitch from '~/components/widgets/SearchSwitch.astro'
 import ThemeSwitch from '~/components/widgets/ThemeSwitch.astro'
 import NavItem from './NavItem.astro'
+import NavDropdown from './NavDropdown.astro'
 import Divider from '~/components/base/Divider.astro'
 import { UI } from '~/config'
 import { withBasePath } from '~/utils/path'
+import { getNavSection } from '~/utils/nav-path.js'
 const { internalNavs, socialLinks, navBarLayout } = UI
 const home = withBasePath('/')
 ---
@@ -14,17 +16,28 @@ const home = withBasePath('/')
     {(['left', 'right'] as const).map((side) => (
       <div class={`nav-bar__group nav-bar__group--${side}`}>
         {side === 'left' && (
-          <a class="nav-bar__brand" href={home}>
-            WutongRain's Blog
+          <a
+            class="nav-bar__brand"
+            href={home}
+            aria-current={Astro.url.pathname === home ? 'page' : undefined}
+          >
+            梧桐雨的博客
           </a>
         )}
         {navBarLayout[side].map((key) =>
           key === 'internalNavs' ? (
             <div class="nav-bar__pages" transition:persist="nav-pages">
               <span class="nav-bar__indicator" aria-hidden="true" />
-              {internalNavs.map((item) => (
-                <NavItem type="internal" {item} />
-              ))}
+              {internalNavs.map((item) => {
+                const kind = getNavSection(item.path)
+                return kind ? (
+                  <NavDropdown {kind}>
+                    <NavItem type="internal" {item} />
+                  </NavDropdown>
+                ) : (
+                  <NavItem type="internal" {item} />
+                )
+              })}
             </div>
           ) : key === 'socialLinks' ? (
             <div class="nav-bar__social">
@@ -47,13 +60,15 @@ const home = withBasePath('/')
 <script>
   import { placeSlidingIndicator } from '~/utils/sliding-indicator.js'
 
-  const normalize = (pathname: string) =>
-    pathname.endsWith('/') ? pathname : `${pathname}/`
+  import {
+    isCurrentNav,
+    normalizeNavPath as normalize,
+  } from '~/utils/nav-path.js'
 
   const pages = () => document.querySelector<HTMLElement>('.nav-bar__pages')
 
   const linksOf = (nav: HTMLElement) =>
-    Array.from(nav.querySelectorAll<HTMLAnchorElement>('a'))
+    Array.from(nav.querySelectorAll<HTMLAnchorElement>('[data-nav-link]'))
 
   const linkPath = (link: HTMLAnchorElement) =>
     normalize(new URL(link.href).pathname)
@@ -63,26 +78,16 @@ const home = withBasePath('/')
     return brand ? linkPath(brand) : '/'
   }
 
-  const currentLink = (nav: HTMLElement) => {
-    const path = normalize(location.pathname)
+  const currentLink = (nav: HTMLElement, pathname = location.pathname) => {
+    const path = normalize(pathname)
     const home = homePath()
     return (
-      linksOf(nav).find((link) => {
-        const target = linkPath(link)
-        return (
-          target === path ||
-          (target === home && path.startsWith(`${home}blogs/`))
-        )
-      }) ?? null
+      linksOf(nav).find((link) => isCurrentNav(path, linkPath(link), home)) ??
+      null
     )
   }
 
-  /**
-   * The pill paints an opaque background, so the link under it has to flip its own
-   * color. That pairing is a visual fact, not a navigation fact: `aria-current`
-   * keeps naming the page the user is actually on, while `data-nav-current` names
-   * the item the pill is drawn on — which leads the page during a preview.
-   */
+  // aria-current names the loaded page; data-nav-current previews the destination.
   const markCurrent = (nav: HTMLElement, current: HTMLAnchorElement | null) => {
     linksOf(nav).forEach((link) => {
       if (link === current) link.setAttribute('aria-current', 'page')
@@ -101,15 +106,16 @@ const home = withBasePath('/')
   }
 
   let pendingLink: HTMLAnchorElement | null = null
-  /** Pathname when the preview started, to tell a landed load from a stale one. */
-  let pendingFrom: string | null = null
+  let pendingSignal: AbortSignal | null = null
+  /** Only this destination can finish the current request's preview. */
+  let pendingTo: string | null = null
 
   const placeIndicator = (animate: boolean) => {
     const nav = pages()
     if (!nav) return
     const indicator = nav.querySelector<HTMLElement>('.nav-bar__indicator')
     const current = currentLink(nav)
-    const target = pendingLink?.isConnected ? pendingLink : current
+    const target = pendingSignal ? pendingLink : current
     markCurrent(nav, current)
     markIndicatorTarget(nav, target)
     placeSlidingIndicator({ indicator, target, animate })
@@ -120,7 +126,7 @@ const home = withBasePath('/')
     if (!nav || nav.dataset.indicatorBound === 'true') return
     nav.dataset.indicatorBound = 'true'
     placeIndicator(false)
-    document.fonts?.ready.then(() => placeIndicator(Boolean(pendingLink)))
+    document.fonts?.ready.then(() => placeIndicator(Boolean(pendingSignal)))
   }
 
   if (!document.documentElement.dataset.navIndicatorListeners) {
@@ -130,21 +136,32 @@ const home = withBasePath('/')
     document.addEventListener('astro:before-preparation', (event) => {
       const nav = pages()
       const source = event.sourceElement
-      if (!(source instanceof HTMLAnchorElement) || !nav) return
-      const link = nav.contains(source)
-        ? source
-        : source.matches('a.nav-bar__brand')
-          ? linksOf(nav).find((item) => linkPath(item) === linkPath(source))
-          : null
-      if (!link || link === currentLink(nav)) return
+      if (!nav) return
+      const destination =
+        event.to instanceof URL
+          ? event.to.pathname
+          : source instanceof HTMLAnchorElement
+            ? new URL(source.href).pathname
+            : null
+      if (!destination) return
+      // All page links resolve to their top-level route, including article links
+      // outside the header. Only top-level button offsets position the pill.
+      const link = currentLink(nav, destination)
+      if (
+        (!link && normalize(destination) !== homePath()) ||
+        (link === currentLink(nav) && !pendingSignal)
+      )
+        return
 
       pendingLink = link
-      pendingFrom = normalize(location.pathname)
+      pendingSignal = event.signal
+      pendingTo = normalize(destination)
       placeIndicator(true)
       const rollback = () => {
-        if (pendingLink !== link) return
+        if (pendingSignal !== event.signal) return
         pendingLink = null
-        pendingFrom = null
+        pendingSignal = null
+        pendingTo = null
         placeIndicator(true)
       }
       event.signal.addEventListener('abort', rollback, { once: true })
@@ -152,21 +169,65 @@ const home = withBasePath('/')
         if (event.defaultPrevented || event.signal.aborted) rollback()
       })
     })
-    document.addEventListener('astro:page-load', () => {
+    const reconcileNavigation = () => {
       // Astro also fires this from window load and from a previous navigation's
       // completion. Those are not this navigation landing, so keep the preview
       // instead of snapping the pill back to the page the user is leaving.
-      if (pendingLink && normalize(location.pathname) === pendingFrom) {
+      if (pendingSignal && normalize(location.pathname) !== pendingTo) {
         placeIndicator(true)
         return
       }
       pendingLink = null
-      pendingFrom = null
+      pendingSignal = null
+      pendingTo = null
       placeIndicator(true)
-    })
+    }
+    document.addEventListener('astro:after-swap', reconcileNavigation)
+    document.addEventListener('astro:page-load', reconcileNavigation)
     window.addEventListener('resize', () =>
-      placeIndicator(Boolean(pendingLink))
+      placeIndicator(Boolean(pendingSignal))
     )
   }
   start()
+</script>
+
+<script>
+  import { updateNavVisibility } from '~/utils/nav-scroll.js'
+
+  let frame = 0
+  const header = () => document.querySelector<HTMLElement>('[data-site-header]')
+  const reveal = () => {
+    updateNavVisibility(window.scrollY, true)
+    header()?.removeAttribute('data-scroll-hidden')
+  }
+  const update = () => {
+    frame = 0
+    const nav = header()
+    if (!nav) return
+    const pinned = Boolean(
+      nav.querySelector(':focus-visible, [data-nav-dropdown][data-open]') ||
+      document.querySelector('#search-panel:not(.hidden)')
+    )
+    nav.toggleAttribute(
+      'data-scroll-hidden',
+      updateNavVisibility(window.scrollY, pinned)
+    )
+  }
+  if (!document.documentElement.dataset.navScrollBound) {
+    document.documentElement.dataset.navScrollBound = 'true'
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!frame) frame = requestAnimationFrame(update)
+      },
+      { passive: true }
+    )
+    document.addEventListener('focusin', (event) => {
+      if (event.target instanceof Node && header()?.contains(event.target))
+        reveal()
+    })
+    document.addEventListener('astro:before-preparation', reveal)
+    document.addEventListener('astro:page-load', reveal)
+  }
+  reveal()
 </script>

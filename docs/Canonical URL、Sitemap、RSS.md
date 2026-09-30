@@ -37,7 +37,7 @@ https://www.wutongyu.site/blogs/foo/?page=2
 ### 设计时要想清楚的
 
 - 官方地址要稳定：本站文章永远是 `/blogs/<slug>/`，带尾斜杠。
-- 筛选、分页、追踪参数**不要**写进 canonical。首页 `/?category=技术向` 的官方地址仍是 `/`。
+- 筛选、分页、追踪参数**不要**写进 canonical。文稿 `/blogs/?category=技术向` 和 `/blogs/#tech` 的官方地址仍是 `/blogs/`；旧首页筛选书签在客户端转到文稿页。
 - 全站一个生成点，避免有的页面忘了写。
 
 ### 本站怎么做
@@ -138,11 +138,11 @@ Head 里挂上总目录：
 
 使用官方 `@astrojs/rss` 输出 RSS 2.0 全文源，入口仍是 `src/pages/rss.xml.js`。沿用生产草稿过滤和日期排序，每篇保留标题、日期、摘要、原 GUID 与链接，并新增 `content:encoded`。
 
-正文通过 Astro 的 `render(post)` 和 Container 渲染，复用现有 Markdown 插件与图片管线；`src/utils/rss-content.js` 将结果转换成阅读器可用的 HTML：图片和链接改成绝对地址，代码保留换行，公式以 LaTeX 源码显示，去掉脚本、样式和交互控件。文末保留「阅读原文」。全文不截断、不限制篇数，也不额外复制封面。
+正文通过 Astro 的 `render(post)` 和 Container 渲染，复用现有 Markdown 插件与图片管线；`src/utils/rss-content.js` 将结果转换成阅读器可用的 HTML：图片和链接改成绝对地址，代码保留换行，公式以 LaTeX 源码显示，去掉脚本、样式和交互控件。文末保留「阅读原文」。全文不截断、不限制篇数，也不额外复制封面。新版首页、文稿分类、拾趣、友链不改变 feed 范围：只有博客集合进入 RSS；`search: false` 不等于不发布，因此日记占位文也会进入源。页面封面卡片、作者头像行、目录和主题不会进入正文 HTML。
 
 `src/utils/rss-feed.js` 负责官方包的字段装配、稳定 GUID、语言和 Atom self 链接。文章配置 redirect 时，条目 link 可以指向外站，但 GUID 和正文地址基准仍是本站文章 URL。任意文章转换失败会使生成失败，不会静默降回摘要。
 
-名片「订阅 RSS」和 Head 都指向 `/rss.xml`：
+首页「订阅 RSS」和 Head 都指向 `/rss.xml`：
 
 ```astro
 <link

@@ -2,7 +2,7 @@
 
 [English](README_ENG.md) · [项目解析](docs/项目解析.md) · [SEO](docs/Canonical%20URL、Sitemap、RSS.md) · [Astro](docs/Astro.md)
 
-[![Astro](https://img.shields.io/badge/Astro-5-ff5a03?logo=astro&logoColor=white)](https://astro.build)
+[![Astro](https://img.shields.io/badge/Astro-7-ff5a03?logo=astro&logoColor=white)](https://astro.build)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![UnoCSS](https://img.shields.io/badge/UnoCSS-66-656565?logo=unocss&logoColor=white)](https://unocss.dev)
 [![Pagefind](https://img.shields.io/badge/Pagefind-search-4b32c3)](https://pagefind.app)
@@ -12,68 +12,38 @@
 
 线上地址：[https://www.wutongyu.site/](https://www.wutongyu.site/)
 
-## 预览
+## 页面与内容
 
-### 首页
+| 路由 | 说明 | 内容源 |
+| :--- | :--- | :--- |
+| `/` | 作者、RSS、社交与最近五篇文稿；无文章分页和个人侧栏 | `BlogProfile`、`RecentWriting` |
+| `/blogs/` | 完整文稿，分类／标签筛选，每页七篇 | `src/content/blogs/**/*.{md,mdx}` |
+| `/blogs/#tech`、`#thought`、`#diary` | 技术、思考、日记分类；旧 query 仍可用 | `src/utils/blog-browser.js` |
+| `/tags/` | 标签目录和排序，多选 AND；选择后展示列表 | 文章 `tags` |
+| `/archives/` | 单条按年时间线，带分类徽标 | 文章 `pubDate`／`category` |
+| `/interests/`、`/interests/<id>/` | 拾趣入口与设备、动漫、电影、电视剧、游戏、书、Kpop 子页 | `src/content/interests/*.md` |
+| `/projects/` | 项目页头与分类网格 | `src/content/projects/data.json` |
+| `/about/` | 作者介绍；无子页标签，背景关闭 | `src/content/about/about.md` |
+| `/friends/` | 推荐／双向两组友链和交换模板 | `src/content/friends/data.json` |
+| `/blogs/<slug>/` | 标题、可选封面、正文；桌面常驻目录，窄屏浮动入口 | 文章集合 |
+| `/rss.xml` | 完整正文 RSS，保留摘要和文章身份，独立于页面布局 | `src/pages/rss.xml.js` |
 
-![首页：文章列表，右栏是名片、近期文章与分类](README-img/home.png)
+顶部品牌“梧桐雨的博客”返回首页。导航依次为文稿、标签、归档、拾趣、项目、关于、友链，工具为本仓库 GitHub、搜索、主题。文章属于文稿，拾趣子页属于拾趣；导航准备、取消和历史返回共用父级定位。首页个人社交来自 `AUTHOR_LINKS`，关于正文中的身份链接修改时需同步。
 
-### 标签
+全站内容以 620px 窄版心居中，桌面导航同宽、独立配置。首页作者／名言／统计／社交居中；目录在版心外靠近正文，最大宽 208px、高度最多半屏、垂直居中。标签、拾趣、项目、关于共用宋体页头，正文与 Markdown 内部标题使用普通字体。首页、标签、归档、文稿、拾趣及其子页使用点阵背景，项目保留 rose，关于关闭背景。
 
-![标签页：全部标签，可按数量或名称排序](README-img/tags.png)
+封面用 `titleImage`／`titleImageAlt`，源图位于 `src/content/blogs/_title-images/`；正文图位于文章所在目录或子目录，以相对路径引用，不能向上越级。拾趣图片位于 `src/content/interests/<id>/`。Soul 原文件保留为未展示内容。
 
-### 归档
-
-![归档页：全部文章按年份排成时间线](README-img/archives.png)
-
-### 项目
-
-![项目页：按 Agent / Personal / App / Frontend 分类的项目卡片](README-img/projects.png)
-
-### 关于
-
-![关于页：About / Use / Hobby / Soul 四个标签](README-img/about.png)
-
-## 页面
-
-| 路由 | 说明 |
-| :--- | :--- |
-| `/` | 首页。文章列表（分类、日期、阅读时间、标题、摘要、可选配图），七篇分页。右栏：名片、近期文章、分类。 |
-| `/tags/` | 标签页。标签可按数量或名称排序；多选为 AND。未选标签时不显示列表。 |
-| `/archives/` | 归档。按年份时间线列出全部文章。 |
-| `/projects/` | 项目。按分类网格展示，数据来自 JSON。 |
-| `/about/` | 关于。About / Use / Hobby / Soul 四个标签，默认 About。无背景特效。 |
-| `/friends/` | 友链。卡片列表 + 申请说明 + `friend.txt` 参考模板。 |
-| `/blogs/[slug]/` | 文章详情。点击右侧 TOC 按钮显示目录，再点隐藏。 |
-| `/rss.xml` | RSS。 |
-
-顶栏：`WutongRain's Blog`、首页 / 标签 / 归档 / 项目 / 关于 / 友链，右侧只留 GitHub（本仓库）、搜索、主题。当前页加粗。X、Instagram、B 站、小红书和个人 GitHub 在关于页。
-
-首页、标签、归档、项目、关于、友链共用 `BlogIndexLayout` 和右栏。文章详情单独排版。
-
-## 内容
-
-| 路径 | 用途 |
-| :--- | :--- |
-| `src/content/blogs/**/*.{md,mdx}` | 文章。`title`、`pubDate`、`category` 必填；`category` 为任意非空字符串。封面用 `titleImage: ./_title-images/...`。 |
-| `src/content/about/*.md` | 关于页。每个文件按 `title`、`order` 成为一个标签，`about.md` 默认第一项。`tab: false` 的文件不进标签栏。 |
-| `src/content/projects/data.json` | 项目卡片。 |
-| `src/content/friends/data.json` | 友链卡片。 |
-| `src/content/blogs/_title-images/` | 列表与标题块配图（全部文章共用） |
-| `src/content/blogs/<名>-img/` | 正文配图，Markdown 写 `./<名>-img/文件.png` |
-| `src/content/about/<tab>/` | 关于页各栏配图 |
-| `src/config.ts` | 站点信息、导航、顶栏 GitHub、TOC / 搜索开关。个人社交在关于页默认栏。 |
-
-改各页文案和数据，按 `blog-content-publisher-skill/SKILL.md`（按页面分）。架构和 seam 见 `docs/项目解析.md`。
+作者操作见 [内容发布 skill](blog-content-publisher-skill/SKILL.md)，图片写法见 [图片管线指南](docs/Astro图片管线指南.md)。重构行为契约见 [重构 SPEC](docs/博客重构%20SPEC.md)，模块权威与边界见 [项目解析](docs/项目解析.md)，全文订阅见 [RSS SPEC](docs/RSS%20全文支持%20SPEC.md)。
 
 ## 技术
 
 - Astro 7 + TypeScript，Markdown / MDX Content Collections（保留 unified 的 Remark / Rehype 插件管线）
 - 内容图片走 Astro 图片管线：相对路径 + `|w` 宽度标记，自动 WebP、`srcset`、宽高与懒加载；`public/` 只放站点级资源
-- 文章标题字体构子集：只下载实际用到的字形（7.65 MB → 73 KiB）
+- 文章标题字体构子集：只下载实际用到的字形（实际字形集合随内容更新）
 - 正文 Inter、代码 DM Mono 使用 `public/fonts/` 里的拉丁子集，不请求 Google Fonts
 - KaTeX 样式与字体本地打包（不依赖 CDN），产物只留 woff2
-- UnoCSS + `public/shell.css`（导航、右栏、归档、关于标签、分页等壳层样式集中一个属主）
+- UnoCSS + `public/shell.css`（导航、版心、首页、归档、分页等壳层样式集中一个属主）
 - Pagefind 只索引博客，且仅在打开搜索时加载
 - `astro-expressive-code` 代码块
 - 明暗主题、ClientRouter 转场
@@ -91,12 +61,12 @@ pnpm dev
 ```bash
 pnpm check                 # Astro 类型与内容检查
 pnpm build                 # 生产构建（含 Pagefind）
-pnpm test:built-pagination # 检查构建后的首页分页与无 JS 回退
+pnpm test:built-pagination # 检查文稿分页与无 JS 回退
+pnpm test:built-restructure # 检查内容迁移、菜单、友链与文章语义
 pnpm test:built-markdown   # 检查构建后图片、阅读时间和 Markdown 插件接线
 pnpm preview
 pnpm test                  # 运行全部单元测试
 pnpm test:blog-browser     # 分页与 URL
-pnpm test:blog-sidebar     # 右栏锁定阈值
 pnpm test:blog-tags        # 标签 AND 筛选
 pnpm test:blog-stats       # 名片统计
 pnpm test:recent-post-date # 近期文章日期
@@ -114,8 +84,8 @@ pnpm format
 
 ```text
 src/
-  components/     导航、右栏、列表、归档、关于、友链、TOC
-  content/        blogs / about / projects / friends
+  components/     导航、首页、列表、拾趣、关于、友链、TOC
+  content/        blogs / about / interests / projects / friends
   layouts/        BaseLayout、BlogIndexLayout、StandardLayout
   pages/          路由
   styles/         正文与 Markdown
@@ -126,29 +96,19 @@ docs/             项目解析（架构）、图片管线指南、Astro 语法�
 
 ## 个人二次开发
 
-欢迎 fork 之后改成自己的站，可以让 AI 阅读下文和文档进行改造。
-
-1. Fork / clone，改 `src/config.ts` 的 `SITE`（网址、标题、描述、作者、语言）和 `UI`（导航文案、顶栏 GitHub）。个人社交在 `src/content/about/about.md`。
-2. 换内容，不要先动布局：
-   - 文章：`src/content/blogs/`，正文图 `src/content/blogs/<名>-img/`，标题图 `src/content/blogs/_title-images/`
-   - 关于：`src/content/about/`，图 `src/content/about/<栏>/`
-   - 项目 / 友链：对应 `data.json`
-
-   内容图片都走 Astro 图片管线（自动 WebP、`srcset`、宽高、懒加载），用相对路径引用，不要再放进 `public/`。正文需要限制宽度时用 alt 后缀 `|w480`。约定见 `docs/Astro图片管线指南.md`。
-3. 换头像：`public/avatar.webp`。友链申请模板里的站名和链接在 `FriendsApplyPanel.astro` 的 `friendInfo`，和 `SITE` 不是同一处。
-4. 改版式、顶栏、右栏、归档线：先读 `docs/项目解析.md` 的权威表和 seam。壳层 CSS 只改 `public/shell.css`，不要只写在组件 `<style>` 里。
-5. 新索引页要带右栏：套 `BlogIndexLayout`，不要复制侧栏。
-6. 改完：`pnpm check`，需要时再 `pnpm build`。
-
-字段契约以 `src/content/schema.ts` 为准。
+1. 修改 `src/config.ts` 的 `SITE`、`UI`、`AUTHOR_LINKS`；品牌文字在 `NavBar`，作者名称和名言在 `BlogProfile`，关于正文的个人身份链接需一起同步。
+2. 按 [内容发布 skill](blog-content-publisher-skill/SKILL.md) 修改文章、项目、关于、拾趣或友链。字段以 `src/content/schema.ts` 为准，不先改页面结构。
+3. 更换 `public/avatar.webp`。交换模板信息在 `FriendsApplyPanel` 的 `friendInfo`，不随 `SITE` 自动同步。
+4. 调整页面结构前读 [项目解析](docs/项目解析.md)。索引页面复用 `BlogIndexLayout` 内容壳，不复制侧栏；同一选择器不要同时定义在全局和局部样式。
+5. 内容图片走 Astro 管线，站点资源留在 `public/`。新增或改图片必须构建校验；准备 PR 时运行全部必需检查和构建产物检查。
 
 ## Skill 怎么用
 
 仓库里是 `blog-content-publisher-skill/SKILL.md`。
 
 - 放到 Agent 的 skills 目录
-- 直接说要改哪一页即可，例如：发博客、改 Use、加友链、改顶栏 GitHub、改关于页社交。Agent 应先对表再动文件。
-- 它会改 Markdown / JSON / `src/config.ts` 里的站点信息；用户没说发布就保持 `draft: true`；没说部署就不要 push。
+- 直接说要改哪一页即可，例如：发博客、改设备、加友链、改顶栏 GitHub、改关于页社交。Agent 应先对表再动文件。
+- 它会改 Markdown / JSON / `src/config.ts` 里的站点信息；用户没说发布就保持 `draft: true`；没有明确授权就不要 commit、push 或部署。
 - 改结构、CSS、分页算法时不要走这个 skill，用 `docs/项目解析.md`。
 
 MIT

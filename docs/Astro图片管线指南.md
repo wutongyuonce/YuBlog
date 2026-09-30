@@ -13,9 +13,9 @@ src/content/blogs/
     算法 1（数组、链表）.md
     algo-img/                     组内共享正文图，必须在文章目录内
 
-src/content/about/
-  use.md  hobby.md
-  use/  hobby/                    关于页配图，与对应 md 同级
+src/content/interests/
+  device.md  book.md
+  device/  book/                  拾趣配图，与对应 md 同级
 ```
 
 `night-lantern.webp`、`yae-miko.webp` 暂无文章引用，保留为备用封面。
@@ -26,28 +26,30 @@ src/content/about/
 | :--- | :--- |
 | 正文图 | `![说明](./代码库搜索-img/file.png)` |
 | 组内共享图 | `![说明](./algo-img/file.png)` |
-| 限制宽度 | `![说明\|w353](./图.png)` |
+| 限制宽度 | `![说明\|w310](./图.png)` |
 | 顶层文章封面 | `titleImage: ./_title-images/foo.webp` |
 | 组内文章封面 | `titleImage: ../_title-images/foo.webp` |
-| 关于页配图 | `![说明\|w300](./use/file.png)` |
+| 拾趣配图 | `![说明\|w300](./device/file.png)` |
 
 有封面时同时写 `titleImageAlt`。
 
 ## 宽度
 
-`|w353` 只表示 353 像素，不接受百分比。正文列宽约 706px，半宽写 `|w353`。标记由 `plugins/remark-image-width.ts` 从 alt 剥离，转成图片节点的 `width`。
+`|w310` 只表示 310 像素，不接受百分比。桌面正文列宽 620px，半宽可写 `|w310`；窄屏按实际列宽限制。标记由 `plugins/remark-image-width.ts` 从 alt 剥离，转成图片节点的 `width`。
 
 必须用 `width`，不要用 CSS 限宽。管线按 `width` 生成 `srcset` 和 `sizes`；只写 CSS 时浏览器仍按原图宽度选图。不写标记时，管线按原图宽度出变体，显示上仍会被列宽限制。源图比目标宽度更宽时才需要标记；图本身已经更窄时不必写。
 
-## 三处渲染
+## 页面与 RSS 渲染
 
 | 位置 | 规则 |
 | :--- | :--- |
-| 文章封面 `PostHero` | `<Image width={706} priority>`。706 来自 `ARTICLE_COLUMN_WIDTH`，不要改成 `layout="full-width"`，否则 `sizes` 变成 `100vw`。 |
-| 列表卡片 `ListItem` | `widths={[274, 548, 822]}`，`sizes="(min-width: 1100px) 274px, (min-width: 768px) 37.5vw, 100vw"`。首页第一张用 `priority`，其余 `loading="lazy"`。 |
+| 文章封面 `PostHero` | `<Image width={620} priority>`。620 来自 `ARTICLE_COLUMN_WIDTH`，不要改成 `layout="full-width"`，否则 `sizes` 变成 `100vw`。 |
+| 列表卡片 `ListItem` | `widths={[274, 548, 822]}`，`sizes="(min-width: 1100px) 274px, (min-width: 768px) 37.5vw, 100vw"`。文稿列表第一项有图时用 `priority`（首页近期笔墨为纯文字），标签页图片保持懒加载，其余 `loading="lazy"`。 |
 | 分享图 `RenderPost` | `getImage()` 单独生成 1200px JPEG，再拼成绝对 URL。不要把封面原图直接放进 `og:image`。 |
 
-`titleImage` 用 schema 工厂里的 `image().optional()`。Astro 5 不能 `import { image } from 'astro:content'`。
+`titleImage` 用 schema 工厂提供的 `image().optional()`；不要从 `astro:content` 导入独立 `image`。文章页独立 h1 在封面之前，封面内的重复标题、描述、作者行只属于页面，不复制到 RSS。
+
+RSS endpoint 只渲染集合 `Content`，复用相同图片解析；`rss-content.js` 把图片 `src` 转为绝对 URL，去掉 `srcset`／`sizes`／懒加载等站点属性。feed 中引用的本地资源必须在 `dist/` 存在，`pnpm test:built-markdown` 验证完整文章与资源，不生成另一套图片。
 
 ## 硬规则
 
@@ -65,7 +67,7 @@ src/content/about/
 
 - 不改文章 URL 或 slug。
 - 不把图片优化理由用于改 `cssCodeSplit` 或 `inlineStylesheets`。
-- RSS 不含图片。`scripts/gen-og-cover.mjs` 只生成 `public/og/default.png`。
+- RSS 包含正文图片，不额外复制文章封面和页面布局。`scripts/gen-og-cover.mjs` 只生成 `public/og/default.png`。
 - 站点图标、头像、字体留在 `public/`。友链头像是远程 URL。
 
 模块归属见 `docs/项目解析.md` §4.8。作者步骤见 `blog-content-publisher-skill/SKILL.md`。

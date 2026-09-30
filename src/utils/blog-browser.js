@@ -2,6 +2,48 @@ import { matchesAllTags, normalizePostTags } from './blog-tag-filter.js'
 
 export const BLOG_PAGE_SIZE = 7
 
+export const BLOG_CATEGORIES = [
+  {
+    id: 'tech',
+    label: '技术',
+    sources: ['技术向', '工具向', '技术', '工具', 'tech'],
+  },
+  {
+    id: 'thought',
+    label: '思考',
+    sources: ['思考向', '思考', 'thought'],
+  },
+  {
+    id: 'diary',
+    label: '日记',
+    sources: ['日记', '日记向', 'diary'],
+  },
+]
+
+/** Preserve custom categories outside the explicit navigation groups.
+ * @param {string} category
+ */
+export function getBlogCategory(category) {
+  return (
+    BLOG_CATEGORIES.find(
+      (group) => group.label === category || group.sources.includes(category)
+    )?.label ?? category
+  )
+}
+
+/** Date-sorted published posts in; navigation shows at most four per group.
+ * @template {{data: {category: string, draft?: boolean}}} T
+ * @param {T[]} posts
+ */
+export function getCategoryPreviews(posts) {
+  return BLOG_CATEGORIES.map(({ id, label }) => {
+    const matches = posts.filter(
+      ({ data }) => getBlogCategory(data.category) === label
+    )
+    return { id, label, count: matches.length, posts: matches.slice(0, 4) }
+  })
+}
+
 /**
  * Blocking script for the list. The body is a string, not function.toString(),
  * so the bundler cannot rewrite it into a closure over other bindings.
@@ -15,7 +57,7 @@ export function blogFirstPaintBootSource(pageSize = BLOG_PAGE_SIZE) {
   }
   return `(() => {
     const params = new URLSearchParams(location.search)
-    const category = (params.get('category') ?? '').trim()
+    const category = ${JSON.stringify(BLOG_CATEGORIES.map(({ id }) => `#${id}`))}.includes(location.hash) || (params.get('category') ?? '').trim()
     const hasTag = params.getAll('tag').some((tag) => tag.trim())
     const root = '[data-blog-browser]:not([data-paged])'
     let page = 1
@@ -55,13 +97,15 @@ export function blogFirstPaintBootSource(pageSize = BLOG_PAGE_SIZE) {
 
 /** @typedef {{category: string, tags: string[], page: number}} BlogQuery */
 
-/** @param {string | URLSearchParams} search @returns {BlogQuery} */
-export function parseBlogQuery(search) {
+/** @param {string | URLSearchParams} search @param {string} [hash] @returns {BlogQuery} */
+export function parseBlogQuery(search, hash = '') {
   const params = new URLSearchParams(search)
   const value = params.get('page') ?? '1'
   const page = /^\d+$/.test(value) ? Number(value) : 1
   return {
-    category: (params.get('category') ?? '').trim(),
+    category:
+      BLOG_CATEGORIES.find(({ id }) => hash === `#${id}`)?.label ??
+      (params.get('category') ?? '').trim(),
     tags: normalizePostTags(params.getAll('tag')),
     page: Number.isSafeInteger(page) && page > 0 ? page : 1,
   }
@@ -70,11 +114,12 @@ export function parseBlogQuery(search) {
 /** @param {BlogQuery} query */
 export function serializeBlogQuery(query) {
   const params = new URLSearchParams()
-  if (query.category) params.set('category', query.category)
+  const group = BLOG_CATEGORIES.find(({ label }) => label === query.category)
+  if (query.category && !group) params.set('category', query.category)
   for (const tag of normalizePostTags(query.tags)) params.append('tag', tag)
   if (query.page > 1) params.set('page', String(query.page))
   const search = params.toString()
-  return search ? `?${search}` : ''
+  return (search ? `?${search}` : '') + (group ? `#${group.id}` : '')
 }
 
 /**
@@ -86,7 +131,10 @@ export function serializeBlogQuery(query) {
 export function selectBlogPage(posts, query) {
   const matches = posts.filter(
     ({ data }) =>
-      (!query.category || data.category === query.category) &&
+      (!query.category ||
+        data.category === query.category ||
+        (BLOG_CATEGORIES.some(({ label }) => label === query.category) &&
+          getBlogCategory(data.category) === query.category)) &&
       matchesAllTags(data.tags, query.tags)
   )
   const pageCount = Math.ceil(matches.length / BLOG_PAGE_SIZE)
@@ -97,20 +145,6 @@ export function selectBlogPage(posts, query) {
     pageCount,
     page,
   }
-}
-
-/** @param {{data: {category: string}}[]} posts */
-export function buildCategorySummary(posts) {
-  const counts = new Map()
-  for (const { data } of posts) {
-    counts.set(data.category, (counts.get(data.category) ?? 0) + 1)
-  }
-  return [...counts]
-    .map(([category, count]) => ({ category, count }))
-    .sort(
-      (a, b) =>
-        b.count - a.count || a.category.localeCompare(b.category, 'zh-CN')
-    )
 }
 
 /**

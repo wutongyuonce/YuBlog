@@ -6,6 +6,7 @@ description: 关于 WutongRain
 import BaseLayout from '~/layouts/BaseLayout.astro'
 import BlogIndexLayout from '~/layouts/BlogIndexLayout.astro'
 import AboutView from '~/components/views/AboutView.astro'
+import PageHeading from '~/components/base/PageHeading.astro'
 
 <BaseLayout
   title={frontmatter.title}
@@ -13,7 +14,12 @@ import AboutView from '~/components/views/AboutView.astro'
   bgType={false}
 >
   <BlogIndexLayout>
-    <h1 class="sr-only">{frontmatter.title}</h1>
+    <div class="overview-header">
+      <PageHeading
+        title={frontmatter.title}
+        subtitle="关于我，也关于这个博客。"
+      />
+    </div>
     <AboutView />
   </BlogIndexLayout>
 </BaseLayout>

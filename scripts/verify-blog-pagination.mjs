@@ -4,7 +4,7 @@ import test from 'node:test'
 import { BLOG_PAGE_SIZE } from '../src/utils/blog-browser.js'
 
 const html = await readFile(
-  new URL('../dist/index.html', import.meta.url),
+  new URL('../dist/blogs/index.html', import.meta.url),
   'utf8'
 )
 
@@ -19,7 +19,7 @@ test('initial HTML offers page-one navigation and an effective no-JS fallback', 
   const pagination = html.match(
     /<nav\b[^>]*\bdata-pagination\b[^>]*>[\s\S]*?<\/nav>/
   )?.[0]
-  assert.ok(pagination, 'the built home page must include pagination')
+  assert.ok(pagination, 'the built blogs page must include pagination')
   assert.doesNotMatch(
     pagination.slice(0, pagination.indexOf('>')),
     /\bhidden(?:\s|=|$)/

@@ -1,0 +1,38 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro'
+import BlogProfile from '~/components/blog/BlogProfile.astro'
+import RecentWriting from '~/components/home/RecentWriting.astro'
+import { withBasePath } from '~/utils/path'
+---
+
+<BaseLayout title="首页" description="梧桐雨的技术文章与日常笔墨" bgType="dot">
+  <div class="home-page" data-blog-home={withBasePath('/blogs/')}>
+    <h1 class="sr-only">梧桐雨的博客</h1>
+    <BlogProfile />
+    <RecentWriting />
+  </div>
+</BaseLayout>
+
+<script>
+  import { navigate } from 'astro:transitions/client'
+
+  const migrateListBookmark = () => {
+    const home = document.querySelector<HTMLElement>('[data-blog-home]')
+    const params = new URLSearchParams(location.search)
+    if (
+      home &&
+      !home.dataset.migrating &&
+      ['category', 'tag', 'page'].some((key) => params.has(key))
+    ) {
+      home.dataset.migrating = 'true'
+      void navigate(
+        `${home.dataset.blogHome}${location.search}${location.hash}`,
+        {
+          history: 'replace',
+        }
+      )
+    }
+  }
+  document.addEventListener('astro:page-load', migrateListBookmark)
+  migrateListBookmark()
+</script>

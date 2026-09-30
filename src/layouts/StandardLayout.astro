@@ -31,19 +31,14 @@ const {
     },
   ]}
 >
-  {hasHeroImage ? (
-    <slot name="hero" />
-  ) : (
-    <>
-      {title && <h1 class="page-title">{title}</h1>}
-      {subtitle && (
-        <p class={`${isArticle ? 'post-subtitle' : 'mt--8!'} op-50 italic`}>
-          {subtitle}
-        </p>
-      )}
-      <slot name="head" />
-    </>
+  {title && <h1 class="page-title">{title}</h1>}
+  {subtitle && !hasHeroImage && (
+    <p class={`${isArticle ? 'post-subtitle' : 'mt--8!'} op-50 italic`}>
+      {subtitle}
+    </p>
   )}
+  <slot name="head" />
+  {hasHeroImage && <slot name="hero" />}
 </header>
 {Astro.slots.has('article') && (
   <article

@@ -5,6 +5,7 @@ import vm from 'node:vm'
 import ts from 'typescript'
 
 import { placeSlidingIndicator } from '../src/utils/sliding-indicator.js'
+import { isCurrentNav, normalizeNavPath } from '../src/utils/nav-path.js'
 
 const component = readFileSync(
   new URL('../src/components/nav/NavBar.astro', import.meta.url),
@@ -13,10 +14,7 @@ const component = readFileSync(
 const clientScript = component.match(/<script>([\s\S]*?)<\/script>/)?.[1]
 assert.ok(clientScript, 'NavBar must have a client script')
 const javascript = ts.transpileModule(
-  clientScript.replace(
-    /^\s*import \{ placeSlidingIndicator \} from '[^']+'\s*$/m,
-    ''
-  ),
+  clientScript.replace(/^\s*import\s+\{[^}]+\}\s+from\s+'[^']+'\s*$/gm, ''),
   {
     compilerOptions: {
       target: ts.ScriptTarget.ES2022,
@@ -48,11 +46,12 @@ function createNav() {
       return selector === 'a.nav-bar__brand' && this.brand
     }
   }
-  const home = new Anchor('/', 2)
+  const home = new Anchor('/blogs/', 2)
   const brand = new Anchor('/', 0, true)
   const about = new Anchor('/about/', 220)
   const friends = new Anchor('/friends/', 274)
-  const links = [home, about, friends]
+  const interests = new Anchor('/interests/', 110)
+  const links = [home, interests, about, friends]
   const indicator = {
     style: {},
     dataset: {},
@@ -60,9 +59,14 @@ function createNav() {
       return {}
     },
   }
+  const submenuLinks = [
+    new Anchor('/interests/book/', 0),
+    new Anchor('/blogs/#thought', 0),
+    new Anchor('/blogs/an-article/', 0),
+  ]
   const nav = {
     dataset: {},
-    contains: (link) => links.includes(link),
+    contains: (link) => [...links, ...submenuLinks].includes(link),
     querySelector: () => indicator,
     querySelectorAll: () => links,
   }
@@ -73,7 +77,7 @@ function createNav() {
   document.querySelector = (selector) =>
     selector === '.nav-bar__pages' ? nav : brand
   const window = new EventTarget()
-  const location = { pathname: '/' }
+  const location = { pathname: '/blogs/' }
   vm.runInNewContext(javascript, {
     document,
     window,
@@ -82,15 +86,23 @@ function createNav() {
     HTMLAnchorElement: Anchor,
     queueMicrotask,
     placeSlidingIndicator,
+    isCurrentNav,
+    normalize: normalizeNavPath,
   })
-  const prepare = (sourceElement, signal = new AbortController().signal) => {
+  const prepare = (
+    sourceElement,
+    signal = new AbortController().signal,
+    to
+  ) => {
     const event = new Event('astro:before-preparation', { cancelable: true })
-    Object.assign(event, { sourceElement, signal })
+    Object.assign(event, { sourceElement, signal, to })
     document.dispatchEvent(event)
     return event
   }
   return {
     home,
+    interests,
+    submenuLinks,
     brand,
     about,
     friends,
@@ -106,7 +118,7 @@ function createNav() {
 test('intercepted navigation previews the target before the URL changes', async () => {
   const nav = createNav()
   nav.prepare(nav.about)
-  assert.equal(nav.location.pathname, '/')
+  assert.equal(nav.location.pathname, '/blogs/')
   assert.equal(nav.indicator.style.transform, 'translateX(220px)')
   // The pill leads, so the label colors must follow the pill; the ARIA state must not.
   assert.equal(nav.about.getAttribute('data-nav-current'), '')
@@ -135,7 +147,7 @@ test('a load that is not this navigation landing keeps the preview', async () =>
   // astro:page-load also fires from window load and from an earlier
   // navigation's completion, while the URL is still the page being left.
   nav.document.dispatchEvent(new Event('astro:page-load'))
-  assert.equal(nav.location.pathname, '/')
+  assert.equal(nav.location.pathname, '/blogs/')
   assert.equal(nav.indicator.style.transform, 'translateX(220px)')
   assert.equal(nav.about.getAttribute('data-nav-current'), '')
   assert.equal(nav.home.getAttribute('aria-current'), 'page')
@@ -175,28 +187,156 @@ test('a newer navigation wins and page-load reconciles history navigation', () =
   nav.location.pathname = '/friends/'
   nav.document.dispatchEvent(new Event('astro:page-load'))
   assert.equal(nav.friends.getAttribute('aria-current'), 'page')
-  nav.location.pathname = '/'
+  nav.location.pathname = '/blogs/'
   nav.document.dispatchEvent(new Event('astro:page-load'))
   assert.equal(nav.indicator.style.transform, 'translateX(2px)')
   assert.equal(nav.home.getAttribute('aria-current'), 'page')
 })
 
-test('the brand link previews Home while keeping the old aria-current', () => {
+test('the brand returns Home without falsely marking the manuscript link', () => {
   const nav = createNav()
   nav.location.pathname = '/about/'
   nav.document.dispatchEvent(new Event('astro:page-load'))
   nav.prepare(nav.brand)
-  assert.equal(nav.indicator.style.transform, 'translateX(2px)')
   assert.equal(nav.about.getAttribute('aria-current'), 'page')
   nav.location.pathname = '/'
   nav.document.dispatchEvent(new Event('astro:page-load'))
-  assert.equal(nav.home.getAttribute('aria-current'), 'page')
+  assert.equal(nav.home.getAttribute('aria-current'), null)
+  assert.equal(nav.about.getAttribute('aria-current'), null)
+  assert.equal(nav.indicator.style.width, '0px')
 })
 
-test('only top-bar links to another page get optimistic feedback', () => {
+test('article pages highlight manuscripts while the home has no top-level pill', () => {
+  const nav = createNav()
+  nav.location.pathname = '/blogs/an-article/'
+  nav.document.dispatchEvent(new Event('astro:page-load'))
+  assert.equal(nav.home.getAttribute('aria-current'), 'page')
+  nav.location.pathname = '/'
+  nav.document.dispatchEvent(new Event('astro:page-load'))
+  assert.equal(nav.home.getAttribute('aria-current'), null)
+  assert.equal(nav.indicator.style.width, '0px')
+})
+
+test('current routes and unknown destinations do not move the pill', () => {
   const nav = createNav()
   nav.prepare(nav.home)
   nav.prepare(new nav.home.constructor('/outside/', 400))
   assert.equal(nav.indicator.style.transform, 'translateX(2px)')
   assert.equal(nav.home.getAttribute('aria-current'), 'page')
+})
+
+test('independent interest pages keep the parent navigation selected', () => {
+  const nav = createNav()
+  nav.location.pathname = '/interests/kpop/'
+  nav.document.dispatchEvent(new Event('astro:page-load'))
+  assert.equal(nav.interests.getAttribute('aria-current'), 'page')
+  assert.equal(nav.interests.getAttribute('data-nav-current'), '')
+  assert.equal(nav.home.getAttribute('aria-current'), null)
+})
+
+test('interest subpage navigation keeps the pill on its top-level parent', () => {
+  const nav = createNav()
+  nav.location.pathname = '/interests/game/'
+  nav.document.dispatchEvent(new Event('astro:page-load'))
+  nav.prepare(nav.submenuLinks[0])
+  assert.equal(nav.indicator.style.transform, 'translateX(110px)')
+  assert.equal(nav.interests.getAttribute('data-nav-current'), '')
+  nav.location.pathname = '/interests/book/'
+  nav.document.dispatchEvent(new Event('astro:page-load'))
+  assert.equal(nav.indicator.style.transform, 'translateX(110px)')
+})
+
+test('manuscript categories and preview articles target the top-level manuscript pill', () => {
+  for (const index of [1, 2]) {
+    const nav = createNav()
+    nav.location.pathname = '/about/'
+    nav.document.dispatchEvent(new Event('astro:page-load'))
+    nav.prepare(nav.submenuLinks[index])
+    assert.equal(nav.indicator.style.transform, 'translateX(2px)')
+    assert.equal(nav.home.getAttribute('data-nav-current'), '')
+    assert.equal(nav.about.getAttribute('aria-current'), 'page')
+    nav.location.pathname = index === 1 ? '/blogs/' : '/blogs/an-article/'
+    nav.document.dispatchEvent(new Event('astro:page-load'))
+    assert.equal(nav.indicator.style.transform, 'translateX(2px)')
+    assert.equal(nav.home.getAttribute('aria-current'), 'page')
+  }
+})
+
+test('article links outside the header preview manuscripts before the page swaps', () => {
+  const nav = createNav()
+  nav.location.pathname = '/about/'
+  nav.document.dispatchEvent(new Event('astro:page-load'))
+  // Archive, tags and recent-writing links are not descendants of the header.
+  const article = new nav.home.constructor('/blogs/an-article/', 0)
+  nav.prepare(article)
+  assert.equal(nav.indicator.style.transform, 'translateX(2px)')
+  assert.equal(nav.home.getAttribute('data-nav-current'), '')
+  assert.equal(nav.about.getAttribute('aria-current'), 'page')
+  nav.location.pathname = '/blogs/an-article/'
+  nav.document.dispatchEvent(new Event('astro:page-load'))
+  assert.equal(nav.indicator.style.transform, 'translateX(2px)')
+  assert.equal(nav.home.getAttribute('aria-current'), 'page')
+})
+
+test('swapping to home reconciles the pill before the next page can paint', () => {
+  const nav = createNav()
+  nav.location.pathname = '/about/'
+  nav.document.dispatchEvent(new Event('astro:page-load'))
+  nav.location.pathname = '/'
+  nav.document.dispatchEvent(new Event('astro:after-swap'))
+  assert.equal(nav.indicator.style.width, '0px')
+  assert.equal(nav.about.getAttribute('data-nav-current'), null)
+})
+
+test('an older request cannot roll back a newer article under the same parent', () => {
+  const nav = createNav()
+  nav.location.pathname = '/about/'
+  nav.document.dispatchEvent(new Event('astro:page-load'))
+  const old = new AbortController()
+  nav.prepare(new nav.home.constructor('/blogs/first/', 0), old.signal)
+  nav.prepare(new nav.home.constructor('/blogs/second/', 0))
+  old.abort()
+  assert.equal(nav.indicator.style.transform, 'translateX(2px)')
+  assert.equal(nav.home.getAttribute('data-nav-current'), '')
+})
+
+test('history destinations also prepare the parent without a clicked anchor', () => {
+  const nav = createNav()
+  nav.prepare(
+    undefined,
+    new AbortController().signal,
+    new URL('https://example.test/friends/')
+  )
+  assert.equal(nav.indicator.style.transform, 'translateX(274px)')
+  assert.equal(nav.friends.getAttribute('data-nav-current'), '')
+  nav.location.pathname = '/friends/'
+  nav.document.dispatchEvent(new Event('astro:after-swap'))
+  assert.equal(nav.friends.getAttribute('aria-current'), 'page')
+})
+
+test('returning to the confirmed parent cancels an in-flight preview immediately', () => {
+  const nav = createNav()
+  const old = new AbortController()
+  nav.prepare(nav.about, old.signal)
+  nav.prepare(nav.home)
+  assert.equal(nav.indicator.style.transform, 'translateX(2px)')
+  old.abort()
+  assert.equal(nav.indicator.style.transform, 'translateX(2px)')
+})
+
+test('an older queued swap cannot finish the newer destination preview', () => {
+  const nav = createNav()
+  nav.prepare(nav.about)
+  nav.prepare(nav.friends)
+  // The earlier swap may already be queued when the newer preparation begins.
+  nav.location.pathname = '/about/'
+  nav.document.dispatchEvent(new Event('astro:after-swap'))
+  nav.document.dispatchEvent(new Event('astro:page-load'))
+  assert.equal(nav.about.getAttribute('aria-current'), 'page')
+  assert.equal(nav.friends.getAttribute('data-nav-current'), '')
+  assert.equal(nav.indicator.style.transform, 'translateX(274px)')
+
+  nav.location.pathname = '/friends/'
+  nav.document.dispatchEvent(new Event('astro:after-swap'))
+  assert.equal(nav.friends.getAttribute('aria-current'), 'page')
 })

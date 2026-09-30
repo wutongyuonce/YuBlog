@@ -1,12 +1,12 @@
 # RSS 全文支持 SPEC 与实现设计
 
-状态：**已实现并通过本地验证，独立 code review 未发现可执行问题**。日期：2026-09-30。分支：`codex/rss-full-content`，基于与 `origin/main` 一致的 `f423c06`。
+状态：**全文功能已合入 main，本次页面重构保留其契约**。同步日期：2026-10-01；页面结构契约见 [博客重构 SPEC](./博客重构%20SPEC.md)。
 
 本文件是后续实现和验收的唯一功能契约。[选型调研](./RSS%20全文支持调研.md)保留背景与来源；实现机制如需调整，应同步修改本文、代码和测试，不维护两份互相竞争的设计。
 
-## 1. Grilling 决策收敛
+## 1. 范围与设计取舍
 
-用户已明确授权“不用问我，直接全部采用推荐的设计决策”。据此按依赖顺序完成下列决策，表中的选择视为本次授权内的设计决定，无待用户回答的产品分支。技术可行性验证仍须执行，不能把设计选择写成验证结果。
+下表规定当前对外行为与取舍；实现细节见权威表，不维护另一份页面专用 RSS 渲染。
 
 | 层次 | 必须决定的问题 | 采用的决定与理由 |
 | --- | --- | --- |
@@ -26,11 +26,11 @@
 
 变更前 `src/pages/rss.xml.js` 手工拼接 XML，只输出标题、链接、GUID、日期和可选摘要。此次改为官方包生成全文订阅，读者可以直接在阅读器阅读正文。
 
-当前仓库有 42 篇 Markdown 文章，源文件合计约 1.93 MB；没有博客 MDX 文件。Astro 本地安装版本为 `7.3.5`。正文已经由 `astro.config.ts` 和 `plugins/index.ts` 统一处理本地图片、CJK 强调、代码、数学公式、提示框和指令。文章页通过 `render(post)` 获取 `Content`。
+当前博客集合使用 Markdown，schema 仍支持 MDX；文章数量随内容变化，不作为规则常量。Astro 项目采用 7 系列。正文已经由 `astro.config.ts` 和 `plugins/index.ts` 统一处理本地图片、CJK 强调、代码、数学公式、提示框和指令。文章页通过 `render(post)` 获取 `Content`。
 
 现有约束由代码而非 RSS 重新定义：`getFilteredPosts()` 在生产排除草稿、开发包含草稿；`getSortedPosts()` 按发布日期降序、同日期按 ID 排序；路径使用 `withBasePath()` 和逐段编码。现有逻辑不会过滤未来日期，本次不增加定时发布规则。
 
-目标是以原订阅地址提供完整、可解析、站外可读的文章内容，同时避免第二套文章渲染逻辑。已有 `dist/rss.xml` 的 42 条、19,607 字节只是调研时旧构建的观察，不是全文实现结果或硬性数量要求。
+目标是以原订阅地址提供完整、可解析、站外可读的文章内容，同时避免第二套文章渲染逻辑。源的篇数和体积由当前已发布集合决定，不采用历史构建值作为约束。
 
 ## 3. 主要场景
 
@@ -170,7 +170,7 @@ GET /rss.xml
 | A3：站外资源与链接可用 | R4；正文工具 | 中文、嵌套路径、base、`../`、`#`、协议相对地址、mailto；img 无 srcset/懒加载；产物内同站图片可映射到真实 dist 文件，无 Astro 图片占位符 |
 | A4：去掉执行及样式依赖 | R5；正文工具 | 事件属性、脚本、style、危险协议被移除；正常图片/链接和原文入口仍在 |
 | A5：身份兼容和 XML 完整性 | R2、R6；feed wrapper | 调用真实官方包，解析 XML：redirect link 与原 GUID 独立；日期、摘要、语言、self、base 正确；`&`、`<`、`]]>` 不破坏 XML、不重复转义；空集合合法 |
-| A6：集合接线正确 | R1；endpoint + 既有工具 | 从实际构建文章页 canonical 集合核对 feed 条目集合，核对日期顺序；临时草稿 fixture 在生产 feed 不存在，不把 42 硬编码为未来数量 |
+| A6：集合接线正确 | R1；endpoint + 既有工具 | 从实际构建文章页 canonical 集合核对 feed 条目集合，核对日期顺序；临时草稿 fixture 在生产 feed 不存在，不硬编码文章数量 |
 | A7：失败没有隐藏 | R7；正文工具 + endpoint | 工具对缺公式源码/非法图片抛错；临时引入一个坏文章的构建验证非零退出并包含文章上下文，恢复后成功；不得把失败 dist 当成功产物 |
 | A8：构建资源接线和成本 | R8；endpoint | 检查实现为调用内单 Container、顺序处理、无抓取/缓存；记录完整构建耗时与 feed 字节数，不用时间阈值测试猜测并发 |
 
@@ -182,20 +182,16 @@ GET /rss.xml
 
 ## 9. 验证门禁
 
-项目检查沿用 `.github/workflows/ci.yml`：`pnpm install --frozen-lockfile`、`pnpm format`、`pnpm lint`、`pnpm test`、`pnpm check`、`pnpm build`、`pnpm test:built-pagination`、`pnpm test:built-markdown`。Astro、Expressive Code、RSS 或清洗依赖升级时，必须重新验证真实构建与正文转换，不能仅运行工具单测。
+项目检查沿用 `.github/workflows/ci.yml`：`pnpm install --frozen-lockfile`、`pnpm format`、`pnpm lint`、`pnpm test`、`pnpm check`、`pnpm build`、`pnpm test:built-pagination`、`pnpm test:built-restructure`、`pnpm test:built-markdown`。Astro、Expressive Code、RSS 或清洗依赖升级时，必须重新验证真实构建与正文转换，不能仅运行工具单测。
 
 阅读器抽查至少看一篇带图片/代码的文章和一篇带公式的文章。若没有可用的阅读器访问条件，必须写明“未进行真实阅读器验证”，不能用浏览器显示 XML 代替兼容性结论，也不能声称所有阅读器兼容。
 
-## 10. 当前状态与验证结果
+## 10. 与页面重构的边界
 
-- 已实现：官方 RSS 序列化、稳定 GUID、原订阅入口、Atom self、全文转换、绝对地址、代码行还原、公式文本、清洗、失败上下文。生产代码为原 endpoint、原 RSS 工具和新增正文工具，没有额外服务、缓存或构建覆写。
-- `pnpm install --frozen-lockfile`、`pnpm format`、`pnpm lint` 通过；`pnpm check` 为 100 个文件、0 错误、0 警告、3 条提示。提示来自测试使用的 `fast-xml-parser` 的 `XMLValidator` 弃用标记；暂复用已依赖包的有效验证接口，没有仅为消除提示再加一个 validator 包。
-- `pnpm test`：71/71 通过，无跳过；其中 RSS 工具与正文专项测试为 8/8。四项受控消融均使对应测试失败：去掉全文、以 redirect 替代 GUID、留下相对地址、将代码行拼接。完成后均恢复生产实现。
-- 完整 `pnpm build` 通过，本地一次最终构建约 8.16 秒；`dist/rss.xml` 包含 42 条全文、2,854,101 字节。这些是当前内容的观测值，不是容量或性能承诺。
-- `pnpm test:built-markdown`：4/4 通过，逐篇核对 feed 与文章 canonical 集合、代码、公式和站外地址，386 个不同的本地图片产物存在；`pnpm test:built-pagination`：1/1 通过。
-- 临时坏文章的生产构建非零退出，日志包含文章 ID 和缺失 TeX annotation 的原因；同一临时文章改为草稿后生产构建成功且 feed 无该条目。临时文件已移除，随后重新完成正常构建。
-- 安装时有仓库原有的 `eslint-plugin-jsx-a11y@6.10.2` 与 ESLint 10 peer 范围提示，两者版本未被本变更调整；lint 实际通过。Pagefind 保留原有中文词干提示，索引生成成功。
-- 独立 GPT-6 Sol 高推理强度 code review 已完成，对 `f423c06...bfcbee2` 未发现可执行 finding。审查方重新通过生产构建、RSS 专项 8/8、Markdown 产物 4/4、分页 1/1，并逐块核对全部 42 篇文章的代码行和空行；没有重跑全量测试、format、lint、check。
-- 未进行真实阅读器验证；本地交付时未运行托管 CI，未部署或发布。托管 CI 以 PR checks 为准，AI 审查不替代仓库要求的人类 approval。
+首页名片／个人侧栏的删除、文稿入口拆分、拾趣内容迁移、封面标题和目录排版不改变 RSS：endpoint 只渲染博客集合 `Content`，不调用 `RenderPost` 或抓取网页。技术／思考／日记是网站浏览映射，RSS 继续沿用原始文章标题、摘要、日期、redirect 和 GUID。新增占位日记不是草稿，因此按集合规则纳入；它的 `search: false` 只影响搜索。
+
+RSS 中的图片是正文资源，不是封面卡片。输出不依赖本站字体、CSS、目录脚本或主题，在阅读器中由其自身样式呈现。当前生产构建的条目数、资源数量和 CI 结果随提交记录在 PR／验证报告，而不是成为功能常量。
+
+实际阅读器视觉未在这次页面重构验证；生产产物检查验证 XML、正文首尾、代码／公式表达、资源存在与集合范围，不能把它称为所有阅读器兼容。
 
 一手参考：[Astro 全文 RSS](https://docs.astro.build/en/recipes/rss/#including-full-post-content)、[Container API（实验）](https://docs.astro.build/en/reference/container-reference/)、[官方 RSS 源码](https://github.com/withastro/astro/blob/main/packages/astro-rss/src/index.ts)、[HAST sanitizer](https://github.com/syntax-tree/hast-util-sanitize)。正文与 code/公式结构依据当前仓库源码及已有构建产物核对；这些结构的升级兼容由产物回归检查承担。

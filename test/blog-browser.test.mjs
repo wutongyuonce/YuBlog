@@ -5,7 +5,8 @@ import {
   parseBlogQuery,
   serializeBlogQuery,
   selectBlogPage,
-  buildCategorySummary,
+  getBlogCategory,
+  getCategoryPreviews,
   getPageNumbers,
   blogFirstPaintBootSource,
 } from '../src/utils/blog-browser.js'
@@ -20,7 +21,7 @@ const posts = Array.from({ length: 13 }, (_, id) => ({
 
 test('the injected first-paint script hides posts outside the requested page', () => {
   assert.doesNotMatch(blogFirstPaintBootSource(), /toString|parseBlogQuery/)
-  const paintOf = (search) => {
+  const paintOf = (search, hash = '') => {
     const style = {
       setAttribute() {
         return undefined
@@ -42,10 +43,14 @@ test('the injected first-paint script hides posts outside the requested page', (
           },
         },
       },
-      location: { search },
+      location: { search, hash },
     })
     return { css: style.textContent, paint: root.dataset.blogPaint }
   }
+  assert.equal(paintOf('', '#tech').paint, 'filter')
+  assert.equal(paintOf('?page=2', '#diary').paint, 'filter')
+  assert.equal(paintOf('?page=2', '#thought').paint, 'filter')
+  assert.equal(paintOf('', '#unknown').paint, '1')
   const first = paintOf('')
   assert.equal(first.paint, '1')
   assert.match(
@@ -132,13 +137,9 @@ test('category and every selected tag filter the full collection before paginati
   for (const search of ['category=不存在', 'tag=不存在']) {
     assert.equal(selectBlogPage(posts, parseBlogQuery(search)).total, 0)
   }
-  assert.deepEqual(buildCategorySummary(posts), [
-    { category: '技术向', count: 11 },
-    { category: '工具向', count: 2 },
-  ])
 })
 
-test('custom categories remain filterable and included in the summary', () => {
+test('custom categories remain filterable by their exact legacy query', () => {
   const customPosts = [
     { id: 'custom', data: { category: '思考向', tags: ['Essay'] } },
   ]
@@ -148,9 +149,6 @@ test('custom categories remain filterable and included in the summary', () => {
     result.items.map(({ id }) => id),
     ['custom']
   )
-  assert.deepEqual(buildCategorySummary(customPosts), [
-    { category: '思考向', count: 1 },
-  ])
 })
 
 test('short pagination lists show every page without ellipses', () => {
@@ -201,4 +199,88 @@ test('pagination never hides a single page or loses the current page and endpoin
       }
     }
   }
+})
+
+test('new fragment categories round-trip with tags and pages; legacy queries still work', () => {
+  const query = parseBlogQuery('?tag=Agent&page=2', '#tech')
+  assert.deepEqual(query, { category: '技术', tags: ['Agent'], page: 2 })
+  const url = new URL(serializeBlogQuery(query), 'https://example.test/blogs/')
+  assert.equal(url.hash, '#tech')
+  assert.equal(url.searchParams.has('category'), false)
+  assert.deepEqual(parseBlogQuery(url.search, url.hash), query)
+  assert.equal(parseBlogQuery('?category=技术向', '#diary').category, '日记')
+  assert.equal(
+    parseBlogQuery('?category=技术向', '#unknown').category,
+    '技术向'
+  )
+  assert.equal(parseBlogQuery('', '#%broken').category, '')
+})
+
+test('category grouping combines tools with tech without losing legacy exact filters', () => {
+  const entries = [
+    { id: 'tools', data: { category: '工具向', tags: ['Agent'] } },
+    { id: 'tech', data: { category: '技术向', tags: ['Agent'] } },
+    { id: 'essay', data: { category: '思考向', tags: [] } },
+    { id: 'diary', data: { category: '日记', tags: [] } },
+    { id: 'custom', data: { category: '自定义', tags: [] } },
+  ]
+  assert.deepEqual(
+    selectBlogPage(entries, parseBlogQuery('', '#tech')).items.map(
+      ({ id }) => id
+    ),
+    ['tools', 'tech']
+  )
+  assert.deepEqual(
+    selectBlogPage(entries, parseBlogQuery('?category=工具向')).items.map(
+      ({ id }) => id
+    ),
+    ['tools']
+  )
+  assert.deepEqual(
+    selectBlogPage(entries, parseBlogQuery('', '#thought')).items.map(
+      ({ id }) => id
+    ),
+    ['essay']
+  )
+  assert.deepEqual(
+    selectBlogPage(entries, parseBlogQuery('', '#diary')).items.map(
+      ({ id }) => id
+    ),
+    ['diary']
+  )
+  assert.equal(
+    serializeBlogQuery({ category: '思考', tags: [], page: 1 }),
+    '#thought'
+  )
+  assert.equal(getBlogCategory('自定义'), '自定义')
+  assert.equal(
+    selectBlogPage(entries, parseBlogQuery('?tag=Missing', '#tech')).total,
+    0
+  )
+})
+
+test('navigation previews count published groups and show at most four in supplied date order', () => {
+  const entries = [
+    ...Array.from({ length: 6 }, (_, id) => ({
+      id,
+      data: { category: id % 2 ? '技术向' : '工具向' },
+    })),
+    { id: 'thought', data: { category: '思考向' } },
+    { id: 'diary', data: { category: '日记' } },
+    { id: 'custom', data: { category: '自定义' } },
+  ]
+  const [tech, thought, diary] = getCategoryPreviews(entries)
+  assert.equal(tech.count, 6)
+  assert.deepEqual(
+    tech.posts.map(({ id }) => id),
+    [0, 1, 2, 3]
+  )
+  assert.equal(diary.count, 1)
+  assert.equal(diary.posts[0].id, 'diary')
+  assert.equal(thought.count, 1)
+  assert.equal(thought.posts[0].id, 'thought')
+  assert.deepEqual(
+    getCategoryPreviews([]).map(({ posts }) => posts),
+    [[], [], []]
+  )
 })

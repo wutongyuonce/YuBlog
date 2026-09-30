@@ -1,6 +1,7 @@
 ---
 import Link from '~/components/base/Link.astro'
-import { resolvePath, ensureTrailingSlash } from '~/utils/path'
+import { resolvePath } from '~/utils/path'
+import { isCurrentNav } from '~/utils/nav-path.js'
 
 import type { InternalNav, SocialLink } from '~/types'
 
@@ -21,17 +22,14 @@ const rel = type === 'internal' ? undefined : 'me'
 const external = type === 'internal' ? false : true
 const ariaCurrent =
   type === 'internal'
-    ? ensureTrailingSlash(Astro.url.pathname) === resolvePath(item.path) ||
-      (item.path === '/' &&
-        ensureTrailingSlash(Astro.url.pathname).startsWith(
-          resolvePath('/blogs')
-        ))
+    ? isCurrentNav(Astro.url.pathname, href, resolvePath('/'))
       ? 'page'
       : false
     : undefined
 ---
 
 <Link
+  data-nav-link={type === 'internal' ? '' : undefined}
   class={`${
     item.displayMode === 'iconHiddenOnMobile' ||
     item.displayMode === 'textHiddenOnMobile'

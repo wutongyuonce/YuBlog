@@ -16,110 +16,33 @@ const tocPosition = Array.isArray(toc) && toc[0] && toc[1].displayPosition
 
 {headings.length > 0 && (
   <aside id="desktop-aside" class="desktop-aside" data-position={tocPosition}>
-    <button
-      type="button"
-      class="desktop-aside__trigger"
-      aria-label="目录"
-      aria-expanded="false"
-      aria-controls="toc-sidebar"
-      title="显示目录"
-    >
-      TOC
-    </button>
     <TocSidebar {headings} />
   </aside>
 )}
 
-<script>
-  const setupTocPin = () => {
-    const aside = document.getElementById('desktop-aside')
-    const trigger = aside?.querySelector<HTMLButtonElement>(
-      '.desktop-aside__trigger'
-    )
-    if (!aside || !trigger || trigger.dataset.openBound) return
-    trigger.dataset.openBound = 'true'
-    trigger.addEventListener('click', () => {
-      const on = aside.dataset.open !== 'true'
-      aside.dataset.open = on ? 'true' : 'false'
-      // The accessible name stays put; `aria-expanded` announces the state.
-      // `title` still follows the action for the mouse tooltip.
-      trigger.setAttribute('aria-expanded', String(on))
-      trigger.title = on ? '隐藏目录' : '显示目录'
-      if (on) {
-        aside.dispatchEvent(new CustomEvent('toc-reveal', { bubbles: true }))
-      }
-    })
-  }
-
-  document.addEventListener('astro:page-load', setupTocPin)
-  setupTocPin()
-</script>
-
 <style>
   .desktop-aside {
-    /* Match .prose.post-content max-width so the gutter math stays aligned. */
-    --article-width: var(--blog-article-width);
-    --toc-inset-start: calc(clamp(3.25rem, 6.5vw, 8.5rem) - 1.4rem);
-    --toc-inset-end: calc(1.2rem + 1.4rem);
+    /* Keep the TOC inside the side gutter without widening the reading column. */
+    --toc-gap: 3rem;
+    --toc-edge: calc(50% + var(--blog-prose-width) / 2 + var(--toc-gap));
     --desktop-toc-width: calc(
-      50% - var(--article-width) / 2 - var(--toc-inset-start) -
-        var(--toc-inset-end)
+      50% - var(--blog-prose-width) / 2 - var(--toc-gap) - var(--site-gutter)
     );
     position: fixed;
-    top: 5.75rem;
-    right: var(--toc-inset-end);
-    left: auto;
+    top: 50%;
+    transform: translateY(-50%);
+    right: auto;
+    left: var(--toc-edge);
     z-index: 100;
-    width: var(--desktop-toc-width);
+    width: min(13rem, var(--desktop-toc-width));
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
   }
 
   .desktop-aside[data-position='left'] {
-    right: auto;
-    left: var(--toc-inset-end);
-  }
-
-  .desktop-aside__trigger {
-    display: inline-flex;
-    align-items: center;
-    align-self: start;
-    margin-inline: -0.4rem;
-    padding: 0.15rem 0.4rem;
-    border: 1px solid transparent;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--c-text);
-    font-size: var(--blog-reading-size);
-    font-weight: 500;
-    opacity: 0.82;
-    cursor: pointer;
-    transition:
-      opacity 0.25s ease,
-      background-color 0.25s ease,
-      font-weight 0.25s ease;
-  }
-
-  .desktop-aside__trigger:hover,
-  .desktop-aside[data-open='true'] .desktop-aside__trigger {
-    opacity: 1;
-  }
-
-  .desktop-aside[data-open='true'] .desktop-aside__trigger {
-    font-weight: 600;
-  }
-
-  .desktop-aside :global(.desktop-toc) {
-    visibility: hidden;
-    pointer-events: none;
-  }
-
-  /* 只有点「目录」按钮（或直接点目录里的链接）时才显示：关闭时用 visibility
-     隐藏，因此不会被 Tab 聚焦，也不会因悬停而自动出现。 */
-  .desktop-aside[data-open='true'] :global(.desktop-toc) {
-    visibility: visible;
-    pointer-events: auto;
+    right: var(--toc-edge);
+    left: auto;
   }
 
   @media (max-width: 1199.9px) {

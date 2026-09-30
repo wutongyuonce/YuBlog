@@ -7,28 +7,16 @@ import type { ImageMetadata } from 'astro'
 
 interface Props {
   title: string
-  subtitle: string
+  description: string
   titleImage: ImageMetadata
   titleImageAlt: string
   pubDate: string
-  lastModDate: string | undefined
-  minutesRead: number
-  tags: string[]
 }
 
-const {
-  title,
-  subtitle,
-  titleImage,
-  titleImageAlt,
-  pubDate,
-  lastModDate,
-  minutesRead,
-  tags,
-} = Astro.props
+const { title, description, titleImage, titleImageAlt, pubDate } = Astro.props
 ---
 
-<section class="post-hero" aria-labelledby="post-hero-title">
+<section class="post-hero" aria-label={title}>
   <Image
     class="post-hero__image"
     src={titleImage}
@@ -37,16 +25,14 @@ const {
     priority
   />
   <div class="post-hero__content">
-    <h1 id="post-hero-title" class="post-hero__title">
-      {title}
-    </h1>
-    {subtitle && <p class="post-hero__subtitle">{subtitle}</p>}
+    <p class="post-hero__title">{title}</p>
+    {description && <p class="post-hero__subtitle">{description}</p>}
     <PostMeta
       {pubDate}
-      {lastModDate}
-      {minutesRead}
-      {tags}
-      hasSubtitle={!!subtitle}
+      lastModDate={undefined}
+      minutesRead={0}
+      tags={[]}
+      hasSubtitle={!!description}
       variant="hero"
     />
   </div>
@@ -59,8 +45,9 @@ const {
     overflow: hidden;
     min-height: clamp(20rem, 46vw, 28rem);
     border-radius: 0.5rem;
-    color: var(--c-text);
-    background: var(--c-bg);
+    margin-top: 1.75rem;
+    color: #fff;
+    background: #050505;
   }
 
   .post-hero::after {
@@ -70,20 +57,11 @@ const {
     inset: 0;
     background: linear-gradient(
       to bottom,
-      rgb(255 255 255 / 0) 20%,
-      rgb(255 255 255 / 0.12) 46%,
-      rgb(255 255 255 / 0.96) 100%
+      rgb(0 0 0 / 0.03) 12%,
+      rgb(0 0 0 / 0.5) 55%,
+      rgb(0 0 0 / 0.92) 100%
     );
     pointer-events: none;
-  }
-
-  :global(html.dark) .post-hero::after {
-    background: linear-gradient(
-      to bottom,
-      rgb(0 0 0 / 0) 20%,
-      rgb(0 0 0 / 0.18) 46%,
-      rgb(0 0 0 / 0.96) 100%
-    );
   }
 
   .post-hero__image {
@@ -105,25 +83,15 @@ const {
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-end;
-    padding: clamp(1.25rem, 4vw, 2.5rem);
-  }
-
-  .post-hero__title::after {
-    content: '';
-    display: block;
-    width: 2.75rem;
-    height: 2px;
-    margin-top: 0.7rem;
-    border-radius: 999px;
-    background: var(--accent);
+    padding: clamp(1.25rem, 4vw, 2rem);
   }
 
   .post-hero__title {
     max-width: 100%;
     margin: 0 !important;
     color: inherit !important;
-    font-family: 'LXGWWenKai-Regular', sans-serif;
-    font-size: clamp(1.8rem, 4.5vw, 2.8rem);
+    font-family: var(--font-heading);
+    font-size: clamp(1.35rem, 3.2vw, 1.8rem);
     font-weight: 400 !important;
     line-height: 1.18;
     overflow-wrap: anywhere;
@@ -134,10 +102,10 @@ const {
     max-width: 60ch;
     margin: 0.8rem 0 0 !important;
     color: inherit;
-    font-size: clamp(1rem, 2.2vw, 1.25rem);
-    line-height: 1.5;
+    font-size: 0.875rem;
+    line-height: 1.7;
     overflow-wrap: anywhere;
-    opacity: 0.78;
+    opacity: 0.88;
   }
 
   @media (max-width: 640px) {

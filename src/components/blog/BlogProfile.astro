@@ -3,6 +3,7 @@ import ProgressStats from '~/components/widgets/ProgressStats.astro'
 import { getBlogStats } from '~/utils/data'
 import { formatChineseCount } from '~/utils/blog-stats'
 import { withBasePath } from '~/utils/path'
+import { AUTHOR_LINKS } from '~/config'
 
 const stats = await getBlogStats()
 const formattedWordCount = formatChineseCount(stats.wordCount)
@@ -12,60 +13,75 @@ const wordCountValue = wordCountUnit
   : formattedWordCount
 ---
 
-<section
-  class="blog-profile"
-  aria-labelledby="blog-profile-name"
-  transition:persist="blog-profile"
->
+<section class="blog-profile" aria-labelledby="blog-profile-name">
   <ProgressStats />
-  <a class="blog-profile__identity" href={withBasePath('/about/')}>
-    <div class="blog-profile__heading">
-      <h2 id="blog-profile-name">梧桐雨</h2>
-      <span class="blog-profile__mbti">INTJ</span>
-    </div>
-    <span class="blog-profile__avatar" aria-hidden="true">
-      <img src={withBasePath('/avatar.webp')} width="48" height="48" alt="" />
-    </span>
-    <p class="blog-profile__motto">Unwavering to the end</p>
-  </a>
-  <a class="blog-profile__rss" href={withBasePath('/rss.xml')}>
-    <span>订阅 RSS</span>
-    <span
-      class="blog-profile__arrow i-ri-arrow-right-up-line"
-      aria-hidden="true"
-    ></span>
-  </a>
-  <dl class="blog-profile__stats">
-    <div>
-      <dt>文章</dt>
-      <dd>
-        <span class="blog-profile__value">{stats.postCount}</span>
-        <span class="blog-profile__unit">篇</span>
-      </dd>
-    </div>
-    <div>
-      <dt>字数</dt>
-      <dd>
-        <span class="blog-profile__value">{wordCountValue}</span>
-        {wordCountUnit && (
-          <span class="blog-profile__unit">{wordCountUnit}</span>
-        )}
-      </dd>
-    </div>
-    <div>
-      <dt>时间</dt>
-      <dd>
-        <span
-          class="blog-profile__value blog-profile__value--time"
-          data-site-days
-          data-from={stats.startedAt}
+  <div class="blog-profile__top">
+    <a class="blog-profile__identity" href={withBasePath('/about/')}>
+      <div class="blog-profile__heading">
+        <h2 id="blog-profile-name">梧桐雨</h2>
+        <span class="blog-profile__mbti">INTJ</span>
+      </div>
+      <span class="blog-profile__avatar" aria-hidden="true">
+        <img src={withBasePath('/avatar.webp')} width="56" height="56" alt="" />
+      </span>
+    </a>
+    <a class="blog-profile__rss" href={withBasePath('/rss.xml')}>
+      <span>订阅 RSS</span>
+      <span
+        class="blog-profile__arrow i-ri-arrow-right-up-line"
+        aria-hidden="true"
+      ></span>
+    </a>
+  </div>
+  <div class="blog-profile__details">
+    <p class="blog-profile__motto">「我与我周旋久，宁做我」</p>
+    <dl class="blog-profile__stats">
+      <div>
+        <dt class="sr-only">文章</dt>
+        <dd>
+          <span class="blog-profile__value">{stats.postCount}</span>
+          <span class="blog-profile__unit">篇</span>
+        </dd>
+      </div>
+      <div>
+        <dt class="sr-only">字数</dt>
+        <dd>
+          <span class="blog-profile__value">{wordCountValue}</span>
+          {wordCountUnit && (
+            <span class="blog-profile__unit">{wordCountUnit}</span>
+          )}
+        </dd>
+      </div>
+      <div>
+        <dt class="sr-only">写作</dt>
+        <dd>
+          <span
+            class="blog-profile__value blog-profile__value--time"
+            data-site-days
+            data-from={stats.startedAt}
+          >
+            {stats.daySpan}
+          </span>
+          <span class="blog-profile__unit">天</span>
+        </dd>
+      </div>
+    </dl>
+    <nav class="blog-profile__social" aria-label="联系与社交媒体">
+      {AUTHOR_LINKS.map(({ label, href, icon }) => (
+        <a
+          {href}
+          title={label}
+          rel={href.startsWith('mailto:') ? undefined : 'me'}
         >
-          {stats.daySpan}
-        </span>
-        <span class="blog-profile__unit">天</span>
-      </dd>
-    </div>
-  </dl>
+          <span
+            class:list={['blog-profile__social-icon', icon]}
+            aria-hidden="true"
+          />
+          <span class="sr-only">{label}</span>
+        </a>
+      ))}
+    </nav>
+  </div>
 </section>
 
 <script>
