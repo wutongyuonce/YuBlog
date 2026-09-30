@@ -1,43 +1,26 @@
 ---
 import { getRecentBlogPosts } from '~/utils/data'
+import { getBlogCategory } from '~/utils/blog-browser.js'
 import { formatRecentPostDate } from '~/utils/recent-post-date.js'
 import { withBasePath } from '~/utils/path'
-
-interface Props {
-  compact?: boolean
-}
-const { compact = false } = Astro.props
 
 const posts = await getRecentBlogPosts()
 ---
 
-{posts.length > 0 && (
-  <section
-    class:list={['recent-writing', { 'recent-writing--compact': compact }]}
-    aria-labelledby="recent-writing-title"
-  >
-    <header class="recent-writing__header">
-      {!compact && <p>RECENT WRITING</p>}
-      <h2 id="recent-writing-title">近期文章</h2>
-    </header>
-
+<section class="recent-writing" aria-labelledby="recent-writing-title">
+  <header class="recent-writing__header">
+    <h2 id="recent-writing-title">近期笔墨</h2>
+    <a href={withBasePath('/blogs/')}>全部文稿</a>
+  </header>
+  {posts.length ? (
     <ol class="recent-writing__timeline">
       {posts.map(({ id, data }, index) => {
         const dateTime = data.pubDate.toISOString()
-
         return (
-          <li
-            class:list={[
-              'recent-writing__item',
-              { 'recent-writing__item--latest': index === 0 },
-            ]}
-          >
-            {!compact && (
-              <span class="recent-writing__number" aria-hidden="true">
-                {String(index + 1).padStart(2, '0')}
-              </span>
-            )}
-
+          <li class="recent-writing__item">
+            <span class="recent-writing__number" aria-hidden="true">
+              {String(index + 1).padStart(2, '0')}
+            </span>
             <div class="recent-writing__content">
               <a
                 class="recent-writing__link"
@@ -45,24 +28,10 @@ const posts = await getRecentBlogPosts()
               >
                 {data.title}
               </a>
-              {!compact && data.tags.length > 0 && (
-                <p class="recent-writing__tags">
-                  {data.tags.slice(0, 4).map((tag, index) => (
-                    <>
-                      {index > 0 && <span aria-hidden="true">·</span>}
-                      <span>{tag}</span>
-                    </>
-                  ))}
-                  {data.tags.length > 4 && (
-                    <>
-                      <span aria-hidden="true">·</span>
-                      <span aria-hidden="true">…</span>
-                    </>
-                  )}
-                </p>
-              )}
+              <p class="recent-writing__category">
+                文稿 · {getBlogCategory(data.category)}
+              </p>
             </div>
-
             <time
               class="recent-writing__date"
               datetime={dateTime}
@@ -74,207 +43,128 @@ const posts = await getRecentBlogPosts()
         )
       })}
     </ol>
-  </section>
-)}
+  ) : (
+    <p>还没有发布文稿。</p>
+  )}
+</section>
 
 <style>
   .recent-writing {
-    --timeline-accent: var(--accent-soft);
-    --timeline-line: color-mix(in srgb, var(--c-text) 14%, transparent);
-    --timeline-number-bg: color-mix(in srgb, var(--c-bg) 95%, var(--c-text) 5%);
-    --timeline-number-border: color-mix(in srgb, var(--c-text) 7%, transparent);
-    --timeline-number-color: color-mix(in srgb, var(--c-text) 64%, transparent);
-    --timeline-number-shadow: 0 1px 5px
-      color-mix(in srgb, var(--c-text) 6%, transparent);
-    margin-top: clamp(1.25rem, 2.5vw, 1.75rem);
-    margin-bottom: 1rem;
+    margin-top: 3rem;
   }
-
-  .recent-writing::before {
-    display: block;
-    width: clamp(3.5rem, 10vw, 4.5rem);
-    height: 1px;
-    margin: 0 auto clamp(1.1rem, 2vw, 1.4rem);
-    background: color-mix(in srgb, var(--c-text) 22%, transparent);
-    content: '';
+  .recent-writing__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
   }
-
-  :global(.dark) .recent-writing {
-    --timeline-line: color-mix(in srgb, var(--c-text) 20%, transparent);
-    --timeline-number-bg: color-mix(
-      in srgb,
-      var(--c-bg) 88%,
-      var(--c-text) 12%
-    );
-    --timeline-number-border: color-mix(in srgb, var(--c-text) 8%, transparent);
-    --timeline-number-color: color-mix(in srgb, var(--c-text) 72%, transparent);
-    --timeline-number-shadow: 0 2px 8px
-      color-mix(in srgb, var(--c-bg) 60%, transparent);
-  }
-
-  .recent-writing__header p {
-    margin: 0 0 0.55rem;
-    color: color-mix(in srgb, var(--c-text) 45%, transparent);
-    font-family:
-      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 0.78rem;
-    letter-spacing: 0.24em;
-  }
-
   .recent-writing__header h2 {
     margin: 0;
-    border: 0;
-    font-family: 'SourceHanSerifCN-Regular', serif;
-    font-size: clamp(1.6rem, 4.2vw, 2.05rem);
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
     font-weight: 400;
-    letter-spacing: 0.05em;
-    line-height: 1.2;
   }
-
+  .recent-writing__header > a {
+    color: color-mix(in srgb, var(--c-text) 60%, var(--c-bg));
+    font-size: 0.75rem;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .recent-writing__header > a:hover {
+    color: var(--accent);
+  }
   .recent-writing__timeline {
     position: relative;
-    margin: clamp(2.25rem, 5vw, 3rem) 0 0;
+    margin: 1.5rem 0 0;
     padding: 0;
     list-style: none;
   }
-
   .recent-writing__timeline::before {
     position: absolute;
-    top: -1.75rem;
-    bottom: -1.4rem;
-    left: 1.31rem;
-    width: 2px;
-    border-radius: 999px;
+    top: 0;
+    bottom: 0.25rem;
+    left: 1rem;
+    width: 1px;
     background: linear-gradient(
-      to bottom,
-      transparent,
-      var(--timeline-accent) 7%,
-      var(--timeline-line) 24%,
-      var(--timeline-line) 90%,
-      transparent 100%
+      var(--accent),
+      color-mix(in srgb, var(--c-text) 15%, transparent)
     );
     content: '';
   }
-
   .recent-writing__item {
     position: relative;
     display: grid;
-    grid-template-columns: 2.75rem minmax(0, 1fr) auto;
-    gap: 0.9rem;
-    align-items: start;
-    padding-bottom: 1.35rem;
+    grid-template-columns: 2rem minmax(0, 1fr) auto;
+    gap: 0.25rem 1rem;
+    align-items: baseline;
+    padding-bottom: 1.4rem;
   }
-
-  :global(.prose) .recent-writing__timeline > .recent-writing__item {
-    padding-left: 0;
-  }
-
-  :global(.prose) .recent-writing__timeline > .recent-writing__item::before {
-    content: none;
-  }
-
   .recent-writing__item:last-child {
-    min-height: 0;
     padding-bottom: 0;
   }
-
   .recent-writing__number {
     position: relative;
     z-index: 1;
-    display: grid;
-    place-items: center;
-    width: 2.4rem;
-    min-height: 1.8rem;
-    margin: 0.18rem auto 0;
-    border: 1px solid var(--timeline-number-border);
-    border-radius: 0.4rem;
-    background: var(--timeline-number-bg);
-    box-shadow: var(--timeline-number-shadow);
-    color: var(--timeline-number-color);
-    font-family: 'SourceHanSerifCN-Regular', serif;
-    font-size: 0.95rem;
+    text-align: center;
+    background: var(--c-bg);
+    font-size: 0.75rem;
+    color: color-mix(in srgb, var(--c-text) 65%, var(--c-bg));
+    font-family: var(--font-heading);
     font-variant-numeric: tabular-nums;
-    line-height: 1;
   }
-
   .recent-writing__item:first-child .recent-writing__number {
-    border-color: color-mix(in srgb, var(--timeline-accent) 28%, transparent);
-    color: var(--timeline-accent);
+    color: var(--accent);
   }
-
   .recent-writing__content {
     min-width: 0;
   }
-
   .recent-writing__link {
-    color: color-mix(in srgb, var(--c-text) 92%, transparent);
-    font-family: 'SourceHanSerifCN-Regular', serif;
-    font-size: clamp(0.98rem, 2.2vw, 1.12rem);
-    line-height: 1.55;
+    color: inherit;
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    line-height: 1.65;
     text-decoration: none;
     border-bottom: 1px solid transparent;
+    transition:
+      color 160ms ease,
+      border-color 160ms ease;
+    overflow-wrap: anywhere;
   }
-
-  .recent-writing__link:hover {
-    color: var(--c-text);
-    border-bottom-color: color-mix(in srgb, var(--c-text) 38%, transparent);
+  .recent-writing__link:hover,
+  .recent-writing__link:focus-visible {
+    color: var(--accent);
+    border-bottom-color: currentColor;
   }
-
-  .recent-writing__tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.38rem;
-    margin: 0.45rem 0 0;
-    color: color-mix(in srgb, var(--c-text) 45%, transparent);
-    font-size: 0.9rem;
-    line-height: 1.45;
+  .recent-writing__item:first-child .recent-writing__link {
+    font-size: 1.0625rem;
+    line-height: 1.6;
   }
-
+  .recent-writing__category {
+    margin: 0.5rem 0 0;
+    color: color-mix(in srgb, var(--c-text) 50%, var(--c-bg));
+    font-size: 0.75rem;
+  }
   .recent-writing__date {
-    padding-top: 0.25rem;
-    color: color-mix(in srgb, var(--c-text) 55%, transparent);
+    color: color-mix(in srgb, var(--c-text) 55%, var(--c-bg));
     font-family: 'SourceHanSerifCN-Regular', serif;
-    font-size: 0.82rem;
+    font-size: 0.75rem;
     font-variant-numeric: tabular-nums;
-    line-height: 1.5;
     white-space: nowrap;
   }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .recent-writing__link {
-      transition:
-        color 160ms ease,
-        border-color 160ms ease;
-    }
-  }
-
   @media (max-width: 640px) {
     .recent-writing__item {
-      grid-template-columns: 2.4rem minmax(0, 1fr);
+      grid-template-columns: 2rem minmax(0, 1fr);
       column-gap: 0.75rem;
-      row-gap: 0.2rem;
     }
-
-    .recent-writing__timeline::before {
-      left: 1.14rem;
-    }
-
-    .recent-writing__number {
-      width: 2.2rem;
-    }
-
     .recent-writing__date {
       grid-column: 2;
-      margin-top: 0;
-      padding-top: 0;
-      font-size: 0.82rem;
+      margin-top: 0.25rem;
     }
   }
 </style>
 
 <script>
   import { formatRecentPostDate } from '~/utils/recent-post-date.js'
-
   const updateRecentWritingDates = () => {
     document
       .querySelectorAll<HTMLElement>('[data-recent-post-date]')
@@ -283,7 +173,6 @@ const posts = await getRecentBlogPosts()
         if (publishedAt) element.textContent = formatRecentPostDate(publishedAt)
       })
   }
-
   updateRecentWritingDates()
   document.addEventListener('astro:page-load', updateRecentWritingDates)
 </script>

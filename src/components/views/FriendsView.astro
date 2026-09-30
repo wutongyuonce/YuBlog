@@ -9,6 +9,13 @@ function getInitial(name: string) {
 
 const friends = await getSortedFriends('friends')
 const isEmpty = friends.length === 0
+const groups = [
+  { title: '推荐', description: '单向收藏，常读的博客与站点。' },
+  { title: '双向', description: '交换友链的朋友们。' },
+].map((group) => ({
+  ...group,
+  items: friends.filter((item) => item.data.category === group.title),
+}))
 ---
 
 <section class="friends-page">
@@ -28,45 +35,56 @@ const isEmpty = friends.length === 0
   ) : (
     <section class="friends-shell slide-enter">
       <div class="friends-board">
-        <div class="friends-grid">
-          {friends.map((item) => (
-            <Link
-              href={item.data.link}
-              external={true}
-              class="friend-card"
-              title={item.data.desc}
-            >
-              <div class="friend-card__avatar-wrap" aria-hidden="true">
-                {item.data.avatar ? (
-                  <img
-                    class="friend-card__avatar"
-                    src={item.data.avatar}
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                    referrerpolicy="no-referrer"
-                  />
-                ) : (
-                  <span class="friend-card__avatar-fallback">
-                    {getInitial(item.data.name)}
-                  </span>
-                )}
-              </div>
+        {groups.map((group) => (
+          <section
+            class="friends-group"
+            aria-labelledby={`friends-${group.title}`}
+          >
+            <header class="friends-group__heading">
+              <h2 id={`friends-${group.title}`}>{group.title}</h2>
+              <p>{group.description}</p>
+            </header>
+            <div class="friends-grid">
+              {group.items.map((item) => (
+                <Link
+                  href={item.data.link}
+                  external={true}
+                  class="friend-card"
+                  title={item.data.desc}
+                >
+                  <div class="friend-card__avatar-wrap" aria-hidden="true">
+                    {item.data.avatar ? (
+                      <img
+                        class="friend-card__avatar"
+                        src={item.data.avatar}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        referrerpolicy="no-referrer"
+                      />
+                    ) : (
+                      <span class="friend-card__avatar-fallback">
+                        {getInitial(item.data.name)}
+                      </span>
+                    )}
+                  </div>
 
-              <div class="friend-card__body">
-                <div class="friend-card__topline">
-                  <h3>{item.data.name}</h3>
-                </div>
+                  <div class="friend-card__body">
+                    <div class="friend-card__topline">
+                      <h3>{item.data.name}</h3>
+                    </div>
 
-                {item.data.siteLabel && (
-                  <p class="friend-card__label">{item.data.siteLabel}</p>
-                )}
+                    {item.data.siteLabel && (
+                      <p class="friend-card__label">{item.data.siteLabel}</p>
+                    )}
 
-                <p class="friend-card__desc">{item.data.desc}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
+                    <p class="friend-card__desc">{item.data.desc}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ))}
       </div>
 
       <FriendsApplyPanel />
@@ -82,7 +100,6 @@ const isEmpty = friends.length === 0
     --friends-shell-bg: transparent;
     --friends-panel-bg: transparent;
     --friends-card-bg: color-mix(in srgb, var(--c-bg) 99%, var(--c-text) 1%);
-    --friends-card-hover: color-mix(in srgb, var(--c-bg) 93%, var(--c-text) 7%);
     --friends-border: color-mix(in srgb, var(--c-text) 10%, transparent);
     --friends-border-strong: color-mix(in srgb, var(--c-text) 18%, transparent);
     --friends-muted: color-mix(in srgb, var(--c-text) 60%, transparent);
@@ -94,11 +111,6 @@ const isEmpty = friends.length === 0
     --friends-shell-bg: transparent;
     --friends-panel-bg: transparent;
     --friends-card-bg: color-mix(in srgb, var(--c-bg) 94%, var(--c-text) 6%);
-    --friends-card-hover: color-mix(
-      in srgb,
-      var(--c-bg) 87%,
-      var(--c-text) 13%
-    );
     --friends-border: color-mix(in srgb, var(--c-text) 14%, transparent);
     --friends-border-strong: color-mix(in srgb, var(--c-text) 24%, transparent);
     --friends-muted: color-mix(in srgb, var(--c-text) 68%, transparent);
@@ -120,7 +132,27 @@ const isEmpty = friends.length === 0
 
   .friends-board {
     display: grid;
-    gap: 0.35rem;
+    gap: 2.25rem;
+  }
+
+  .friends-group__heading {
+    margin-bottom: 1rem;
+  }
+
+  .friends-group__heading h2 {
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 400;
+    line-height: 1.3;
+    color: var(--c-text);
+  }
+
+  .friends-group__heading p {
+    margin: 0.4rem 0 0;
+    color: var(--friends-muted);
+    font-size: 0.8125rem;
+    line-height: 1.5;
   }
 
   .friends-chip {
@@ -132,41 +164,43 @@ const isEmpty = friends.length === 0
   .friends-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.9rem;
+    gap: 0.75rem;
   }
 
   .friend-card {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
-    gap: 1rem;
+    gap: 0.75rem;
     align-items: center;
-    min-height: 6.9rem;
-    padding: 0.95rem 1rem;
+    min-height: 6.3rem;
+    padding: 0.8rem;
     border: 1px solid var(--friends-border);
-    border-radius: 1.15rem;
+    border-radius: 0.75rem;
     background: var(--friends-card-bg);
     color: inherit;
+    opacity: 1;
     transition:
-      transform 180ms ease,
       border-color 180ms ease,
       background-color 180ms ease,
-      opacity 180ms ease;
+      box-shadow 180ms ease;
   }
 
-  .friend-card:hover {
-    transform: translateY(-1px);
-    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-    background: var(--friends-card-hover);
+  .friend-card:hover,
+  .friend-card:focus-visible {
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--c-bg));
+    background: var(--friends-card-bg);
+    box-shadow: 0 3px 12px color-mix(in srgb, var(--c-text) 5%, transparent);
   }
 
-  .friend-card:hover .friend-card__avatar-wrap {
-    box-shadow: 0 0 12px 3px color-mix(in srgb, var(--accent) 28%, transparent);
+  .friend-card:hover .friend-card__topline h3,
+  .friend-card:focus-visible .friend-card__topline h3 {
+    color: var(--accent);
   }
 
   .friend-card__avatar-wrap {
     position: relative;
-    width: 3.7rem;
-    height: 3.7rem;
+    width: 3rem;
+    height: 3rem;
     flex: none;
     border-radius: 999px;
     background: color-mix(in srgb, var(--c-bg) 88%, var(--c-text) 12%);
@@ -213,9 +247,17 @@ const isEmpty = friends.length === 0
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 1.02rem;
+    font-size: 0.9375rem;
     line-height: 1.35;
     color: color-mix(in srgb, var(--c-text) 92%, transparent);
+    transition: color 180ms ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .friend-card,
+    .friend-card__topline h3 {
+      transition: none;
+    }
   }
 
   .friend-card__label,
@@ -228,7 +270,7 @@ const isEmpty = friends.length === 0
   .friend-card__label {
     margin-top: 0.35rem;
     color: var(--friends-subtle);
-    font-size: 0.84rem;
+    font-size: 0.75rem;
     font-weight: 500;
     line-height: 1.45;
   }
@@ -240,7 +282,7 @@ const isEmpty = friends.length === 0
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     color: var(--friends-muted);
-    font-size: 0.9rem;
+    font-size: 0.8125rem;
     line-height: 1.52;
   }
 
@@ -252,6 +294,8 @@ const isEmpty = friends.length === 0
   }
 
   .friends-empty h2 {
+    font-family: var(--font-heading);
+    font-weight: 400;
     font-size: 1.2rem;
     color: color-mix(in srgb, var(--c-text) 92%, transparent);
   }
@@ -268,7 +312,7 @@ const isEmpty = friends.length === 0
     font-size: 0.92em;
   }
 
-  @media (max-width: 920px) {
+  @media (max-width: 600px) {
     .friends-grid {
       grid-template-columns: 1fr;
     }
@@ -279,27 +323,9 @@ const isEmpty = friends.length === 0
       width: 100%;
     }
 
-    .friends-board,
     .friends-empty {
       padding: 1rem;
       border-radius: 1.25rem;
-    }
-
-    .friends-grid {
-      grid-template-columns: 1fr;
-      gap: 0.85rem;
-    }
-
-    .friend-card {
-      min-height: 6.5rem;
-      padding: 0.92rem;
-      border-radius: 1rem;
-    }
-
-    .friend-card__avatar-wrap {
-      width: 3.3rem;
-      height: 3.3rem;
-      box-shadow: 0 0 0 0.22rem var(--friends-avatar-ring);
     }
   }
 </style>

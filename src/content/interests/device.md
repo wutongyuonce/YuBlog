@@ -1,9 +1,10 @@
 ---
-title: Use
-order: 1
+title: 设备
+description: 日常在用的软硬件
+order: 0
 ---
 
-#### 我的电子设备
+## 我的电子设备
 
 - **💻 PC：** Macbook Pro M5 24+512、天选4 r9 4070 16+1T、Samsung T7 固态 1T
 - **📱 Phone：** Honor Magic7 24+512、小米金沙江磁吸充电宝
@@ -12,17 +13,17 @@ order: 1
 - **🎮 Controller：** 盖世小鸡 G7 Pro
 - **⌨️ Keyboard：** Lofree FLOW2
 
-#### 我的 AI 服务
+## 我的 AI 服务
 
 * GPT Plus * 3：GPT-6 Astra/Sol/luna
 
-  ![GPT|w300](./use/PixPin_2026-09-24_01-30-49.png)
+  ![GPT|w300](./device/PixPin_2026-09-24_01-30-49.png)
 
 * Supergrok：Grok 4.7
 
 * deepseek API
 
-#### 我的 Mac 软件
+## 我的 Mac 软件
 
 - **笔记、日程管理：** Typora、Obsidian、飞书、语雀、滴答清单、Pomodoro
 - **浏览器：** Safari、ego lite、Chrome
@@ -35,7 +36,7 @@ order: 1
 - **媒体、信息：** Folo/NetNewsWire（RSS 订阅器）、Readest（阅读器）、OBS、剪映专业版（剪辑）、ArcTime Pro（字幕）、IINA（视频播放器）、Downie4（视频下载器）、小宇宙（播客）
 - **其他工具：** RunCatNeo（Mac 监控）、Deck（最好用的 Mac 剪切板历史）、PixPin（截图）、Pearcleaner / App Cleaner（清理）、Slidepad（右侧浏览器）、TopNotch（遮挡刘海）、FineTune（音频控制）、超级右键、CleanMyKeyboard、Mos（鼠标）、Bob（翻译）
 
-#### 我的手机软件
+## 我的手机软件
 
 * 微信、豆包输入法
 * 社交媒体：vx、qq、zfb、wb、X、ins、Github、telegram、discord、twitch、Proton Authenticator（密钥）
@@ -54,6 +55,6 @@ order: 1
 * 就业：boss、offershow、牛牛、领英、智联招聘、脉脉、实习僧
 * 搜索AI：grok、chatgpt、kimi、deepseek、google
 
-#### 我的 Kpop 周边
+## 我的 Kpop 周边
 
 ...

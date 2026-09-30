@@ -7,7 +7,7 @@ import {
   transformerVariantGroup,
 } from 'unocss'
 
-import { UI } from './src/config'
+import { UI, INTEREST_ICONS, AUTHOR_LINKS } from './src/config'
 import projecstData from './src/content/projects/data.json'
 
 import type {
@@ -108,6 +108,8 @@ export default defineConfig({
     ...navIcons,
     ...socialIcons,
     ...projectIcons,
+    ...Object.values(INTEREST_ICONS),
+    ...AUTHOR_LINKS.map(({ icon }) => icon),
     'i-simple-icons-x',
     'i-simple-icons-instagram',
     'i-simple-icons-bilibili',
@@ -122,10 +124,6 @@ export default defineConfig({
     /* Toc */
     'i-ri-menu-2-fill',
     'i-ri-menu-3-fill',
-    'i-ri-user-3-line',
-    'i-ri-apps-line',
-    'i-ri-heart-line',
-    'i-ri-ghost-line',
 
     /* Rose background */
     'z--1',

@@ -12,13 +12,42 @@ export const SITE: Site = {
   imageDomains: [],
 }
 
+export const AUTHOR_LINKS = [
+  {
+    label: 'GitHub',
+    href: 'https://github.com/wutongyuonce',
+    icon: 'i-uil-github-alt',
+  },
+  {
+    label: 'X',
+    href: 'https://x.com/Yu2002964143523',
+    icon: 'i-simple-icons-x',
+  },
+  {
+    label: 'Instagram',
+    href: 'https://www.instagram.com/wutongyu0730',
+    icon: 'i-simple-icons-instagram',
+  },
+  {
+    label: 'Bilibili',
+    href: 'https://space.bilibili.com/521627597',
+    icon: 'i-simple-icons-bilibili',
+  },
+  {
+    label: '小红书',
+    href: 'https://www.xiaohongshu.com/user/profile/64842572000000001f005e63',
+    icon: 'i-simple-icons-xiaohongshu',
+  },
+  { label: '邮箱', href: 'mailto:18896680730@163.com', icon: 'i-ri-mail-line' },
+]
+
 export const UI: Ui = {
   internalNavs: [
     {
-      path: '/',
-      title: '首页',
+      path: '/blogs',
+      title: '文稿',
       displayMode: 'alwaysText',
-      text: '首页',
+      text: '文稿',
     },
     {
       path: '/tags',
@@ -31,6 +60,12 @@ export const UI: Ui = {
       title: '归档',
       displayMode: 'alwaysText',
       text: '归档',
+    },
+    {
+      path: '/interests',
+      title: '拾趣',
+      displayMode: 'alwaysText',
+      text: '拾趣',
     },
     {
       path: '/projects',
@@ -102,4 +137,15 @@ export const FEATURES: Features = {
       maxItemsPerPage: [true, 3],
     },
   ],
+}
+
+/** Dropdown icons also feed UnoCSS's dynamic-class safelist. */
+export const INTEREST_ICONS: Record<string, string> = {
+  device: 'i-ri-computer-line',
+  anime: 'i-ri-sparkling-line',
+  movie: 'i-ri-film-line',
+  tv: 'i-ri-tv-line',
+  game: 'i-ri-gamepad-line',
+  book: 'i-ri-book-open-line',
+  kpop: 'i-ri-music-2-line',
 }

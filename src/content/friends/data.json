@@ -5,7 +5,7 @@
     "link": "https://antfu.me/",
     "avatar": "https://github.com/antfu.png?size=96",
     "desc": "Vue、Vite 与开源生态的长期建设者。",
-    "category": "Friends",
+    "category": "推荐",
     "siteLabel": "站在巨人的肩膀上",
     "order": 1
   },
@@ -15,7 +15,7 @@
     "link": "https://www.pseudoyu.com/",
     "avatar": "https://github.com/Pseudoyu.png?size=96",
     "desc": "独立开发、区块链与长期写作的交汇点。",
-    "category": "Friends",
+    "category": "推荐",
     "siteLabel": "Web3 / 写作 / Indie",
     "order": 2
   },
@@ -25,7 +25,7 @@
     "link": "https://www.ruanyifeng.com/blog/",
     "avatar": "",
     "desc": "长期更新的技术随笔与周刊，是很多人的固定入口。",
-    "category": "Friends",
+    "category": "推荐",
     "siteLabel": "技术周刊入口",
     "order": 3
   },
@@ -35,7 +35,7 @@
     "link": "https://lucumr.pocoo.org/",
     "avatar": "https://lucumr.pocoo.org/static/avatar-large.jpg",
     "desc": "Founder of Earendil",
-    "category": "Friends",
+    "category": "推荐",
     "siteLabel": "Earendil, pi",
     "order": 4
   },
@@ -44,7 +44,7 @@
     "name": "Hazenix的后端札记",
     "link": "https://blog.hazenix.top",
     "desc": "全栈偏后端，写技术也写生活。",
-    "category": "Friends",
+    "category": "双向",
     "order": 5
   },
   {
@@ -53,7 +53,7 @@
     "link": "https://blog.huizhi.ink",
     "avatar": "https://github.com/huizhiLLL.png",
     "desc": "也许只是些碎碎念吧。",
-    "category": "Friends",
+    "category": "双向",
     "order": 6
   },
   {
@@ -62,7 +62,7 @@
     "link": "https://blog.seeridia.top",
     "avatar": "https://www.github.com/Seeridia.png",
     "desc": "Seeridia 的小小小的大窝！",
-    "category": "Friends",
+    "category": "双向",
     "order": 7
   },
   {
@@ -71,7 +71,7 @@
     "link": "https://miuo.me",
     "avatar": "https://miuo.me/avatar.avif",
     "desc": "记录文章、笔记、实验和暂时不想丢掉的内容。",
-    "category": "Friends",
+    "category": "双向",
     "order": 8
   },
   {
@@ -80,7 +80,7 @@
     "link": "https://blog.wibus.ren",
     "avatar": "https://avatars.githubusercontent.com/u/62133302?v=4",
     "desc": "Notes on Being Human",
-    "category": "Friends",
+    "category": "双向",
     "siteLabel": "Wibus",
     "order": 9
   },
@@ -90,7 +90,7 @@
     "link": "https://joyehuang.me/",
     "avatar": "https://joyehuang.me/favicon/favicon.ico",
     "desc": "Stay hungry, stay foolish",
-    "category": "Friends",
+    "category": "双向",
     "order": 10
   },
   {
@@ -99,7 +99,7 @@
     "link": "https://blog.joshua2008.top/",
     "avatar": "https://blog.joshua2008.top/images/avatar.webp",
     "desc": "AI Agent & Full-Stack Developer",
-    "category": "Friends",
+    "category": "双向",
     "order": 11
   },
   {
@@ -108,7 +108,7 @@
     "link": "https://xnnehang.top",
     "avatar": "https://xnnehang.top/avatar.jpg",
     "desc": "写代码是因为爱。",
-    "category": "Friends",
+    "category": "双向",
     "order": 12
   },
   {
@@ -117,7 +117,7 @@
     "link": "https://innei.in/",
     "avatar": "https://avatars.githubusercontent.com/u/41265413?v=5",
     "desc": "Innei's personal blog on frontend and full-stack development — TypeScript, React, Next.js, AI engineering, indie hacking, travel and life.",
-    "category": "Friends",
+    "category": "双向",
     "order": 13
   },
   {
@@ -126,7 +126,7 @@
     "link": "https://nyakku.moe",
     "avatar": "https://nyakku.moe/avatar.jpg",
     "desc": "一个小透明的透明世界",
-    "category": "Friends",
+    "category": "双向",
     "order": 14
   },
   {
@@ -135,17 +135,8 @@
     "link": "https://skk.moe",
     "avatar": "https://cdn.skk.moe/avatar/96x96.png",
     "desc": "童话只美在真实却从不续写",
-    "category": "Friends",
+    "category": "双向",
     "order": 15
-  },
-  {
-    "id": "tcdw",
-    "name": "吐槽大王部落格",
-    "link": "https://www.tcdw.net",
-    "avatar": "https://avatars.githubusercontent.com/u/8687182?v=4&s=200",
-    "desc": "正在学习接受不完美的世界",
-    "category": "Friends",
-    "order": 16
   },
   {
     "id": "linmeng-blog",
@@ -153,7 +144,7 @@
     "link": "https://kslinmeng.cn/",
     "avatar": "https://cdn.kslinmeng.cn/gh/tanf/my-photos@main/new-windows1/20260901222623983.png",
     "desc": "爱吃柠檬",
-    "category": "Friends",
+    "category": "双向",
     "order": 17
   },
   {
@@ -162,7 +153,7 @@
     "link": "https://you-find.me",
     "avatar": "https://you-find.me/profile/me.png",
     "desc": "不足之处 敬请谅解 🙏",
-    "category": "Friends",
+    "category": "双向",
     "order": 18
   },
   {
@@ -171,7 +162,7 @@
     "link": "https://www.vinking.top/",
     "avatar": "https://cdn.vinking.top/avatar.webp",
     "desc": "愿星光永远偏爱你的梦境",
-    "category": "Friends",
+    "category": "双向",
     "siteLabel": "Vinking",
     "order": 19
   },
@@ -181,7 +172,7 @@
     "link": "https://www.yux-bao.icu",
     "avatar": "https://www.yux-bao.icu/avatar.webp",
     "desc": "一程山水，一念清欢",
-    "category": "Friends",
+    "category": "双向",
     "order": 20
   },
   {
@@ -190,7 +181,7 @@
     "link": "https://xxxuuu.me/",
     "avatar": "https://github.com/xxxuuu.png?size=96",
     "desc": "Life is an append-only log",
-    "category": "Friends",
+    "category": "双向",
     "order": 21
   }
 ]

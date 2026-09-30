@@ -321,13 +321,13 @@
 /* Article pages use a denser reading rhythm than landing pages. */
 .prose.post-header,
 .prose.post-content {
-  max-width: var(--blog-article-width);
+  max-width: var(--blog-prose-width);
 }
 
 /* The back link is a sibling footer. Match the article column, then hang
    left by the h2 anchor (0.9em of 1.6em) so ">" lines up with "#". */
 main:has(.post-content) > footer.prose {
-  width: min(100%, var(--blog-article-width));
+  width: min(100%, var(--blog-prose-width));
   max-width: none;
   /* ch must match .post-content; the link itself keeps the reading size. */
   font-size: 1rem;
@@ -355,7 +355,19 @@ main:has(.post-content) > footer.prose :is(a, span) {
 }
 
 .prose.post-content :is(h1, h2, h3, h4, h5, h6) {
-  scroll-margin-top: calc(var(--site-header-height, 4.5rem) + 0.75rem);
+  /* Without the TOC script, navigation remains visible. */
+  scroll-margin-top: var(--post-anchor-offset, 4.75rem);
+}
+
+/* Fragment targets must not move while a reader is navigating to them. */
+.slide-enter-content.post-content > :is(h1, h2, h3, h4, h5, h6) {
+  transform: none !important;
+}
+
+@media (max-width: 767px) {
+  .prose.post-content :is(h1, h2, h3, h4, h5, h6) {
+    scroll-margin-top: var(--post-anchor-offset, 7rem);
+  }
 }
 
 .prose.post-content h2 {

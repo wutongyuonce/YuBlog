@@ -80,11 +80,24 @@ test('no target collapses the pill to zero width', () => {
     ['transition', 'none'],
     ['transition', ''],
   ])
-  assert.equal(indicator.dataset.ready, 'true')
+  assert.equal(indicator.dataset.ready, 'false')
 })
 
 test('missing indicator is a no-op', () => {
   const { element: target } = createStub({ width: 88, left: 240 })
 
   assert.equal(placeSlidingIndicator({ indicator: null, target }), false)
+})
+
+test('reappearing after home must not animate from an invisible stale position', () => {
+  const { element: indicator, sets } = createStub({ ready: true })
+  placeSlidingIndicator({ indicator, target: null })
+  sets.length = 0
+  const { element: target } = createStub({ width: 60, left: 240 })
+  placeSlidingIndicator({ indicator, target })
+  assert.deepEqual(transitions(sets), [
+    ['transition', 'none'],
+    ['transition', ''],
+  ])
+  assert.equal(indicator.style.transform, 'translateX(240px)')
 })

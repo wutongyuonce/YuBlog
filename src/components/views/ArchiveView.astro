@@ -1,6 +1,7 @@
 ---
 import { getGroupedPostsByYear } from '~/utils/data'
 import { withBasePath } from '~/utils/path'
+import { getBlogCategory } from '~/utils/blog-browser.js'
 
 const groups = await getGroupedPostsByYear('blogs')
 ---
@@ -17,20 +18,24 @@ const groups = await getGroupedPostsByYear('blogs')
         {group.items.map((item) => {
           const href = item.data.redirect || withBasePath(`/blogs/${item.id}/`)
           const dateTime = item.data.pubDate.toISOString()
+          const category = getBlogCategory(item.data.category)
 
           return (
-            <li class="archive-post">
+            <li class="archive-post" data-category={category}>
               <time datetime={dateTime}>{dateTime.slice(5, 10)}</time>
               <span class="archive-post__mark" aria-hidden="true"></span>
-              <a
-                class="archive-post__title"
-                {href}
-                {...(item.data.redirect
-                  ? { target: '_blank', rel: 'noopener noreferrer' }
-                  : {})}
-              >
-                {item.data.title}
-              </a>
+              <div class="archive-post__headline">
+                <a
+                  class="archive-post__title"
+                  {href}
+                  {...(item.data.redirect
+                    ? { target: '_blank', rel: 'noopener noreferrer' }
+                    : {})}
+                >
+                  {item.data.title}
+                </a>
+                <span class="archive-post__category">{category}</span>
+              </div>
               {item.data.tags.length > 0 && (
                 <p class="archive-post__tags">
                   {item.data.tags.map((tag) => `#${tag}`).join(' ')}

@@ -197,9 +197,8 @@ export const friendSchema = z.object({
     .transform((value) => value.trim()),
 
   category: z
-    .string()
-    .describe('**必填**。友链所属分组。')
-    .transform((value) => value.trim()),
+    .enum(['推荐', '双向'])
+    .describe('**必填**。推荐为单向收藏，双向为已交换友链的站点。'),
 
   siteLabel: z
     .string()
@@ -224,4 +223,11 @@ export const aboutSchema = z.object({
     .boolean()
     .default(true)
     .describe('false 时不进标签栏，显示在按钮下方。'),
+})
+
+/** Seven reading sections; their metadata also drives the navigation menu. */
+export const interestSchema = z.object({
+  title: z.string().trim().min(1),
+  description: z.string().trim().min(1),
+  order: z.number().int().nonnegative(),
 })

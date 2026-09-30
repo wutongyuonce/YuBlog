@@ -61,7 +61,7 @@ export function getSortedPosts(posts: CollectionEntry<'blogs'>[]) {
   )
 }
 
-async function getPublishedBlogPosts() {
+export async function getPublishedBlogPosts() {
   return await getCollection('blogs', ({ data }) => !data.draft)
 }
 

@@ -1,0 +1,203 @@
+---
+import { getCollection } from 'astro:content'
+import { INTEREST_ICONS } from '~/config'
+import { getPublishedBlogPosts, getSortedPosts } from '~/utils/data'
+import { getCategoryPreviews } from '~/utils/blog-browser.js'
+import { withBasePath } from '~/utils/path'
+
+interface Props {
+  kind: 'blogs' | 'interests'
+}
+const { kind } = Astro.props
+const publishedPosts =
+  kind === 'blogs' ? getSortedPosts(await getPublishedBlogPosts()) : []
+const previews = getCategoryPreviews(publishedPosts)
+const interests =
+  kind === 'interests'
+    ? (await getCollection('interests')).sort(
+        (a, b) => a.data.order - b.data.order
+      )
+    : []
+const menuId = `nav-menu-${kind}`
+---
+
+<div class={`nav-dropdown nav-dropdown--${kind}`} data-nav-dropdown>
+  <div class="nav-dropdown__trigger">
+    <slot />
+  </div>
+  <div id={menuId} class="nav-dropdown__panel">
+    {kind === 'blogs' ? (
+      <>
+        <div class="nav-dropdown__categories">
+          {previews.map(({ id, label, count, posts }) => (
+            <div class="nav-dropdown__category" data-preview-category={id}>
+              <a
+                class="nav-dropdown__category-link"
+                href={`${withBasePath('/blogs/')}#${id}`}
+              >
+                <span>{label}</span>
+                <span>{count}</span>
+              </a>
+              <section
+                class="nav-dropdown__preview"
+                aria-label={`${label}最近文稿`}
+              >
+                <h2>{label} · 最近</h2>
+                {posts.length ? (
+                  <ul>
+                    {posts.map(({ id: postId, data }) => (
+                      <li>
+                        <time datetime={data.pubDate.toISOString()}>
+                          {data.pubDate
+                            .toISOString()
+                            .slice(5, 10)
+                            .replace('-', '.')}
+                        </time>
+                        <a
+                          href={
+                            data.redirect || withBasePath(`/blogs/${postId}/`)
+                          }
+                        >
+                          {data.title}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>还没有发布{label}文稿。</p>
+                )}
+              </section>
+            </div>
+          ))}
+        </div>
+        <a class="nav-dropdown__all" href={withBasePath('/blogs/')}>
+          查看全部文稿 <span>{publishedPosts.length} 篇</span>
+        </a>
+      </>
+    ) : (
+      <ul class="nav-dropdown__interests">
+        {interests.map(({ id, data }) => (
+          <li>
+            <a href={withBasePath(`/interests/${id}/`)}>
+              <span
+                class:list={['nav-dropdown__icon', INTEREST_ICONS[id]]}
+                aria-hidden="true"
+              />
+              <span>
+                <strong>{data.title}</strong>
+                <small>{data.description}</small>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</div>
+
+<script>
+  const closeDropdowns = () => {
+    document
+      .querySelectorAll<HTMLElement>('[data-nav-dropdown]')
+      .forEach((menu) => {
+        delete menu.dataset.open
+        menu
+          .querySelector('[data-nav-link]')
+          ?.setAttribute('aria-expanded', 'false')
+      })
+  }
+  const mountDropdowns = () => {
+    document
+      .querySelectorAll<HTMLElement>('[data-nav-dropdown]')
+      .forEach((menu) => {
+        if (menu.dataset.bound) return
+        menu.dataset.bound = 'true'
+        const link = menu.querySelector<HTMLAnchorElement>('[data-nav-link]')!
+        const panel = menu.querySelector<HTMLElement>('.nav-dropdown__panel')!
+        const categories = Array.from(
+          menu.querySelectorAll<HTMLElement>('[data-preview-category]')
+        )
+        const selectPreview = (selected: HTMLElement) => {
+          categories.forEach((category) =>
+            category.toggleAttribute(
+              'data-preview-active',
+              category === selected
+            )
+          )
+        }
+        if (categories[0]) selectPreview(categories[0])
+        categories.forEach((category) => {
+          category
+            .querySelector('a')
+            ?.addEventListener('pointerenter', (event) => {
+              if ((event as PointerEvent).pointerType === 'mouse')
+                selectPreview(category)
+            })
+          category.addEventListener('focusin', () => selectPreview(category))
+        })
+        link.setAttribute('aria-haspopup', 'true')
+        link.setAttribute('aria-controls', panel.id)
+        link.setAttribute('aria-expanded', 'false')
+        let touchOpening = false
+        const setOpen = (open: boolean) => {
+          if (open) {
+            closeDropdowns()
+            menu.dataset.open = ''
+          } else delete menu.dataset.open
+          link.setAttribute('aria-expanded', String(open))
+        }
+        menu.addEventListener('pointerenter', (event) => {
+          if (event.pointerType === 'mouse') setOpen(true)
+        })
+        menu.addEventListener('pointerleave', (event) => {
+          if (
+            event.pointerType === 'mouse' &&
+            !menu.querySelector(':focus-visible')
+          )
+            setOpen(false)
+        })
+        menu.addEventListener('focusin', () => setOpen(true))
+        menu.addEventListener('focusout', (event) => {
+          if (
+            !(event.relatedTarget instanceof Node) ||
+            !menu.contains(event.relatedTarget)
+          )
+            setOpen(false)
+        })
+        link.addEventListener('pointerdown', (event) => {
+          touchOpening =
+            event.pointerType === 'touch' && !menu.hasAttribute('data-open')
+        })
+        link.addEventListener('click', (event) => {
+          if (!touchOpening) return
+          event.preventDefault()
+          touchOpening = false
+          setOpen(true)
+        })
+        menu.addEventListener('keydown', (event) => {
+          if (
+            event.target === link &&
+            (event.key === 'ArrowDown' || event.key === ' ')
+          ) {
+            event.preventDefault()
+            setOpen(true)
+            panel.querySelector<HTMLAnchorElement>('a')?.focus()
+          } else if (event.key === 'Escape') {
+            event.preventDefault()
+            link.focus()
+            setOpen(false)
+          }
+        })
+      })
+  }
+  document.addEventListener('pointerdown', (event) => {
+    if (
+      !(event.target instanceof Element) ||
+      !event.target.closest('[data-nav-dropdown]')
+    )
+      closeDropdowns()
+  })
+  document.addEventListener('astro:before-preparation', closeDropdowns)
+  document.addEventListener('astro:page-load', mountDropdowns)
+  mountDropdowns()
+</script>

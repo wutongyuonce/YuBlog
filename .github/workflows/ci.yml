@@ -44,5 +44,8 @@ jobs:
       - name: Verify built pagination
         run: pnpm test:built-pagination
 
+      - name: Verify built restructure
+        run: pnpm test:built-restructure
+
       - name: Verify built Markdown
         run: pnpm test:built-markdown

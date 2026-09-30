@@ -22,9 +22,9 @@ const external = type === 'internal' ? false : true
 const ariaCurrent =
   type === 'internal'
     ? ensureTrailingSlash(Astro.url.pathname) === resolvePath(item.path) ||
-      (item.path === '/' &&
+      ((item.path === '/blogs' || item.path === '/interests') &&
         ensureTrailingSlash(Astro.url.pathname).startsWith(
-          resolvePath('/blogs')
+          resolvePath(item.path)
         ))
       ? 'page'
       : false
@@ -32,6 +32,7 @@ const ariaCurrent =
 ---
 
 <Link
+  data-nav-link={type === 'internal' ? '' : undefined}
   class={`${
     item.displayMode === 'iconHiddenOnMobile' ||
     item.displayMode === 'textHiddenOnMobile'

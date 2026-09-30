@@ -14,7 +14,7 @@ interface Props {
   requireTags?: boolean
 }
 
-const { basePath = withBasePath('/'), requireTags = false } = Astro.props
+const { basePath = withBasePath('/blogs/'), requireTags = false } = Astro.props
 const posts = await getBlogListItems()
 const firstPaintBoot = blogFirstPaintBootSource()
 const firstPageCount = Math.ceil(posts.length / BLOG_PAGE_SIZE)
@@ -40,6 +40,7 @@ const firstPagePaginationHtml = showFirstPagePagination
 <section
   data-blog-browser
   data-home={basePath}
+  data-tags-path={withBasePath('/tags/')}
   data-require-tags={requireTags ? '' : undefined}
   aria-label="文章列表"
 >
@@ -137,9 +138,10 @@ const firstPagePaginationHtml = showFirstPagePagination
     color: var(--accent);
   }
   .blog-category-header h1 {
+    font-family: var(--font-heading);
     margin: 0;
-    font-size: 2.25rem;
-    font-weight: 650;
+    font-size: 1.75rem;
+    font-weight: 400;
     line-height: 1.25;
   }
   .blog-category-count {
@@ -164,7 +166,7 @@ const firstPagePaginationHtml = showFirstPagePagination
   }
   @media (max-width: 767px) {
     .blog-category-header h1 {
-      font-size: 1.85rem;
+      font-size: 1.5rem;
     }
   }
 </style>
@@ -182,13 +184,17 @@ const firstPagePaginationHtml = showFirstPagePagination
     event.newDocument instanceof Document &&
     'to' in event &&
     event.to instanceof URL
-  const update = (doc: Document = document, search = location.search) => {
+  const update = (
+    doc: Document = document,
+    search = location.search,
+    hash = location.hash
+  ) => {
     const root = doc.querySelector<HTMLElement>('[data-blog-browser]')
     if (!root) return
     const live = doc === document
     const home = root.dataset.home!
     const requireTags = root.hasAttribute('data-require-tags')
-    const query = parseBlogQuery(search)
+    const query = parseBlogQuery(search, hash)
     const posts = Array.from(
       root.querySelectorAll<HTMLElement>('[data-blog-item]')
     ).map((element) => ({
@@ -267,7 +273,7 @@ const firstPagePaginationHtml = showFirstPagePagination
         count.textContent = `共 ${result.total} 篇`
         const tagsLink = doc.createElement('a')
         tagsLink.textContent = '全部标签'
-        tagsLink.href = `${home}tags/`
+        tagsLink.href = root.dataset.tagsPath!
         filters.append(count, tagsLink)
       }
     }
@@ -329,10 +335,11 @@ const firstPagePaginationHtml = showFirstPagePagination
   }
   document.addEventListener('astro:before-swap', (event) => {
     if (!isSwapEvent(event)) return
-    update(event.newDocument, event.to.search)
+    update(event.newDocument, event.to.search, event.to.hash)
   })
   document.addEventListener('astro:page-load', () => update())
   document.addEventListener('blog:querychange', () => update())
   window.addEventListener('popstate', () => update())
+  window.addEventListener('hashchange', () => update())
   update()
 </script>

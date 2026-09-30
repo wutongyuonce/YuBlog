@@ -11,6 +11,7 @@ if (!toc || (Array.isArray(toc) && !toc[0])) return
 
 <script>
   import { pickActiveHeadingIndex } from '~/utils/toc-active'
+  import { updateNavScroll } from '~/utils/nav-scroll.js'
 
   class Toc extends HTMLElement {
     #headingMapToc = new Map<Element, HTMLAnchorElement[]>()
@@ -19,13 +20,26 @@ if (!toc || (Array.isArray(toc) && !toc[0])) return
     #previousActiveLinks: HTMLAnchorElement[] = []
     #frame = 0
     #shiftObserver: ResizeObserver | null = null
+    #navObserver: MutationObserver | null = null
 
     connectedCallback() {
       this.#init()
-      this.#schedule()
+      this.#sync()
       window.addEventListener('scroll', this.#schedule, { passive: true })
       window.addEventListener('resize', this.#schedule)
+      this.addEventListener('click', this.#prepareAnchor)
       this.addEventListener('toc-reveal', this.#onReveal)
+      const header = document.querySelector('[data-site-header]')
+      if (header) {
+        this.#navObserver = new MutationObserver(this.#schedule)
+        this.#navObserver.observe(header, {
+          attributes: true,
+          attributeFilter: ['data-scroll-hidden'],
+        })
+      }
+      document.fonts.ready.then(() => {
+        if (this.isConnected) this.#schedule()
+      })
       // Lazy images and webfonts move the headings without scrolling. Without
       // this, the highlight keeps pointing at wherever the reader was before
       // the shift until they happen to scroll again. Observed on <body>: the
@@ -61,6 +75,7 @@ if (!toc || (Array.isArray(toc) && !toc[0])) return
     }
 
     #sync = () => {
+      this.#setAnchorOffset(this.#readingOffset())
       const laidOut = this.#headings.filter(
         (heading) => heading.getClientRects().length > 0
       )
@@ -92,16 +107,72 @@ if (!toc || (Array.isArray(toc) && !toc[0])) return
       this.#previousActiveLinks = newLinks
     }
 
+    #visibleHeaderOffset = () => {
+      const header = document.querySelector('[data-site-header]')
+      if (!(header instanceof HTMLElement)) return 20
+      const top =
+        parseFloat(
+          getComputedStyle(header).getPropertyValue('--nav-visible-top')
+        ) || 0
+      return top + header.getBoundingClientRect().height + 12
+    }
+
+    #readingOffset = () =>
+      document.querySelector('[data-site-header][data-scroll-hidden]')
+        ? 20
+        : this.#visibleHeaderOffset()
+
+    #setAnchorOffset = (offset: number) => {
+      document.documentElement.style.setProperty(
+        '--post-anchor-offset',
+        `${offset}px`
+      )
+    }
+
+    #prepareAnchor = (event: MouseEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      )
+        return
+      const link =
+        event.target instanceof Element
+          ? event.target.closest<HTMLAnchorElement>('[data-toc-link]')
+          : null
+      const heading = this.#headings.find(
+        (node) => link && this.#headingMapToc.get(node)?.includes(link)
+      )
+      if (!heading) return
+      const currentOffset = this.#readingOffset()
+      const top = heading.getBoundingClientRect().top + window.scrollY
+      const targetY = Math.max(
+        0,
+        Math.min(
+          top - currentOffset,
+          document.documentElement.scrollHeight - window.innerHeight
+        )
+      )
+      // Use the navigation's own scroll rule, then let the normal fragment
+      // navigation consume the margin. No second scroll or custom history.
+      const next = updateNavScroll(
+        {
+          y: window.scrollY,
+          direction: 0,
+          travel: 0,
+          hidden: currentOffset === 20,
+        },
+        targetY
+      )
+      this.#setAnchorOffset(next.hidden ? 20 : this.#visibleHeaderOffset())
+    }
+
     #activationLine = (heading: Element) => {
       const margin = parseFloat(getComputedStyle(heading).scrollMarginTop)
-      if (Number.isFinite(margin)) return margin + 1
-
-      const header = document.querySelector('[data-site-header]')
-      const headerHeight =
-        header instanceof HTMLElement
-          ? header.getBoundingClientRect().height
-          : 72
-      return headerHeight + 12 + 1
+      return (Number.isFinite(margin) ? margin : this.#readingOffset()) + 1
     }
 
     #isAtBottom = () => {
@@ -204,9 +275,13 @@ if (!toc || (Array.isArray(toc) && !toc[0])) return
       this.#frame = 0
       window.removeEventListener('scroll', this.#schedule)
       window.removeEventListener('resize', this.#schedule)
+      this.removeEventListener('click', this.#prepareAnchor)
       this.removeEventListener('toc-reveal', this.#onReveal)
       this.#shiftObserver?.disconnect()
       this.#shiftObserver = null
+      this.#navObserver?.disconnect()
+      this.#navObserver = null
+      document.documentElement.style.removeProperty('--post-anchor-offset')
       this.#headingMapToc.clear()
       this.#headings = []
       this.#currentActiveHeading = null

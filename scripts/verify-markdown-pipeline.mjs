@@ -30,12 +30,12 @@ test('Markdown width, reading metadata and heading links reach the built site', 
   ])
 
   // This article has no explicit minutesRead: losing remarkReadingTime would
-  // remove the automatic reading time (and zero out the sidebar word count).
-  assert.match(post, /\b[1-9]\d* min read\b/)
+  // remove the automatic reading time (and zero out the profile word count).
+  assert.match(post, /\b[1-9]\d* min(?: read)?\b/)
   const wordCount = home.match(
-    /<dt>字数<\/dt>\s*<dd>\s*<span class="blog-profile__value">([\d.]+)<\/span>/
+    /<dt\b[^>]*>字数<\/dt>\s*<dd>\s*<span class="blog-profile__value">([\d.]+)<\/span>/
   )
-  assert.ok(wordCount, 'the sidebar should show the total word count')
+  assert.ok(wordCount, 'the profile should show the total word count')
   assert.ok(
     Number(wordCount[1]) > 0,
     'word count must not silently become zero'

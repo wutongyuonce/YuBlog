@@ -88,27 +88,23 @@ frontmatter to <code>false</code> or remove it to publish the post.`
     {isSearchable}
     {searchFilter}
   >
-    {titleImage ? (
+    <Fragment slot="head">
+      <PostMeta
+        {pubDate}
+        {lastModDate}
+        {minutesRead}
+        {tags}
+        hasSubtitle={!titleImage && !!subtitle}
+      />
+    </Fragment>
+    {titleImage && (
       <Fragment slot="hero">
         <PostHero
           {title}
-          {subtitle}
+          description={description || subtitle}
           {titleImage}
           {titleImageAlt}
           {pubDate}
-          {lastModDate}
-          {minutesRead}
-          {tags}
-        />
-      </Fragment>
-    ) : (
-      <Fragment slot="head">
-        <PostMeta
-          {pubDate}
-          {lastModDate}
-          {minutesRead}
-          {tags}
-          hasSubtitle={!!subtitle}
         />
       </Fragment>
     )}

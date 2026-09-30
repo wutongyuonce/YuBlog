@@ -45,6 +45,8 @@ const isAboutPage = pathname === resolvePath('/about')
 const isFriendsPage = pathname === resolvePath('/friends')
 const hideBackLink =
   isHomePage ||
+  pathname === resolvePath('/blogs') ||
+  pathname.startsWith(resolvePath('/interests')) ||
   isTagsPage ||
   isArchivesPage ||
   isProjectsPage ||
@@ -105,7 +107,7 @@ if (hasCustomCursor) style['--external-link-cursor'] = cursorType
     <NavBar />
 
     <!-- Main -->
-    <main id="main" class="px-7 pt-4 pb-10">
+    <main id="main" class="site-main pb-10">
       <!-- Content -->
       <slot />
       {!hideBackLink && (

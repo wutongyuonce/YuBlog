@@ -9,7 +9,7 @@ const isBlogDetail =
 
 const pathSegments = currentPath.split('/').slice(0, -2)
 const href = isBlogDetail
-  ? withBasePath('/')
+  ? withBasePath('/blogs/')
   : pathSegments.length > 1
     ? pathSegments.join('/') + '/'
     : '/'

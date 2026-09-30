@@ -34,12 +34,9 @@ const showLastModDate =
       alt=""
       aria-hidden="true"
     />
+    <span>梧桐雨</span>
+    <span aria-hidden="true">—</span>
     <time datetime={pubDate}>{formatDate(pubDate)}</time>
-    {showLastModDate && (
-      <time datetime={lastModDate}>· Updated {formatDate(lastModDate)}</time>
-    )}
-    {minutesRead > 0 && <span>· {minutesRead} min read</span>}
-    {tags.length > 0 && <span>· {tags.join(' / ')}</span>}
   </div>
 ) : isMinimal ? (
   <div
@@ -96,11 +93,15 @@ const showLastModDate =
     flex-wrap: wrap;
     gap: 0.35rem 0.55rem;
     margin-top: 1.1rem !important;
-    color: var(--c-text);
-    font-size: 0.9rem;
+    color: inherit;
+    font-size: 0.8rem;
     line-height: 1.4;
     overflow-wrap: anywhere;
-    opacity: 0.72;
+    opacity: 0.9;
+  }
+
+  .post-meta--hero time {
+    color: inherit;
   }
 
   .post-meta--hero > :not(.post-meta__avatar) {
