@@ -323,3 +323,20 @@ test('returning to the confirmed parent cancels an in-flight preview immediately
   old.abort()
   assert.equal(nav.indicator.style.transform, 'translateX(2px)')
 })
+
+test('an older queued swap cannot finish the newer destination preview', () => {
+  const nav = createNav()
+  nav.prepare(nav.about)
+  nav.prepare(nav.friends)
+  // The earlier swap may already be queued when the newer preparation begins.
+  nav.location.pathname = '/about/'
+  nav.document.dispatchEvent(new Event('astro:after-swap'))
+  nav.document.dispatchEvent(new Event('astro:page-load'))
+  assert.equal(nav.about.getAttribute('aria-current'), 'page')
+  assert.equal(nav.friends.getAttribute('data-nav-current'), '')
+  assert.equal(nav.indicator.style.transform, 'translateX(274px)')
+
+  nav.location.pathname = '/friends/'
+  nav.document.dispatchEvent(new Event('astro:after-swap'))
+  assert.equal(nav.friends.getAttribute('aria-current'), 'page')
+})

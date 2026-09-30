@@ -111,8 +111,8 @@ const home = withBasePath('/')
 
   let pendingLink: HTMLAnchorElement | null = null
   let pendingSignal: AbortSignal | null = null
-  /** Pathname when the preview started, to tell a landed load from a stale one. */
-  let pendingFrom: string | null = null
+  /** Only this destination can finish the current request's preview. */
+  let pendingTo: string | null = null
 
   const placeIndicator = (animate: boolean) => {
     const nav = pages()
@@ -159,13 +159,13 @@ const home = withBasePath('/')
 
       pendingLink = link
       pendingSignal = event.signal
-      pendingFrom = normalize(location.pathname)
+      pendingTo = normalize(destination)
       placeIndicator(true)
       const rollback = () => {
         if (pendingSignal !== event.signal) return
         pendingLink = null
         pendingSignal = null
-        pendingFrom = null
+        pendingTo = null
         placeIndicator(true)
       }
       event.signal.addEventListener('abort', rollback, { once: true })
@@ -177,13 +177,13 @@ const home = withBasePath('/')
       // Astro also fires this from window load and from a previous navigation's
       // completion. Those are not this navigation landing, so keep the preview
       // instead of snapping the pill back to the page the user is leaving.
-      if (pendingSignal && normalize(location.pathname) === pendingFrom) {
+      if (pendingSignal && normalize(location.pathname) !== pendingTo) {
         placeIndicator(true)
         return
       }
       pendingLink = null
       pendingSignal = null
-      pendingFrom = null
+      pendingTo = null
       placeIndicator(true)
     }
     document.addEventListener('astro:after-swap', reconcileNavigation)
@@ -196,13 +196,12 @@ const home = withBasePath('/')
 </script>
 
 <script>
-  import { updateNavScroll } from '~/utils/nav-scroll.js'
+  import { updateNavVisibility } from '~/utils/nav-scroll.js'
 
-  let state = { y: window.scrollY, direction: 0, travel: 0, hidden: false }
   let frame = 0
   const header = () => document.querySelector<HTMLElement>('[data-site-header]')
   const reveal = () => {
-    state = updateNavScroll(state, window.scrollY, true)
+    updateNavVisibility(window.scrollY, true)
     header()?.removeAttribute('data-scroll-hidden')
   }
   const update = () => {
@@ -213,8 +212,10 @@ const home = withBasePath('/')
       nav.querySelector(':focus-visible, [data-nav-dropdown][data-open]') ||
       document.querySelector('#search-panel:not(.hidden)')
     )
-    state = updateNavScroll(state, window.scrollY, pinned)
-    nav.toggleAttribute('data-scroll-hidden', state.hidden)
+    nav.toggleAttribute(
+      'data-scroll-hidden',
+      updateNavVisibility(window.scrollY, pinned)
+    )
   }
   if (!document.documentElement.dataset.navScrollBound) {
     document.documentElement.dataset.navScrollBound = 'true'

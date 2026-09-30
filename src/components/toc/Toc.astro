@@ -11,7 +11,7 @@ if (!toc || (Array.isArray(toc) && !toc[0])) return
 
 <script>
   import { pickActiveHeadingIndex } from '~/utils/toc-active'
-  import { updateNavScroll } from '~/utils/nav-scroll.js'
+  import { predictNavVisibility } from '~/utils/nav-scroll.js'
 
   class Toc extends HTMLElement {
     #headingMapToc = new Map<Element, HTMLAnchorElement[]>()
@@ -158,16 +158,9 @@ if (!toc || (Array.isArray(toc) && !toc[0])) return
       )
       // Use the navigation's own scroll rule, then let the normal fragment
       // navigation consume the margin. No second scroll or custom history.
-      const next = updateNavScroll(
-        {
-          y: window.scrollY,
-          direction: 0,
-          travel: 0,
-          hidden: currentOffset === 20,
-        },
-        targetY
+      this.#setAnchorOffset(
+        predictNavVisibility(targetY) ? 20 : this.#visibleHeaderOffset()
       )
-      this.#setAnchorOffset(next.hidden ? 20 : this.#visibleHeaderOffset())
     }
 
     #activationLine = (heading: Element) => {

@@ -364,7 +364,7 @@ main:has(.post-content) > footer.prose :is(a, span) {
   transform: none !important;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 799px) {
   .prose.post-content :is(h1, h2, h3, h4, h5, h6) {
     scroll-margin-top: var(--post-anchor-offset, 7rem);
   }

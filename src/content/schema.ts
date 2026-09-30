@@ -216,13 +216,8 @@ export const friendSchema = z.object({
 export const aboutSchema = z.object({
   title: z
     .string()
-    .describe('标签按钮上的名字。')
+    .describe('介绍文档的标题；页面页头由路由提供。')
     .transform((value) => value.trim()),
-  order: z.number().default(0).describe('标签排序，数值越小越靠前。'),
-  tab: z
-    .boolean()
-    .default(true)
-    .describe('false 时不进标签栏，显示在按钮下方。'),
 })
 
 /** Seven reading sections; their metadata also drives the navigation menu. */

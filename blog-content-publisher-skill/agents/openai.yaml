@@ -1,4 +1,4 @@
 interface:
   display_name: '博客内容发布'
-  short_description: '维护博客文章、项目、关于页、友链和站点文案'
-  default_prompt: 'Use $blog-content-publisher to update blog posts, projects, about pages, friends, or site copy in this Astro site.'
+  short_description: '维护博客文章、项目、作者介绍、拾趣、友链和站点文案'
+  default_prompt: 'Use $blog-content-publisher to update blog posts, projects, author introduction, interests, friends, or site copy in this Astro site.'
