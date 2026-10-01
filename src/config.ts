@@ -52,7 +52,7 @@ export const MORE_LINKS = [
   {
     title: '相册',
     description: '光影与日常',
-    href: 'https://example.com/album/',
+    href: 'https://photos.wutongyu.site/',
     icon: 'i-ri-image-line',
     external: true,
   },
