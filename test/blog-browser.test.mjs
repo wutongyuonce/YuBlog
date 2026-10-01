@@ -6,6 +6,7 @@ import {
   serializeBlogQuery,
   selectBlogPage,
   getBlogCategory,
+  getBlogCategoryColors,
   getCategoryPreviews,
   getPageNumbers,
   blogFirstPaintBootSource,
@@ -50,7 +51,8 @@ test('the injected first-paint script hides posts outside the requested page', (
   assert.equal(paintOf('', '#tech').paint, 'filter')
   assert.equal(paintOf('?page=2', '#diary').paint, 'filter')
   assert.equal(paintOf('?page=2', '#thought').paint, 'filter')
-  assert.equal(paintOf('', '#unknown').paint, '1')
+  assert.equal(paintOf('', '#旅行').paint, 'filter')
+  assert.equal(paintOf('', '#%E6%97%85%E8%A1%8C').paint, 'filter')
   const first = paintOf('')
   assert.equal(first.paint, '1')
   assert.match(
@@ -93,7 +95,8 @@ test('shared URLs preserve Chinese filters and AND tags without duplicate values
   const query = parseBlogQuery(
     '?category=技术向&tag=Agent&tag=测试&tag=Agent&page=2'
   )
-  assert.deepEqual(parseBlogQuery(serializeBlogQuery(query)), query)
+  const url = new URL(serializeBlogQuery(query), 'https://example.test/blogs/')
+  assert.deepEqual(parseBlogQuery(url.search, url.hash), query)
   assert.deepEqual(query.tags, ['Agent', '测试'])
   assert.equal(serializeBlogQuery(parseBlogQuery('')), '')
 })
@@ -211,9 +214,10 @@ test('new fragment categories round-trip with tags and pages; legacy queries sti
   assert.equal(parseBlogQuery('?category=技术向', '#diary').category, '日记')
   assert.equal(
     parseBlogQuery('?category=技术向', '#unknown').category,
-    '技术向'
+    'unknown'
   )
   assert.equal(parseBlogQuery('', '#%broken').category, '')
+  assert.equal(parseBlogQuery('?category=旅行', '#%broken').category, '旅行')
 })
 
 test('category grouping combines tools with tech without losing legacy exact filters', () => {
@@ -283,4 +287,102 @@ test('navigation previews count published groups and show at most four in suppli
     getCategoryPreviews([]).map(({ posts }) => posts),
     [[], [], []]
   )
+})
+
+test('arbitrary category names share fragment URLs without reserved-name or encoding collisions', () => {
+  for (const category of [
+    '旅行',
+    'English',
+    'tech',
+    'thought',
+    'diary',
+    'category=tech',
+    'C++ / C# & 100%',
+    '<script>',
+    '👩‍💻',
+  ]) {
+    const query = { category, tags: ['随笔'], page: 2 }
+    const url = new URL(
+      serializeBlogQuery(query),
+      'https://example.test/blogs/'
+    )
+    assert.equal(url.searchParams.has('category'), false)
+    assert.deepEqual(parseBlogQuery(url.search, url.hash), query)
+    assert.equal(
+      selectBlogPage(
+        [{ data: { category, tags: ['随笔'] } }],
+        parseBlogQuery(url.search, url.hash)
+      ).total,
+      1
+    )
+  }
+  assert.equal(
+    serializeBlogQuery({ category: '旅行', tags: [], page: 1 }),
+    '#%E6%97%85%E8%A1%8C'
+  )
+  const legacy = parseBlogQuery('?category=工具向')
+  const url = new URL(serializeBlogQuery(legacy), 'https://example.test/blogs/')
+  assert.deepEqual(
+    selectBlogPage(posts, parseBlogQuery(url.search, url.hash)).items.map(
+      ({ id }) => id
+    ),
+    [0, 1]
+  )
+})
+
+test('published custom categories are discovered once with counts and bounded date-ordered previews', () => {
+  const entries = [
+    ...Array.from({ length: 9 }, (_, id) => ({
+      id,
+      data: { category: '旅行' },
+    })),
+    { id: 'reading', data: { category: '读书' } },
+    { id: 'tools', data: { category: '工具向' } },
+  ]
+  const groups = getCategoryPreviews(entries)
+  assert.deepEqual(
+    groups.slice(0, 3).map(({ label }) => label),
+    ['技术', '思考', '日记']
+  )
+  assert.equal(groups.length, 5)
+  const travel = groups.find(({ label }) => label === '旅行')
+  assert.equal(travel.count, 9)
+  assert.deepEqual(
+    travel.posts.map(({ id }) => id),
+    [0, 1, 2, 3]
+  )
+  assert.equal(parseBlogQuery('', '#' + travel.id).category, '旅行')
+  assert.deepEqual(
+    getCategoryPreviews([...entries].reverse()).map(({ label }) => label),
+    groups.map(({ label }) => label)
+  )
+  assert.equal(
+    getCategoryPreviews(
+      entries.filter(({ data }) => data.category !== '旅行')
+    ).some(({ label }) => label === '旅行'),
+    false
+  )
+})
+
+test('category colors preserve aliases and assign stable theme colors without CSS injection', () => {
+  assert.deepEqual(getBlogCategoryColors('工具向'), {
+    light: '#526b80',
+    dark: '#a0b4c6',
+  })
+  assert.deepEqual(getBlogCategoryColors('思考向'), {
+    light: 'var(--accent)',
+    dark: 'var(--accent)',
+  })
+  assert.deepEqual(getBlogCategoryColors('日记向'), {
+    light: '#62785f',
+    dark: '#a9bca1',
+  })
+  const colors = getBlogCategoryColors('旅行')
+  for (const name of ['读书', '旅行', '旅行; color: red', '👩‍💻']) {
+    const { light, dark } = getBlogCategoryColors(name)
+    assert.match(light, /^hsl\(\d{1,3} 32% 36%\)$/)
+    assert.match(dark, /^hsl\(\d{1,3} 32% 72%\)$/)
+  }
+  assert.deepEqual(getBlogCategoryColors('旅行'), colors)
+  assert.notEqual(colors.light, colors.dark)
 })

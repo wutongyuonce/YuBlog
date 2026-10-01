@@ -7,16 +7,19 @@ export const BLOG_CATEGORIES = [
     id: 'tech',
     label: '技术',
     sources: ['技术向', '工具向', '技术', '工具', 'tech'],
+    colors: { light: '#526b80', dark: '#a0b4c6' },
   },
   {
     id: 'thought',
     label: '思考',
     sources: ['思考向', '思考', 'thought'],
+    colors: { light: 'var(--accent)', dark: 'var(--accent)' },
   },
   {
     id: 'diary',
     label: '日记',
     sources: ['日记', '日记向', 'diary'],
+    colors: { light: '#62785f', dark: '#a9bca1' },
   },
 ]
 
@@ -31,17 +34,67 @@ export function getBlogCategory(category) {
   )
 }
 
-/** Date-sorted published posts in; navigation shows at most four per group.
+/** Date-sorted published posts in; discover categories and keep at most four previews.
  * @template {{data: {category: string, draft?: boolean}}} T
  * @param {T[]} posts
  */
 export function getCategoryPreviews(posts) {
-  return BLOG_CATEGORIES.map(({ id, label }) => {
-    const matches = posts.filter(
-      ({ data }) => getBlogCategory(data.category) === label
-    )
-    return { id, label, count: matches.length, posts: matches.slice(0, 4) }
-  })
+  const groups = new Map(
+    BLOG_CATEGORIES.map(({ id, label }) => [
+      label,
+      { id, label, count: 0, posts: /** @type {T[]} */ ([]) },
+    ])
+  )
+  for (const post of posts) {
+    const label = getBlogCategory(post.data.category)
+    let group = groups.get(label)
+    if (!group) {
+      group = {
+        id: serializeBlogQuery({ category: label, tags: [], page: 1 }).slice(1),
+        label,
+        count: 0,
+        posts: [],
+      }
+      groups.set(label, group)
+    }
+    group.count++
+    if (group.posts.length < 4) group.posts.push(post)
+  }
+  const knownLabels = BLOG_CATEGORIES.map(({ label }) => label)
+  return [
+    ...Array.from(groups.values()).slice(0, BLOG_CATEGORIES.length),
+    ...Array.from(groups.values())
+      .filter(({ label }) => !knownLabels.includes(label))
+      .sort((a, b) => a.label.localeCompare(b.label, 'zh-Hans-CN')),
+  ]
+}
+
+/** Stable theme colors; content order and other categories do not affect the hue.
+ * @param {string} category
+ */
+export function getBlogCategoryColors(category) {
+  const label = getBlogCategory(category)
+  const known = BLOG_CATEGORIES.find((group) => group.label === label)
+  if (known) return known.colors
+  let hash = 0
+  for (const char of label)
+    hash = (Math.imul(hash, 31) + (char.codePointAt(0) ?? 0)) >>> 0
+  const hue = hash % 360
+  return { light: `hsl(${hue} 32% 36%)`, dark: `hsl(${hue} 32% 72%)` }
+}
+
+/** @param {string} hash */
+function categoryFromHash(hash) {
+  const group = BLOG_CATEGORIES.find(({ id }) => hash === `#${id}`)
+  if (group) return group.label
+  if (!hash.startsWith('#')) return ''
+  try {
+    return decodeURIComponent(
+      hash.startsWith('#category=') ? hash.slice(10) : hash.slice(1)
+    ).trim()
+  } catch {
+    return ''
+  }
 }
 
 /**
@@ -57,7 +110,7 @@ export function blogFirstPaintBootSource(pageSize = BLOG_PAGE_SIZE) {
   }
   return `(() => {
     const params = new URLSearchParams(location.search)
-    const category = ${JSON.stringify(BLOG_CATEGORIES.map(({ id }) => `#${id}`))}.includes(location.hash) || (params.get('category') ?? '').trim()
+    const category = Boolean(location.hash.slice(1)) || (params.get('category') ?? '').trim()
     const hasTag = params.getAll('tag').some((tag) => tag.trim())
     const root = '[data-blog-browser]:not([data-paged])'
     let page = 1
@@ -103,9 +156,7 @@ export function parseBlogQuery(search, hash = '') {
   const value = params.get('page') ?? '1'
   const page = /^\d+$/.test(value) ? Number(value) : 1
   return {
-    category:
-      BLOG_CATEGORIES.find(({ id }) => hash === `#${id}`)?.label ??
-      (params.get('category') ?? '').trim(),
+    category: categoryFromHash(hash) || (params.get('category') ?? '').trim(),
     tags: normalizePostTags(params.getAll('tag')),
     page: Number.isSafeInteger(page) && page > 0 ? page : 1,
   }
@@ -115,11 +166,17 @@ export function parseBlogQuery(search, hash = '') {
 export function serializeBlogQuery(query) {
   const params = new URLSearchParams()
   const group = BLOG_CATEGORIES.find(({ label }) => label === query.category)
-  if (query.category && !group) params.set('category', query.category)
   for (const tag of normalizePostTags(query.tags)) params.append('tag', tag)
   if (query.page > 1) params.set('page', String(query.page))
   const search = params.toString()
-  return (search ? `?${search}` : '') + (group ? `#${group.id}` : '')
+  const categoryId = encodeURIComponent(query.category)
+  const reserved = BLOG_CATEGORIES.some(({ id }) => id === categoryId)
+  const hash = group
+    ? `#${group.id}`
+    : query.category
+      ? `#${reserved ? 'category=' : ''}${categoryId}`
+      : ''
+  return (search ? `?${search}` : '') + hash
 }
 
 /**

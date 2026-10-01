@@ -37,7 +37,7 @@ https://www.wutongyu.site/blogs/foo/?page=2
 ### 设计时要想清楚的
 
 - 官方地址要稳定：本站文章永远是 `/blogs/<slug>/`，带尾斜杠。
-- 筛选、分页、追踪参数**不要**写进 canonical。文稿 `/blogs/?category=技术向` 和 `/blogs/#tech` 的官方地址仍是 `/blogs/`；首页兼容筛选书签在客户端转到文稿页。
+- 筛选、分页、追踪参数**不要**写进 canonical。文稿 `/blogs/?category=技术向`、`/blogs/#tech` 和新增分类 `/blogs/#旅行` 的官方地址仍是 `/blogs/`；首页兼容筛选书签在客户端转到文稿页。
 - 全站一个生成点，避免有的页面忘了写。
 
 ### 本站怎么做
@@ -50,7 +50,11 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site)
 <link rel="canonical" href={canonicalURL} />
 ```
 
-`Astro.site` 来自配置里的 `site`。用的是 `pathname`，所以查询串不会进 canonical。
+`Astro.site` 来自配置里的 `site`。用的是 `pathname`，所以查询串和 URL 片段都不会进 canonical。
+
+分类链接里的 `#tech`／`#旅行` 是 URL 片段，不是新页面，也不是哈希计算结果。浏览器只向服务器请求 `/blogs/`；页面脚本读取 `#` 后的值，从 HTML 已有的全部文章中筛选，再分页。站内分类入口统一生成片段链接；旧 `?category=` 仍可解析，并在启用脚本后转成等价片段，保留原筛选含义、标签和页码。片段和 query 读取后进入同一套筛选逻辑。拾趣的 `/interests/movie/` 则有独立内容和静态 HTML，因此使用路径路由。
+
+这些分类筛选状态不新增 sitemap 条目；文章 `/blogs/<slug>/` 和拾趣 `/interests/<id>/` 等独立页面由构建路由进入 sitemap。
 
 自己检查：打开任意文章 → 查看源代码 → 搜 `rel="canonical"`，应看到完整 `https://www.wutongyu.site/...`。
 
@@ -139,6 +143,8 @@ Head 里挂上总目录：
 使用官方 `@astrojs/rss` 输出 RSS 2.0 全文源，入口是 `src/pages/rss.xml.js`。使用共享集合工具完成生产草稿过滤和日期排序，每篇保留标题、日期、摘要、GUID、链接和 `content:encoded`。
 
 正文通过 Astro 的 `render(post)` 和 Container 渲染，复用现有 Markdown 插件与图片管线；`src/utils/rss-content.js` 将结果转换成阅读器可用的 HTML：图片和链接改成绝对地址，代码保留换行，公式以 LaTeX 源码显示，去掉脚本、样式和交互控件。文末保留「阅读原文」。全文不截断、不限制篇数，也不额外复制封面。页面布局、文稿分类、拾趣、友链独立于 feed 范围：只有博客集合进入 RSS；`search: false` 不等于不发布，因此日记占位文也会进入源。页面封面卡片、作者头像行、目录和主题不会进入正文 HTML。
+
+新增或修改文章的分类无需修改 RSS：`/rss.xml` 继续订阅全部已发布博客，不按文稿页的片段或 query 筛选；不输出分类元数据，也不提供独立分类订阅源。分类分组、入口及徽标配色不会修改文章永久 URL、GUID、发布日期或正文。新分类中的已发布文章会随重新构建进入同一个源。
 
 `src/utils/rss-feed.js` 负责官方包的字段装配、稳定 GUID、语言和 Atom self 链接。文章配置 redirect 时，条目 link 可以指向外站，但 GUID 和正文地址基准仍是本站文章 URL。任意文章转换失败会使生成失败，不会静默降回摘要。
 

@@ -4,6 +4,11 @@ import test from 'node:test'
 import { fromHtml } from 'hast-util-from-html'
 import { visit } from 'unist-util-visit'
 import { XMLParser } from 'fast-xml-parser'
+import {
+  BLOG_CATEGORIES,
+  getBlogCategoryColors,
+  parseBlogQuery,
+} from '../src/utils/blog-browser.js'
 
 const load = async (file) =>
   fromHtml(await readFile(new URL(`../dist/${file}`, import.meta.url), 'utf8'))
@@ -260,7 +265,41 @@ test('navigation previews only published articles and respects the four-post bou
   const previews = elements(home, (node) =>
     hasClass(node, 'nav-dropdown__preview')
   )
-  assert.equal(previews.length, 3)
+  const categories = elements(home, (node) =>
+    hasClass(node, 'nav-dropdown__category-link')
+  )
+  const archivedPosts = elements(otherPages[0], (node) =>
+    hasClass(node, 'archive-post')
+  )
+  const counts = new Map(BLOG_CATEGORIES.map(({ label }) => [label, 0]))
+  for (const post of archivedPosts) {
+    const category = post.properties.dataCategory
+    counts.set(category, (counts.get(category) ?? 0) + 1)
+    const colors = getBlogCategoryColors(category)
+    assert.ok(
+      post.properties.style.includes(
+        `--archive-category-light: ${colors.light}`
+      )
+    )
+    assert.ok(
+      post.properties.style.includes(`--archive-category-dark: ${colors.dark}`)
+    )
+  }
+  assert.equal(categories.length, counts.size)
+  assert.equal(previews.length, counts.size)
+  const seen = new Set()
+  for (const category of categories) {
+    const url = new URL(category.properties.href, 'https://www.wutongyu.site/')
+    const label = parseBlogQuery(url.search, url.hash).category
+    assert.equal(url.pathname, '/blogs/')
+    assert.equal(url.searchParams.has('category'), false)
+    assert.ok(!seen.has(label), 'Each category has exactly one menu entry')
+    seen.add(label)
+    const spans = elements(category, (node) => node.tagName === 'span')
+    assert.equal(spans[0].children[0].value, label)
+    assert.equal(Number(spans[1].children[0].value), counts.get(label))
+  }
+  assert.deepEqual(seen, new Set(counts.keys()))
   const thoughtLinks = elements(
     previews[1],
     (node) => node.tagName === 'a'

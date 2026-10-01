@@ -2,7 +2,10 @@
 import { getCollection } from 'astro:content'
 import { INTEREST_ICONS, MORE_LINKS } from '~/config'
 import { getPublishedBlogPosts, getSortedPosts } from '~/utils/data'
-import { getCategoryPreviews } from '~/utils/blog-browser.js'
+import {
+  getCategoryPreviews,
+  serializeBlogQuery,
+} from '~/utils/blog-browser.js'
 import { withBasePath } from '~/utils/path'
 
 interface Props {
@@ -28,12 +31,15 @@ const menuId = `nav-menu-${kind}`
   <div id={menuId} class="nav-dropdown__panel">
     {kind === 'blogs' ? (
       <>
-        <div class="nav-dropdown__categories">
+        <div
+          class="nav-dropdown__categories"
+          style={`--blog-category-count: ${previews.length}`}
+        >
           {previews.map(({ id, label, count, posts }) => (
             <div class="nav-dropdown__category" data-preview-category={id}>
               <a
                 class="nav-dropdown__category-link"
-                href={`${withBasePath('/blogs/')}#${id}`}
+                href={`${withBasePath('/blogs/')}${serializeBlogQuery({ category: label, tags: [], page: 1 })}`}
               >
                 <span>{label}</span>
                 <span>{count}</span>
