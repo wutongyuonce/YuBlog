@@ -138,6 +138,7 @@ const firstPagePaginationHtml = showFirstPagePagination
     color: var(--accent);
   }
   .blog-category-header h1 {
+    overflow-wrap: anywhere;
     font-family: var(--font-heading);
     margin: 0;
     font-size: 1.75rem;
@@ -227,8 +228,13 @@ const firstPagePaginationHtml = showFirstPagePagination
     query.page = result.page
     if (live) {
       const canonical = new URL(location.href)
-      if (query.page === 1) canonical.searchParams.delete('page')
-      else canonical.searchParams.set('page', String(query.page))
+      const stateUrl = new URL(home + serializeBlogQuery(query), canonical)
+      for (const key of ['category', 'tag', 'page'])
+        canonical.searchParams.delete(key)
+      stateUrl.searchParams.forEach((value, key) =>
+        canonical.searchParams.append(key, value)
+      )
+      canonical.hash = stateUrl.hash
       if (canonical.href !== location.href)
         history.replaceState(history.state, '', canonical)
     }

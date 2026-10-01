@@ -18,7 +18,7 @@
 | :--- | :--- | :--- |
 | `/` | 作者、RSS、社交与最近五篇文稿；无文章分页和个人侧栏 | `BlogProfile`、`RecentWriting` |
 | `/blogs/` | 完整文稿，分类／标签筛选，每页七篇 | `src/content/blogs/**/*.{md,mdx}` |
-| `/blogs/#tech`、`#thought`、`#diary` | 技术、思考、日记分类；支持兼容 query | `src/utils/blog-browser.js` |
+| `/blogs/#tech`、`#thought`、`#diary` | 技术、思考、日记及自动发现的新分类（如 `#旅行`）；兼容旧 query | `src/utils/blog-browser.js` |
 | `/tags/` | 标签目录和排序，多选 AND；选择后展示列表 | 文章 `tags` |
 | `/archives/` | 单条按年时间线，带分类徽标 | 文章 `pubDate`／`category` |
 | `/interests/`、`/interests/<id>/` | 拾趣入口与设备、动漫、电影、电视剧、游戏、书、Kpop 子页 | `src/content/interests/*.md` |
@@ -27,6 +27,8 @@
 | `/friends/` | 推荐／双向两组友链和交换模板 | `src/content/friends/data.json` |
 | `/blogs/<slug>/` | 标题、可选封面、正文；桌面常驻目录，窄屏浮动入口 | 文章集合 |
 | `/rss.xml` | 完整正文 RSS，保留摘要和文章身份，独立于页面布局 | `src/pages/rss.xml.js` |
+
+发布带新 `category` 的文章后，重新构建会自动扩展文稿菜单、数量和最近四篇预览；新分类使用 `/blogs/#旅行` 这样的 URL 片段链接（`#` 后是分类标识，浏览器会编码中文），归档徽标自动分配稳定的深浅主题颜色。旧 `?category=` 链接仍可用，启用脚本后转换为等价的片段链接。RSS 仍订阅全部已发布博客。分类筛选依赖 JavaScript；拾趣的 `/interests/movie/` 是独立内容页，可直接阅读。
 
 顶部品牌“梧桐雨の博客”返回首页，顶栏文字统一使用宋体。导航依次为文稿、标签、归档、拾趣、项目、关于、更多，工具为本仓库 GitHub、搜索、主题。“更多”下拉包含友链和相册，友链指向 `/friends/`，相册指向 `https://photos.wutongyu.site/`，带 ↗ 并在新标签页打开；菜单数据在 `MORE_LINKS`。页脚在电脑和手机上均显示萌 ICP 链接。文章属于文稿，拾趣子页属于拾趣；导航准备、取消和历史返回共用父级定位。首页个人社交来自 `AUTHOR_LINKS`，不依赖关于 Markdown 是否包含社交链接。
 

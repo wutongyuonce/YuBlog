@@ -1,7 +1,7 @@
 ---
 import { getGroupedPostsByYear } from '~/utils/data'
 import { withBasePath } from '~/utils/path'
-import { getBlogCategory } from '~/utils/blog-browser.js'
+import { getBlogCategory, getBlogCategoryColors } from '~/utils/blog-browser.js'
 
 const groups = await getGroupedPostsByYear('blogs')
 ---
@@ -19,9 +19,14 @@ const groups = await getGroupedPostsByYear('blogs')
           const href = item.data.redirect || withBasePath(`/blogs/${item.id}/`)
           const dateTime = item.data.pubDate.toISOString()
           const category = getBlogCategory(item.data.category)
+          const colors = getBlogCategoryColors(category)
 
           return (
-            <li class="archive-post" data-category={category}>
+            <li
+              class="archive-post"
+              data-category={category}
+              style={`--archive-category-light: ${colors.light}; --archive-category-dark: ${colors.dark}`}
+            >
               <time datetime={dateTime}>{dateTime.slice(5, 10)}</time>
               <span class="archive-post__mark" aria-hidden="true"></span>
               <div class="archive-post__headline">

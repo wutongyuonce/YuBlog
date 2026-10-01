@@ -38,7 +38,7 @@ const visibleCategory = () =>
       .filter(
         (node) =>
           getComputedStyle(node.querySelector('.nav-dropdown__preview'))
-            .display !== 'none'
+            .visibility !== 'hidden'
       )
       .map((node) => node.dataset.previewCategory)
   )
@@ -47,7 +47,10 @@ const rows = await page.evaluate(() =>
     node.getBoundingClientRect().toJSON()
   )
 )
-assert.equal(rows.length, 3)
+assert.ok(
+  rows.length >= 3,
+  'Built-in groups remain ahead of discovered categories'
+)
 assert.ok(rows[2].top > rows[1].bottom, 'Exercise the actual gap between rows')
 const x = rows[1].left + rows[1].width / 2
 await page.hover('a[href="/blogs/#thought"]')

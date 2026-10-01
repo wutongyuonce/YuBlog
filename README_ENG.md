@@ -16,7 +16,7 @@
 | :--- | :--- | :--- |
 | `/` | Author, RSS, socials and five recent posts; no pager or personal sidebar | `BlogProfile`, `RecentWriting` |
 | `/blogs/` | Full list, category/tag filtering, seven posts per page | `src/content/blogs/**/*.{md,mdx}` |
-| `/blogs/#tech`, `#thought`, `#diary` | Technology, thoughts and diary; query URLs are also supported | `utils/blog-browser.js` |
+| `/blogs/#tech`, `#thought`, `#diary` | Built-in groups and discovered categories such as `#旅行`; legacy query URLs still work | `utils/blog-browser.js` |
 | `/tags/` | Sortable tag directory, multi-select AND, results after selection | Post tags |
 | `/archives/` | One timeline grouped by year with category badges | Post dates/categories |
 | `/interests/`, `/interests/<id>/` | Equipment, anime, films, TV, games, books and Kpop | `src/content/interests/*.md` |
@@ -25,6 +25,8 @@
 | `/friends/` | Recommended and mutual links, exchange template | Friends JSON |
 | `/blogs/<slug>/` | Title, optional cover, content; persistent desktop TOC, mobile control | Post collection |
 | `/rss.xml` | Complete article HTML with stable identity and summaries | `src/pages/rss.xml.js` |
+
+Publishing a post with a new `category` and rebuilding automatically adds its menu entry, count and up to four recent previews. New categories use name fragments such as `/blogs/#旅行` (URL-encoded) and stable light/dark archive badge colors. Legacy `?category=` links remain supported and normalize to equivalent fragment URLs when JavaScript is enabled. RSS continues to include all published blog posts. Blog filtering requires JavaScript; interest routes such as `/interests/movie/` are independent content pages.
 
 The “梧桐雨の博客” brand returns home; navigation text uses the local serif font. Navigation contains manuscripts, tags, archives, interests, projects, about and More, followed by the repository GitHub link, search and theme. Articles select manuscripts; interest subpages select interests. More contains Friends and an external placeholder Album link marked ↗, configured in `MORE_LINKS`. The footer shows the Moe ICP link on desktop and mobile. Home socials use `AUTHOR_LINKS` independently of the About Markdown.
 
