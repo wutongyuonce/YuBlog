@@ -89,7 +89,7 @@ test('More exposes the friend page and a marked external album; registration is 
     const links = elements(menu, (node) => node.tagName === 'a')
     assert.deepEqual(
       links.map((node) => node.properties.href),
-      ['/friends/', 'https://example.com/album/']
+      ['/friends/', 'https://photos.wutongyu.site/']
     )
     assert.equal(links[1].properties.target, '_blank')
     assert.ok(
