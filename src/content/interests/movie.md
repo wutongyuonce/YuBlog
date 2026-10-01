@@ -4,20 +4,6 @@ description: 银幕里的故事
 order: 2
 ---
 
-## 动漫电影
-
-- [你的名字](https://zh.wikipedia.org/wiki/你的名字)
-- [天气之子](https://www.bilibili.com/bangumi/play/ss33343)
-- [声之形](https://www.bilibili.com/bangumi/play/ss12116)
-- [言语如苏打般涌现](https://www.bilibili.com/bangumi/play/ss39136)
-- [风之谷](https://zh.wikipedia.org/zh-cn/風之谷_(電影))
-- 宫崎骏：[哈尔的移动城堡](https://zh.wikipedia.org/wiki/哈尔的移动城堡)、[千与千寻](https://zh.wikipedia.org/wiki/千与千寻)、[红猪](https://zh.wikipedia.org/wiki/红猪)、[天空之城](https://zh.wikipedia.org/wiki/天空之城)、[幽灵公主](https://zh.wikipedia.org/wiki/魔法公主)、[风之谷](https://zh.wikipedia.org/zh-cn/風之谷_(電影))
-- [秒速五厘米](https://zh.wikipedia.org/wiki/秒速5公分)
-- [八仙](https://zh.wikipedia.org/wiki/八仙！)
-
-
-## 电影
-
 * [疯狂的石头](https://zh.wikipedia.org/wiki/疯狂的石头)
 * [给阿嬷的情书](https://wuu.wikipedia.org/wiki/给阿嬷的情书)
 * [唐人街探案](https://zh.wikipedia.org/wiki/唐人街探案)
@@ -34,6 +20,7 @@ order: 2
 * [阿凡达](https://zh.wikipedia.org/wiki/阿凡达)
 * [沙丘](https://zh.wikipedia.org/wiki/沙丘_(2021年電影))
 * [F1：狂飙飞车](https://zh.wikipedia.org/wiki/F1：狂飙飞车)
+* [速度与激情系列](https://zh.wikipedia.org/wiki/速度与激情)
 * [我是谁：没有绝对安全的系统](https://zh.wikipedia.org/wiki/我是谁：没有绝对安全的系统)
 * 超英系列：
   * [蜘蛛侠](https://zh.wikipedia.org/wiki/蜘蛛侠)
@@ -47,3 +34,5 @@ order: 2
   * [蚁人](https://zh.wikipedia.org/wiki/蚁人)
   * [银河护卫队](https://zh.wikipedia.org/wiki/银河护卫队)
   * [死侍](https://zh.wikipedia.org/wiki/死侍)
+
+![电影|w300](./movie/464284973.jpg)

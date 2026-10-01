@@ -98,7 +98,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 ## 关于与拾趣
 
-`/about/` 只渲染 `src/content/about/about.md`。保持作者原文，仅做必要 Markdown 结构，不编造经历或人设。页面标题／说明由 `src/pages/about.mdx` 配合 `PageHeading` 渲染，不由内容 frontmatter 创建按钮。`soul.md` 保留但不展示；不要创建旧 Use／Hobby 标签。
+`/about/` 只渲染 `src/content/about/about.md`。保持作者原文，仅做必要 Markdown 结构，不编造经历或人设。页面标题／说明由 `src/pages/about.mdx` 配合 `PageHeading` 渲染，不由内容 frontmatter 创建按钮。关于内容仅维护这一个 Markdown 文件。
 
 兴趣内容位于 `src/content/interests/`，入口 `/interests/`，子页 `/interests/<id>/`。文件和分类：
 
@@ -114,7 +114,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 读取同目录样例后修改。frontmatter 的 `title`、`description`、`order` 供入口、子页和顶部下拉共同使用。子页标题直接是分类名，不加“拾趣-”。新增文件会成为静态页面，但增加新导航分类还需更新 `config.ts` 的 `INTEREST_ICONS`；不要为内容修改重复实现导航。
 
-图片放在对应子目录，例如 `src/content/interests/device/`，Markdown 用 `![说明](./device/file.png)`，需要限宽时写 alt 的 `|w300`。图片仍需位于 Markdown 所在目录或子目录内。不要使用已迁移的 `about/use/` 或 `about/hobby/`。
+图片放在对应子目录，例如 `src/content/interests/device/`，Markdown 用 `![说明](./device/file.png)`，需要限宽时写 alt 的 `|w300`。图片仍需位于 Markdown 所在目录或子目录内。拾趣内容和图片统一维护在 `src/content/interests/`。
 
 内容集合 schema／图片验证由 `pnpm check` 和 `pnpm build` 完成；轻量 Python 校验器目前只支持博客与友链，不假装能完整校验兴趣集合。
 
@@ -161,10 +161,11 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --frie
 `src/config.ts`：
 
 - 页面链接：`UI.internalNavs`（path / title / text）
+- 更多菜单中的友链／相册：`MORE_LINKS`。友链保持 `/friends/`，相册链接标为外链并显示 ↗；当前相册是占位地址。
 - 顶栏 GitHub：`UI.socialLinks`，只留本仓库链接。和搜索、主题同属右侧工具组。
 - 站点名、描述、域名：`SITE`
 
-个人社交不在 `UI.socialLinks`。首页读取 `AUTHOR_LINKS`，关于正文中的「欢迎交友 / 聊天：」仍由 Markdown 维护；修改账号时同步两处。个人 GitHub 指向主页，顶栏 GitHub 指向本仓库。首页名言／作者文案在 `BlogProfile`，品牌文案在 `NavBar`；不要以为修改 `SITE.title` 会同步所有正文文案。
+个人社交不在 `UI.socialLinks`。首页读取 `AUTHOR_LINKS`，关于正文独立维护作者希望展示的联系方式；若也展示同一账号，再同步该字段。个人 GitHub 指向主页，顶栏 GitHub 指向本仓库。首页名言／作者文案在 `BlogProfile`，品牌文案在 `NavBar`；不要以为修改 `SITE.title` 会同步所有正文文案。
 
 图标类名构建后若空白：首页身份图标由 `AUTHOR_LINKS` 自动加入 safelist；关于页独有图标才需检查 `unocss.config.ts`。关于页图标尺寸在 `public/shell.css` 的 `.about-social__icon`，本 skill 不改 CSS。
 
@@ -174,6 +175,8 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --frie
 
 改完先跑 `pnpm check`；文章或友链再跑上面的 `validate_content.py`，它只检查基础元数据，**不完整验证 schema、图片或封面**，最终仍以 Astro 检查／构建为准。新增文章、修改正文图或封面时必须跑 `pnpm build`：Astro 的 schema 和图片管线才是路径解析及 `titleImageAlt` 的权威校验。含 `|w` 的图片还要人工核对标记写在 alt 而不是 URL 中（构建可能静默产出占位图）。构建失败只修这次内容，或说明是原有问题。
 
-发文章涉及订阅时，构建后运行 `pnpm test:built-markdown` 核对全文与资源。列表／内容迁移运行 `pnpm test:built-restructure`；分页修改运行 `pnpm test:built-pagination`。
+发文章涉及订阅时，构建后运行 `pnpm test:built-markdown` 核对全文与资源。列表／内容结构修改运行 `pnpm test:built-restructure`；分页修改运行 `pnpm test:built-pagination`。
+
+将用户可见的内容发布、站点信息或维护规则变更记入 `CHANGELOG.md` 的「未发布」，合并为最终结果；未发布内容不填写已发布版本或日期。README、SPEC 和指南保持当前状态，不添加开发过程记录。
 
 交接时写清：改了哪一页、文件路径、上线后的路由、是否草稿。用户没说部署就不要部署。

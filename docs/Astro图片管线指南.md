@@ -1,6 +1,6 @@
 # Astro 图片管线指南
 
-内容图片放在 `src/content/`，由 Astro 图片管线生成 WebP、`srcset`、宽高和懒加载。`public/` 只放站点级资源。本文只描述当前写法；迁移过程和测量记录不在这里。
+内容图片放在 `src/content/`，由 Astro 图片管线生成 WebP、`srcset`、宽高和懒加载。`public/` 只放站点级资源。本文规定图片的存放方式、引用语法、页面渲染和 RSS 资源规则。
 
 ## 放哪里
 
@@ -17,8 +17,6 @@ src/content/interests/
   device.md  book.md
   device/  book/                  拾趣配图，与对应 md 同级
 ```
-
-`night-lantern.webp`、`yae-miko.webp` 暂无文章引用，保留为备用封面。
 
 ## 怎么写
 
@@ -55,17 +53,17 @@ RSS endpoint 只渲染集合 `Content`，复用相同图片解析；`rss-content
 
 1. 正文图必须在该文章所在目录或其子目录内，路径以 `./` 开头。`../` 会让构建报 `ImageNotFound`。封面可以 `./` 或 `../`。
 2. 原始 `<img>` 不进管线。本地图不要写 HTML 标签。
-3. 远程图保持原始 `<img>`。现有 4 张外链（leetcode.cn、assets.leetcode.com、hello-algo.com）不纳入构建期抓取。
-4. 代码块里的 `<img>` 是示例，不迁移。`Astro.md` 里有 1 处。
+3. 远程图保持原始 `<img>`。外链图片不纳入构建期抓取。
+4. 代码块里的 `<img>` 是示例文本，不参与图片转换。
 5. GIF 走管线，输出保留帧的动画 WebP，HTML 宽高按单帧计算。多档宽度会生成多份动画文件。
-6. 产物在 `/_astro/`，文件名带内容哈希，不可手写。旧的 `/blogs/<名>-img/`、`/blog-title-images/`、`/about/<栏>/` 不再部署，会 404，不做重定向。
+6. 产物在 `/_astro/`，文件名带内容哈希，不可手写。内容图片引用相对源文件路径，不手写公共资源路径或构建产物 URL。
 7. 源图不降采样。管线减少的是访客下载量，不是仓库体积。
 
 宽度标记若写进 URL（`![](./x.webp|w480)`），构建不报错，产物会留下不可见的 `<img __ASTRO_IMAGE_="...">`。改 remark / rehype 插件后要删 `node_modules/.astro/`，否则会构建出缓存的旧 HTML。
 
-## 不改什么
+## 资源边界
 
-- 不改文章 URL 或 slug。
+- 图片路径与文章 URL、slug 各自独立维护。
 - 不把图片优化理由用于改 `cssCodeSplit` 或 `inlineStylesheets`。
 - RSS 包含正文图片，不额外复制文章封面和页面布局。`scripts/gen-og-cover.mjs` 只生成 `public/og/default.png`。
 - 站点图标、头像、字体留在 `public/`。友链头像是远程 URL。

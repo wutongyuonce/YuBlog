@@ -22,27 +22,27 @@ const tocPosition = Array.isArray(toc) && toc[0] && toc[1].displayPosition
 
 <style>
   .desktop-aside {
-    /* Keep the TOC inside the side gutter without widening the reading column. */
-    --toc-gap: 3rem;
-    --toc-edge: calc(50% + var(--blog-prose-width) / 2 + var(--toc-gap));
-    --desktop-toc-width: calc(
-      50% - var(--blog-prose-width) / 2 - var(--toc-gap) - var(--site-gutter)
+    /* Offset the TOC slightly outward without widening the reading column. */
+    --toc-space: calc(50% - var(--blog-prose-width) / 2 - var(--site-gutter));
+    --toc-center: calc(
+      50% + var(--blog-prose-width) / 2 + var(--toc-space) / 2 + 1rem
     );
     position: fixed;
-    top: 50%;
-    transform: translateY(-50%);
+    top: calc(50% - 2rem);
+    transform: translate(-50%, -50%);
     right: auto;
-    left: var(--toc-edge);
+    left: var(--toc-center);
     z-index: 100;
-    width: min(13rem, var(--desktop-toc-width));
+    width: min(13rem, calc(var(--toc-space) - 3rem));
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
   }
 
   .desktop-aside[data-position='left'] {
-    right: var(--toc-edge);
+    right: var(--toc-center);
     left: auto;
+    transform: translate(50%, -50%);
   }
 
   @media (max-width: 1199.9px) {

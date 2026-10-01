@@ -41,6 +41,23 @@ export const AUTHOR_LINKS = [
   { label: '邮箱', href: 'mailto:18896680730@163.com', icon: 'i-ri-mail-line' },
 ]
 
+export const MORE_LINKS = [
+  {
+    title: '友链',
+    description: '推荐与双向友链',
+    href: '/friends/',
+    icon: 'i-ri-links-line',
+    external: false,
+  },
+  {
+    title: '相册',
+    description: '光影与日常',
+    href: 'https://example.com/album/',
+    icon: 'i-ri-image-line',
+    external: true,
+  },
+]
+
 export const UI: Ui = {
   internalNavs: [
     {
@@ -81,9 +98,9 @@ export const UI: Ui = {
     },
     {
       path: '/friends',
-      title: '友链',
+      title: '更多',
       displayMode: 'alwaysText',
-      text: '友链',
+      text: '更多',
     },
   ],
   socialLinks: [

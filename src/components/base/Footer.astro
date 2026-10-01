@@ -8,7 +8,7 @@ const copyrightText = `© ${currentYear} ${SITE.author}`
 
 <footer class="slide-enter animate-delay-1600! px-7 mt-auto mb-8">
   <div class="prose mx-auto">
-    <div class="flex lt-sm:flex-col items-center text-sm whitespace-nowrap">
+    <div class="flex flex-wrap gap-y-1 lt-sm:flex-col items-center text-sm whitespace-nowrap">
       <span class="op-50">{copyrightText}</span>
       <span class="footer-mark lt-sm:hidden" aria-hidden="true"></span>
       <span class="op-50">
@@ -21,6 +21,14 @@ const copyrightText = `© ${currentYear} ${SITE.author}`
           Astro
         </Link>
       </span>
+      <span class="footer-mark lt-sm:hidden" aria-hidden="true"></span>
+      <Link
+        href="https://icp.gov.moe/?keyword=20269668"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        萌ICP备20269668号
+      </Link>
     </div>
   </div>
 </footer>

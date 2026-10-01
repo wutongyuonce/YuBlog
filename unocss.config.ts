@@ -7,7 +7,7 @@ import {
   transformerVariantGroup,
 } from 'unocss'
 
-import { UI, INTEREST_ICONS, AUTHOR_LINKS } from './src/config'
+import { UI, INTEREST_ICONS, AUTHOR_LINKS, MORE_LINKS } from './src/config'
 import projecstData from './src/content/projects/data.json'
 
 import type {
@@ -109,6 +109,7 @@ export default defineConfig({
     ...socialIcons,
     ...projectIcons,
     ...Object.values(INTEREST_ICONS),
+    ...MORE_LINKS.map(({ icon }) => icon),
     ...AUTHOR_LINKS.map(({ icon }) => icon),
     'i-simple-icons-x',
     'i-simple-icons-instagram',

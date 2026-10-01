@@ -349,8 +349,8 @@ main:has(.post-content) > footer.prose :is(a, span) {
   font-size: 1rem;
 }
 
-.prose.post-content h1 {
-  font-size: 2.125em;
+.prose:is(.post-content, .interests-page__content) h1 {
+  font-size: 2.125rem;
   margin-bottom: 0.75em;
 }
 
@@ -370,26 +370,26 @@ main:has(.post-content) > footer.prose :is(a, span) {
   }
 }
 
-.prose.post-content h2 {
-  font-size: 1.6em;
+.prose:is(.post-content, .interests-page__content) h2 {
+  font-size: 1.6rem;
   font-weight: 600;
   margin-top: 1.1rem;
   margin-bottom: 1.1rem;
 }
 
-.prose.post-content h3 {
+.prose:is(.post-content, .interests-page__content) h3 {
   color: var(--fg-deep);
-  font-size: 1.1875em;
+  font-size: 1.1875rem;
   font-weight: 500;
   margin-top: 0.8rem;
   margin-bottom: 0.8rem;
 }
 
-.prose.post-content h4,
-.prose.post-content h5,
-.prose.post-content h6 {
+.prose:is(.post-content, .interests-page__content) h4,
+.prose:is(.post-content, .interests-page__content) h5,
+.prose:is(.post-content, .interests-page__content) h6 {
   color: var(--fg);
-  font-size: 1em;
+  font-size: 1rem;
   margin-top: 0.65rem;
   margin-bottom: 0.65rem;
 }

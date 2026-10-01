@@ -30,6 +30,28 @@ const elements = (tree, predicate) => {
 }
 const hasClass = (node, name) => node.properties.className?.includes(name)
 
+test('deployment keeps manuscripts and category bookmarks on the manuscript route', async () => {
+  const { redirects = [] } = JSON.parse(
+    await readFile(new URL('../vercel.json', import.meta.url), 'utf8')
+  )
+  for (const href of [
+    '/blogs',
+    '/blogs/',
+    '/blogs/#tech',
+    '/blogs/#thought',
+    '/blogs/#diary',
+  ]) {
+    const pathname = new URL(href, 'https://www.wutongyu.site/').pathname
+    const redirect = redirects.find(({ source }) => source === pathname)
+    if (redirect)
+      assert.equal(
+        new URL(redirect.destination, 'https://www.wutongyu.site/').pathname,
+        '/blogs/',
+        `${href} must reach the manuscript page, not the former home-page list`
+      )
+  }
+})
+
 test('section children have the correct parent selected before client scripts run', async () => {
   const book = await load('interests/book/index.html')
   for (const [page, href] of [
@@ -37,6 +59,7 @@ test('section children have the correct parent selected before client scripts ru
     [article, '/blogs/'],
     [interests, '/interests/'],
     [book, '/interests/'],
+    [otherPages[3], '/friends/'],
   ]) {
     const current = elements(
       page,
@@ -48,6 +71,40 @@ test('section children have the correct parent selected before client scripts ru
       current.map((node) => node.properties.href),
       [href]
     )
+  }
+})
+
+test('More exposes the friend page and a marked external album; registration is on every page', () => {
+  for (const page of [home, blogs, interests, about, article, ...otherPages]) {
+    const menu = elements(
+      page,
+      (node) => node.properties.id === 'nav-menu-more'
+    )[0]
+    assert.ok(menu, 'Every navigation includes More')
+    const links = elements(menu, (node) => node.tagName === 'a')
+    assert.deepEqual(
+      links.map((node) => node.properties.href),
+      ['/friends/', 'https://example.com/album/']
+    )
+    assert.equal(links[1].properties.target, '_blank')
+    assert.ok(
+      elements(links[1], (node) => hasClass(node, 'nav-dropdown__external'))
+        .length
+    )
+    assert.equal(
+      elements(menu, (node) => 'dataNavLink' in node.properties).length,
+      0,
+      'Submenu links must not become top-level indicator targets'
+    )
+    const registration = elements(
+      page,
+      (node) =>
+        node.tagName === 'a' &&
+        node.properties.href === 'https://icp.gov.moe/?keyword=20269668'
+    )
+    assert.equal(registration.length, 1)
+    assert.equal(registration[0].properties.target, '_blank')
+    assert.equal(registration[0].children[0].value.trim(), '萌ICP备20269668号')
   }
 })
 
@@ -88,22 +145,21 @@ test('desktop articles expose the TOC directly with no disclosure button', () =>
   )
 })
 
-test('home social links preserve the about-page identities and add the real email', () => {
+test('home social links preserve the established identities and real email independently of about content', () => {
   const nav = elements(home, (node) =>
     hasClass(node, 'blog-profile__social')
   )[0]
   const hrefs = elements(nav, (node) => node.tagName === 'a').map(
     (node) => node.properties.href
   )
-  const aboutHrefs = new Set(
-    elements(about, (node) => node.tagName === 'a').map(
-      (node) => node.properties.href
-    )
-  )
-  assert.equal(hrefs.length, 6)
-  for (const href of hrefs.filter((href) => !href.startsWith('mailto:')))
-    assert.ok(aboutHrefs.has(href), href)
-  assert.ok(hrefs.includes('mailto:18896680730@163.com'))
+  assert.deepEqual(hrefs, [
+    'https://github.com/wutongyuonce',
+    'https://x.com/Yu2002964143523',
+    'https://www.instagram.com/wutongyu0730',
+    'https://space.bilibili.com/521627597',
+    'https://www.xiaohongshu.com/user/profile/64842572000000001f005e63',
+    'mailto:18896680730@163.com',
+  ])
 })
 
 test('archive preserves one chronological timeline and labels the shared categories', () => {

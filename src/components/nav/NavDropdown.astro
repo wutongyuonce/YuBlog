@@ -1,12 +1,12 @@
 ---
 import { getCollection } from 'astro:content'
-import { INTEREST_ICONS } from '~/config'
+import { INTEREST_ICONS, MORE_LINKS } from '~/config'
 import { getPublishedBlogPosts, getSortedPosts } from '~/utils/data'
 import { getCategoryPreviews } from '~/utils/blog-browser.js'
 import { withBasePath } from '~/utils/path'
 
 interface Props {
-  kind: 'blogs' | 'interests'
+  kind: 'blogs' | 'interests' | 'more'
 }
 const { kind } = Astro.props
 const publishedPosts =
@@ -74,7 +74,7 @@ const menuId = `nav-menu-${kind}`
           查看全部文稿 <span>{publishedPosts.length} 篇</span>
         </a>
       </>
-    ) : (
+    ) : kind === 'interests' ? (
       <ul class="nav-dropdown__interests">
         {interests.map(({ id, data }) => (
           <li>
@@ -87,6 +87,33 @@ const menuId = `nav-menu-${kind}`
                 <strong>{data.title}</strong>
                 <small>{data.description}</small>
               </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <ul class="nav-dropdown__interests">
+        {MORE_LINKS.map(({ title, description, href, icon, external }) => (
+          <li>
+            <a
+              href={external ? href : withBasePath(href)}
+              target={external ? '_blank' : undefined}
+              rel={external ? 'noopener noreferrer' : undefined}
+              aria-label={external ? `${title}（新窗口）` : undefined}
+            >
+              <span
+                class:list={['nav-dropdown__icon', icon]}
+                aria-hidden="true"
+              />
+              <span>
+                <strong>{title}</strong>
+                <small>{description}</small>
+              </span>
+              {external && (
+                <span class="nav-dropdown__external" aria-hidden="true">
+                  ↗
+                </span>
+              )}
             </a>
           </li>
         ))}

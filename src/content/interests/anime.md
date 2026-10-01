@@ -54,8 +54,7 @@ order: 1
 * [男子高中生的日常](https://www.bilibili.com/bangumi/play/ss2680)
 * [灵能百分百](https://www.bilibili.com/bangumi/play/ss5058)
 
-
-## 国漫
+国漫：
 
 - [灵笼](https://www.bilibili.com/bangumi/play/ss46585)
 - [凡人修仙传](https://www.bilibili.com/bangumi/play/ss28747)
@@ -69,3 +68,14 @@ order: 1
 - [中国惊奇先生](https://www.bilibili.com/bangumi/play/ss10086)
 - [仙王的日常生活](https://www.bilibili.com/bangumi/play/ss26194)
 - [咸鱼哥](https://www.bilibili.com/bangumi/play/ss43341)
+
+动漫电影：
+
+- [你的名字](https://zh.wikipedia.org/wiki/你的名字)
+- [天气之子](https://www.bilibili.com/bangumi/play/ss33343)
+- [声之形](https://www.bilibili.com/bangumi/play/ss12116)
+- [言语如苏打般涌现](https://www.bilibili.com/bangumi/play/ss39136)
+- [风之谷](https://zh.wikipedia.org/zh-cn/風之谷_(電影))
+- 宫崎骏：[哈尔的移动城堡](https://zh.wikipedia.org/wiki/哈尔的移动城堡)、[千与千寻](https://zh.wikipedia.org/wiki/千与千寻)、[红猪](https://zh.wikipedia.org/wiki/红猪)、[天空之城](https://zh.wikipedia.org/wiki/天空之城)、[幽灵公主](https://zh.wikipedia.org/wiki/魔法公主)、[风之谷](https://zh.wikipedia.org/zh-cn/風之谷_(電影))
+- [秒速五厘米](https://zh.wikipedia.org/wiki/秒速5公分)
+- [八仙](https://zh.wikipedia.org/wiki/八仙！)

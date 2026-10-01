@@ -24,3 +24,15 @@ test('base paths preserve the same parent ownership without selecting the home l
     assert.equal(isCurrentNav(`/other/${section}/`, target, '/demo/'), false)
   }
 })
+
+test('More keeps friends as its real route, including base and trailing slash variants', () => {
+  for (const home of ['/', '/demo/']) {
+    for (const target of [`${home}friends`, `${home}friends/`]) {
+      assert.equal(getNavSection(target, home), 'more')
+      assert.equal(isCurrentNav(`${home}friends/`, target, home), true)
+      assert.equal(isCurrentNav(`${home}interests/book/`, target, home), false)
+      assert.equal(isCurrentNav(home, target, home), false)
+    }
+    assert.equal(getNavSection(`${home}more/`, home), null)
+  }
+})

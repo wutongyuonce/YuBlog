@@ -12,6 +12,7 @@ export function getNavSection(pathname, home = '/') {
   const root = normalizeNavPath(home)
   if (path === `${root}blogs/`) return 'blogs'
   if (path === `${root}interests/`) return 'interests'
+  if (path === `${root}friends/`) return 'more'
   return null
 }
 
