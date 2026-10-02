@@ -62,7 +62,3 @@ order: 0
 * 学习工作：多邻国、沉浸式翻译、腾讯会议、leetcode、指南者留学、百度网盘、飞书、语雀、不背单词、欧陆词典、学信网、扫描全能王
 * 就业：boss、offershow、牛牛、领英、智联招聘、脉脉、实习僧
 * 搜索AI：grok、chatgpt、kimi、deepseek、google
-
-### 我的 Kpop 周边
-
-...
