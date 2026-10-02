@@ -23,9 +23,9 @@ order: 0
 
 ### 我的 AI 服务
 
-* GPT Plus * 3：GPT-6 Astra/Sol/luna
+[![Tokens Stats](https://tokens.ci/api/embed/wutongyuonce/svg?theme=light&template=graph&tokens=compact&cost=compact)](https://tokens.ci/u/wutongyuonce)
 
-  ![GPT|w300](./device/PixPin_2026-09-24_01-30-49.png)
+* GPT Plus * 3：GPT-6 Astra/Sol/luna
 
 * Supergrok：Grok 4.7
 
