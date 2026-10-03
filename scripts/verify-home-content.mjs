@@ -47,6 +47,10 @@ for (const width of [1440, 390, 320]) {
           return contrast(style.color, background) >= 4.5
         }),
         overflow: document.documentElement.scrollWidth > innerWidth,
+        contentWidth: body.getBoundingClientRect().width,
+        navWidth: document
+          .querySelector('.nav-bar__inner')
+          .getBoundingClientRect().width,
         shadow: getComputedStyle(body).boxShadow,
         headings: [...body.querySelectorAll('h1,h2,h3,h4,h5,h6')].every(
           (heading) =>
@@ -77,6 +81,11 @@ for (const width of [1440, 390, 320]) {
       `${width}/${dark}: page must not overflow`
     )
     assert.equal(layout.shadow, 'none')
+    assert.ok(
+      Math.abs(layout.navWidth - layout.contentWidth) < 1,
+      'navigation and content share the responsive width'
+    )
+    if (width === 1440) assert.equal(layout.contentWidth, 660)
     assert.equal(
       layout.readable,
       true,

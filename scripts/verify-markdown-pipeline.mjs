@@ -252,3 +252,25 @@ test('home and interests share card markup, image processing and heading groups'
     })
   }
 })
+
+test('shared rating labels reach every Markdown card consumer without stale cached text', async () => {
+  let checked = 0
+  for (const path of [
+    'index.html',
+    ...['movie', 'tv', 'anime', 'game', 'book'].map(
+      (id) => `interests/${id}/index.html`
+    ),
+  ]) {
+    const page = fromHtml(await html(path))
+    const scores = elements(page, 'p').filter((node) =>
+      node.properties.className?.includes('media-card__score')
+    )
+    for (const score of scores)
+      assert.ok(
+        textOf(score).startsWith('评分：'),
+        `${path}: the shared card renderer must replace old cached rating labels`
+      )
+    checked += scores.length
+  }
+  assert.ok(checked > 0, 'authored ratings must survive the shared pipeline')
+})

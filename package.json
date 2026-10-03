@@ -10,7 +10,7 @@
     "sync": "astro sync",
     "dev": "astro dev",
     "check": "astro check",
-    "build": "astro build",
+    "build": "astro build --force",
     "preview": "astro preview",
     "test": "node --test",
     "test:blog-browser": "node --test test/blog-browser.test.mjs",

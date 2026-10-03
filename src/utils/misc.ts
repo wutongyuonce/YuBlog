@@ -1,5 +1,5 @@
-/** Optimized hero image size; matches the 670px reading column. */
-export const ARTICLE_COLUMN_WIDTH = 670
+/** Optimized hero image size; matches the 660px reading column. */
+export const ARTICLE_COLUMN_WIDTH = 660
 
 /**
  * Locks the scroll position of the document.

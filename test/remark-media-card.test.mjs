@@ -39,6 +39,8 @@ test(':::card renders a scrollable media card and keeps the cover image', async 
     /<img\b(?=[^>]*class="media-card__cover")(?=[^>]*src="\.\/s4\.jpg")[^>]*>/
   )
   assert.match(code, /style="--score:3\.5"/)
+  assert.match(code, /<p class="media-card__score">评分：/)
+  assert.doesNotMatch(code, /个人评分：/)
   assert.match(
     code,
     /<span class="media-card__rating-value">3\.5 分，满分 5 分<\/span>/
@@ -60,7 +62,7 @@ test(':::card renders a scrollable media card and keeps the cover image', async 
   assert.doesNotMatch(code, /javascript:alert/)
   assert.doesNotMatch(
     code.slice(code.lastIndexOf('<article class="media-card">')),
-    /个人评分/
+    /class="media-card__score"/
   )
 })
 
@@ -76,7 +78,10 @@ test('headings split card groups and untrusted titles stay text', async () => {
   assert.match(code, /(?:&lt;|&#x3C;)script/)
   assert.doesNotMatch(code, /<script>/)
   assert.match(code, /0 分，满分 5 分/)
-  assert.doesNotMatch(code.slice(code.lastIndexOf('<article')), /个人评分/)
+  assert.doesNotMatch(
+    code.slice(code.lastIndexOf('<article')),
+    /class="media-card__score"/
+  )
 })
 
 test('malformed scores and nested cards fail instead of silently changing content', async () => {

@@ -148,7 +148,7 @@ const buildCard = (node: Directive): Element | null => {
   if (score !== null) {
     body.push(
       element('p', 'media-card__score', [
-        text('个人评分：'),
+        text('评分：'),
         element('span', 'media-card__stars', [], {
           style: `--score:${score}`,
           ariaHidden: 'true',
