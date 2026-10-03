@@ -6,6 +6,8 @@ order: 0
 
 ### 我的电子设备
 
+![device|w300](./device/device.jpg)
+
 - **💻 PC 电脑：** Macbook Pro M5 24+512、天选4 r9 4070 16+1T、Samsung T7 固态 1T
 - **📱 Phone 手机：** Honor Magic7 24+512、小米金沙江磁吸充电宝
 - **🎧 Headphones 耳机 / Audio 音响：** Airpods Pro 2、ARPTICAL 拉斐尔 + EPZ TP35 Pro、Sony SRS-XB100
@@ -20,6 +22,8 @@ order: 0
 - **👛 Purse 钱包：** Bellroy Hide & Seek
 - **🫙 香水：** LELABO ANOTHER 13
 - **🐘 玩偶：** JELLYCAT 史玛吉大象 Medium
+
+![elephant|w300](./device/elephant.jpg)
 
 ### 我的 AI 服务
 

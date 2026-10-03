@@ -35,4 +35,4 @@ order: 2
   * [银河护卫队](https://zh.wikipedia.org/wiki/银河护卫队)
   * [死侍](https://zh.wikipedia.org/wiki/死侍)
 
-![电影|w300](./movie/464284973.jpg)
+![电影|w300](./movie/douban.jpg)
