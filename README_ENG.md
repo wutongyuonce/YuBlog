@@ -28,7 +28,7 @@
 
 Publishing a post with a new `category` and rebuilding automatically adds its menu entry, count and up to four recent previews. New categories use name fragments such as `/blogs/#旅行` (URL-encoded) and stable light/dark archive badge colors. Legacy `?category=` links remain supported and normalize to equivalent fragment URLs when JavaScript is enabled. RSS continues to include all published blog posts. Blog filtering requires JavaScript; interest routes such as `/interests/movie/` are independent content pages.
 
-The “梧桐雨の博客” brand returns home; navigation text uses the local serif font. Navigation contains manuscripts, tags, archives, interests, projects, about and More, followed by the repository GitHub link, search and theme. Articles select manuscripts; interest subpages select interests. More contains Friends and an external placeholder Album link marked ↗, configured in `MORE_LINKS`. The footer shows the Moe ICP link on desktop and mobile. Home socials use `AUTHOR_LINKS` independently of the About Markdown.
+The “梧桐雨の博客” brand returns home; navigation text uses the local serif font. Navigation contains manuscripts, tags, archives, interests, projects, about and More, followed by the repository GitHub link, search and theme. Articles select manuscripts; interest subpages select interests. More contains Friends and an external placeholder Album link marked ↗, configured in `MORE_LINKS`. The footer shows the Moe ICP link on desktop and mobile. Page views are collected by one Umami Cloud script in `Head.astro`; the page shows no counter or badge. Home socials use `AUTHOR_LINKS` independently of the About Markdown.
 
 Content and the independently configured desktop navigation are 620px wide. Home author details are centered. The TOC sits 16px outward from the center of the space between the reading column and viewport gutter, at most 208px wide and half a viewport high, with its center 32px above the viewport midpoint and internal scrolling. Tags, interests, projects and about share a serif heading; article titles use bold serif in lists and regular serif in archives; body text and internal Markdown headings use sans-serif. Interests and subpages use the dot background. About has no background; projects use rose.
 
@@ -104,7 +104,7 @@ docs/             architecture, Astro notes, SEO tutorial
 
 ## Documentation and changelog
 
-README, specifications and guides describe the current implementation. Record meaningful feature, UI, publishing, dependency and maintenance changes under **Unreleased** in [CHANGELOG.md](CHANGELOG.md). Consolidate related adjustments into their final outcome; assign a version and date only when released.
+README, specifications and guides describe the current implementation. Record meaningful webpage structure, interaction and code changes under **Unreleased** in [CHANGELOG.md](CHANGELOG.md). Do not record content-data edits such as posts, about, interests, projects or friend links. Consolidate related adjustments into their final outcome; assign a version and date only when released.
 
 ## Using the content skill
 

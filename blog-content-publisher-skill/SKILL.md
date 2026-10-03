@@ -177,6 +177,6 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --frie
 
 发文章涉及订阅时，构建后运行 `pnpm test:built-markdown` 核对全文与资源。列表／内容结构修改运行 `pnpm test:built-restructure`；分页修改运行 `pnpm test:built-pagination`。
 
-将用户可见的内容发布、站点信息或维护规则变更记入 `CHANGELOG.md` 的「未发布」，合并为最终结果；未发布内容不填写已发布版本或日期。README、SPEC 和指南保持当前状态，不添加开发过程记录。
+文章、关于、拾趣、项目、友链等内容数据不记入 `CHANGELOG.md`。只有这次改动同时改变了网页结构、交互或代码时，才把那部分结构或代码结果写入「未发布」；未发布条目不填写已发布版本或日期。README、SPEC 和指南保持当前状态，不添加开发过程记录。
 
 交接时写清：改了哪一页、文件路径、上线后的路由、是否草稿。用户没说部署就不要部署。

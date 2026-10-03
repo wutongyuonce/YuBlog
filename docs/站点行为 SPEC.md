@@ -88,6 +88,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 | 友链页头 | 推荐／双向 24px 宋体，小于主要页面标题；交换说明标题使用普通无衬线字体加粗（700） |
 | 图片 | 封面／正文图片由 Astro 生成变体，分享图 1200px；`public/` 只放站点资源，不手写内容图片构建 URL |
 | 页脚 | 电脑与手机均显示“萌ICP备20269668号”，链接 `https://icp.gov.moe/?keyword=20269668`，新标签页打开并带 `noopener noreferrer` |
+| 访问统计 | `Head.astro` 加载一份 Umami Cloud 脚本；页面不显示计数、徽章或页脚文案 |
 | 主题与焦点 | 颜色源于 `--c-bg`、`--c-text`、`--accent`；提供深浅主题及可见键盘反馈，不依靠颜色表达类别 |
 
 ## 4. 模块权威和调用边界
@@ -108,6 +109,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 | 更多菜单条目 | `config.ts` `MORE_LINKS` | `NavDropdown` 呈现，UnoCSS 提取图标；友链路由归属由 `nav-path.js` 维护 | 导航路径与构建产物检查 |
 | 拾趣标题／顺序／说明 | `content/interests/*.md` | 入口、子页和导航；图标唯一映射 `config.ts` | 构建页面检查 |
 | 社交身份 | `config.ts` `AUTHOR_LINKS` | 首页读取配置，关于正文独立维护联系方式 | 构建产物检查核对身份 |
+| 访问统计 | `Head.astro` 的 Umami 脚本 | 全站经 `BaseLayout` 加载；不在页脚或正文渲染 | 构建产物头部含该脚本 |
 | RSS HTML／XML与失败 | `rss-content.js`／`rss-feed.js`；endpoint编排 | `render(Content)` → 转换 → 序列化 | RSS owner-level 与产物检查 |
 | 样式 | 壳层 `shell.css`、正文 `prose.css`、组件局部样式 | 不重复定义同一选择器属主 | `css-ownership.test.mjs` |
 

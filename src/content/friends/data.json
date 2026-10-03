@@ -121,15 +121,6 @@
     "order": 13
   },
   {
-    "id": "nyakku",
-    "name": "Nyakku",
-    "link": "https://nyakku.moe",
-    "avatar": "https://nyakku.moe/avatar.jpg",
-    "desc": "一个小透明的透明世界",
-    "category": "双向",
-    "order": 14
-  },
-  {
     "id": "sukka",
     "name": "苏卡卡的有底洞",
     "link": "https://skk.moe",
@@ -137,15 +128,6 @@
     "desc": "童话只美在真实却从不续写",
     "category": "双向",
     "order": 15
-  },
-  {
-    "id": "linmeng-blog",
-    "name": "linmeng'blog",
-    "link": "https://kslinmeng.cn/",
-    "avatar": "https://cdn.kslinmeng.cn/gh/tanf/my-photos@main/new-windows1/20260901222623983.png",
-    "desc": "爱吃柠檬",
-    "category": "双向",
-    "order": 17
   },
   {
     "id": "pleasure1234",
