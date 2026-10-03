@@ -32,25 +32,25 @@ order: 4
 
 玩过：
 
-:::card{title="无畏契约" href="https://zh.wikipedia.org/wiki/无畏契约" score="5" label="游戏"}
+:::card{title="无畏契约" href="https://zh.wikipedia.org/wiki/无畏契约" score="4.5" label="游戏"}
 ![无畏契约海报](./game/valorant.png)
 
 五对五的战术射击。枪法要准，技能和报点也得一起练。
 :::
 
-:::card{title="反恐精英：全球攻势" href="https://zh.wikipedia.org/wiki/反恐精英：全球攻势" score="5" label="游戏"}
+:::card{title="反恐精英：全球攻势" href="https://zh.wikipedia.org/wiki/反恐精英：全球攻势" score="4.5" label="游戏"}
 ![反恐精英：全球攻势海报](./game/csgo.jpg)
 
 拆包和架枪的老游戏。经济局和那一声脚步仍然最纯粹。
 :::
 
-:::card{title="Apex 英雄" href="https://zh.wikipedia.org/wiki/Apex_英雄" score="5" label="游戏"}
+:::card{title="Apex 英雄" href="https://zh.wikipedia.org/wiki/Apex_英雄" score="4.5" label="游戏"}
 ![Apex 英雄海报](./game/apex.jpg)
 
 英雄大逃杀。滑铲、复活和三人配合比单人吃鸡更要紧。
 :::
 
-:::card{title="赛博朋克 2077" href="https://zh.wikipedia.org/wiki/賽博朋克2077" score="5" label="游戏"}
+:::card{title="赛博朋克 2077" href="https://zh.wikipedia.org/wiki/賽博朋克2077" score="4.5" label="游戏"}
 ![赛博朋克 2077海报](./game/cp2077.jpg)
 
 夜之城可以逛很久。主线有坑，城市和人物还是值回票。
@@ -59,7 +59,7 @@ order: 4
 :::card{title="黑神话：悟空" href="https://zh.wikipedia.org/wiki/黑神话：悟空" score="5" label="游戏"}
 ![黑神话：悟空海报](./game/wukong.jpg)
 
-取经路上的动作游戏。场景和棍子都狠，boss 也真的要学。
+玩的第一部 3A，当时各个直播间都在玩，很有氛围。
 :::
 
 :::card{title="小小梦魇 2" href="https://zh.wikipedia.org/wiki/小小梦魇2" score="5" label="游戏"}
@@ -68,7 +68,7 @@ order: 4
 两个小孩穿过一张张坏掉的画。吓人，但同伴那只手是暖的。
 :::
 
-:::card{title="荒野大镖客：救赎 2" href="https://zh.wikipedia.org/wiki/荒野大镖客：救赎2" score="5" label="游戏"}
+:::card{title="荒野大镖客：救赎 2" href="https://zh.wikipedia.org/wiki/荒野大镖客：救赎2" score="4.5" label="游戏"}
 ![荒野大镖客：救赎 2海报](./game/rdr2.jpg)
 
 一个帮派在西部的最后几年。骑马慢，亚瑟的结局不慢。
@@ -80,7 +80,7 @@ order: 4
 太难了，至今未通关。赛博摩托车和刀很快，死了就再来，关卡不让你糊弄。
 :::
 
-:::card{title="欧洲卡车模拟 2" href="https://zh.wikipedia.org/wiki/欧洲卡车模拟2" score="4" label="游戏"}
+:::card{title="欧洲卡车模拟 2" href="https://zh.wikipedia.org/wiki/欧洲卡车模拟2" score="4.5" label="游戏"}
 ![欧洲卡车模拟 2海报](./game/ets2.jpg)
 
 按时把货送到。风景和电台比刺激重要，开长途会静下来。
@@ -110,13 +110,13 @@ order: 4
 第一人称走进贝克家。恐怖从枪战改成屋子里的家人。
 :::
 
-:::card{title="极限竞速：地平线 4" href="https://zh.wikipedia.org/wiki/极限竞速_地平线4" score="5" label="游戏"}
+:::card{title="极限竞速：地平线 4" href="https://zh.wikipedia.org/wiki/极限竞速_地平线4" score="4.5" label="游戏"}
 ![极限竞速：地平线 4海报](./game/fh4.jpg)
 
 英国四季都在变。节日赛和开放地图，开车本身就够玩。
 :::
 
-:::card{title="极限竞速：地平线 5" href="https://zh.wikipedia.org/wiki/极限竞速_地平线5" score="5" label="游戏"}
+:::card{title="极限竞速：地平线 5" href="https://zh.wikipedia.org/wiki/极限竞速_地平线5" score="4.5" label="游戏"}
 ![极限竞速：地平线 5海报](./game/fh5.jpg)
 
 换到墨西哥。地图更大，车仍然好开，探索比赢比赛爽。

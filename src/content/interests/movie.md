@@ -4,7 +4,7 @@ description: 银幕里的故事
 order: 2
 ---
 
-:::card{title="疯狂的石头" href="https://zh.wikipedia.org/wiki/疯狂的石头" score="5" label="电影"}
+:::card{title="疯狂的石头" href="https://zh.wikipedia.org/wiki/疯狂的石头" score=" 4.5" label="电影"}
 ![疯狂的石头海报](./movie/crazy-stone.jpg)
 
 宁浩 2006 年的黑色喜剧。一块翡翠把厂长、小偷和骗子卷进同一场互相算计，台词和巧合都收得很紧。
@@ -28,7 +28,7 @@ order: 2
 徐峥饰演的神油店老板代购仿制药。前半段是市井喜剧，后半段把救命药的价钱压到人身上。
 :::
 
-:::card{title="小偷家族" href="https://zh.wikipedia.org/wiki/小偷家族" score="5" label="电影"}
+:::card{title="小偷家族" href="https://zh.wikipedia.org/wiki/小偷家族" score="4.5" label="电影"}
 ![小偷家族海报](./movie/shoplifters.jpg)
 
 是枝裕和拍的一组没有血缘、却靠彼此过活的人。家里很挤，关系却比许多正规家庭更真。
@@ -82,13 +82,13 @@ order: 2
 诺兰拍原子弹之父。听证会和试验场来回切，人被自己造出来的东西压住。
 :::
 
-:::card{title="阿凡达" href="https://zh.wikipedia.org/wiki/阿凡达" score="5" label="电影"}
+:::card{title="阿凡达" href="https://zh.wikipedia.org/wiki/阿凡达" score="4.5" label="电影"}
 ![阿凡达海报](./movie/avatar.jpg)
 
 卡梅隆的潘多拉。故事是老桥段，森林、飞行和尺度仍然值得进影厅。
 :::
 
-:::card{title="沙丘" href="https://zh.wikipedia.org/wiki/沙丘_(2021年電影)" score="4" label="电影"}
+:::card{title="沙丘" href="https://zh.wikipedia.org/wiki/沙丘_(2021年電影)" score="4.5" label="电影"}
 ![沙丘海报](./movie/dune.jpg)
 
 维伦纽瓦的沙丘。声音和沙漠都很大，命运压在一个还没准备好的人身上。
@@ -100,25 +100,25 @@ order: 2
 围着一级方程式拍的竞速片。车手、车队和弯道都按真比赛的密度来。
 :::
 
-:::card{title="速度与激情" href="https://zh.wikipedia.org/wiki/速度与激情" score="5" label="电影"}
+:::card{title="速度与激情" href="https://zh.wikipedia.org/wiki/速度与激情" score="4.5" label="电影"}
 ![速度与激情海报](./movie/fast-furious.jpg)
 
 一家人飙车的长系列。第五部最爱，后面越拍越夸张，但还是冲着那股义气去看。
 :::
 
-:::card{title="我是谁：没有绝对安全的系统" href="https://zh.wikipedia.org/wiki/我是谁：没有绝对安全的系统" score="4" label="电影"}
+:::card{title="我是谁：没有绝对安全的系统" href="https://zh.wikipedia.org/wiki/我是谁：没有绝对安全的系统" score="4.5" label="电影"}
 ![我是谁：没有绝对安全的系统海报](./movie/who-am-i.jpg)
 
 德国黑客片。一个人撞进情报系统，追杀和敲键盘交替，节奏很紧。
 :::
 
-:::card{title="蜘蛛侠" href="https://zh.wikipedia.org/wiki/蜘蛛侠" score="5" label="电影"}
+:::card{title="蜘蛛侠" href="https://zh.wikipedia.org/wiki/蜘蛛侠" score="4.5" label="电影"}
 ![蜘蛛侠海报](./movie/spiderman.jpg)
 
 新三部加动画一起算。邻家小子的责任感和几条宇宙线叠在一起，仍然是最想重看的超英。
 :::
 
-:::card{title="毒液" href="https://zh.wikipedia.org/wiki/毒液" score="5" label="电影"}
+:::card{title="毒液" href="https://zh.wikipedia.org/wiki/毒液" score="4.5" label="电影"}
 ![毒液海报](./movie/venom.jpg)
 
 记者和共生体吵着过日子。吓人的部分不多，两个人抢身体的笑点更记得住。
@@ -136,7 +136,7 @@ order: 2
 瓦坎达的王位和外界撞在一起。国度的样子比打戏更记得住。
 :::
 
-:::card{title="复仇者联盟" href="https://zh.wikipedia.org/wiki/复仇者联盟" score="4" label="电影"}
+:::card{title="复仇者联盟" href="https://zh.wikipedia.org/wiki/复仇者联盟" score="4.5" label="电影"}
 ![复仇者联盟海报](./movie/avengers.jpg)
 
 一群人终于站到同一场战役里。看的是集合，不是某一句台词。
@@ -154,7 +154,7 @@ order: 2
 托尼·斯塔克用盔甲把漫威这条线打开。嘴贫，但工坊里那一身盔甲仍然最好看。
 :::
 
-:::card{title="奇异博士" href="https://zh.wikipedia.org/wiki/奇异博士" score="3" label="电影"}
+:::card{title="奇异博士" href="https://zh.wikipedia.org/wiki/奇异博士" score="3.5" label="电影"}
 ![奇异博士海报](./movie/doctor-strange.jpg)
 
 外科医生转去学魔法。视觉在转，故事比较常规。
@@ -166,7 +166,7 @@ order: 2
 把盗窃片缩进微观世界。笑话和尺寸反差比史诗感更对味。
 :::
 
-:::card{title="银河护卫队" href="https://zh.wikipedia.org/wiki/银河护卫队" score="4" label="电影"}
+:::card{title="银河护卫队" href="https://zh.wikipedia.org/wiki/银河护卫队" score="4.5" label="电影"}
 ![银河护卫队海报](./movie/guardians.jpg)
 
 一船不合拍的人靠歌单绑在一起。热闹，也有一点真感情。

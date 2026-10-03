@@ -8,19 +8,19 @@ order: 1
 
 正在看：
 
-:::card{title="FX战士久留美" href="https://zh.wikipedia.org/wiki/FX战士久留美" label="日漫"}
+:::card{title="FX战士久留美" href="https://zh.wikipedia.org/wiki/FX战士久留美" score="4" label="日漫"}
 ![FX战士久留美海报](./anime/fx-kurumi.jpg)
 
 正在看。
 :::
 
-:::card{title="凡人修仙传" href="https://zh.wikipedia.org/wiki/凡人修仙传" label="国漫"}
+:::card{title="凡人修仙传" href="https://zh.wikipedia.org/wiki/凡人修仙传" score="5" label="国漫"}
 ![凡人修仙传海报](./anime/fanren.jpg)
 
 正在看。
 :::
 
-:::card{title="牧神记" href="https://www.bilibili.com/bangumi/play/ss45969" label="国漫"}
+:::card{title="牧神记" href="https://www.bilibili.com/bangumi/play/ss45969" score="4.5" label="国漫"}
 ![牧神记海报](./anime/mushen.jpg)
 
 正在看。
@@ -144,19 +144,19 @@ order: 1
 我的入门番。青春期症候群把心事变成看得见的异常，樱岛学姐那条线很完整。
 :::
 
-:::card{title="我独自升级" href="https://zh.wikipedia.org/wiki/我独自升级" score="5" label="日漫"}
+:::card{title="我独自升级" href="https://zh.wikipedia.org/wiki/我独自升级" score="4" label="日漫"}
 ![我独自升级海报](./anime/solo-leveling.jpg)
 
 最弱猎人进副本升级。打怪很爽，系统提示也干脆。
 :::
 
-:::card{title="ReLIFE" href="https://zh.wikipedia.org/wiki/ReLIFE" score="5" label="日漫"}
+:::card{title="ReLIFE" href="https://zh.wikipedia.org/wiki/ReLIFE" score="4.5" label="日漫"}
 ![ReLIFE海报](./anime/relife.jpg)
 
 失败的大人吃了药回到高中。重来一次不是开挂，是把当时没说的话说出来。
 :::
 
-:::card{title="来自深渊" href="https://zh.wikipedia.org/wiki/来自深渊" score="5" label="日漫"}
+:::card{title="来自深渊" href="https://zh.wikipedia.org/wiki/来自深渊" score="4.5" label="日漫"}
 ![来自深渊海报](./anime/abyss.jpg)
 
 深渊往下越来越好看，也越来越狠。可爱画风和后面的代价反差很大。
@@ -186,7 +186,7 @@ order: 1
 用游戏攻略的方式追校园剧女主。后宫壳，创作和选择还有一点真东西。
 :::
 
-:::card{title="异世界迷宫黑心企业" href="https://www.bilibili.com/bangumi/play/ss38934" score="4" label="日漫"}
+:::card{title="异世界迷宫黑心企业" href="https://www.bilibili.com/bangumi/play/ss38934" score="4.5" label="日漫"}
 ![异世界迷宫黑心企业海报](./anime/black-company.jpg)
 
 标题很糟糕，里面其实在骂黑心公司和加班。迷宫是下班之后的事。
@@ -222,7 +222,7 @@ order: 1
 外表和家里完全两样的两个人。甜，剧情比较直。
 :::
 
-:::card{title="总之就是非常可爱" href="https://zh.wikipedia.org/wiki/總之就是非常可愛" score="3" label="日漫"}
+:::card{title="总之就是非常可爱" href="https://zh.wikipedia.org/wiki/總之就是非常可愛" score="3.5" label="日漫"}
 ![总之就是非常可爱海报](./anime/tonikawa.jpg)
 
 情侣日常，每集一个小场面。可爱是目的，别的不多。
@@ -246,7 +246,7 @@ order: 1
 夜之城边缘的一小队人。很短，戴维和露西那条线收得很狠。
 :::
 
-:::card{title="86 不存在的战区" href="https://zh.wikipedia.org/wiki/86—不存在的戰區—" score="4" label="日漫"}
+:::card{title="86 不存在的战区" href="https://zh.wikipedia.org/wiki/86—不存在的戰區—" score="4.5" label="日漫"}
 ![86 不存在的战区海报](./anime/eighty-six.jpg)
 
 墙外的人和墙内的指挥。战争、种族和那台机甲都没有轻松写。
@@ -290,13 +290,13 @@ order: 1
 灯塔外面是怪物，里面是阶级。设定和人祸绑在一起，不是只好看。
 :::
 
-:::card{title="大道朝天" href="https://www.bilibili.com/bangumi/play/ss43369" score="5" label="国漫"}
+:::card{title="大道朝天" href="https://www.bilibili.com/bangumi/play/ss43369" score="4.5" label="国漫"}
 ![大道朝天海报](./anime/dadao.jpg)
 
 猫腻那条线上的修行故事。世界观大，人还是在问自己要走哪条路。
 :::
 
-:::card{title="镇魂街" href="https://zh.wikipedia.org/wiki/镇魂街" score="5" label="国漫"}
+:::card{title="镇魂街" href="https://zh.wikipedia.org/wiki/镇魂街" score="4.5" label="国漫"}
 ![镇魂街海报](./anime/rakshasa.jpg)
 
 守护灵和镇魂将。热血打戏直给，人设也记得住。
@@ -308,7 +308,7 @@ order: 1
 水墨打戏。几乎不靠台词，动作本身就把五行讲完了。
 :::
 
-:::card{title="刺客伍六七" href="https://zh.wikipedia.org/wiki/刺客伍六七" score="4" label="国漫"}
+:::card{title="刺客伍六七" href="https://zh.wikipedia.org/wiki/刺客伍六七" score="4.5" label="国漫"}
 ![刺客伍六七海报](./anime/scissor-seven.jpg)
 
 理发师兼刺客。前两季笑话密，后面感情重了一点。
@@ -332,7 +332,7 @@ order: 1
 民间怪谈一条条讲。气氛和包袱都在，适合当长一点的志怪。
 :::
 
-:::card{title="仙王的日常生活" href="https://zh.wikipedia.org/wiki/仙王的日常生活" score="3" label="国漫"}
+:::card{title="仙王的日常生活" href="https://zh.wikipedia.org/wiki/仙王的日常生活" score="3.5" label="国漫"}
 ![仙王的日常生活海报](./anime/immortal-king.jpg)
 
 大能重生去上学。日常段子为主，主线比较散。
