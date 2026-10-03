@@ -1,8 +1,13 @@
 ---
 title: About
 ---
+一些自我介绍：
 
-网名梧桐雨，mbti 是 INTJ。正在申请香港 CS Msc，也在找 Agent 方向的 Intern。喜欢写代码，也喜欢研究设计优雅、极简的系统。最近研究的领域：Long-horizon Harness、Agent Memory、Sandbox、Computer Use。
+* 网名梧桐雨
+* mbti 是 INTJ
+* 正在申请香港 CS Msc，也在找 Agent 方向的 Intern
+* 喜欢写代码，也喜欢研究设计优雅、极简的系统
+* 最近研究的领域：Long-horizon Harness、Agent Memory、Computer Use
 
 我的技术栈：
 
@@ -14,9 +19,9 @@ title: About
 
 我的简历放在这：...
 
-这个博客是我的工作台：技术向写系统、模型和工程，工具向写自己真正用过的东西... 
+欢迎联系：
 
 - 微信：Zhang05once（请说明添加理由）
 - 邮件：18896680730@163.com
 
-日常在用的软硬件，以及动漫、影视、游戏、书与 Kpop，收在[拾趣](/interests/)。
+日常在用的软硬件，以及喜欢的动漫、影视、游戏、书与 Kpop，收在[拾趣](/interests/)。
