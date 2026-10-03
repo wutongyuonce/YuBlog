@@ -1,0 +1,20 @@
+---
+import { Content as RecentMediaContent } from '../../content/interests/recent.md'
+import { withBasePath } from '~/utils/path'
+---
+
+<section class="recent-media" aria-labelledby="recent-media-title">
+  <header class="home-section-header">
+    <h2 id="recent-media-title">近期书影游</h2>
+    <a href={withBasePath('/interests/')}>全部拾趣</a>
+  </header>
+  <div class="prose markdown-content recent-media__body">
+    <RecentMediaContent />
+  </div>
+</section>
+
+<style>
+  .recent-media {
+    margin-top: 3rem;
+  }
+</style>

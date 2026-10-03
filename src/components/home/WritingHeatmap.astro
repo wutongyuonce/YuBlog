@@ -1,0 +1,574 @@
+---
+import { render } from 'astro:content'
+
+import { getPublishedBlogPosts } from '~/utils/data'
+import {
+  buildWritingHeatmap,
+  formatHeatmapLabel,
+} from '~/utils/blog-heatmap.js'
+import { formatChineseCount } from '~/utils/blog-stats.js'
+import { withBasePath } from '~/utils/path'
+
+const posts = await getPublishedBlogPosts()
+const entries = await Promise.all(
+  posts.map(async (post) => {
+    const { remarkPluginFrontmatter } = await render(post)
+    return {
+      date: post.data.pubDate,
+      title: post.data.title,
+      href: post.data.redirect || withBasePath(`/blogs/${post.id}/`),
+      words: remarkPluginFrontmatter.wordCount,
+    }
+  })
+)
+const heatmap = buildWritingHeatmap(entries)
+
+const years =
+  heatmap?.years.map((year) => ({
+    ...year,
+    weeks: year.weeks.map((week) =>
+      week.map((cell) => {
+        if (!cell.inYear) return { pad: true as const }
+        const dayPosts = heatmap.postsByDate[cell.key] ?? []
+        const label = formatHeatmapLabel(cell.key)
+        return {
+          pad: false as const,
+          key: cell.key,
+          level: cell.level,
+          count: cell.count,
+          label,
+          href: dayPosts.length === 1 ? dayPosts[0].href : '',
+          name:
+            dayPosts.length === 0
+              ? label
+              : `${label}，${cell.count}篇：${dayPosts.map((item) => item.title).join('、')}`,
+        }
+      })
+    ),
+  })) ?? []
+
+const yearSwitchCss = years
+  .map(
+    (year) =>
+      `.writing-heatmap:has(#writing-heatmap-year-${year.year}:checked) [data-year-panel='${year.year}']{display:block}`
+  )
+  .join('')
+---
+
+{heatmap && (
+  <section
+    class="writing-heatmap"
+    data-writing-heatmap
+    data-heatmap-index={JSON.stringify(heatmap.postsByDate)}
+    aria-labelledby="writing-heatmap-title"
+  >
+    <header class="home-section-header">
+      <h2 id="writing-heatmap-title">写作热力</h2>
+      {years.length > 1 ? (
+        <div class="writing-heatmap__years" role="radiogroup" aria-label="年份">
+          {years.map((year) => (
+            <label class="writing-heatmap__year">
+              <input
+                type="radio"
+                name="writing-heatmap-year"
+                id={`writing-heatmap-year-${year.year}`}
+                value={year.year}
+                checked={year.year === heatmap.selectedYear}
+              />
+              <span>{year.year}</span>
+            </label>
+          ))}
+        </div>
+      ) : (
+        <p class="writing-heatmap__single-year">{years[0].year}</p>
+      )}
+    </header>
+    {years.map((year) => (
+      <div
+        class="writing-heatmap__panel"
+        data-year-panel={year.year}
+        data-solo={years.length === 1 ? '' : undefined}
+      >
+        <p class="writing-heatmap__summary">
+          <span class="writing-heatmap__count">{year.total}</span>
+          <span>篇</span>
+          <span aria-hidden="true">·</span>
+          <span class="writing-heatmap__count">
+            {formatChineseCount(year.words)}
+          </span>
+          <span>字</span>
+          <span aria-hidden="true">·</span>
+          <span class="writing-heatmap__count">{year.activeDays}</span>
+          <span>天</span>
+        </p>
+        <div class="writing-heatmap__scroll">
+          <div class="writing-heatmap__board">
+            <div class="writing-heatmap__months" aria-hidden="true">
+              <span class="writing-heatmap__gutter" />
+              <div class="writing-heatmap__month-track">
+                {year.weekLabels.map((label) => (
+                  <span>{label}</span>
+                ))}
+              </div>
+            </div>
+            <div class="writing-heatmap__body">
+              <div class="writing-heatmap__dows" aria-hidden="true">
+                <span>一</span>
+                <span />
+                <span>三</span>
+                <span />
+                <span>五</span>
+                <span />
+                <span />
+              </div>
+              <div class="writing-heatmap__weeks">
+                {year.weeks.map((week) => (
+                  <div class="writing-heatmap__week">
+                    {week.map((cell) =>
+                      cell.pad ? (
+                        <span
+                          class="writing-heatmap__cell"
+                          aria-hidden="true"
+                        />
+                      ) : cell.href ? (
+                        <a
+                          class="writing-heatmap__cell"
+                          data-level={cell.level}
+                          data-date={cell.key}
+                          href={cell.href}
+                          aria-label={cell.name}
+                        />
+                      ) : cell.count > 1 ? (
+                        <button
+                          type="button"
+                          class="writing-heatmap__cell"
+                          data-level={cell.level}
+                          data-date={cell.key}
+                          aria-label={cell.name}
+                        />
+                      ) : (
+                        <span
+                          class="writing-heatmap__cell"
+                          data-level={cell.level}
+                          data-date={cell.key}
+                          aria-hidden="true"
+                        />
+                      )
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    ))}
+    <p class="writing-heatmap__legend" aria-hidden="true">
+      <span>少</span>
+      {[0, 1, 2, 3, 4].map((level) => (
+        <span class="writing-heatmap__swatch" data-level={level} />
+      ))}
+      <span>多</span>
+    </p>
+    <div
+      class="writing-heatmap__tip"
+      data-heatmap-tip
+      role="region"
+      aria-label="当天文章"
+      hidden
+    />
+    {years.length > 1 && <style is:inline set:html={yearSwitchCss}></style>}
+  </section>
+)}
+
+<style>
+  .writing-heatmap {
+    --cell: 10px;
+    --gap: 2px;
+    --gutter: 1.25rem;
+    margin-top: 2.75rem;
+  }
+  .writing-heatmap__single-year {
+    margin: 0;
+    color: var(--accent);
+    font-family: var(--font-heading);
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .writing-heatmap__years {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.35rem 1.1rem;
+  }
+  .writing-heatmap__year {
+    position: relative;
+    color: color-mix(in srgb, var(--c-text) 42%, var(--c-bg));
+    font-family: var(--font-heading);
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+  }
+  .writing-heatmap__year input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .writing-heatmap__year:hover,
+  .writing-heatmap__year:has(:checked) {
+    color: var(--accent);
+  }
+  .writing-heatmap__year:has(:checked) {
+    box-shadow: inset 0 -1px 0 var(--accent);
+  }
+  .writing-heatmap__year:has(:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  .writing-heatmap__panel {
+    display: none;
+  }
+  .writing-heatmap__panel[data-solo] {
+    display: block;
+  }
+  .writing-heatmap__summary {
+    display: flex;
+    justify-content: flex-start;
+    align-items: baseline;
+    gap: 0.28rem;
+    margin: 0.7rem 0 0.85rem;
+    color: color-mix(in srgb, var(--c-text) 55%, var(--c-bg));
+    font-size: 0.75rem;
+  }
+  .writing-heatmap__count {
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .writing-heatmap__scroll {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+  .writing-heatmap__board {
+    width: max-content;
+    margin-inline: auto;
+  }
+  .writing-heatmap__months,
+  .writing-heatmap__body {
+    display: grid;
+    grid-template-columns: var(--gutter) max-content;
+    column-gap: 6px;
+  }
+  .writing-heatmap__months {
+    align-items: end;
+    margin-bottom: 0.35rem;
+    min-height: 1rem;
+  }
+  .writing-heatmap__month-track,
+  .writing-heatmap__weeks {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: var(--cell);
+    gap: var(--gap);
+  }
+  .writing-heatmap__month-track span {
+    color: color-mix(in srgb, var(--c-text) 46%, var(--c-bg));
+    font-size: 0.6875rem;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .writing-heatmap__dows,
+  .writing-heatmap__week {
+    display: grid;
+    grid-template-rows: repeat(7, var(--cell));
+    gap: var(--gap);
+  }
+  .writing-heatmap__dows span {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    color: color-mix(in srgb, var(--c-text) 42%, var(--c-bg));
+    font-size: 0.625rem;
+    line-height: 1;
+  }
+  .writing-heatmap__cell,
+  .writing-heatmap__swatch {
+    display: block;
+    width: var(--cell);
+    height: var(--cell);
+    padding: 0;
+    border: 0;
+    border-radius: 2px;
+    background: transparent;
+  }
+  .writing-heatmap__cell[data-level='0'],
+  .writing-heatmap__swatch[data-level='0'] {
+    background: color-mix(in srgb, var(--accent) 14%, var(--c-bg));
+  }
+  .writing-heatmap__cell[data-level='1'],
+  .writing-heatmap__swatch[data-level='1'] {
+    background: color-mix(in srgb, var(--accent) 42%, var(--c-bg));
+  }
+  .writing-heatmap__cell[data-level='2'],
+  .writing-heatmap__swatch[data-level='2'] {
+    background: color-mix(in srgb, var(--accent) 62%, var(--c-bg));
+  }
+  .writing-heatmap__cell[data-level='3'],
+  .writing-heatmap__swatch[data-level='3'] {
+    background: color-mix(in srgb, var(--accent) 82%, var(--c-bg));
+  }
+  .writing-heatmap__cell[data-level='4'],
+  .writing-heatmap__swatch[data-level='4'] {
+    background: var(--accent);
+  }
+  a.writing-heatmap__cell {
+    text-decoration: none;
+  }
+  .writing-heatmap__cell[data-date]:hover,
+  .writing-heatmap__cell[data-date]:focus-visible {
+    outline: 1px solid color-mix(in srgb, var(--c-text) 72%, transparent);
+    outline-offset: 1px;
+  }
+  .writing-heatmap__legend {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    margin: 0.8rem 0 0;
+    color: color-mix(in srgb, var(--c-text) 46%, var(--c-bg));
+    font-size: 0.6875rem;
+  }
+  .writing-heatmap__tip {
+    position: fixed;
+    z-index: 40;
+    max-width: min(16rem, calc(100vw - 24px));
+    max-height: min(24rem, calc(100dvh - 16px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0.45rem 0.6rem;
+    border: 1px solid color-mix(in srgb, var(--c-text) 12%, var(--c-bg));
+    background: var(--c-bg);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--c-text) 8%, transparent);
+  }
+  .writing-heatmap__tip[hidden] {
+    display: none;
+  }
+  .writing-heatmap__tip:not([hidden]) {
+    display: grid;
+    gap: 0.2rem;
+  }
+  .writing-heatmap__tip :global(p) {
+    margin: 0;
+    color: color-mix(in srgb, var(--c-text) 62%, var(--c-bg));
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    line-height: 1.5;
+  }
+  .writing-heatmap__tip :global(a) {
+    color: inherit;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+  .writing-heatmap__tip :global(a:hover),
+  .writing-heatmap__tip :global(a:focus-visible) {
+    color: var(--accent);
+  }
+</style>
+
+<script>
+  import { formatHeatmapLabel } from '~/utils/blog-heatmap.js'
+
+  const placeTip = (tip: HTMLElement, cell: HTMLElement) => {
+    const rect = cell.getBoundingClientRect()
+    const margin = 8
+    const tipRect = tip.getBoundingClientRect()
+    const half = tipRect.width / 2
+    const left = Math.min(
+      Math.max(rect.left + rect.width / 2, margin + half),
+      window.innerWidth - margin - half
+    )
+    const above = rect.top - tipRect.height - margin
+    tip.style.left = `${left}px`
+    tip.style.translate = '-50% 0'
+    const desiredTop = above < margin ? rect.bottom + margin : above
+    tip.style.top = `${Math.max(margin, Math.min(desiredTop, window.innerHeight - tipRect.height - margin))}px`
+  }
+
+  const bindHeatmap = (root: HTMLElement) => {
+    if (root.dataset.bound) return
+    const tip = root.querySelector<HTMLElement>('[data-heatmap-tip]')
+    if (!tip) return
+    root.dataset.bound = 'true'
+    let hideTimer = 0
+    let activeCell: HTMLElement | null = null
+    const controller = new AbortController()
+    const { signal } = controller
+    const postsByDate: Record<string, { title: string; href: string }[]> =
+      JSON.parse(root.dataset.heatmapIndex || '{}')
+
+    const cancelHide = () => window.clearTimeout(hideTimer)
+    const hideTip = (restoreFocus = false) => {
+      // Focus can emit focusin synchronously; clear the content afterwards.
+      if (restoreFocus && tip.contains(document.activeElement)) {
+        activeCell?.focus({ preventScroll: true })
+      }
+      cancelHide()
+      tip.hidden = true
+      tip.replaceChildren()
+      activeCell = null
+    }
+    const scheduleHide = () => {
+      cancelHide()
+      hideTimer = window.setTimeout(() => {
+        if (!root.contains(document.activeElement)) hideTip()
+      }, 280)
+    }
+    const cellFrom = (target: EventTarget | null) =>
+      target instanceof Element
+        ? target.closest<HTMLElement>('[data-date]')
+        : null
+    const showTip = (cell: HTMLElement) => {
+      const date = cell.dataset.date
+      if (
+        !date ||
+        (tip.contains(document.activeElement) && activeCell !== cell)
+      )
+        return
+      cancelHide()
+      if (activeCell === cell && !tip.hidden) return
+      activeCell = cell
+      tip.replaceChildren()
+      const heading = document.createElement('p')
+      heading.textContent = formatHeatmapLabel(date)
+      tip.append(heading)
+      const posts = postsByDate[date] ?? []
+      if (!posts.length) {
+        const empty = document.createElement('p')
+        empty.textContent = '没有文章'
+        tip.append(empty)
+      } else {
+        for (const post of posts) {
+          const link = document.createElement('a')
+          link.href = post.href
+          link.textContent = post.title
+          tip.append(link)
+        }
+      }
+      tip.hidden = false
+      tip.scrollTop = 0
+      placeTip(tip, cell)
+    }
+
+    root.addEventListener(
+      'pointerover',
+      (event) => {
+        const cell = cellFrom(event.target)
+        if (cell && root.contains(cell)) showTip(cell)
+      },
+      { signal }
+    )
+    root.addEventListener(
+      'pointerout',
+      (event) => {
+        if (!cellFrom(event.target)) return
+        if (
+          event.relatedTarget instanceof Node &&
+          tip.contains(event.relatedTarget)
+        )
+          return
+        scheduleHide()
+      },
+      { signal }
+    )
+    root.addEventListener(
+      'focusin',
+      (event) => {
+        cancelHide()
+        const cell = cellFrom(event.target)
+        if (cell && root.contains(cell)) showTip(cell)
+      },
+      { signal }
+    )
+    root.addEventListener(
+      'focusout',
+      (event) => {
+        if (
+          event.relatedTarget instanceof Node &&
+          root.contains(event.relatedTarget)
+        )
+          return
+        scheduleHide()
+      },
+      { signal }
+    )
+    root.addEventListener(
+      'click',
+      (event) => {
+        if (!(event.target instanceof Element)) return
+        const button =
+          event.target.closest<HTMLButtonElement>('button[data-date]')
+        if (!button || !root.contains(button)) return
+        showTip(button)
+        tip.querySelector<HTMLAnchorElement>('a')?.focus()
+      },
+      { signal }
+    )
+    root.addEventListener('change', () => hideTip(), { signal })
+    tip.addEventListener('pointerenter', cancelHide, { signal })
+    tip.addEventListener('pointerleave', scheduleHide, { signal })
+
+    document.addEventListener(
+      'pointerdown',
+      (event) => {
+        if (event.target instanceof Node && !root.contains(event.target))
+          hideTip(true)
+      },
+      { signal }
+    )
+    document.addEventListener(
+      'keydown',
+      (event) => {
+        if (event.key === 'Escape') hideTip(true)
+      },
+      { signal }
+    )
+    window.addEventListener(
+      'scroll',
+      (event) => {
+        if (event.target instanceof Node && tip.contains(event.target)) return
+        if (!tip.contains(document.activeElement)) hideTip()
+      },
+      { capture: true, signal }
+    )
+    window.addEventListener(
+      'resize',
+      () => {
+        if (activeCell && !tip.hidden) placeTip(tip, activeCell)
+      },
+      { signal }
+    )
+    document.addEventListener(
+      'astro:before-swap',
+      () => {
+        hideTip()
+        controller.abort()
+      },
+      { once: true, signal }
+    )
+  }
+
+  const bindAll = () => {
+    document
+      .querySelectorAll<HTMLElement>('[data-writing-heatmap]')
+      .forEach(bindHeatmap)
+  }
+
+  document.addEventListener('astro:page-load', bindAll)
+  bindAll()
+</script>

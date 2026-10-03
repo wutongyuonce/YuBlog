@@ -14,7 +14,7 @@
 
 | Route | Purpose | Source |
 | :--- | :--- | :--- |
-| `/` | Author, RSS, socials and five recent posts; no pager or personal sidebar | `BlogProfile`, `RecentWriting` |
+| `/` | Author, RSS, socials, writing heatmap, five recent posts and recent media; no pager or personal sidebar | `BlogProfile`, `WritingHeatmap`, `RecentWriting`, `recent.md` |
 | `/blogs/` | Full list, category/tag filtering, seven posts per page | `src/content/blogs/**/*.{md,mdx}` |
 | `/blogs/#tech`, `#thought`, `#diary` | Built-in groups and discovered categories such as `#旅行`; legacy query URLs still work | `utils/blog-browser.js` |
 | `/tags/` | Sortable tag directory, multi-select AND, results after selection | Post tags |
@@ -28,11 +28,11 @@
 
 Publishing a post with a new `category` and rebuilding automatically adds its menu entry, count and up to four recent previews. New categories use name fragments such as `/blogs/#旅行` (URL-encoded) and stable light/dark archive badge colors. Legacy `?category=` links remain supported and normalize to equivalent fragment URLs when JavaScript is enabled. RSS continues to include all published blog posts. Blog filtering requires JavaScript; interest routes such as `/interests/movie/` are independent content pages.
 
-The “梧桐雨の博客” brand returns home; navigation text uses the local serif font. Navigation contains manuscripts, tags, archives, interests, projects, about and More, followed by the repository GitHub link, search and theme. Articles select manuscripts; interest subpages select interests. More contains Friends and an external placeholder Album link marked ↗, configured in `MORE_LINKS`. The footer shows the Moe ICP link on desktop and mobile. Page views are collected by one Umami Cloud script in `Head.astro`; the page shows no counter or badge. Home socials use `AUTHOR_LINKS` independently of the About Markdown.
+The “梧桐雨の博客” brand returns home; navigation text uses the local serif font. Navigation contains manuscripts, tags, archives, interests, projects, about and More, followed by the repository GitHub link, search and theme. Articles select manuscripts; interest subpages select interests. More contains Friends and the external Album link at `https://photos.wutongyu.site/` marked ↗, configured in `MORE_LINKS`. The footer uses the local serif font. The author name links home, and the Moe ICP link remains visible on desktop and mobile. Page views are collected by one Umami Cloud script in `Head.astro`; the page shows no counter or badge. Home socials use `AUTHOR_LINKS` independently of the About Markdown.
 
-Content and the independently configured desktop navigation are 620px wide. Home author details are centered. The TOC sits 16px outward from the center of the space between the reading column and viewport gutter, at most 208px wide and half a viewport high, with its center 32px above the viewport midpoint and internal scrolling. Tags, interests, projects and about share a serif heading; article titles use bold serif in lists and regular serif in archives; body text and internal Markdown headings use sans-serif. Interests and subpages use the dot background. About has no background; projects use rose.
+Content is 670px wide. Desktop navigation stays independently configured at 620px. Home author details are centered. The writing-heatmap title aligns left with recent posts, and the year switch sits on that title's right. The TOC sits 16px outward from the center of the space between the reading column and viewport gutter, at most 208px wide and half a viewport high, with its center 32px above the viewport midpoint and internal scrolling. Tags, interests, projects and about share a serif heading; article titles use bold serif in lists and regular serif in archives; body text and internal Markdown headings use sans-serif. Interests and subpages use the dot background. About has no background; projects use rose.
 
-Covers use `titleImage`/`titleImageAlt` under `src/content/blogs/_title-images/`. Body images belong inside the article directory or a child directory; reference them relatively without traversing upward. Interest images live under `src/content/interests/<id>/`. About content is maintained only in `src/content/about/about.md`.
+Covers use `titleImage`/`titleImageAlt` under `src/content/blogs/_title-images/`. Body images belong inside the article directory or a child directory; reference them relatively without traversing upward. Interest images live under `src/content/interests/<id>/`. The interests index note lives in `intro.md`; home media lives in `recent.md`. Neither creates a subpage or menu item. Both use the shared Markdown pipeline and `prose.css`. Consecutive `:::card` entries form responsive grids (up to two columns at the current shell width); headings separate groups and share `.markdown-content` typography. Finished entries may include the author's score; watching/planned entries omit it. About content is maintained only in `src/content/about/about.md`.
 
 See the [content skill](blog-content-publisher-skill/SKILL.md), [image pipeline](docs/Astro图片管线指南.md), [site behavior SPEC](docs/站点行为%20SPEC.md), [architecture](docs/项目解析.md) and [full-content RSS SPEC](docs/RSS%20全文支持%20SPEC.md).
 
@@ -68,7 +68,9 @@ pnpm preview
 pnpm test                  # all unit tests
 pnpm test:blog-browser     # pagination and URLs
 pnpm test:blog-tags        # tag AND filtering
-pnpm test:blog-stats       # profile stats
+pnpm test:blog-stats       # readable word counts and formatting
+node --test test/blog-heatmap.test.mjs # Shanghai calendar and yearly totals
+node --test test/remark-media-card.test.mjs # Markdown cards
 pnpm test:recent-post-date # recent-post dates
 pnpm test:progress-stats   # day-of-year and progress
 pnpm test:cjk-emphasis     # emphasis next to CJK punctuation

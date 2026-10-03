@@ -8,7 +8,7 @@ const posts = await getRecentBlogPosts()
 ---
 
 <section class="recent-writing" aria-labelledby="recent-writing-title">
-  <header class="recent-writing__header">
+  <header class="home-section-header">
     <h2 id="recent-writing-title">近期笔墨</h2>
     <a href={withBasePath('/blogs/')}>全部文稿</a>
   </header>
@@ -51,27 +51,6 @@ const posts = await getRecentBlogPosts()
 <style>
   .recent-writing {
     margin-top: 3rem;
-  }
-  .recent-writing__header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-  .recent-writing__header h2 {
-    margin: 0;
-    font-family: var(--font-heading);
-    font-size: 1.25rem;
-    font-weight: 400;
-  }
-  .recent-writing__header > a {
-    color: color-mix(in srgb, var(--c-text) 60%, var(--c-bg));
-    font-size: 0.75rem;
-    text-decoration: none;
-    white-space: nowrap;
-  }
-  .recent-writing__header > a:hover {
-    color: var(--accent);
   }
   .recent-writing__timeline {
     position: relative;

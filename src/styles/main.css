@@ -9,7 +9,8 @@
   --accent-soft: #c98299;
   --site-nav-width: 620px;
   --site-gutter: 28px;
-  --blog-shell-width: 620px;
+  /* Shared content target; images use the matching ARTICLE_COLUMN_WIDTH. */
+  --blog-shell-width: min(670px, calc(100vw - var(--site-gutter) * 2));
   --blog-prose-width: var(--blog-shell-width);
   --blog-reading-size: 1.0625rem;
 }
@@ -17,6 +18,15 @@
 @media (max-width: 600px) {
   :root {
     --site-gutter: 16px;
+  }
+}
+/* Two side gutters reserve 2 × (208px TOC + 48px clearance) = 32rem. */
+@media (min-width: 1200px) {
+  :root {
+    --blog-shell-width: min(
+      670px,
+      calc(100vw - 32rem - var(--site-gutter) * 2)
+    );
   }
 }
 

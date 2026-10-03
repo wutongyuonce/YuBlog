@@ -113,7 +113,7 @@ test('More exposes the friend page and a marked external album; registration is 
   }
 })
 
-test('friend recommendations are separate from exchanged links and the removed link is absent', () => {
+test('friend groups reflect content categories and the removed link is absent', async () => {
   const friends = otherPages[3]
   const groups = elements(friends, (node) => hasClass(node, 'friends-group'))
   assert.equal(groups.length, 2)
@@ -127,14 +127,23 @@ test('friend recommendations are separate from exchanged links and the removed l
       (node) => node.properties.href
     )
   )
-  assert.deepEqual(links[0], [
-    'https://antfu.me/',
-    'https://www.pseudoyu.com/',
-    'https://www.ruanyifeng.com/blog/',
-    'https://lucumr.pocoo.org/',
-  ])
-  assert.equal(links[1].length, 16)
-  assert.equal(new Set(links.flat()).size, 20)
+  const source = JSON.parse(
+    await readFile(
+      new URL('../src/content/friends/data.json', import.meta.url),
+      'utf8'
+    )
+  ).sort(
+    (a, b) => a.order - b.order || a.name.localeCompare(b.name, 'zh-Hans-CN')
+  )
+  for (const [index, category] of headings.entries()) {
+    assert.deepEqual(
+      links[index],
+      source
+        .filter((entry) => entry.category === category)
+        .map((entry) => entry.link)
+    )
+  }
+  assert.equal(new Set(links.flat()).size, source.length)
   assert.ok(!links.flat().includes('https://www.tcdw.net'))
 })
 
@@ -175,7 +184,6 @@ test('archive preserves one chronological timeline and labels the shared categor
   )
   for (const [slug, category] of [
     ['browser-use', '技术'],
-    ['east-asian-meritocracy', '思考'],
     ['intj-antifragile', '思考'],
     ['diary-placeholder', '日记'],
   ]) {
@@ -304,10 +312,7 @@ test('navigation previews only published articles and respects the four-post bou
     previews[1],
     (node) => node.tagName === 'a'
   ).map((node) => node.properties.href)
-  assert.deepEqual(thoughtLinks, [
-    '/blogs/east-asian-meritocracy/',
-    '/blogs/intj-antifragile/',
-  ])
+  assert.deepEqual(thoughtLinks, ['/blogs/intj-antifragile/'])
   assert.deepEqual(
     elements(previews[2], (node) => node.tagName === 'a').map(
       (node) => node.properties.href
@@ -389,7 +394,7 @@ test('all seven interest links resolve to independent content pages; about has n
 })
 
 test('cover articles keep one standalone heading and a descriptive author cover', async () => {
-  for (const slug of ['browser-use', 'east-asian-meritocracy']) {
+  for (const slug of ['browser-use', 'intj-antifragile']) {
     const page = await load(`blogs/${slug}/index.html`)
     const header = elements(page, (node) => hasClass(node, 'post-header'))[0]
     assert.equal(elements(header, (node) => node.tagName === 'h1').length, 1)

@@ -16,7 +16,7 @@
 
 | 路由 | 说明 | 内容源 |
 | :--- | :--- | :--- |
-| `/` | 作者、RSS、社交与最近五篇文稿；无文章分页和个人侧栏 | `BlogProfile`、`RecentWriting` |
+| `/` | 作者、RSS、社交、写作热力、最近五篇文稿与近期书影游；无文章分页和个人侧栏 | `BlogProfile`、`WritingHeatmap`、`RecentWriting`、`recent.md` |
 | `/blogs/` | 完整文稿，分类／标签筛选，每页七篇 | `src/content/blogs/**/*.{md,mdx}` |
 | `/blogs/#tech`、`#thought`、`#diary` | 技术、思考、日记及自动发现的新分类（如 `#旅行`）；兼容旧 query | `src/utils/blog-browser.js` |
 | `/tags/` | 标签目录和排序，多选 AND；选择后展示列表 | 文章 `tags` |
@@ -30,11 +30,11 @@
 
 发布带新 `category` 的文章后，重新构建会自动扩展文稿菜单、数量和最近四篇预览；新分类使用 `/blogs/#旅行` 这样的 URL 片段链接（`#` 后是分类标识，浏览器会编码中文），归档徽标自动分配稳定的深浅主题颜色。旧 `?category=` 链接仍可用，启用脚本后转换为等价的片段链接。RSS 仍订阅全部已发布博客。分类筛选依赖 JavaScript；拾趣的 `/interests/movie/` 是独立内容页，可直接阅读。
 
-顶部品牌“梧桐雨の博客”返回首页，顶栏文字统一使用宋体。导航依次为文稿、标签、归档、拾趣、项目、关于、更多，工具为本仓库 GitHub、搜索、主题。“更多”下拉包含友链和相册，友链指向 `/friends/`，相册指向 `https://photos.wutongyu.site/`，带 ↗ 并在新标签页打开；菜单数据在 `MORE_LINKS`。页脚在电脑和手机上均显示萌 ICP 链接。访问统计由 `Head.astro` 加载 Umami Cloud 脚本，页面不显示计数或徽章。文章属于文稿，拾趣子页属于拾趣；导航准备、取消和历史返回共用父级定位。首页个人社交来自 `AUTHOR_LINKS`，不依赖关于 Markdown 是否包含社交链接。
+顶部品牌“梧桐雨の博客”返回首页，顶栏文字统一使用宋体。导航依次为文稿、标签、归档、拾趣、项目、关于、更多，工具为本仓库 GitHub、搜索、主题。“更多”下拉包含友链和相册，友链指向 `/friends/`，相册指向 `https://photos.wutongyu.site/`，带 ↗ 并在新标签页打开；菜单数据在 `MORE_LINKS`。页脚使用宋体，作者名指向首页，电脑和手机上均显示萌 ICP 链接。访问统计由 `Head.astro` 加载 Umami Cloud 脚本，页面不显示计数或徽章。文章属于文稿，拾趣子页属于拾趣；导航准备、取消和历史返回共用父级定位。首页个人社交来自 `AUTHOR_LINKS`，不依赖关于 Markdown 是否包含社交链接。
 
-全站内容以 620px 窄版心居中，桌面导航同宽、独立配置。首页作者／名言／统计／社交居中；目录在版心右侧留白中线基础上向右移 16px，最大宽 208px、高度最多半屏，中心比视口中线高 32px。标签、拾趣、项目、关于共用宋体页头，文稿列表文章标题使用宋体加粗，归档文章标题使用常规字重宋体，正文与 Markdown 内部标题使用普通字体。首页、标签、归档、文稿、拾趣及其子页使用点阵背景，项目使用 rose，关于关闭背景。
+全站内容以 670px 版心居中，桌面导航仍为 620px、独立配置。首页作者／名言／社交居中；写作热力标题与近期笔墨左对齐，年份在标题右侧。目录在版心右侧留白中线基础上向右移 16px，最大宽 208px、高度最多半屏，中心比视口中线高 32px。标签、拾趣、项目、关于共用宋体页头，文稿列表文章标题使用宋体加粗，归档文章标题使用常规字重宋体，正文与 Markdown 内部标题使用普通字体。首页、标签、归档、文稿、拾趣及其子页使用点阵背景，项目使用 rose，关于关闭背景。
 
-封面用 `titleImage`／`titleImageAlt`，源图位于 `src/content/blogs/_title-images/`；正文图位于文章所在目录或子目录，以相对路径引用，不能向上越级。拾趣图片位于 `src/content/interests/<id>/`。关于内容只维护 `src/content/about/about.md`。
+封面用 `titleImage`／`titleImageAlt`，源图位于 `src/content/blogs/_title-images/`；正文图位于文章所在目录或子目录，以相对路径引用，不能向上越级。拾趣图片位于 `src/content/interests/<id>/`。入口说明只维护 `intro.md`，首页近期书影游只维护 `recent.md`；二者不生成拾趣子页或菜单项。`:::card` 与标题都使用共享 Markdown 管线和 `prose.css`：连续卡片按容器宽度自动分列，当前版心最多两列，标题将卡片分组。正文标题共用 `.markdown-content`。已完成条目可写作者评分，正在看／准备看／准备玩不写评分。关于内容只维护 `src/content/about/about.md`。
 
 作者操作见 [内容发布 skill](blog-content-publisher-skill/SKILL.md)，图片写法见 [图片管线指南](docs/Astro图片管线指南.md)。页面行为契约见 [站点行为 SPEC](docs/站点行为%20SPEC.md)，模块权威与边界见 [项目解析](docs/项目解析.md)，全文订阅见 [RSS SPEC](docs/RSS%20全文支持%20SPEC.md)。
 
@@ -70,7 +70,9 @@ pnpm preview
 pnpm test                  # 运行全部单元测试
 pnpm test:blog-browser     # 分页与 URL
 pnpm test:blog-tags        # 标签 AND 筛选
-pnpm test:blog-stats       # 名片统计
+pnpm test:blog-stats       # 字数统计与格式
+node --test test/blog-heatmap.test.mjs # 上海日历与年度汇总
+node --test test/remark-media-card.test.mjs # Markdown 卡片
 pnpm test:recent-post-date # 近期文章日期
 pnpm test:progress-stats   # 年积日与进度
 pnpm test:cjk-emphasis     # CJK 旁强调语法
