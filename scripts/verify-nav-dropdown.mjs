@@ -34,12 +34,8 @@ await page.hover('a[aria-label="文稿"]')
 
 const visibleCategory = () =>
   page.evaluate(() =>
-    [...document.querySelectorAll('.nav-dropdown__category')]
-      .filter(
-        (node) =>
-          getComputedStyle(node.querySelector('.nav-dropdown__preview'))
-            .visibility !== 'hidden'
-      )
+    [...document.querySelectorAll('.nav-dropdown__preview')]
+      .filter((node) => getComputedStyle(node).display !== 'none')
       .map((node) => node.dataset.previewCategory)
   )
 const rows = await page.evaluate(() =>
@@ -52,6 +48,10 @@ assert.ok(
   'Built-in groups remain ahead of discovered categories'
 )
 assert.ok(rows[2].top > rows[1].bottom, 'Exercise the actual gap between rows')
+assert.ok(
+  rows[1].top - rows[0].bottom < 16 && rows[2].top - rows[1].bottom < 16,
+  'Category links stay packed from the top; preview height must not distribute them'
+)
 const x = rows[1].left + rows[1].width / 2
 await page.hover('a[href="/blogs/#thought"]')
 assert.deepEqual(await visibleCategory(), ['thought'])

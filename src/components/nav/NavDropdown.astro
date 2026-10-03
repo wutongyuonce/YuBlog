@@ -22,6 +22,31 @@ const interests =
       )
     : []
 const menuId = `nav-menu-${kind}`
+const noScriptPreviewCss =
+  kind === 'blogs'
+    ? `@media (min-width:601px){${previews
+        .map((_, index) => {
+          const nth = index + 1
+          const scope = '.nav-dropdown--blogs:not([data-bound])'
+          const onCategory = `${scope} .nav-dropdown__categories:has(> .nav-dropdown__category-list > .nav-dropdown__category:nth-child(${nth}):is(:hover, :focus-within))`
+          const onPreview = `${scope} .nav-dropdown__categories:has(> .nav-dropdown__preview-pane > .nav-dropdown__preview:nth-child(${nth}):is(:hover, :focus-within))`
+          const preview = '> .nav-dropdown__preview-pane > .nav-dropdown__preview'
+          const link = `> .nav-dropdown__category-list > .nav-dropdown__category:nth-child(${nth}) > .nav-dropdown__category-link`
+          const highlight =
+            'background:color-mix(in srgb,var(--c-text) 8%,var(--c-bg))'
+          const rules = [
+            `${onCategory} ${preview}:nth-child(${nth}),${onPreview} ${preview}:nth-child(${nth}){display:block}`,
+            `${onPreview} ${link}{${highlight}}`,
+          ]
+          if (index > 0)
+            rules.push(
+              `${onCategory} ${preview}:first-child,${onPreview} ${preview}:first-child{display:none}`,
+              `${onPreview} > .nav-dropdown__category-list > .nav-dropdown__category:first-child > .nav-dropdown__category-link{background:transparent}`
+            )
+          return rules.join('')
+        })
+        .join('')}}`
+    : ''
 ---
 
 <div class={`nav-dropdown nav-dropdown--${kind}`} data-nav-dropdown>
@@ -31,21 +56,30 @@ const menuId = `nav-menu-${kind}`
   <div id={menuId} class="nav-dropdown__panel">
     {kind === 'blogs' ? (
       <>
-        <div
-          class="nav-dropdown__categories"
-          style={`--blog-category-count: ${previews.length}`}
-        >
-          {previews.map(({ id, label, count, posts }) => (
-            <div class="nav-dropdown__category" data-preview-category={id}>
-              <a
-                class="nav-dropdown__category-link"
-                href={`${withBasePath('/blogs/')}${serializeBlogQuery({ category: label, tags: [], page: 1 })}`}
+        <div class="nav-dropdown__categories">
+          <div class="nav-dropdown__category-list">
+            {previews.map(({ id, label, count }, index) => (
+              <div
+                class="nav-dropdown__category"
+                data-preview-category={id}
+                style={`--i: ${index}`}
               >
-                <span>{label}</span>
-                <span>{count}</span>
-              </a>
+                <a
+                  class="nav-dropdown__category-link"
+                  href={`${withBasePath('/blogs/')}${serializeBlogQuery({ category: label, tags: [], page: 1 })}`}
+                >
+                  <span>{label}</span>
+                  <span>{count}</span>
+                </a>
+              </div>
+            ))}
+          </div>
+          <div class="nav-dropdown__preview-pane">
+            {previews.map(({ id, label, posts }, index) => (
               <section
                 class="nav-dropdown__preview"
+                data-preview-category={id}
+                style={`--i: ${index}`}
                 aria-label={`${label}最近文稿`}
               >
                 <h2>{label} · 最近</h2>
@@ -73,9 +107,12 @@ const menuId = `nav-menu-${kind}`
                   <p>还没有发布{label}文稿。</p>
                 )}
               </section>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
+        {noScriptPreviewCss && (
+          <style is:inline set:html={noScriptPreviewCss} />
+        )}
         <a class="nav-dropdown__all" href={withBasePath('/blogs/')}>
           查看全部文稿 <span>{publishedPosts.length} 篇</span>
         </a>
@@ -148,15 +185,18 @@ const menuId = `nav-menu-${kind}`
         const link = menu.querySelector<HTMLAnchorElement>('[data-nav-link]')!
         const panel = menu.querySelector<HTMLElement>('.nav-dropdown__panel')!
         const categories = Array.from(
-          menu.querySelectorAll<HTMLElement>('[data-preview-category]')
+          menu.querySelectorAll<HTMLElement>('.nav-dropdown__category')
         )
         const selectPreview = (selected: HTMLElement) => {
-          categories.forEach((category) =>
-            category.toggleAttribute(
-              'data-preview-active',
-              category === selected
-            )
-          )
+          const id = selected.dataset.previewCategory
+          menu
+            .querySelectorAll<HTMLElement>('[data-preview-category]')
+            .forEach((node) => {
+              node.toggleAttribute(
+                'data-preview-active',
+                node.dataset.previewCategory === id
+              )
+            })
         }
         if (categories[0]) selectPreview(categories[0])
         categories.forEach((category) => {
