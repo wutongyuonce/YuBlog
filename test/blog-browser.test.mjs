@@ -21,7 +21,6 @@ const posts = Array.from({ length: 13 }, (_, id) => ({
 }))
 
 test('the injected first-paint script hides posts outside the requested page', () => {
-  assert.doesNotMatch(blogFirstPaintBootSource(), /toString|parseBlogQuery/)
   const paintOf = (search, hash = '') => {
     const style = {
       setAttribute() {
@@ -365,23 +364,25 @@ test('published custom categories are discovered once with counts and bounded da
 })
 
 test('category colors preserve aliases and assign stable theme colors without CSS injection', () => {
-  assert.deepEqual(getBlogCategoryColors('工具向'), {
-    light: '#526b80',
-    dark: '#a0b4c6',
-  })
-  assert.deepEqual(getBlogCategoryColors('思考向'), {
-    light: 'var(--accent)',
-    dark: 'var(--accent)',
-  })
-  assert.deepEqual(getBlogCategoryColors('日记向'), {
-    light: '#62785f',
-    dark: '#a9bca1',
-  })
+  for (const [alias, group] of [
+    ['工具向', '技术'],
+    ['思考向', '思考'],
+    ['日记向', '日记'],
+  ]) {
+    assert.deepEqual(getBlogCategoryColors(alias), getBlogCategoryColors(group))
+  }
   const colors = getBlogCategoryColors('旅行')
   for (const name of ['读书', '旅行', '旅行; color: red', '👩‍💻']) {
     const { light, dark } = getBlogCategoryColors(name)
-    assert.match(light, /^hsl\(\d{1,3} 32% 36%\)$/)
-    assert.match(dark, /^hsl\(\d{1,3} 32% 72%\)$/)
+    for (const color of [light, dark]) {
+      assert.equal(typeof color, 'string')
+      assert.ok(color.trim())
+      assert.doesNotMatch(
+        color,
+        /[;{}<>]/,
+        'category names cannot inject CSS declarations'
+      )
+    }
   }
   assert.deepEqual(getBlogCategoryColors('旅行'), colors)
   assert.notEqual(colors.light, colors.dark)

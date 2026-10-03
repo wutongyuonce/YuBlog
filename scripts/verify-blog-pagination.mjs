@@ -11,25 +11,23 @@ const html = await readFile(
 test('initial HTML offers page-one navigation and an effective no-JS fallback', () => {
   const postCount = [...html.matchAll(/<div\b[^>]*\bdata-blog-item(?:\s|=|>)/g)]
     .length
-  assert.ok(
-    postCount > BLOG_PAGE_SIZE,
-    'fallback must expose more than the first page'
-  )
-
   const pagination = html.match(
     /<nav\b[^>]*\bdata-pagination\b[^>]*>[\s\S]*?<\/nav>/
   )?.[0]
   assert.ok(pagination, 'the built blogs page must include pagination')
-  assert.doesNotMatch(
-    pagination.slice(0, pagination.indexOf('>')),
-    /\bhidden(?:\s|=|$)/
-  )
-  assert.match(pagination, /href="[^"]*\?page=2"/)
-  assert.match(pagination, /aria-current="page"/)
+  const openingTag = pagination.slice(0, pagination.indexOf('>'))
+  if (postCount > BLOG_PAGE_SIZE) {
+    assert.doesNotMatch(openingTag, /\bhidden(?:\s|=|$)/)
+    assert.match(pagination, /href="[^"]*\?page=2"/)
+    assert.match(pagination, /aria-current="page"/)
+  } else {
+    assert.match(openingTag, /\bhidden(?:\s|=|$)/)
+    assert.doesNotMatch(pagination, /href="[^"]*\?page=2"/)
+  }
 
   const fallback = [...html.matchAll(/<noscript>[\s\S]*?<\/noscript>/g)]
     .map(([block]) => block)
-    .find((block) => block.includes('当前显示全部文章'))
+    .find((block) => block.includes('[data-blog-item]'))
   assert.ok(fallback, 'the no-JS fallback must expose the full article list')
   // A bare `[data-blog-item] { display: block }` check also matches rules
   // scoped under an unrelated selector, which would leave only page one visible.

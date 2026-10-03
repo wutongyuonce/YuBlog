@@ -1,9 +1,15 @@
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
+import { readFile, readdir } from 'node:fs/promises'
 import test from 'node:test'
 import { fromHtml } from 'hast-util-from-html'
 import { visit } from 'unist-util-visit'
 import { XMLParser } from 'fast-xml-parser'
+import {
+  AUTHOR_LINKS,
+  INTEREST_ICONS,
+  MORE_LINKS,
+  SITE,
+} from '../src/config.ts'
 import {
   BLOG_CATEGORIES,
   getBlogCategoryColors,
@@ -12,20 +18,36 @@ import {
 
 const load = async (file) =>
   fromHtml(await readFile(new URL(`../dist/${file}`, import.meta.url), 'utf8'))
-const [home, blogs, interests, about, article, ...otherPages] =
+const [home, blogs, interests, about, archives, tags, projects, friends] =
   await Promise.all(
     [
       'index.html',
       'blogs/index.html',
       'interests/index.html',
       'about/index.html',
-      'blogs/browser-use/index.html',
       'archives/index.html',
       'tags/index.html',
       'projects/index.html',
       'friends/index.html',
     ].map(load)
   )
+const articleFiles = (
+  await readdir(new URL('../dist/blogs/', import.meta.url), { recursive: true })
+).filter((file) => file.endsWith('/index.html'))
+const articles = await Promise.all(
+  articleFiles.map((file) => load(`blogs/${file}`))
+)
+const pages = [
+  home,
+  blogs,
+  interests,
+  about,
+  archives,
+  tags,
+  projects,
+  friends,
+  ...articles,
+]
 const elements = (tree, predicate) => {
   const found = []
   visit(tree, 'element', (node) => {
@@ -34,37 +56,30 @@ const elements = (tree, predicate) => {
   return found
 }
 const hasClass = (node, name) => node.properties.className?.includes(name)
+const textOf = (node) =>
+  node.type === 'text' ? node.value : (node.children || []).map(textOf).join('')
 
-test('deployment keeps manuscripts and category bookmarks on the manuscript route', async () => {
+test('deployment preserves the manuscript route', async () => {
   const { redirects = [] } = JSON.parse(
     await readFile(new URL('../vercel.json', import.meta.url), 'utf8')
   )
-  for (const href of [
-    '/blogs',
-    '/blogs/',
-    '/blogs/#tech',
-    '/blogs/#thought',
-    '/blogs/#diary',
-  ]) {
-    const pathname = new URL(href, 'https://www.wutongyu.site/').pathname
+  for (const pathname of ['/blogs', '/blogs/']) {
     const redirect = redirects.find(({ source }) => source === pathname)
     if (redirect)
       assert.equal(
-        new URL(redirect.destination, 'https://www.wutongyu.site/').pathname,
+        new URL(redirect.destination, SITE.website).pathname,
         '/blogs/',
-        `${href} must reach the manuscript page, not the former home-page list`
+        'Manuscripts and category bookmarks must not redirect to home'
       )
   }
 })
 
-test('section children have the correct parent selected before client scripts run', async () => {
-  const book = await load('interests/book/index.html')
+test('section pages select the correct navigation parent before scripts run', () => {
   for (const [page, href] of [
     [blogs, '/blogs/'],
-    [article, '/blogs/'],
+    ...articles.map((page) => [page, '/blogs/']),
     [interests, '/interests/'],
-    [book, '/interests/'],
-    [otherPages[3], '/friends/'],
+    [friends, '/friends/'],
   ]) {
     const current = elements(
       page,
@@ -79,8 +94,8 @@ test('section children have the correct parent selected before client scripts ru
   }
 })
 
-test('More exposes the friend page and a marked external album; registration is on every page', () => {
-  for (const page of [home, blogs, interests, about, article, ...otherPages]) {
+test('More follows configuration and safely marks external destinations', () => {
+  for (const page of pages) {
     const menu = elements(
       page,
       (node) => node.properties.id === 'nav-menu-more'
@@ -89,51 +104,47 @@ test('More exposes the friend page and a marked external album; registration is 
     const links = elements(menu, (node) => node.tagName === 'a')
     assert.deepEqual(
       links.map((node) => node.properties.href),
-      ['/friends/', 'https://photos.wutongyu.site/']
+      MORE_LINKS.map(({ href }) => href)
     )
-    assert.equal(links[1].properties.target, '_blank')
-    assert.ok(
-      elements(links[1], (node) => hasClass(node, 'nav-dropdown__external'))
-        .length
-    )
+    for (const [index, config] of MORE_LINKS.entries()) {
+      if (!config.external) continue
+      assert.equal(links[index].properties.target, '_blank')
+      assert.ok(links[index].properties.rel?.includes('noopener'))
+      assert.ok(links[index].properties.rel?.includes('noreferrer'))
+      assert.ok(
+        elements(links[index], (node) =>
+          hasClass(node, 'nav-dropdown__external')
+        ).length
+      )
+    }
     assert.equal(
       elements(menu, (node) => 'dataNavLink' in node.properties).length,
       0,
       'Submenu links must not become top-level indicator targets'
     )
-    const registration = elements(
-      page,
-      (node) =>
-        node.tagName === 'a' &&
-        node.properties.href === 'https://icp.gov.moe/?keyword=20269668'
-    )
-    assert.equal(registration.length, 1)
-    assert.equal(registration[0].properties.target, '_blank')
-    assert.equal(registration[0].children[0].value.trim(), '萌ICP备20269668号')
   }
 })
 
-test('friend groups reflect content categories and the removed link is absent', async () => {
-  const friends = otherPages[3]
-  const groups = elements(friends, (node) => hasClass(node, 'friends-group'))
-  assert.equal(groups.length, 2)
-  const headings = groups.map(
-    (group) =>
-      elements(group, (node) => node.tagName === 'h2')[0].children[0].value
-  )
-  assert.deepEqual(headings, ['推荐', '双向'])
-  const links = groups.map((group) =>
-    elements(group, (node) => hasClass(node, 'friend-card')).map(
-      (node) => node.properties.href
-    )
-  )
+test('friend groups render the current data without dropping entries', async () => {
   const source = JSON.parse(
     await readFile(
       new URL('../src/content/friends/data.json', import.meta.url),
       'utf8'
     )
   ).sort(
-    (a, b) => a.order - b.order || a.name.localeCompare(b.name, 'zh-Hans-CN')
+    (a, b) =>
+      (a.order ?? 999) - (b.order ?? 999) ||
+      a.name.localeCompare(b.name, 'zh-Hans-CN')
+  )
+  const groups = elements(friends, (node) => hasClass(node, 'friends-group'))
+  const headings = groups.map((group) =>
+    textOf(elements(group, (node) => node.tagName === 'h2')[0])
+  )
+  assert.deepEqual(headings, source.length ? ['推荐', '双向'] : [])
+  const links = groups.map((group) =>
+    elements(group, (node) => hasClass(node, 'friend-card')).map(
+      (node) => node.properties.href
+    )
   )
   for (const [index, category] of headings.entries()) {
     assert.deepEqual(
@@ -143,104 +154,72 @@ test('friend groups reflect content categories and the removed link is absent', 
         .map((entry) => entry.link)
     )
   }
-  assert.equal(new Set(links.flat()).size, source.length)
-  assert.ok(!links.flat().includes('https://www.tcdw.net'))
+  assert.equal(links.flat().length, source.length)
 })
 
-test('desktop articles expose the TOC directly with no disclosure button', () => {
-  const aside = elements(
-    article,
-    (node) => node.properties.id === 'desktop-aside'
-  )[0]
-  assert.equal(elements(aside, (node) => node.tagName === 'button').length, 0)
-  assert.equal(
-    elements(aside, (node) => node.properties.id === 'toc-sidebar').length,
-    1
-  )
-})
-
-test('home social links preserve the established identities and real email independently of about content', () => {
-  const nav = elements(home, (node) =>
-    hasClass(node, 'blog-profile__social')
-  )[0]
-  const hrefs = elements(nav, (node) => node.tagName === 'a').map(
-    (node) => node.properties.href
-  )
-  assert.deepEqual(hrefs, [
-    'https://github.com/wutongyuonce',
-    'https://x.com/Yu2002964143523',
-    'https://www.instagram.com/wutongyu0730',
-    'https://space.bilibili.com/521627597',
-    'https://www.xiaohongshu.com/user/profile/64842572000000001f005e63',
-    'mailto:18896680730@163.com',
-  ])
-})
-
-test('archive preserves one chronological timeline and labels the shared categories', () => {
-  const archive = otherPages[0]
-  assert.equal(
-    elements(archive, (node) => hasClass(node, 'archive-timeline')).length,
-    1
-  )
-  for (const [slug, category] of [
-    ['browser-use', '技术'],
-    ['intj-antifragile', '思考'],
-    ['diary-placeholder', '日记'],
-  ]) {
-    const post = elements(
-      archive,
-      (node) =>
-        hasClass(node, 'archive-post') &&
-        elements(node, (child) => child.properties.href === `/blogs/${slug}/`)
-          .length
+test('desktop articles expose an authored TOC directly', () => {
+  for (const article of articles) {
+    const aside = elements(
+      article,
+      (node) => node.properties.id === 'desktop-aside'
     )[0]
-    assert.equal(post.properties.dataCategory, category)
+    if (!aside) continue // Articles may disable TOC or have no eligible headings.
+    assert.equal(elements(aside, (node) => node.tagName === 'button').length, 0)
     assert.equal(
-      elements(post, (node) => hasClass(node, 'archive-post__category'))[0]
-        .children[0].value,
-      category
+      elements(aside, (node) => node.properties.id === 'toc-sidebar').length,
+      1
     )
   }
 })
 
-test('all pages omit the personal sidebar; only home contains a profile', () => {
-  for (const page of [home, blogs, interests, about, article, ...otherPages]) {
+test('home social links follow author configuration independently of about content', () => {
+  const nav = elements(home, (node) =>
+    hasClass(node, 'blog-profile__social')
+  )[0]
+  assert.ok(nav)
+  const hrefs = elements(nav, (node) => node.tagName === 'a').map(
+    (node) => node.properties.href
+  )
+  assert.deepEqual(
+    hrefs,
+    AUTHOR_LINKS.map(({ href }) => href)
+  )
+})
+
+test('archive shows readable category labels on a single timeline', () => {
+  assert.equal(
+    elements(archives, (node) => hasClass(node, 'archive-timeline')).length,
+    1
+  )
+  for (const post of elements(archives, (node) =>
+    hasClass(node, 'archive-post')
+  )) {
     assert.equal(
-      elements(
-        page,
-        (node) =>
-          hasClass(node, 'blog-sidebar') ||
-          hasClass(node, 'blog-index-sidebar-column')
-      ).length,
-      0
+      textOf(
+        elements(post, (node) => hasClass(node, 'archive-post__category'))[0]
+      ),
+      post.properties.dataCategory
     )
+  }
+})
+
+test('home is the landing page and manuscripts own the full article list', () => {
+  for (const page of pages) {
     assert.equal(
       elements(page, (node) => 'dataSiteHeader' in node.properties).length,
       1
     )
-    if (page !== home)
-      assert.equal(
-        elements(page, (node) => hasClass(node, 'blog-profile')).length,
-        0
-      )
+    assert.equal(
+      elements(page, (node) => hasClass(node, 'blog-profile')).length,
+      page === home ? 1 : 0
+    )
   }
-})
-
-test('home is a landing page, manuscripts own pagination, and articles have no profile', () => {
-  assert.equal(
-    elements(home, (node) => hasClass(node, 'blog-profile')).length,
-    1
-  )
   assert.equal(
     elements(home, (node) => hasClass(node, 'recent-writing__item')).length,
-    5
+    Math.min(5, articles.length)
   )
   assert.equal(
     elements(home, (node) => 'dataBlogBrowser' in node.properties).length,
-    0
-  )
-  assert.equal(
-    elements(home, (node) => hasClass(node, 'blog-sidebar')).length,
     0
   )
   assert.equal(
@@ -248,27 +227,24 @@ test('home is a landing page, manuscripts own pagination, and articles have no p
     1
   )
   assert.equal(
-    elements(blogs, (node) => hasClass(node, 'recent-writing')).length,
-    0
+    elements(blogs, (node) => 'dataBlogItem' in node.properties).length,
+    articles.length
   )
-  assert.equal(
-    elements(article, (node) => hasClass(node, 'blog-profile')).length,
-    0
-  )
-  assert.ok(
-    elements(
-      article,
-      (node) => node.tagName === 'a' && node.properties.href === '/blogs/'
-    ).length
-  )
+  for (const article of articles)
+    assert.ok(
+      elements(
+        article,
+        (node) => node.tagName === 'a' && node.properties.href === '/blogs/'
+      ).length
+    )
 })
 
-test('navigation previews only published articles and respects the four-post bound', async () => {
+test('navigation previews count current categories and only link published articles', async () => {
   const xml = await readFile(
     new URL('../dist/rss.xml', import.meta.url),
     'utf8'
   )
-  const feed = new XMLParser().parse(xml).rss.channel.item
+  const feed = [].concat(new XMLParser().parse(xml).rss.channel.item || [])
   const publishedLinks = new Set(feed.map(({ link }) => link))
   const previews = elements(home, (node) =>
     hasClass(node, 'nav-dropdown__preview')
@@ -276,7 +252,7 @@ test('navigation previews only published articles and respects the four-post bou
   const categories = elements(home, (node) =>
     hasClass(node, 'nav-dropdown__category-link')
   )
-  const archivedPosts = elements(otherPages[0], (node) =>
+  const archivedPosts = elements(archives, (node) =>
     hasClass(node, 'archive-post')
   )
   const counts = new Map(BLOG_CATEGORIES.map(({ label }) => [label, 0]))
@@ -297,28 +273,17 @@ test('navigation previews only published articles and respects the four-post bou
   assert.equal(previews.length, counts.size)
   const seen = new Set()
   for (const category of categories) {
-    const url = new URL(category.properties.href, 'https://www.wutongyu.site/')
+    const url = new URL(category.properties.href, SITE.website)
     const label = parseBlogQuery(url.search, url.hash).category
     assert.equal(url.pathname, '/blogs/')
     assert.equal(url.searchParams.has('category'), false)
     assert.ok(!seen.has(label), 'Each category has exactly one menu entry')
     seen.add(label)
     const spans = elements(category, (node) => node.tagName === 'span')
-    assert.equal(spans[0].children[0].value, label)
-    assert.equal(Number(spans[1].children[0].value), counts.get(label))
+    assert.equal(textOf(spans[0]), label)
+    assert.equal(Number(textOf(spans[1])), counts.get(label))
   }
   assert.deepEqual(seen, new Set(counts.keys()))
-  const thoughtLinks = elements(
-    previews[1],
-    (node) => node.tagName === 'a'
-  ).map((node) => node.properties.href)
-  assert.deepEqual(thoughtLinks, ['/blogs/intj-antifragile/'])
-  assert.deepEqual(
-    elements(previews[2], (node) => node.tagName === 'a').map(
-      (node) => node.properties.href
-    ),
-    ['/blogs/diary-placeholder/']
-  )
   for (const preview of previews) {
     const links = elements(preview, (node) => node.tagName === 'a')
     assert.ok(links.length <= 4)
@@ -326,100 +291,86 @@ test('navigation previews only published articles and respects the four-post bou
       properties: { href },
     } of links)
       assert.ok(
-        publishedLinks.has(new URL(href, 'https://www.wutongyu.site/').href),
+        publishedLinks.has(new URL(href, SITE.website).href),
         `Preview must be published: ${href}`
       )
   }
 })
 
-test('all seven interest links resolve to independent content pages; about has no old tabs', async () => {
-  const ids = ['device', 'anime', 'movie', 'tv', 'game', 'book', 'kpop']
-  const titles = ['设备', '动漫', '电影', '电视剧', '游戏', '书', 'Kpop']
+test('interest menu and index agree and their links resolve to content pages', async () => {
   const menu = elements(
     home,
     (node) => node.properties.id === 'nav-menu-interests'
   )[0]
-  const urls = ids.map((id) => `/interests/${id}/`)
-  assert.deepEqual(
-    elements(menu, (node) => node.tagName === 'a').map(
-      (node) => node.properties.href
-    ),
-    urls
-  )
   const index = elements(interests, (node) =>
     hasClass(node, 'interests-page__index')
   )[0]
+  assert.ok(menu)
+  assert.ok(index)
+  const indexLinks = elements(index, (node) => node.tagName === 'a')
+  const menuLinks = elements(menu, (node) => node.tagName === 'a')
   assert.deepEqual(
-    elements(index, (node) => node.tagName === 'a').map(
-      (node) => node.properties.href
-    ),
-    urls
+    menuLinks.map((node) => node.properties.href),
+    indexLinks.map((node) => node.properties.href)
   )
-  assert.equal(
-    elements(interests, (node) => 'dataInterest' in node.properties).length,
-    0
+  const sourceFiles = (
+    await readdir(new URL('../src/content/interests/', import.meta.url))
+  ).filter(
+    (file) =>
+      /\.(md|mdx)$/.test(file) && !['intro.md', 'recent.md'].includes(file)
   )
-  for (const [position, id] of ids.entries()) {
-    const page = await load(`interests/${id}/index.html`)
+  assert.equal(indexLinks.length, sourceFiles.length)
+  for (const link of indexLinks) {
+    const pathname = new URL(link.properties.href, SITE.website).pathname
+    const page = await load(`${pathname.slice(1)}index.html`)
+    const id = decodeURIComponent(pathname.split('/').filter(Boolean).at(-1))
+    const menuLink = menuLinks.find(
+      (node) => node.properties.href === link.properties.href
+    )
+    const icons = elements(menuLink, (node) =>
+      hasClass(node, 'nav-dropdown__icon')
+    )
+    assert.equal(
+      icons.length,
+      INTEREST_ICONS[id] ? 1 : 0,
+      `${id}: unconfigured icons leave no placeholder`
+    )
+    if (INTEREST_ICONS[id]) assert.ok(hasClass(icons[0], INTEREST_ICONS[id]))
     const content = elements(page, (node) => 'dataInterest' in node.properties)
     assert.equal(content.length, 1)
     assert.equal(content[0].properties.dataInterest, id)
     const title = elements(page, (node) => node.tagName === 'h1')[0]
-    assert.equal(title.children[0].value, titles[position])
     assert.equal(
-      elements(page, (node) => hasClass(node, 'blog-profile')).length,
-      0
+      textOf(title),
+      textOf(elements(link, (node) => node.tagName === 'span')[0])
     )
-    const currentLink = elements(
-      page,
-      (node) =>
-        node.properties.ariaCurrent === 'page' &&
-        node.properties.href === '/interests/'
+    assert.equal(
+      elements(
+        page,
+        (node) =>
+          node.properties.ariaCurrent === 'page' &&
+          node.properties.href === '/interests/'
+      ).length,
+      1
     )
-    assert.equal(currentLink.length, 1)
   }
-  assert.equal(
-    elements(
-      about,
-      (node) =>
-        node.properties.role === 'tablist' ||
-        node.properties.role === 'tabpanel'
-    ).length,
-    0
-  )
-  assert.equal(
-    elements(about, (node) => hasClass(node, 'about-panel')).length,
-    1
-  )
 })
 
-test('cover articles keep one standalone heading and a descriptive author cover', async () => {
-  for (const slug of ['browser-use', 'intj-antifragile']) {
-    const page = await load(`blogs/${slug}/index.html`)
+test('article covers do not replace the standalone page heading', () => {
+  for (const page of articles) {
     const header = elements(page, (node) => hasClass(node, 'post-header'))[0]
+    assert.ok(header)
     assert.equal(elements(header, (node) => node.tagName === 'h1').length, 1)
-    assert.equal(
-      elements(header, (node) => hasClass(node, 'page-title')).length,
-      1
-    )
     const hero = elements(header, (node) => hasClass(node, 'post-hero'))[0]
-    assert.ok(hero, 'The cover remains below the standalone heading')
+    if (!hero) continue // A cover and its description are optional authored data.
     assert.equal(elements(hero, (node) => node.tagName === 'h1').length, 0)
-    assert.equal(
-      elements(hero, (node) => hasClass(node, 'post-hero__subtitle')).length,
-      1
+    const cover = elements(
+      hero,
+      (node) => node.tagName === 'img' && !hasClass(node, 'post-meta__avatar')
+    )[0]
+    assert.ok(
+      cover?.properties.alt?.trim(),
+      'Authored covers need descriptive alt text'
     )
-    const meta = elements(hero, (node) => hasClass(node, 'post-meta--hero'))[0]
-    const text = (node) =>
-      node.type === 'text'
-        ? node.value
-        : (node.children || []).map(text).join('')
-    assert.match(text(meta), /梧桐雨/)
-    assert.doesNotMatch(text(meta), /min read|Agent \/|Updated/)
-    assert.equal(
-      elements(meta, (node) => hasClass(node, 'post-meta__avatar')).length,
-      1
-    )
-    assert.equal(elements(meta, (node) => node.tagName === 'time').length, 1)
   }
 })

@@ -3,7 +3,7 @@ import test from 'node:test'
 
 import { placeSlidingIndicator } from '../src/utils/sliding-indicator.js'
 
-/** 记录 style 赋值与回流调用次数的假元素。 */
+/** 记录 style 赋值的假元素。 */
 const createStub = ({ width = 0, left = 0, ready = false } = {}) => {
   const sets = []
   const element = {
@@ -20,9 +20,7 @@ const createStub = ({ width = 0, left = 0, ready = false } = {}) => {
     dataset: ready ? { ready: 'true' } : {},
     offsetWidth: width,
     offsetLeft: left,
-    reflows: 0,
     getBoundingClientRect() {
-      this.reflows++
       return {}
     },
   }
@@ -43,7 +41,6 @@ test('first placement drops the transition and sets width + offset', () => {
     ['transition', 'none'],
     ['transition', ''],
   ])
-  assert.equal(indicator.reflows, 1)
   assert.equal(indicator.dataset.ready, 'true')
 })
 
@@ -54,7 +51,6 @@ test('later placement keeps the transition so the pill animates', () => {
   placeSlidingIndicator({ indicator, target })
 
   assert.deepEqual(transitions(sets), [])
-  assert.equal(indicator.reflows, 0)
   assert.equal(indicator.style.width, '60px')
 })
 

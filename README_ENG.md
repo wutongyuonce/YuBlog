@@ -19,7 +19,7 @@
 | `/blogs/#tech`, `#thought`, `#diary` | Built-in groups and discovered categories such as `#旅行`; legacy query URLs still work | `utils/blog-browser.js` |
 | `/tags/` | Sortable tag directory, multi-select AND, results after selection | Post tags |
 | `/archives/` | One timeline grouped by year with category badges | Post dates/categories |
-| `/interests/`, `/interests/<id>/` | Equipment, anime, films, TV, games, books and Kpop | `src/content/interests/*.md` |
+| `/interests/`, `/interests/<id>/` | Interest index and content-driven category pages | `src/content/interests/*.{md,mdx}` (excluding `intro.md` and `recent.md`) |
 | `/projects/` | Page heading and project groups | Projects JSON |
 | `/about/` | Author introduction, no tabs or animated background | `src/content/about/about.md` |
 | `/friends/` | Recommended and mutual links, exchange template | Friends JSON |
@@ -28,11 +28,13 @@
 
 Publishing a post with a new `category` and rebuilding automatically adds its menu entry, count and up to four recent previews. New categories use name fragments such as `/blogs/#旅行` (URL-encoded) and stable light/dark archive badge colors. Legacy `?category=` links remain supported and normalize to equivalent fragment URLs when JavaScript is enabled. RSS continues to include all published blog posts. Blog filtering requires JavaScript; interest routes such as `/interests/movie/` are independent content pages.
 
+To add an interest category, place `<id>.md` (or `.mdx`) directly in `src/content/interests/` with a non-empty `title` and `description` and a non-negative integer `order`. Rebuilding automatically creates `/interests/<id>/` and adds the category to the index and navbar dropdown, sorted by `order`. Categories are not limited to the current equipment, anime, films, TV, games, books and Kpop; no route or navigation-array edits are needed. Icons are optional: configure `INTEREST_ICONS` in `src/config.ts` using the filename without its extension as the key. Unconfigured entries show text only, with no icon placeholder. Interests have no `draft` switch and are published in the next build. `intro.md` and `recent.md` are not categories.
+
 The “梧桐雨の博客” brand returns home; navigation text uses the local serif font. Navigation contains manuscripts, tags, archives, interests, projects, about and More, followed by the repository GitHub link, search and theme. Articles select manuscripts; interest subpages select interests. More contains Friends and the external Album link at `https://photos.wutongyu.site/` marked ↗, configured in `MORE_LINKS`. The footer uses the local serif font. The author name links home, and the Moe ICP link remains visible on desktop and mobile. Page views are collected by one Umami Cloud script in `Head.astro`; the page shows no counter or badge. Home socials use `AUTHOR_LINKS` independently of the About Markdown.
 
 Content targets 660px. Navigation uses the same width variable and responsive constraints. Home author details are centered. The writing-heatmap title aligns left with recent posts, and the year switch sits on that title's right. The TOC sits 16px outward from the center of the space between the reading column and viewport gutter, at most 208px wide and half a viewport high, with its center 32px above the viewport midpoint and internal scrolling. Tags, interests, projects and about share a serif heading; article titles use bold serif in lists and regular serif in archives; body text and internal Markdown headings use sans-serif. Interests and subpages use the dot background. About has no background; projects use rose.
 
-Covers use `titleImage`/`titleImageAlt` under `src/content/blogs/_title-images/`. Body images belong inside the article directory or a child directory; reference them relatively without traversing upward. Interest images live under `src/content/interests/<id>/`. The interests index note lives in `intro.md`; home media lives in `recent.md`. Neither creates a subpage or menu item. Both use the shared Markdown pipeline and `prose.css`. Consecutive `:::card` entries form responsive grids (up to two columns at the current shell width); headings separate groups and share `.markdown-content` typography. Finished entries may include the author's score; watching/planned entries omit it. About content is maintained only in `src/content/about/about.md`.
+Covers use `titleImage`/`titleImageAlt` under `src/content/blogs/_title-images/`. Body images belong inside the article directory or a child directory; reference them relatively without traversing upward. Interest images live under `src/content/interests/<id>/`. The interests index note lives in `intro.md`; home media lives in `recent.md`. Neither creates a subpage or menu item. Both use the shared Markdown pipeline and `prose.css`. Consecutive `:::card` entries form responsive grids (up to two columns at the current shell width); headings separate groups and share `.markdown-content` typography. Author scores are optional regardless of watching/playing status; omitted scores are not invented. About content is maintained only in `src/content/about/about.md`.
 
 See the [content skill](blog-content-publisher-skill/SKILL.md), [image pipeline](docs/Astro图片管线指南.md), [site behavior SPEC](docs/站点行为%20SPEC.md), [architecture](docs/项目解析.md) and [full-content RSS SPEC](docs/RSS%20全文支持%20SPEC.md).
 
@@ -63,7 +65,7 @@ pnpm check                 # Astro type and content checks
 pnpm build                 # production build (includes Pagefind)
 pnpm test:built-pagination # check manuscript pagination and the no-JS fallback
 pnpm test:built-restructure # check page structure, menus, friends and article semantics
-pnpm test:built-markdown   # check images, reading metadata, and Markdown plugins in the build
+pnpm test:built-markdown   # check built images, headings, cards and complete RSS content
 pnpm preview
 pnpm test                  # all unit tests
 pnpm test:blog-browser     # pagination and URLs
@@ -75,7 +77,6 @@ pnpm test:recent-post-date # recent-post dates
 pnpm test:progress-stats   # day-of-year and progress
 pnpm test:cjk-emphasis     # emphasis next to CJK punctuation
 pnpm test:toc-active       # current-heading picker
-pnpm test:css-ownership    # one owner per global selector
 pnpm test:canvas-size      # canvas backing store & DPR cap
 pnpm test:reduced-motion   # reduced-motion gate
 pnpm lint
@@ -101,7 +102,7 @@ docs/             architecture, Astro notes, SEO tutorial
 1. Edit `SITE`, `UI` and `AUTHOR_LINKS` in `src/config.ts`. Brand copy is in `NavBar`; author/motto in `BlogProfile`. Maintain any contact details shown in About separately.
 2. Change posts, projects, about, interests and friends with the content skill. The field authority is `src/content/schema.ts`.
 3. Replace `public/avatar.webp`. Exchange-template values in `FriendsApplyPanel.friendInfo` are separate from `SITE`.
-4. Read the architecture before changing layout. Index pages use `BlogIndexLayout` without a sidebar. Keep one owner per CSS selector.
+4. Read the architecture before changing layout. Index pages use `BlogIndexLayout` without a sidebar. Keep shared styles centralized; check scope and cascade when applying component overrides.
 5. Content images use Astro; site assets stay in `public/`. Build after image changes, and run the required checks before preparing a PR.
 
 ## Documentation and changelog
@@ -113,8 +114,8 @@ README, specifications and guides describe the current implementation. Record me
 The skill lives at `blog-content-publisher-skill/SKILL.md`.
 
 - Put it in your agent’s skills directory.
-- Say which page to change, e.g. new post, edit equipment, add a friend link, change the navbar GitHub link, or edit About socials. The agent should match the page table first, then edit files.
-- It edits Markdown / JSON / `SITE` and `UI` in `src/config.ts`. Keep `draft: true` unless you asked to publish. Do not push unless you asked to deploy.
+- Say which page to change, e.g. new post, edit equipment, add an interest category, add a category icon, add a friend link, change the navbar GitHub link, or edit About socials. The agent should match the page table first, then edit files.
+- It edits Markdown / JSON / site configuration in `src/config.ts`. New blog posts keep `draft: true` unless you asked to publish; this does not apply to interests. Do not commit, push or deploy without explicit authorization.
 - Do not use this skill for structure, CSS, or pagination logic — use `docs/项目解析.md`.
 
 MIT

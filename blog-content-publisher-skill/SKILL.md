@@ -2,8 +2,8 @@
 name: blog-content-publisher
 description: >
   维护 YuBlog（Wutong-Yu Astro 站）所有可改内容。按页面改：文稿与配图、首页近期笔墨和标签/归档所依赖的文章元数据、
-  项目 JSON、关于作者介绍、拾趣七个分类与个人社交、友链 JSON、顶栏导航与顶栏 GitHub、友链申请模板文案。
-  触发：发博客、改文章、改封面、改 titleImage、改分类、改关于、改拾趣、改设备、改动漫、改影视、改游戏、改书、改 Kpop、改友链、改项目、改导航、改顶栏 GitHub、改关于页社交、改名片站名。
+  项目 JSON、关于作者介绍、拾趣分类（可新增、图标可选）与个人社交、友链 JSON、顶栏导航与顶栏 GitHub、友链申请模板文案。
+  触发：发博客、改文章、改封面、改 titleImage、改分类、改关于、改拾趣、新增拾趣分类、给拾趣分类补图标、改设备、改动漫、改影视、改游戏、改书、改 Kpop、改友链、改项目、改导航、改顶栏 GitHub、改关于页社交、改名片站名。
   不要用来做布局/CSS 重构；那些看 docs/项目解析.md。
 ---
 
@@ -22,10 +22,10 @@ description: >
 | 归档多一条/少一条 | 归档 | 同上，靠 `pubDate` |
 | 项目卡片 | 项目 | `src/content/projects/data.json` |
 | 作者介绍 | 关于 `/about/` | `src/content/about/about.md` |
-| 设备、动漫、电影、电视剧、游戏、书、Kpop | 拾趣入口和对应子页 | `src/content/interests/<id>.md`，图放对应 `<id>/` |
+| 改拾趣内容、新增或重排拾趣分类（如设备、动漫、旅行） | 拾趣入口和对应子页 | `src/content/interests/<id>.md`，图放对应 `<id>/` |
 | 友链增删改、申请模板里的站名/链接 | 友链 | `data.json` 或 `FriendsApplyPanel.astro` 的 `friendInfo` |
 | 顶栏页面名、顶栏 GitHub | 全站顶栏 | `src/config.ts` 的 `UI` |
-| 个人社交（名字、链接、图标） | 首页与关于 | `config.ts` 的 `AUTHOR_LINKS` 和 `about.md` 同步 |
+| 个人社交（名字、链接、图标） | 首页与关于 | `config.ts` 的 `AUTHOR_LINKS`；若 `about.md` 也展示同一联系方式，再同步该字段 |
 | 站点标题、域名 | 全站 SEO | `src/config.ts` 的 `SITE` |
 
 本 skill 管理内容与配置；布局、CSS 和交互逻辑按 `docs/项目解析.md` 的权威表处理，不混入一次内容更新。
@@ -100,7 +100,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 `/about/` 只渲染 `src/content/about/about.md`。保持作者原文，仅做必要 Markdown 结构，不编造经历或人设。页面标题／说明由 `src/pages/about.mdx` 配合 `PageHeading` 渲染，不由内容 frontmatter 创建按钮。关于内容仅维护这一个 Markdown 文件。
 
-兴趣内容位于 `src/content/interests/`，入口 `/interests/`，子页 `/interests/<id>/`。文件和分类：
+兴趣内容位于 `src/content/interests/`，入口 `/interests/`，子页 `/interests/<id>/`。分类来自该目录顶层的 `.md` / `.mdx` 文件，排除 `intro.md`、`recent.md`；**不固定分类 ID 或数量**。下表是现有分类示例，不是允许列表：
 
 | ID | 内容 |
 | :--- | :--- |
@@ -112,13 +112,35 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 | `book` | 书 |
 | `kpop` | 喜欢的团体与 idle |
 
-读取同目录样例后修改。frontmatter 的 `title`、`description`、`order` 供入口、子页和顶部下拉共同使用。子页标题直接是分类名，不加“拾趣-”。新增文件会成为静态页面，但增加新导航分类还需更新 `config.ts` 的 `INTEREST_ICONS`；不要为内容修改重复实现导航。
+读取同目录样例后修改。frontmatter 的 `title`、`description` 必须为非空字符串，`order` 必须为非负整数；三者供入口、子页和顶部下拉共同使用，`order` 越小越靠前。子页标题直接是分类名，不加“拾趣-”。
+
+### 新增拾趣分类
+
+1. 在 `src/content/interests/` 顶层新建 `<id>.md`（或 `.mdx`），不要放进配图子目录。文件名去掉扩展名就是分类 ID 和路由；已有文件不要擅自改名，以免改变 URL。
+2. 填写元数据和正文。例如 `src/content/interests/travel.md`：
+
+   ```md
+   ---
+   title: 旅行
+   description: 路上的记录
+   order: 7
+   ---
+
+   这里写正文。
+   ```
+
+   `7` 只是示例排序值，不是分类数量上限。拾趣没有 `draft` 开关；新增文件会随下一次构建发布，不套用博客草稿规则。
+3. 重新构建后自动生成 `/interests/travel/`，并加入拾趣入口和顶部下拉菜单。无需改 `UI.internalNavs`、手写路由或在组件内复制分类列表。
+4. 图标可选。用户未指定图标时，先保留纯文字菜单，不补默认图标、空图标容器或占位间距。需要图标时，只在 `src/config.ts` 的 `INTEREST_ICONS` 中以文件名（不含扩展名）为键添加，例如 `travel: 'i-ri-compass-line'`。映射值已自动进入 UnoCSS safelist，不用再手工维护一份。
+5. 运行 `pnpm check`、`pnpm build`、`pnpm test:built-restructure`、`pnpm test:built-markdown`；核对新子页、入口和菜单的标题、说明、顺序及图标状态。分类变多或名称变长时，检查窄屏菜单换行和内部滚动，不把自动收录理解为任意数量都保证布局可用。
+
+### 正文与配图
 
 图片放在对应子目录，例如 `src/content/interests/device/`，Markdown 用 `![说明](./device/file.png)`，需要限宽时写 alt 的 `|w300`。图片仍需位于 Markdown 所在目录或子目录内。拾趣内容和图片统一维护在 `src/content/interests/`。
 
 入口页列表下方的说明只改 `intro.md`。首页近期书影游只改 `recent.md`。这两个文件不进分类集合，不要给它们写 `order`，也不要加进顶部菜单。
 
-电影、电视剧、动漫、游戏、书的条目都用卡片。已看完、玩过或读过的可写作者评分 `score`；正在看、准备看、准备玩不写 `score`：
+电影、电视剧、动漫、游戏、书的条目都用卡片。作者可按需填写评分 `score`，与观看／游玩状态无关；没有作者提供的分数时不生成评分：
 
 ```md
 :::card{title="片名" href="https://zh.wikipedia.org/wiki/片名" score="5" label="电影"}
@@ -177,22 +199,22 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --frie
 `src/config.ts`：
 
 - 页面链接：`UI.internalNavs`（path / title / text）
-- 更多菜单中的友链／相册：`MORE_LINKS`。友链保持 `/friends/`，相册链接标为外链并显示 ↗；当前相册是占位地址。
+- 更多菜单中的友链／相册：`MORE_LINKS`。友链保持 `/friends/`，相册链接标为外链并显示 ↗；当前相册指向 `https://photos.wutongyu.site/`。
 - 顶栏 GitHub：`UI.socialLinks`，只留本仓库链接。和搜索、主题同属右侧工具组。
 - 站点名、描述、域名：`SITE`
 
 个人社交不在 `UI.socialLinks`。首页读取 `AUTHOR_LINKS`，关于正文独立维护作者希望展示的联系方式；若也展示同一账号，再同步该字段。个人 GitHub 指向主页，顶栏 GitHub 指向本仓库。首页名言／作者文案在 `BlogProfile`，品牌文案在 `NavBar`；不要以为修改 `SITE.title` 会同步所有正文文案。
 
-图标类名构建后若空白：首页身份图标由 `AUTHOR_LINKS` 自动加入 safelist；关于页独有图标才需检查 `unocss.config.ts`。关于页图标尺寸在 `public/shell.css` 的 `.about-social__icon`，本 skill 不改 CSS。
+图标类名构建后若空白：首页身份图标由 `AUTHOR_LINKS`、拾趣菜单图标由 `INTEREST_ICONS` 自动加入 safelist；关于页独有图标才需检查 `unocss.config.ts`。关于页图标尺寸在 `public/shell.css` 的 `.about-social__icon`，本 skill 不改 CSS。
 
 ---
 
 ## 校验与交接
 
-改完先跑 `pnpm check`；文章或友链再跑上面的 `validate_content.py`，它只检查基础元数据，**不完整验证 schema、图片或封面**，最终仍以 Astro 检查／构建为准。新增文章、修改正文图或封面时必须跑 `pnpm build`：Astro 的 schema 和图片管线才是路径解析及 `titleImageAlt` 的权威校验。含 `|w` 的图片还要人工核对标记写在 alt 而不是 URL 中（构建可能静默产出占位图）。构建失败只修这次内容，或说明是原有问题。
+改完先跑 `pnpm check`；文章或友链再跑上面的 `validate_content.py`，它只检查基础元数据，**不完整验证 schema、图片或封面**，最终仍以 Astro 检查／构建为准。新增文章或拾趣分类、修改正文、正文图、封面或拾趣图标时必须跑 `pnpm build`：Astro 的 schema 和图片管线才是路径解析及 `titleImageAlt` 的权威校验。含 `|w` 的图片还要人工核对标记写在 alt 而不是 URL 中（构建可能静默产出占位图）。构建失败只修这次内容，或说明是原有问题。
 
-发文章涉及订阅时，构建后运行 `pnpm test:built-markdown` 核对全文与资源。列表／内容结构修改运行 `pnpm test:built-restructure`；分页修改运行 `pnpm test:built-pagination`。
+发文章涉及订阅时，构建后运行 `pnpm test:built-markdown` 核对全文与资源。列表／内容结构或拾趣分类／图标修改运行 `pnpm test:built-restructure`；拾趣正文修改运行 `pnpm test:built-markdown`；分页修改运行 `pnpm test:built-pagination`。构建测试跟随当前配置和内容，不要求保留具体文章、友链名单、拾趣分类数量或观看状态。
 
 文章、关于、拾趣、项目、友链等内容数据不记入 `CHANGELOG.md`。只有这次改动同时改变了网页结构、交互或代码时，才把那部分结构或代码结果写入「未发布」；未发布条目不填写已发布版本或日期。README、SPEC 和指南保持当前状态，不添加开发过程记录。
 
-交接时写清：改了哪一页、文件路径、上线后的路由、是否草稿。用户没说部署就不要部署。
+交接时写清：改了哪一页、文件路径、上线后的路由、博客是否草稿；新增拾趣分类说明图标是否配置，以及构建与菜单／页面校验结果。用户没说部署就不要部署。

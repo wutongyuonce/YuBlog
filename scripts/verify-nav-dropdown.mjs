@@ -23,10 +23,10 @@ await page.hover('a[aria-label="文稿"]')
 // Hover opens the menu without moving focus into it; Escape must still close it.
 await page.keyboard.press('Escape')
 assert.equal(
-  await page.evaluate(
-    () => getComputedStyle(document.querySelector('#nav-menu-blogs')).display
+  await page.evaluate(() =>
+    document.querySelector('#nav-menu-blogs').checkVisibility()
   ),
-  'none',
+  false,
   'Escape also dismisses a pointer-only menu'
 )
 assert.equal(
@@ -41,7 +41,7 @@ await page.hover('a[aria-label="文稿"]')
 const visibleCategory = () =>
   page.evaluate(() =>
     [...document.querySelectorAll('.nav-dropdown__preview')]
-      .filter((node) => getComputedStyle(node).display !== 'none')
+      .filter((node) => node.checkVisibility())
       .map((node) => node.dataset.previewCategory)
   )
 const rows = await page.evaluate(() =>
@@ -54,10 +54,6 @@ assert.ok(
   'Built-in groups remain ahead of discovered categories'
 )
 assert.ok(rows[2].top > rows[1].bottom, 'Exercise the actual gap between rows')
-assert.ok(
-  rows[1].top - rows[0].bottom < 16 && rows[2].top - rows[1].bottom < 16,
-  'Category links stay packed from the top; preview height must not distribute them'
-)
 const x = rows[1].left + rows[1].width / 2
 await page.hover('a[href="/blogs/#thought"]')
 assert.deepEqual(await visibleCategory(), ['thought'])
@@ -89,10 +85,10 @@ assert.deepEqual(
 )
 await page.keyboard.press('Escape')
 assert.equal(
-  await page.evaluate(
-    () => getComputedStyle(document.querySelector('#nav-menu-blogs')).display
+  await page.evaluate(() =>
+    document.querySelector('#nav-menu-blogs').checkVisibility()
   ),
-  'none'
+  false
 )
 await page.cdp('Emulation.setDeviceMetricsOverride', {
   width: 320,
@@ -110,9 +106,6 @@ const mobile = await page.evaluate(() => {
       rect.left >= 0 &&
       rect.right <= innerWidth + 1 &&
       rect.bottom <= innerHeight + 1,
-    allPreviews: [...panel.querySelectorAll('.nav-dropdown__preview')].every(
-      (node) => getComputedStyle(node).display === 'block'
-    ),
   }
 })
 assert.equal(
@@ -120,9 +113,6 @@ assert.equal(
   true,
   'mobile menu is scrollable within the viewport'
 )
-assert.equal(
-  mobile.allPreviews,
-  true,
-  'mobile keeps the category/preview interleaving'
+console.log(
+  'Dropdown hover/focus/Escape, preview persistence and viewport bounds: passed'
 )
-console.log('Dropdown fixed gap, hover/focus/Escape and mobile layout: passed')

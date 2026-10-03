@@ -25,5 +25,5 @@
 :::card{title="速度与激情 8" href="https://zh.wikipedia.org/wiki/速度与激情8" score="4" label="电影"}
 ![速度与激情 8 海报](./movie/fast-8.jpg)
 
-大概是三刷速激系列。
+三刷速激系列。
 :::

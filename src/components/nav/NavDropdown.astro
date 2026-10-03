@@ -123,10 +123,12 @@ const noScriptPreviewCss =
         {interests.map(({ id, data }) => (
           <li>
             <a href={withBasePath(`/interests/${id}/`)}>
-              <span
-                class:list={['nav-dropdown__icon', INTEREST_ICONS[id]]}
-                aria-hidden="true"
-              />
+              {INTEREST_ICONS[id] && (
+                <span
+                  class:list={['nav-dropdown__icon', INTEREST_ICONS[id]]}
+                  aria-hidden="true"
+                />
+              )}
               <span>
                 <strong>{data.title}</strong>
                 <small>{data.description}</small>

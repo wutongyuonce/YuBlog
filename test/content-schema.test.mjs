@@ -49,7 +49,7 @@ test('content boundaries reject empty categories and malformed URLs', () => {
       name: 'f',
       link: 'not-a-url',
       desc: 'f',
-      category: 'Friends',
+      category: '推荐',
     }).success,
     false
   )

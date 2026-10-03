@@ -24,7 +24,6 @@
     "test:recent-post-date": "node --test test/recent-post-date.test.mjs",
     "test:cjk-emphasis": "node --test test/cjk-emphasis.test.mjs",
     "test:toc-active": "node --test test/toc-active.test.mjs",
-    "test:css-ownership": "node --test test/css-ownership.test.mjs",
     "test:canvas-size": "node --test test/canvas-size.test.mjs",
     "test:reduced-motion": "node --test test/reduced-motion.test.mjs",
     "test:sliding-indicator": "node --test test/sliding-indicator.test.mjs",

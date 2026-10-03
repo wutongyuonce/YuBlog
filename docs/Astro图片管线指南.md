@@ -14,9 +14,11 @@ src/content/blogs/
     algo-img/                     组内共享正文图，必须在文章目录内
 
 src/content/interests/
-  device.md  book.md
-  device/  book/                  拾趣配图，与对应 md 同级
+  <id>.md                        分类正文，也支持 <id>.mdx
+  <id>/                          该分类的配图目录，与正文文件同级
 ```
+
+拾趣分类不限于已有列表；例如新增 `travel.md` 时，配图放在 `travel/`，正文写 `![说明](./travel/file.png)`，重新构建后自动生成页面、入口和菜单。`intro.md`、`recent.md` 不作为分类。菜单图标不是正文图片，只按需在 `src/config.ts` 的 `INTEREST_ICONS` 配置；没有图标时显示纯文字，不需要创建图标文件或占位。
 
 ## 怎么写
 

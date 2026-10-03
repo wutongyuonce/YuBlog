@@ -220,7 +220,7 @@ export const aboutSchema = z.object({
     .transform((value) => value.trim()),
 })
 
-/** Seven reading sections; their metadata also drives the navigation menu. */
+/** Content-driven interest sections; their metadata also drives the navigation menu. */
 export const interestSchema = z.object({
   title: z.string().trim().min(1),
   description: z.string().trim().min(1),

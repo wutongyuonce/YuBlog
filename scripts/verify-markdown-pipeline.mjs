@@ -3,7 +3,12 @@ import { access, readFile, readdir } from 'node:fs/promises'
 import test from 'node:test'
 import { XMLParser, XMLValidator } from 'fast-xml-parser'
 import { fromHtml } from 'hast-util-from-html'
+import { toHtml } from 'hast-util-to-html'
+import { toRssHtml } from '../src/utils/rss-content.js'
 import { visit } from 'unist-util-visit'
+import { createMarkdownProcessor } from '@astrojs/markdown-remark'
+import remarkDirective from 'remark-directive'
+import remarkMediaCard from '../plugins/remark-media-card.ts'
 
 const built = (path) => new URL(`../dist/${path}`, import.meta.url)
 const html = (path) => readFile(built(path), 'utf8')
@@ -21,61 +26,6 @@ test('static routes, feed, sitemap and search index exist', async () => {
       'pagefind/pagefind-entry.json',
     ].map((path) => access(built(path)))
   )
-})
-
-test('Markdown width, reading metadata and heading links reach the built site', async () => {
-  const [home, post] = await Promise.all([
-    html('index.html'),
-    html('blogs/多模态agent/index.html'),
-  ])
-
-  // This article has no explicit minutesRead: losing remarkReadingTime would
-  // remove the automatic reading time and zero out the heatmap word counts.
-  assert.match(post, /\b[1-9]\d* min(?: read)?\b/)
-  assert.doesNotMatch(home, /blog-profile__stats/)
-  const summaries = elements(fromHtml(home), 'p').filter((node) =>
-    node.properties.className?.includes('writing-heatmap__summary')
-  )
-  assert.ok(summaries.length > 0, 'each heatmap year should show a word count')
-  const wordCounts = summaries.map(
-    (node) => textOf(node).match(/([\d,.]+)(?:万)?\s*字/)?.[1]
-  )
-  assert.ok(
-    wordCounts.every(Boolean),
-    'annual summaries include readable word counts'
-  )
-  assert.ok(
-    wordCounts.some((count) => Number(count.replaceAll(',', '')) > 0),
-    'word count must not silently become zero'
-  )
-
-  const image = post.match(
-    /<img\b[^>]*alt="Cascaded 级联架构：VAD、ASR、LLM、TTS 流水线"[^>]*>/
-  )?.[0]
-  assert.ok(image, 'the |w586 image must not leak its marker into alt text')
-  assert.match(image, /\bwidth="586"/)
-  assert.match(image, /\bdata-astro-image="constrained"/)
-  assert.match(image, /\bsrcset="[^"]+\.webp/)
-  assert.match(
-    post,
-    /class="header-anchor"[^>]*href="#voice-agent-语音助手三种架构范式"/
-  )
-})
-
-test('rehype tables, code, math and callouts remain active', async () => {
-  const [tablePost, mathPost, calloutPost] = await Promise.all([
-    html('blogs/fastapi/index.html'),
-    html('blogs/算法笔记/算法-2哈希表字符串双指针总结栈与队列/index.html'),
-    html('blogs/juc并发编程/juc-并发编程-1多线程基础/index.html'),
-  ])
-  assert.match(tablePost, /<div>\s*<table>/)
-  assert.match(tablePost, /<div class="expressive-code">/)
-  assert.match(mathPost, /<span class="katex">/)
-  assert.match(
-    calloutPost,
-    /<div class="callout" data-callout="caution"[^>]*>[\s\S]*?<div class="callout-content"><p><strong>临界区/
-  )
-  assert.doesNotMatch(calloutPost, /\[!CAUTION\]/)
 })
 
 const elements = (tree, tag) => {
@@ -159,21 +109,32 @@ test('full RSS covers every built article and uses real, standalone content asse
         `code lines lost: ${canonical}: ${code.slice(0, 80)}`
       )
 
-    if (file.startsWith('多模态agent/')) {
-      const article = elements(page, 'article')[0]
-      const paragraphs = elements(article, 'p').map(textOf).filter(Boolean)
-      const feedText = textOf(body)
-      assert.ok(feedText.includes(paragraphs[0]), 'opening prose must survive')
-      assert.ok(
-        feedText.includes(paragraphs.at(-1)),
-        'closing prose must survive'
-      )
-      const image = elements(body, 'img').find(
-        (n) =>
-          n.properties.alt === 'Cascaded 级联架构：VAD、ASR、LLM、TTS 流水线'
-      )
-      assert.equal(image.properties.width, 586)
+    const article = elements(page, 'article').find((node) =>
+      node.properties.className?.includes('post-content')
+    )
+    assert.ok(article, `${canonical}: the published page has an article body`)
+    const content = {
+      type: 'root',
+      children: article.children.filter(
+        (node) =>
+          node.type !== 'element' || node.tagName !== 'table-of-contents'
+      ),
     }
+    // The site compresses inter-element whitespace; compare prose without
+    // locking its serialization. Code line order is checked separately above.
+    const expected = fromHtml(toRssHtml(toHtml(content), canonical), {
+      fragment: true,
+    })
+    assert.equal(
+      textOf(body).replace(/\s+/g, ''),
+      textOf(expected).replace(/\s+/g, ''),
+      `${canonical}: RSS must retain the complete authored text`
+    )
+    assert.equal(
+      elements(body, 'table').length,
+      elements(article, 'table').length,
+      `${canonical}: RSS preserves authored tables`
+    )
     const annotations = elements(page, 'annotation').filter(
       (n) => n.properties.encoding === 'application/x-tex'
     )
@@ -183,10 +144,6 @@ test('full RSS covers every built article and uses real, standalone content asse
         rssInlineCode.includes(textOf(annotation)),
         'formula source must survive'
       )
-    if (file === 'fastapi/index.html')
-      assert.ok(elements(body, 'table').length > 0)
-    if (file.includes('juc-并发编程-1多线程基础/'))
-      assert.ok(textOf(body).includes('临界区'))
   }
   for (const asset of assets) await access(built(asset))
   const dates = items.map((item) => Date.parse(item.pubDate))
@@ -199,53 +156,63 @@ test('full RSS covers every built article and uses real, standalone content asse
   )
 })
 
-test('home and interests share card markup, image processing and heading groups', async () => {
+test('home and interest cards preserve authored content through the shared pipeline', async () => {
   const home = fromHtml(await html('index.html'))
   const recent = elements(home, 'div').find((node) =>
     node.properties.className?.includes('recent-media__body')
   )
   assert.ok(recent, 'home renders the standalone recent.md content')
-  const cards = elements(recent, 'article').filter((node) =>
-    node.properties.className?.includes('media-card')
-  )
-  assert.ok(cards.length > 0)
-  for (const image of elements(recent, 'img')) {
-    assert.ok(image.properties.className?.includes('media-card__cover'))
-    assert.equal(image.properties.dataAstroImage, 'constrained')
-    assert.match(image.properties.src, /^\/_astro\/.*\.webp$/)
-    await access(built(image.properties.src.slice(1)))
+  const processor = await createMarkdownProcessor({
+    remarkPlugins: [remarkDirective, remarkMediaCard],
+  })
+  const cardContent = (tree) =>
+    elements(tree, 'article')
+      .filter((node) => node.properties.className?.includes('media-card'))
+      .map((card) => ({
+        title: elements(card, 'a')
+          .concat(elements(card, 'p'))
+          .filter((node) =>
+            node.properties.className?.includes('media-card__title')
+          )
+          .map(textOf),
+        rating: elements(card, 'p')
+          .filter((node) =>
+            node.properties.className?.includes('media-card__score')
+          )
+          .map(textOf),
+      }))
+  const files = (
+    await readdir(new URL('../src/content/interests/', import.meta.url))
+  ).filter((file) => /\.(md|mdx)$/.test(file) && file !== 'intro.md')
+  for (const file of files) {
+    const source = await readFile(
+      new URL(`../src/content/interests/${file}`, import.meta.url),
+      'utf8'
+    )
+    const { code } = await processor.render(source)
+    const page =
+      file === 'recent.md'
+        ? recent
+        : fromHtml(
+            await html(
+              `interests/${file.replace(/\.(md|mdx)$/, '')}/index.html`
+            )
+          )
+    assert.deepEqual(
+      cardContent(page),
+      cardContent(fromHtml(code)),
+      `${file}: card titles and optional ratings match the shared renderer`
+    )
+    for (const card of elements(page, 'article').filter((node) =>
+      node.properties.className?.includes('media-card')
+    )) {
+      for (const image of elements(card, 'img')) {
+        assert.ok(image.properties.className?.includes('media-card__cover'))
+        assert.equal(image.properties.dataAstroImage, 'constrained')
+        await access(built(image.properties.src.slice(1)))
+      }
+    }
   }
-  for (const heading of recent.children.filter((node) =>
-    /^h[1-6]$/.test(node.tagName)
-  )) {
-    assert.ok(
-      heading.properties.id,
-      'Markdown heading depth and anchors survive'
-    )
-    assert.equal(
-      elements(heading, 'a').filter((node) =>
-        node.properties.className?.includes('header-anchor')
-      ).length,
-      1
-    )
-  }
-  const anime = fromHtml(await html('interests/anime/index.html'))
-  const firstCard = elements(anime, 'article').find((node) =>
-    node.properties.className?.includes('media-card')
-  )
-  assert.ok(firstCard, 'watching entries are cards rather than plain links')
-  assert.ok(elements(firstCard, 'img').length > 0)
-  assert.ok(
-    elements(firstCard, 'a').some((node) =>
-      node.properties.className?.includes('media-card__title')
-    )
-  )
-  assert.ok(
-    !elements(firstCard, 'p').some((node) =>
-      node.properties.className?.includes('media-card__score')
-    ),
-    'watching entries have no invented score'
-  )
   for (const id of ['intro', 'recent']) {
     await assert.rejects(access(built(`interests/${id}/index.html`)), {
       code: 'ENOENT',
@@ -253,24 +220,35 @@ test('home and interests share card markup, image processing and heading groups'
   }
 })
 
-test('shared rating labels reach every Markdown card consumer without stale cached text', async () => {
-  let checked = 0
-  for (const path of [
-    'index.html',
-    ...['movie', 'tv', 'anime', 'game', 'book'].map(
-      (id) => `interests/${id}/index.html`
-    ),
-  ]) {
-    const page = fromHtml(await html(path))
-    const scores = elements(page, 'p').filter((node) =>
-      node.properties.className?.includes('media-card__score')
-    )
-    for (const score of scores)
-      assert.ok(
-        textOf(score).startsWith('评分：'),
-        `${path}: the shared card renderer must replace old cached rating labels`
-      )
-    checked += scores.length
+test('rendered Markdown headings and processed images remain usable', async () => {
+  const files = (await readdir(built(''), { recursive: true })).filter(
+    (file) => file === 'index.html' || file.endsWith('/index.html')
+  )
+  for (const file of files) {
+    const page = fromHtml(await html(file))
+    const bodies = elements(page, 'article')
+      .concat(elements(page, 'div'))
+      .filter((node) => node.properties.className?.includes('markdown-content'))
+    for (const body of bodies) {
+      for (const tag of ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']) {
+        for (const heading of elements(body, tag)) {
+          assert.ok(
+            heading.properties.id,
+            `${file}: Markdown heading has an anchor target`
+          )
+          const anchors = elements(heading, 'a').filter((node) =>
+            node.properties.className?.includes('header-anchor')
+          )
+          assert.equal(anchors.length, 1)
+          assert.equal(anchors[0].properties.href, `#${heading.properties.id}`)
+        }
+      }
+      for (const image of elements(body, 'img')) {
+        assert.doesNotMatch(image.properties.alt || '', /\|w\d+$/)
+        if (!image.properties.dataAstroImage) continue
+        assert.ok(image.properties.width > 0 && image.properties.height > 0)
+        await access(built(image.properties.src.slice(1)))
+      }
+    }
   }
-  assert.ok(checked > 0, 'authored ratings must survive the shared pipeline')
 })

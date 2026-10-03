@@ -9,6 +9,8 @@
 3. 改文案/数据：`blog-content-publisher-skill/SKILL.md`（按页面）
 4. 页面行为：`docs/站点行为 SPEC.md`；变更记录：`CHANGELOG.md`
 
+新增拾趣分类属于内容维护：按 skill 在 `src/content/interests/` 顶层新增 `.md` / `.mdx`，填写 `title`、`description`、`order`，重新构建即生成子页、入口和菜单；不固定分类 ID 或数量。`intro.md`、`recent.md` 不作为分类。图标可选，只在 `INTEREST_ICONS` 配置；缺省为纯文字菜单，不留占位，不为此修改导航数组或组件。
+
 ## 按需
 
 - Astro 语法：`docs/Astro.md`

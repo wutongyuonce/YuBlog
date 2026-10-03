@@ -54,7 +54,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site)
 
 分类链接里的 `#tech`／`#旅行` 是 URL 片段，不是新页面，也不是哈希计算结果。浏览器只向服务器请求 `/blogs/`；页面脚本读取 `#` 后的值，从 HTML 已有的全部文章中筛选，再分页。站内分类入口统一生成片段链接；旧 `?category=` 仍可解析，并在启用脚本后转成等价片段，保留原筛选含义、标签和页码。片段和 query 读取后进入同一套筛选逻辑。拾趣的 `/interests/movie/` 则有独立内容和静态 HTML，因此使用路径路由。
 
-这些分类筛选状态不新增 sitemap 条目；文章 `/blogs/<slug>/` 和拾趣 `/interests/<id>/` 等独立页面由构建路由进入 sitemap。
+这些分类筛选状态不新增 sitemap 条目；文章 `/blogs/<slug>/` 和拾趣 `/interests/<id>/` 等独立页面由构建路由进入 sitemap。在 `src/content/interests/` 顶层新增满足 schema 的 `.md` / `.mdx` 分类文件后，重新构建会自动生成分类页及其菜单入口、canonical 和 sitemap 条目，无需手写路由或 sitemap；`intro.md`、`recent.md` 不生成分类页。图标可选，不影响路由或收录；拾趣不进入只订阅博客集合的 RSS。
 
 自己检查：打开任意文章 → 查看源代码 → 搜 `rel="canonical"`，应看到完整 `https://www.wutongyu.site/...`。
 
@@ -142,7 +142,7 @@ Head 里挂上总目录：
 
 使用官方 `@astrojs/rss` 输出 RSS 2.0 全文源，入口是 `src/pages/rss.xml.js`。使用共享集合工具完成生产草稿过滤和日期排序，每篇保留标题、日期、摘要、GUID、链接和 `content:encoded`。
 
-正文通过 Astro 的 `render(post)` 和 Container 渲染，复用现有 Markdown 插件与图片管线；`src/utils/rss-content.js` 将结果转换成阅读器可用的 HTML：图片和链接改成绝对地址，代码保留换行，公式以 LaTeX 源码显示，去掉脚本、样式和交互控件。文末保留「阅读原文」。全文不截断、不限制篇数，也不额外复制封面。页面布局、文稿分类、拾趣、友链独立于 feed 范围：只有博客集合进入 RSS；`search: false` 不等于不发布，因此日记占位文也会进入源。页面封面卡片、作者头像行、目录和主题不会进入正文 HTML。
+正文通过 Astro 的 `render(post)` 和 Container 渲染，复用现有 Markdown 插件与图片管线；`src/utils/rss-content.js` 将结果转换成阅读器可用的 HTML：图片和链接改成绝对地址，代码保留换行，公式以 LaTeX 源码显示，去掉脚本、样式和交互控件。文末保留「阅读原文」。全文不截断、不限制篇数，也不额外复制封面。页面布局、文稿分类、拾趣、友链独立于 feed 范围：只有博客集合进入 RSS，生产排除草稿；`search: false` 不等于不发布，未标为草稿的文章仍进入源。页面封面卡片、作者头像行、目录和主题不会进入正文 HTML。
 
 新增或修改文章的分类无需修改 RSS：`/rss.xml` 继续订阅全部已发布博客，不按文稿页的片段或 query 筛选；不输出分类元数据，也不提供独立分类订阅源。分类分组、入口及徽标配色不会修改文章永久 URL、GUID、发布日期或正文。新分类中的已发布文章会随重新构建进入同一个源。
 
