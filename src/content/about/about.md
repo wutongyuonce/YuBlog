@@ -9,6 +9,13 @@ title: About
 * 喜欢写代码，也喜欢研究设计优雅、极简的系统
 * 最近研究的领域：Long-horizon Harness、Agent Memory、Computer Use
 
+<a href="https://ghfind.com/u/wutongyuonce?ref=badge">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://ghfind.com/api/card/mini/wutongyuonce?variant=radar&theme=dark&lang=zh" />
+    <img src="https://ghfind.com/api/card/mini/wutongyuonce?variant=radar&theme=light&lang=zh" alt="GitHub Roast 评分卡" width="440" />
+  </picture>
+</a>
+
 我的技术栈：
 
 * 语言：Java 出身，转战 Typescript、Python（都不精通），Markdown
