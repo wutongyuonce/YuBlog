@@ -466,15 +466,15 @@ main:has(.post-content) > footer.prose :is(a, span) {
   padding: 0.7rem 0.85rem 0.75rem 0.7rem;
   overflow: hidden;
   border: 0;
-  border-radius: 0.5rem;
+  border-radius: 0.3rem;
   background: #fff;
   box-shadow:
-    0 1px 2px rgb(0 0 0 / 4%),
-    0 8px 24px rgb(0 0 0 / 8%);
+    0 1px 2px rgb(0 0 0 / 7%),
+    0 8px 24px rgb(0 0 0 / 14%);
 }
 :root.dark .prose .media-card {
-  background: color-mix(in srgb, var(--c-text) 8%, var(--c-bg));
-  box-shadow: 0 10px 28px rgb(0 0 0 / 35%);
+  background: color-mix(in srgb, var(--c-text) 4%, var(--c-bg));
+  box-shadow: 0 8px 22px rgb(255 255 255 / 12%);
 }
 .prose .media-card:not(:has(.media-card__cover)) {
   grid-template-columns: minmax(0, 1fr);
@@ -484,7 +484,7 @@ main:has(.post-content) > footer.prose :is(a, span) {
   top: 0;
   right: 0;
   padding: 0.15rem 0.7rem 0.28rem;
-  border-bottom-left-radius: 0.7rem;
+  border-bottom-left-radius: 0.45rem;
   background: #526e47;
   color: #fff;
   font-size: 0.82rem;
@@ -493,9 +493,9 @@ main:has(.post-content) > footer.prose :is(a, span) {
 }
 .prose .media-card__cover {
   width: 7.25rem;
-  height: 10.5rem;
+  height: 9.33rem;
   margin: 0;
-  border-radius: 0.55rem;
+  border-radius: 0.28rem;
   object-fit: cover;
 }
 .prose .media-card__body {
@@ -505,8 +505,8 @@ main:has(.post-content) > footer.prose :is(a, span) {
   padding-top: 0.15rem;
 }
 .prose .media-card:has(.media-card__cover) .media-card__body {
-  min-height: 10.5rem;
-  max-height: 10.5rem;
+  min-height: 9.33rem;
+  max-height: 9.33rem;
 }
 .prose :is(a, p).media-card__title {
   margin: 0;
