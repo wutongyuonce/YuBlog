@@ -15,6 +15,13 @@
   --blog-reading-size: 1.0625rem;
 }
 
+/* Compact the desktop links/tools gap without changing two-row navigation. */
+@media (min-width: 800px) {
+  :root {
+    --site-nav-width: 595px;
+  }
+}
+
 @media (max-width: 600px) {
   :root {
     --site-gutter: 16px;
