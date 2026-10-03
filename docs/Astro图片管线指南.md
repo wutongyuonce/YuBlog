@@ -33,7 +33,7 @@ src/content/interests/
 
 ## 宽度
 
-`|w310` 只表示 310 像素，不接受百分比。桌面正文列宽 620px，半宽可写 `|w310`；窄屏按实际列宽限制。标记由 `plugins/remark-image-width.ts` 从 alt 剥离，转成图片节点的 `width`。
+`|w335` 只表示 335 像素，不接受百分比。桌面正文列宽 670px，半宽可写 `|w335`；窄屏按实际列宽限制。标记由 `plugins/remark-image-width.ts` 从 alt 剥离，转成图片节点的 `width`。
 
 必须用 `width`，不要用 CSS 限宽。管线按 `width` 生成 `srcset` 和 `sizes`；只写 CSS 时浏览器仍按原图宽度选图。不写标记时，管线按原图宽度出变体，显示上仍会被列宽限制。源图比目标宽度更宽时才需要标记；图本身已经更窄时不必写。
 
@@ -41,8 +41,9 @@ src/content/interests/
 
 | 位置 | 规则 |
 | :--- | :--- |
-| 文章封面 `PostHero` | `<Image width={620} priority>`。620 来自 `ARTICLE_COLUMN_WIDTH`，不要改成 `layout="full-width"`，否则 `sizes` 变成 `100vw`。 |
-| 列表卡片 `ListItem` | `widths={[274, 548, 822]}`，`sizes="(min-width: 1100px) 274px, (min-width: 768px) 37.5vw, 100vw"`。文稿列表第一项有图时用 `priority`（首页近期笔墨为纯文字），标签页图片保持懒加载，其余 `loading="lazy"`。 |
+| 文章封面 `PostHero` | `<Image width={670} priority>`。670 来自 `ARTICLE_COLUMN_WIDTH`，不要改成 `layout="full-width"`，否则 `sizes` 变成 `100vw`。 |
+| 列表卡片 `ListItem` | `widths={[274, 548, 822]}`，`sizes="(min-width: 768px) 250px, 100vw"`。有图封面列固定 250px，无图占位列 222px，加宽不进入封面。文稿列表第一项有图时用 `priority`（首页近期笔墨为纯文字），标签页图片保持懒加载，其余 `loading="lazy"`。 |
+| 拾趣 `:::card` 封面 | 卡片内第一张相对路径图片。插件只给图片加 `media-card__cover` 和默认 `width: 240`，不改路径，所以仍进图片管线。显示尺寸由 `prose.css` 固定为 7.25rem × 10.5rem。 |
 | 分享图 `RenderPost` | `getImage()` 单独生成 1200px JPEG，再拼成绝对 URL。不要把封面原图直接放进 `og:image`。 |
 
 `titleImage` 用 schema 工厂提供的 `image().optional()`；不要从 `astro:content` 导入独立 `image`。文章页独立 h1 在封面之前，封面内的重复标题、描述、作者行只属于页面，不复制到 RSS。

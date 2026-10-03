@@ -43,7 +43,7 @@ const {
 {Astro.slots.has('article') && (
   <article
     class:list={[
-      'slide-enter-content prose mx-auto',
+      'slide-enter-content prose markdown-content mx-auto',
       { 'post-content': isArticle },
     ]}
     data-pagefind-body={isSearchable ? '' : undefined}

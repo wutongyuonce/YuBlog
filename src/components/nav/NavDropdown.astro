@@ -30,7 +30,8 @@ const noScriptPreviewCss =
           const scope = '.nav-dropdown--blogs:not([data-bound])'
           const onCategory = `${scope} .nav-dropdown__categories:has(> .nav-dropdown__category-list > .nav-dropdown__category:nth-child(${nth}):is(:hover, :focus-within))`
           const onPreview = `${scope} .nav-dropdown__categories:has(> .nav-dropdown__preview-pane > .nav-dropdown__preview:nth-child(${nth}):is(:hover, :focus-within))`
-          const preview = '> .nav-dropdown__preview-pane > .nav-dropdown__preview'
+          const preview =
+            '> .nav-dropdown__preview-pane > .nav-dropdown__preview'
           const link = `> .nav-dropdown__category-list > .nav-dropdown__category:nth-child(${nth}) > .nav-dropdown__category-link`
           const highlight =
             'background:color-mix(in srgb,var(--c-text) 8%,var(--c-bg))'

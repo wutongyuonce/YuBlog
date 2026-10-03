@@ -28,7 +28,7 @@ Avatar: ${friendInfo.avatar}`
       </li>
       <li>
         <span class="friends-apply__index">02</span>
-        <span class="friends-apply__rule-text">站点使用 https 协议</span>
+        <span class="friends-apply__rule-text">使用 https 协议</span>
       </li>
     </ol>
     <p class="friends-apply__hint">
@@ -107,17 +107,18 @@ Avatar: ${friendInfo.avatar}`
 <style>
   .friends-apply {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(16rem, 1.05fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.5rem 1.75rem;
-    align-items: start;
+    align-items: stretch;
   }
 
   .friends-apply__intro {
-    display: grid;
-    align-content: start;
+    display: flex;
+    flex-direction: column;
     gap: 0.65rem;
     min-width: 0;
-    padding: 0.35rem 0.15rem 0;
+    height: 100%;
+    padding: 0;
   }
 
   .friends-apply__intro h3 {
@@ -130,8 +131,9 @@ Avatar: ${friendInfo.avatar}`
 
   .friends-apply__rules {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.45rem 1.5rem;
+    flex-wrap: nowrap;
+    gap: 0.45rem 1rem;
+    overflow-x: auto;
     margin: 0.1rem 0 0;
     padding: 0;
     list-style: none;
@@ -174,8 +176,8 @@ Avatar: ${friendInfo.avatar}`
   }
 
   .friends-apply__pr {
-    margin-top: 0.2rem;
-    justify-self: start;
+    margin-top: auto;
+    align-self: start;
     padding: 0.38rem 0.78rem;
     border: 1px solid var(--friends-border);
     border-radius: 0.55rem;
@@ -195,10 +197,16 @@ Avatar: ${friendInfo.avatar}`
   }
 
   .friends-apply__block {
+    display: flex;
     min-width: 0;
+    min-height: 100%;
   }
 
   .friends-apply__editor {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    width: 100%;
     overflow: hidden;
     border: 1px solid var(--friends-border);
     border-radius: 10px;
@@ -251,8 +259,8 @@ Avatar: ${friendInfo.avatar}`
   }
 
   .friends-apply pre {
+    flex: 1;
     margin: 0;
-    min-height: 9.5rem;
     padding: 1rem 1rem 1.15rem;
     color: var(--c-text);
     font-family:
@@ -260,8 +268,8 @@ Avatar: ${friendInfo.avatar}`
       monospace;
     font-size: 0.82rem;
     line-height: 1.7;
-    overflow-wrap: anywhere;
-    white-space: pre-wrap;
+    overflow-x: auto;
+    white-space: pre;
   }
 
   .friends-apply__copy {

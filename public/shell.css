@@ -541,6 +541,7 @@ header.nav-bar .nav-bar__group--right #search-switch {
   color: var(--profile-muted);
   font-family: var(--font-heading);
   font-size: 1.0625rem;
+  font-style: italic;
   line-height: 1.8;
 }
 .blog-profile__rss {
@@ -589,41 +590,6 @@ header.nav-bar .nav-bar__group--right #search-switch {
 .blog-profile a:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 4px;
-}
-.blog-profile__stats {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px 20px;
-  margin: 8px 0 0;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  color: var(--profile-muted);
-}
-.blog-profile__stats div {
-  display: flex;
-  align-items: baseline;
-  gap: 20px;
-}
-.blog-profile__stats div + div::before {
-  content: '·';
-  color: color-mix(in srgb, var(--c-text) 30%, transparent);
-}
-.blog-profile dd {
-  display: flex;
-  align-items: baseline;
-  gap: 3px;
-  margin: 0;
-  color: inherit;
-  font-variant-numeric: tabular-nums;
-}
-.blog-profile__value {
-  color: var(--c-text);
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-.blog-profile__value--time {
-  color: var(--accent);
 }
 .blog-profile__social {
   display: flex;
@@ -706,12 +672,6 @@ header.nav-bar .nav-bar__group--right #search-switch {
   }
   .blog-profile__heading {
     gap: 6px;
-  }
-  .blog-profile__stats {
-    column-gap: 12px;
-  }
-  .blog-profile__stats div {
-    gap: 12px;
   }
   .blog-profile__social {
     gap: 12px;
@@ -1181,6 +1141,9 @@ header.nav-bar
   padding: 8px;
   translate: none;
 }
+header.nav-bar .nav-dropdown--more .nav-dropdown__panel {
+  translate: 4.5rem 0;
+}
 .nav-dropdown__interests a {
   display: flex;
   align-items: center;
@@ -1222,6 +1185,9 @@ header.nav-bar
   header.nav-bar .nav-dropdown__trigger {
     justify-content: center;
   }
+  header.nav-bar .nav-dropdown--more .nav-dropdown__panel {
+    translate: none;
+  }
 }
 @media (max-width: 600px) {
   header.nav-bar .nav-dropdown__panel {
@@ -1250,4 +1216,30 @@ header.nav-bar
     border: 0;
     padding: 12px 0 8px;
   }
+}
+
+/* Shared home section headings; content Markdown keeps its own typography. */
+.home-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.home-section-header h2 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 400;
+}
+.home-section-header > a {
+  color: color-mix(in srgb, var(--c-text) 60%, var(--c-bg));
+  font-size: 0.75rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.home-section-header > a:is(:hover, :focus-visible) {
+  color: var(--accent);
+}
+.recent-media .home-section-header {
+  margin-bottom: 1.25rem;
 }

@@ -35,9 +35,18 @@ const selectorsOf = (css, lineOffset = 0) => {
     if (!prelude || prelude.startsWith('@')) continue
     const line = lineOffset + source.slice(0, match.index).split('\n').length
 
-    for (const part of prelude.split(',')) {
-      const selector = part.trim().replace(/\s+/g, ' ')
-      if (selector) found.push({ selector, line })
+    // :is() / :where() 中的逗号不分隔独立选择器。
+    let depth = 0
+    let start = 0
+    for (let index = 0; index <= prelude.length; index += 1) {
+      const char = prelude[index]
+      if (char === '(' || char === '[') depth += 1
+      if (char === ')' || char === ']') depth -= 1
+      if (index === prelude.length || (char === ',' && depth === 0)) {
+        const selector = prelude.slice(start, index).trim().replace(/\s+/g, ' ')
+        if (selector) found.push({ selector, line })
+        start = index + 1
+      }
     }
   }
 
@@ -122,6 +131,7 @@ test('the guard sees selectors inside at-rules and ignores comments', () => {
   const css = `
     /* .ignored { color: red } */
     .a, .b { color: red }
+    .prose:is(.post-content, .interests-page__content) h2 { margin: 0 }
     @media (max-width: 480px) {
       .c:hover { color: blue }
     }
@@ -129,6 +139,11 @@ test('the guard sees selectors inside at-rules and ignores comments', () => {
 
   assert.deepEqual(
     selectorsOf(css).map((item) => item.selector),
-    ['.a', '.b', '.c:hover']
+    [
+      '.a',
+      '.b',
+      '.prose:is(.post-content, .interests-page__content) h2',
+      '.c:hover',
+    ]
   )
 })

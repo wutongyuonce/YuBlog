@@ -26,31 +26,39 @@ test('static routes, feed, sitemap and search index exist', async () => {
 test('Markdown width, reading metadata and heading links reach the built site', async () => {
   const [home, post] = await Promise.all([
     html('index.html'),
-    html('blogs/east-asian-meritocracy/index.html'),
+    html('blogs/多模态agent/index.html'),
   ])
 
   // This article has no explicit minutesRead: losing remarkReadingTime would
-  // remove the automatic reading time (and zero out the profile word count).
+  // remove the automatic reading time and zero out the heatmap word counts.
   assert.match(post, /\b[1-9]\d* min(?: read)?\b/)
-  const wordCount = home.match(
-    /<dt\b[^>]*>字数<\/dt>\s*<dd>\s*<span class="blog-profile__value">([\d.]+)<\/span>/
+  assert.doesNotMatch(home, /blog-profile__stats/)
+  const summaries = elements(fromHtml(home), 'p').filter((node) =>
+    node.properties.className?.includes('writing-heatmap__summary')
   )
-  assert.ok(wordCount, 'the profile should show the total word count')
+  assert.ok(summaries.length > 0, 'each heatmap year should show a word count')
+  const wordCounts = summaries.map(
+    (node) => textOf(node).match(/([\d,.]+)(?:万)?\s*字/)?.[1]
+  )
   assert.ok(
-    Number(wordCount[1]) > 0,
+    wordCounts.every(Boolean),
+    'annual summaries include readable word counts'
+  )
+  assert.ok(
+    wordCounts.some((count) => Number(count.replaceAll(',', '')) > 0),
     'word count must not silently become zero'
   )
 
   const image = post.match(
-    /<img\b[^>]*alt="两位女孩在列车车厢中的画面"[^>]*>/
+    /<img\b[^>]*alt="Cascaded 级联架构：VAD、ASR、LLM、TTS 流水线"[^>]*>/
   )?.[0]
-  assert.ok(image, 'the |w480 image must not leak its marker into alt text')
-  assert.match(image, /\bwidth="480"/)
+  assert.ok(image, 'the |w586 image must not leak its marker into alt text')
+  assert.match(image, /\bwidth="586"/)
   assert.match(image, /\bdata-astro-image="constrained"/)
   assert.match(image, /\bsrcset="[^"]+\.webp/)
   assert.match(
     post,
-    /class="header-anchor"[^>]*href="#一优绩主义怎样从学校走进家庭"/
+    /class="header-anchor"[^>]*href="#voice-agent-语音助手三种架构范式"/
   )
 })
 
@@ -151,7 +159,7 @@ test('full RSS covers every built article and uses real, standalone content asse
         `code lines lost: ${canonical}: ${code.slice(0, 80)}`
       )
 
-    if (file.startsWith('east-asian-meritocracy/')) {
+    if (file.startsWith('多模态agent/')) {
       const article = elements(page, 'article')[0]
       const paragraphs = elements(article, 'p').map(textOf).filter(Boolean)
       const feedText = textOf(body)
@@ -161,9 +169,10 @@ test('full RSS covers every built article and uses real, standalone content asse
         'closing prose must survive'
       )
       const image = elements(body, 'img').find(
-        (n) => n.properties.alt === '两位女孩在列车车厢中的画面'
+        (n) =>
+          n.properties.alt === 'Cascaded 级联架构：VAD、ASR、LLM、TTS 流水线'
       )
-      assert.equal(image.properties.width, 480)
+      assert.equal(image.properties.width, 586)
     }
     const annotations = elements(page, 'annotation').filter(
       (n) => n.properties.encoding === 'application/x-tex'
@@ -188,4 +197,58 @@ test('full RSS covers every built article and uses real, standalone content asse
   console.log(
     `RSS: ${items.length} articles, ${assets.size} local image assets, ${Buffer.byteLength(xml)} bytes`
   )
+})
+
+test('home and interests share card markup, image processing and heading groups', async () => {
+  const home = fromHtml(await html('index.html'))
+  const recent = elements(home, 'div').find((node) =>
+    node.properties.className?.includes('recent-media__body')
+  )
+  assert.ok(recent, 'home renders the standalone recent.md content')
+  const cards = elements(recent, 'article').filter((node) =>
+    node.properties.className?.includes('media-card')
+  )
+  assert.ok(cards.length > 0)
+  for (const image of elements(recent, 'img')) {
+    assert.ok(image.properties.className?.includes('media-card__cover'))
+    assert.equal(image.properties.dataAstroImage, 'constrained')
+    assert.match(image.properties.src, /^\/_astro\/.*\.webp$/)
+    await access(built(image.properties.src.slice(1)))
+  }
+  for (const heading of recent.children.filter((node) =>
+    /^h[1-6]$/.test(node.tagName)
+  )) {
+    assert.ok(
+      heading.properties.id,
+      'Markdown heading depth and anchors survive'
+    )
+    assert.equal(
+      elements(heading, 'a').filter((node) =>
+        node.properties.className?.includes('header-anchor')
+      ).length,
+      1
+    )
+  }
+  const anime = fromHtml(await html('interests/anime/index.html'))
+  const firstCard = elements(anime, 'article').find((node) =>
+    node.properties.className?.includes('media-card')
+  )
+  assert.ok(firstCard, 'watching entries are cards rather than plain links')
+  assert.ok(elements(firstCard, 'img').length > 0)
+  assert.ok(
+    elements(firstCard, 'a').some((node) =>
+      node.properties.className?.includes('media-card__title')
+    )
+  )
+  assert.ok(
+    !elements(firstCard, 'p').some((node) =>
+      node.properties.className?.includes('media-card__score')
+    ),
+    'watching entries have no invented score'
+  )
+  for (const id of ['intro', 'recent']) {
+    await assert.rejects(access(built(`interests/${id}/index.html`)), {
+      code: 'ENOENT',
+    })
+  }
 })

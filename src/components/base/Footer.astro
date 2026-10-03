@@ -1,39 +1,60 @@
 ---
-import Link from '~/components/base/Link.astro'
-import { SITE } from '~/config'
+import { withBasePath } from '~/utils/path'
 
 const currentYear = new Date().getFullYear()
-const copyrightText = `© ${currentYear} ${SITE.author}`
 ---
 
 <footer class="slide-enter animate-delay-1600! px-7 mt-auto mb-8">
   <div class="prose mx-auto">
     <div class="flex flex-wrap gap-y-1 lt-sm:flex-col items-center text-sm whitespace-nowrap">
-      <span class="op-50">{copyrightText}</span>
-      <span class="footer-mark lt-sm:hidden" aria-hidden="true"></span>
-      <span class="op-50">
-        Built with
-        <Link
-          class="op-100! color-[--fg]!"
-          href="https://astro.build"
-          external={true}
-        >
-          Astro
-        </Link>
+      <span>
+        <span class="op-50">© {currentYear}</span>{' '}
+        <a class="footer-link" href={withBasePath('/')}>
+          梧桐雨
+        </a>
       </span>
       <span class="footer-mark lt-sm:hidden" aria-hidden="true"></span>
-      <Link
+      <span>
+        <span class="op-50">Built with</span>{' '}
+        <a class="footer-link" href="https://astro.build">
+          Astro
+        </a>
+      </span>
+      <span class="footer-mark lt-sm:hidden" aria-hidden="true"></span>
+      <a
+        class="footer-link"
         href="https://icp.gov.moe/?keyword=20269668"
         target="_blank"
         rel="noopener noreferrer"
       >
         萌ICP备20269668号
-      </Link>
+      </a>
     </div>
   </div>
 </footer>
 
 <style>
+  footer {
+    font-family: var(--font-heading);
+    font-weight: 400;
+    font-synthesis: none;
+  }
+
+  .footer-link {
+    border-bottom: 1px solid color-mix(in srgb, var(--fg) 35%, transparent);
+    color: color-mix(in srgb, var(--fg) 72%, transparent);
+    text-decoration: none;
+    transition:
+      border-color 0.3s ease-in-out,
+      color 0.3s ease-in-out;
+  }
+
+  .footer-link:hover,
+  .footer-link:focus-visible {
+    border-bottom-color: var(--accent);
+    color: var(--accent);
+  }
+
   .footer-mark {
     flex: none;
     width: 0.38rem;

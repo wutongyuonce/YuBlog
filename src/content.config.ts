@@ -30,7 +30,10 @@ const about = defineCollection({
 })
 
 const interests = defineCollection({
-  loader: glob({ base: './src/content/interests', pattern: '*.{md,mdx}' }),
+  loader: glob({
+    base: './src/content/interests',
+    pattern: ['*.{md,mdx}', '!intro.md', '!recent.md'],
+  }),
   schema: interestSchema,
 })
 

@@ -1,7 +1,6 @@
 import { getCollection, render } from 'astro:content'
 
 import { getYear } from '~/utils/datetime'
-import { getInclusiveDayCount, sumWordCounts } from '~/utils/blog-stats'
 
 import type { CollectionEntry } from 'astro:content'
 
@@ -71,36 +70,6 @@ export async function getPublishedBlogPosts() {
 export async function getRecentBlogPosts() {
   const posts = await getPublishedBlogPosts()
   return getSortedPosts(posts).slice(0, 5)
-}
-
-export interface BlogStats {
-  postCount: number
-  wordCount: number
-  daySpan: number
-  startedAt: string
-}
-
-/**
- * Summarizes published blog content for the home page.
- */
-export async function getBlogStats(): Promise<BlogStats> {
-  const posts = await getPublishedBlogPosts()
-  const renderedPosts = await Promise.all(posts.map((post) => render(post)))
-  const startedAt =
-    posts.length === 0
-      ? new Date().toISOString()
-      : new Date(
-          Math.min(...posts.map(({ data }) => data.pubDate.valueOf()))
-        ).toISOString()
-
-  return {
-    postCount: posts.length,
-    wordCount: sumWordCounts(
-      renderedPosts.map((post) => post.remarkPluginFrontmatter.wordCount)
-    ),
-    daySpan: getInclusiveDayCount(startedAt),
-    startedAt,
-  }
 }
 
 export interface GroupedBlogItem {

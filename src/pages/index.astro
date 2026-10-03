@@ -1,7 +1,9 @@
 ---
 import BaseLayout from '~/layouts/BaseLayout.astro'
 import BlogProfile from '~/components/blog/BlogProfile.astro'
+import WritingHeatmap from '~/components/home/WritingHeatmap.astro'
 import RecentWriting from '~/components/home/RecentWriting.astro'
+import RecentMedia from '~/components/home/RecentMedia.astro'
 import { withBasePath } from '~/utils/path'
 ---
 
@@ -9,7 +11,9 @@ import { withBasePath } from '~/utils/path'
   <div class="home-page" data-blog-home={withBasePath('/blogs/')}>
     <h1 class="sr-only">梧桐雨的博客</h1>
     <BlogProfile />
+    <WritingHeatmap />
     <RecentWriting />
+    <RecentMedia />
   </div>
 </BaseLayout>
 

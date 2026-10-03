@@ -6,6 +6,6 @@ if (!entry) throw new Error('Missing author introduction: about/about.md')
 const { Content } = await render(entry)
 ---
 
-<section class="about-panel prose">
+<section class="about-panel prose markdown-content">
   <Content />
 </section>

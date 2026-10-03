@@ -10,6 +10,12 @@ assert.ok(
 )
 const task = await taskSpace(spaceId)
 const page = task.page('p1')
+await page.cdp('Emulation.setDeviceMetricsOverride', {
+  width: 1440,
+  height: 900,
+  deviceScaleFactor: 1,
+  mobile: false,
+})
 await page.goto('http://127.0.0.1:4322/')
 await page.mouse.click(100, 120)
 await page.hover('a[aria-label="文稿"]')
@@ -88,6 +94,35 @@ assert.equal(
   ),
   'none'
 )
-console.log(
-  'Dropdown gap, reverse movement, preview gutter, keyboard focus and Escape: passed'
+await page.cdp('Emulation.setDeviceMetricsOverride', {
+  width: 320,
+  height: 800,
+  deviceScaleFactor: 1,
+  mobile: false,
+})
+await page.goto('http://127.0.0.1:4322/')
+await page.hover('a[aria-label="文稿"]')
+const mobile = await page.evaluate(() => {
+  const panel = document.querySelector('#nav-menu-blogs')
+  const rect = panel.getBoundingClientRect()
+  return {
+    bounded:
+      rect.left >= 0 &&
+      rect.right <= innerWidth + 1 &&
+      rect.bottom <= innerHeight + 1,
+    allPreviews: [...panel.querySelectorAll('.nav-dropdown__preview')].every(
+      (node) => getComputedStyle(node).display === 'block'
+    ),
+  }
+})
+assert.equal(
+  mobile.bounded,
+  true,
+  'mobile menu is scrollable within the viewport'
 )
+assert.equal(
+  mobile.allPreviews,
+  true,
+  'mobile keeps the category/preview interleaving'
+)
+console.log('Dropdown fixed gap, hover/focus/Escape and mobile layout: passed')

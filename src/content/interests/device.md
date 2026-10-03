@@ -6,7 +6,7 @@ order: 0
 
 ### 我的电子设备
 
-![device|w300](./device/device.jpg)
+![device|w450](./device/device.jpg)
 
 - **💻 PC 电脑：** Macbook Pro M5 24+512、天选4 r9 4070 16+1T、Samsung T7 固态 1T
 - **📱 Phone 手机：** Honor Magic7 24+512、小米金沙江磁吸充电宝

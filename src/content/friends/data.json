@@ -174,5 +174,25 @@
     "desc": "主站",
     "category": "双向",
     "order": 22
+  },
+  {
+    "id": "hyoban",
+    "name": "Hyoban",
+    "link": "https://hyoban.cc/",
+    "avatar": "https://image.hyoban.cc/site/avatar-cropped.png",
+    "desc": "写工作、代码和生活的记录。",
+    "category": "推荐",
+    "siteLabel": "Do what you like",
+    "order": 23
+  },
+  {
+    "id": "douchi",
+    "name": "椒盐豆豉",
+    "link": "https://blog.douchi.space/",
+    "avatar": "https://blog.douchi.space/favicon.png",
+    "desc": "西雅图码农的生活、职业与兴趣记录。",
+    "category": "推荐",
+    "siteLabel": "喜欢就买 不行就分",
+    "order": 24
   }
 ]

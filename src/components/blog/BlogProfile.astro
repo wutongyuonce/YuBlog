@@ -1,16 +1,7 @@
 ---
 import ProgressStats from '~/components/widgets/ProgressStats.astro'
-import { getBlogStats } from '~/utils/data'
-import { formatChineseCount } from '~/utils/blog-stats'
 import { withBasePath } from '~/utils/path'
 import { AUTHOR_LINKS } from '~/config'
-
-const stats = await getBlogStats()
-const formattedWordCount = formatChineseCount(stats.wordCount)
-const wordCountUnit = formattedWordCount.endsWith('万') ? '万' : ''
-const wordCountValue = wordCountUnit
-  ? formattedWordCount.slice(0, -wordCountUnit.length)
-  : formattedWordCount
 ---
 
 <section class="blog-profile" aria-labelledby="blog-profile-name">
@@ -35,37 +26,6 @@ const wordCountValue = wordCountUnit
   </div>
   <div class="blog-profile__details">
     <p class="blog-profile__motto">「我与我周旋久，宁做我」</p>
-    <dl class="blog-profile__stats">
-      <div>
-        <dt class="sr-only">文章</dt>
-        <dd>
-          <span class="blog-profile__value">{stats.postCount}</span>
-          <span class="blog-profile__unit">篇</span>
-        </dd>
-      </div>
-      <div>
-        <dt class="sr-only">字数</dt>
-        <dd>
-          <span class="blog-profile__value">{wordCountValue}</span>
-          {wordCountUnit && (
-            <span class="blog-profile__unit">{wordCountUnit}</span>
-          )}
-        </dd>
-      </div>
-      <div>
-        <dt class="sr-only">写作</dt>
-        <dd>
-          <span
-            class="blog-profile__value blog-profile__value--time"
-            data-site-days
-            data-from={stats.startedAt}
-          >
-            {stats.daySpan}
-          </span>
-          <span class="blog-profile__unit">天</span>
-        </dd>
-      </div>
-    </dl>
     <nav class="blog-profile__social" aria-label="联系与社交媒体">
       {AUTHOR_LINKS.map(({ label, href, icon }) => (
         <a
@@ -83,19 +43,3 @@ const wordCountValue = wordCountUnit
     </nav>
   </div>
 </section>
-
-<script>
-  import { getInclusiveDayCount } from '~/utils/blog-stats.js'
-
-  const paintSiteDays = () => {
-    document
-      .querySelectorAll<HTMLElement>('[data-site-days]')
-      .forEach((element) => {
-        const from = element.dataset.from
-        if (from) element.textContent = String(getInclusiveDayCount(from))
-      })
-  }
-
-  document.addEventListener('astro:page-load', paintSiteDays)
-  paintSiteDays()
-</script>
