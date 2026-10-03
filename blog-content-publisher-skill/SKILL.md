@@ -118,7 +118,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 入口页列表下方的说明只改 `intro.md`。首页近期书影游只改 `recent.md`。这两个文件不进分类集合，不要给它们写 `order`，也不要加进顶部菜单。
 
-电影、电视剧、动漫、游戏的条目都用卡片。已看完或玩过的可写作者评分 `score`；正在看、准备看、准备玩不写 `score`：
+电影、电视剧、动漫、游戏、书的条目都用卡片。已看完、玩过或读过的可写作者评分 `score`；正在看、准备看、准备玩不写 `score`：
 
 ```md
 :::card{title="片名" href="https://zh.wikipedia.org/wiki/片名" score="5" label="电影"}
@@ -127,6 +127,8 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 原有短评或状态。没有作者原文时不要虚构个人评价；仅有链接的条目保留“正在看／准备看／准备玩”等状态。
 :::
 ```
+
+书卡片的作者写在正文，保留原有评分和顺序；没有封面或书评时不编造。
 
 `score` 用作者写的分数，范围 0 到 5，只接受半星步进；非法分数或嵌套卡片会使构建失败。`href` 只接受 http(s)、mailto 和站内路径。有封面时，将第一张相对路径图片单独成段。连续卡片按容器宽度自动分列，当前版心最多两列；宽屏单张保留空列、与双卡同宽，窄屏填满一行，Markdown 标题将卡片分成不同网格。首页不另设标题或卡片样式。
 
