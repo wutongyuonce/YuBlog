@@ -56,9 +56,19 @@ for (const width of [1440, 390, 320]) {
         scoresFit: [...body.querySelectorAll('.media-card__body')].every(
           (card) => card.scrollWidth <= card.clientWidth + 1
         ),
-        columns: getComputedStyle(body.querySelector('.media-cards'))
-          .gridTemplateColumns.split(' ')
-          .filter((value) => parseFloat(value) > 0).length,
+        grids: [...body.querySelectorAll('.media-cards')].map((group) => {
+          const style = getComputedStyle(group)
+          return {
+            columns: style.gridTemplateColumns
+              .split(' ')
+              .filter((value) => parseFloat(value) > 0).length,
+            width: group.getBoundingClientRect().width,
+            gap: parseFloat(style.columnGap),
+            cardWidths: [...group.children].map(
+              (card) => card.getBoundingClientRect().width
+            ),
+          }
+        }),
       }
     })
     assert.equal(
@@ -82,7 +92,20 @@ for (const width of [1440, 390, 320]) {
       true,
       'scores must not be cropped by a narrow card'
     )
-    assert.equal(layout.columns, width === 1440 ? 2 : 1)
+    for (const grid of layout.grids) {
+      const columns = width === 1440 ? 2 : 1
+      assert.equal(
+        grid.columns,
+        columns,
+        'even single-card groups reserve the desktop empty column'
+      )
+      const expectedWidth = (grid.width - grid.gap * (columns - 1)) / columns
+      for (const cardWidth of grid.cardWidths)
+        assert.ok(
+          Math.abs(cardWidth - expectedWidth) < 1,
+          'single cards stay as wide as paired cards, filling one column on mobile'
+        )
+    }
   }
 }
 

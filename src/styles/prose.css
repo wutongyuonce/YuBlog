@@ -452,7 +452,7 @@ main:has(.post-content) > footer.prose :is(a, span) {
 /* :::card。评论区高度跟封面走，多出来的介绍在卡片内滚动。 */
 .prose .media-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
   gap: 0.8rem;
   margin: 1.25em 0;
 }
