@@ -15,6 +15,12 @@ import {
   parseBlogQuery,
 } from '../src/utils/blog-browser.js'
 
+const siteBase = new URL(
+  SITE.base.endsWith('/') ? SITE.base : `${SITE.base}/`,
+  SITE.website
+)
+const sitePath = (path) => new URL(path.replace(/^\//, ''), siteBase).pathname
+
 const load = async (file) =>
   fromHtml(await readFile(new URL(`../dist/${file}`, import.meta.url), 'utf8'))
 const [home, blogs, interests, about, archives, tags, projects, friends] =
@@ -62,12 +68,12 @@ test('deployment preserves the manuscript route', async () => {
   const { redirects = [] } = JSON.parse(
     await readFile(new URL('../vercel.json', import.meta.url), 'utf8')
   )
-  for (const pathname of ['/blogs', '/blogs/']) {
+  for (const pathname of [sitePath('blogs'), sitePath('blogs/')]) {
     const redirect = redirects.find(({ source }) => source === pathname)
     if (redirect)
       assert.equal(
         new URL(redirect.destination, SITE.website).pathname,
-        '/blogs/',
+        sitePath('blogs/'),
         'Manuscripts and category bookmarks must not redirect to home'
       )
   }
@@ -75,10 +81,10 @@ test('deployment preserves the manuscript route', async () => {
 
 test('section pages select the correct navigation parent before scripts run', () => {
   for (const [page, href] of [
-    [blogs, '/blogs/'],
-    ...articles.map((page) => [page, '/blogs/']),
-    [interests, '/interests/'],
-    [friends, '/friends/'],
+    [blogs, sitePath('blogs/')],
+    ...articles.map((page) => [page, sitePath('blogs/')]),
+    [interests, sitePath('interests/')],
+    [friends, sitePath('friends/')],
   ]) {
     const current = elements(
       page,
@@ -103,7 +109,7 @@ test('More follows configuration and safely marks external destinations', () => 
     const links = elements(menu, (node) => node.tagName === 'a')
     assert.deepEqual(
       links.map((node) => node.properties.href),
-      MORE_LINKS.map(({ href }) => href)
+      MORE_LINKS.map(({ href, external }) => (external ? href : sitePath(href)))
     )
     for (const [index, config] of MORE_LINKS.entries()) {
       if (!config.external) continue
@@ -154,6 +160,40 @@ test('friend groups render the current data without dropping entries', async () 
     )
   }
   assert.equal(links.flat().length, source.length)
+})
+
+test('project groups preserve every configured category and entry', async () => {
+  const source = JSON.parse(
+    await readFile(
+      new URL('../src/content/projects/data.json', import.meta.url),
+      'utf8'
+    )
+  )
+  const groups = elements(projects, (node) => hasClass(node, 'project-group'))
+  assert.deepEqual(
+    groups
+      .map((group) =>
+        textOf(
+          elements(group, (node) => hasClass(node, 'categorizer__label'))[0]
+        )
+      )
+      .sort(),
+    [...new Set(source.map(({ category }) => category))].sort()
+  )
+  for (const group of groups) {
+    const category = textOf(
+      elements(group, (node) => hasClass(node, 'categorizer__label'))[0]
+    )
+    assert.deepEqual(
+      elements(group, (node) => hasClass(node, 'group-card__title'))
+        .map(textOf)
+        .sort(),
+      source
+        .filter((entry) => entry.category === category)
+        .map(({ id }) => id)
+        .sort()
+    )
+  }
 })
 
 test('desktop articles expose an authored TOC directly', () => {
@@ -254,7 +294,8 @@ test('home is the landing page and manuscripts own the full article list', () =>
     assert.ok(
       elements(
         article,
-        (node) => node.tagName === 'a' && node.properties.href === '/blogs/'
+        (node) =>
+          node.tagName === 'a' && node.properties.href === sitePath('blogs/')
       ).length
     )
 })
@@ -295,7 +336,7 @@ test('navigation previews count current categories and only link published artic
   for (const category of categories) {
     const url = new URL(category.properties.href, SITE.website)
     const label = parseBlogQuery(url.search, url.hash).category
-    assert.equal(url.pathname, '/blogs/')
+    assert.equal(url.pathname, sitePath('blogs/'))
     assert.equal(url.searchParams.has('category'), false)
     assert.ok(!seen.has(label), 'Each category has exactly one menu entry')
     seen.add(label)
@@ -349,7 +390,10 @@ test('interest menu and index agree and their links resolve to content pages', a
   assert.equal(indexLinks.length, sourceFiles.length)
   for (const link of indexLinks) {
     const pathname = new URL(link.properties.href, SITE.website).pathname
-    const page = await load(`${pathname.slice(1)}index.html`)
+    assert.ok(pathname.startsWith(siteBase.pathname))
+    const page = await load(
+      `${pathname.slice(siteBase.pathname.length)}index.html`
+    )
     const id = decodeURIComponent(pathname.split('/').filter(Boolean).at(-1))
     const menuLink = menuLinks.find(
       (node) => node.properties.href === link.properties.href
@@ -357,12 +401,15 @@ test('interest menu and index agree and their links resolve to content pages', a
     const icons = elements(menuLink, (node) =>
       hasClass(node, 'nav-dropdown__icon')
     )
+    const icon = Object.hasOwn(INTEREST_ICONS, id)
+      ? INTEREST_ICONS[id]
+      : undefined
     assert.equal(
       icons.length,
-      INTEREST_ICONS[id] ? 1 : 0,
+      icon ? 1 : 0,
       `${id}: unconfigured icons leave no placeholder`
     )
-    if (INTEREST_ICONS[id]) assert.ok(hasClass(icons[0], INTEREST_ICONS[id]))
+    if (icon) assert.ok(hasClass(icons[0], icon))
     const content = elements(page, (node) => 'dataInterest' in node.properties)
     assert.equal(content.length, 1)
     assert.equal(content[0].properties.dataInterest, id)
@@ -376,7 +423,7 @@ test('interest menu and index agree and their links resolve to content pages', a
         page,
         (node) =>
           node.properties.ariaCurrent === 'page' &&
-          node.properties.href === '/interests/'
+          node.properties.href === sitePath('interests/')
       ).length,
       1
     )

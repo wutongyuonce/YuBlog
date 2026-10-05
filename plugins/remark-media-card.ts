@@ -1,4 +1,6 @@
+import { fromHtml } from 'hast-util-from-html'
 import type { Image, Parent, Root, RootContent } from 'mdast'
+import { visit } from 'unist-util-visit'
 
 /**
  * 封面卡片。博客、拾趣、关于共用这条 Markdown 管线，所以 `.md` 里都能写：
@@ -109,6 +111,18 @@ const markCover = (image: Image) => {
   }
 }
 
+const htmlMediaTags = new Set([
+  'img',
+  'picture',
+  'svg',
+  'video',
+  'audio',
+  'iframe',
+  'object',
+  'embed',
+  'canvas',
+])
+
 const buildCard = (node: Directive): Element | null => {
   const title = node.attributes?.title?.trim() ?? ''
   const href = safeHref(node.attributes?.href)
@@ -126,6 +140,34 @@ const buildCard = (node: Directive): Element | null => {
       }
     }
     if (!isEmptyParagraph(child)) review.push(child)
+  }
+
+  for (const child of review) {
+    visit(child, (node) => {
+      let containsMedia =
+        node.type === 'image' || node.type === 'imageReference'
+      if (
+        node.type.startsWith('mdxJsx') &&
+        'name' in node &&
+        typeof node.name === 'string' &&
+        htmlMediaTags.has(node.name.toLowerCase())
+      )
+        containsMedia = true
+      if (node.type === 'html') {
+        visit(
+          fromHtml(node.value, { fragment: true }),
+          'element',
+          (element) => {
+            if (htmlMediaTags.has(element.tagName)) containsMedia = true
+          }
+        )
+      }
+      if (containsMedia) {
+        throw new Error(
+          `Card review "${title}" cannot contain media; use at most one standalone cover image`
+        )
+      }
+    })
   }
 
   if (!title && !cover && review.length === 0) return null

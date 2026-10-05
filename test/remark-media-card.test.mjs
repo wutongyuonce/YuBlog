@@ -119,6 +119,113 @@ test('unsafe URL variants do not become links', async () => {
   }
 })
 
+test('card reviews reject Markdown images instead of silently dropping them', async (t) => {
+  const processor = await createMarkdownProcessor({
+    remarkPlugins: [remarkDirective, remarkMediaCard],
+  })
+  for (const [name, review] of [
+    ['second cover', '![封面](./cover.jpg)\n\n![额外图片](./extra.jpg)'],
+    ['inline image', '文字 ![额外图片](./extra.jpg)'],
+    ['nested image', '> - **![额外图片](./extra.jpg)**'],
+    ['image reference', '> ![额外图片][extra]\n\n[extra]: ./extra.jpg'],
+  ]) {
+    await t.test(name, async () => {
+      await assert.rejects(
+        processor.render(`:::card{title="仅文字介绍"}\n${review}\n:::`),
+        { name: 'Error', message: /Card review.*仅文字介绍.*media/ }
+      )
+    })
+  }
+})
+
+test('card reviews reject actual HTML media, including nested and mixed-case tags', async (t) => {
+  const processor = await createMarkdownProcessor({
+    remarkPlugins: [remarkDirective, remarkMediaCard],
+  })
+  for (const html of [
+    '<span><IMG src="./extra.jpg"></span>',
+    '<picture><source srcset="./extra.jpg"></picture>',
+    '<svg><circle r="1"></circle></svg>',
+    '<video src="./clip.mp4"></video>',
+    '<audio src="./clip.mp3"></audio>',
+    '<iframe src="https://example.com"></iframe>',
+    '<object data="./extra.pdf"></object>',
+    '<embed src="./extra.pdf">',
+    '<canvas></canvas>',
+  ]) {
+    await t.test(html, async () => {
+      await assert.rejects(
+        processor.render(`:::card{title="HTML媒体"}\n${html}\n:::`),
+        { name: 'Error', message: /Card review.*HTML媒体.*media/ }
+      )
+    })
+  }
+})
+
+test('static MDX media cannot bypass the shared card transformer', () => {
+  for (const type of ['mdxJsxFlowElement', 'mdxJsxTextElement']) {
+    const image = { type, name: 'img', attributes: [], children: [] }
+    const tree = {
+      type: 'root',
+      children: [
+        {
+          type: 'containerDirective',
+          name: 'card',
+          attributes: { title: 'MDX媒体' },
+          children: [
+            type === 'mdxJsxTextElement'
+              ? { type: 'paragraph', children: [image] }
+              : image,
+          ],
+        },
+      ],
+    }
+    assert.throws(() => remarkMediaCard()(tree), /Card review.*MDX媒体.*media/)
+  }
+})
+
+test('text formatting, links, HTML comments and literal media code remain valid', async () => {
+  const processor = await createMarkdownProcessor({
+    remarkPlugins: [remarkDirective, remarkMediaCard],
+    syntaxHighlight: false,
+  })
+  const { code } = await processor.render(
+    [
+      ':::card{title="文字与封面"}',
+      '**先写介绍** [链接](https://example.com/review)',
+      '',
+      '![封面](./cover.jpg)',
+      '',
+      '> - *保留列表*',
+      '',
+      '<span title="<img>">HTML 排版</span>',
+      '',
+      '<!-- <img src="./ignored.jpg"> -->',
+      '',
+      '`<img>`',
+      '',
+      '```html',
+      '<img src="./literal.jpg">',
+      '```',
+      ':::',
+      '',
+      ':::card{title="无封面和评分"}',
+      '只有文字。',
+      ':::',
+    ].join('\n')
+  )
+  assert.equal(code.match(/class="media-card__cover"/g)?.length, 1)
+  assert.match(code, /<strong>先写介绍<\/strong>/)
+  assert.match(code, /<a href="https:\/\/example.com\/review">链接<\/a>/)
+  assert.match(code, /<em>保留列表<\/em>/)
+  assert.match(code, /HTML 排版/)
+  assert.match(code, /<!-- <img src="\.\/ignored.jpg"> -->/)
+  assert.match(code, /<code>(?:&lt;|&#x3C;)img/)
+  assert.match(code, /<pre><code class="language-html">/)
+  assert.match(code, /只有文字。/)
+  assert.doesNotMatch(code, /class="media-card__score"/)
+})
+
 test('an explicit cover width survives card decoration', async () => {
   const processor = await createMarkdownProcessor({
     remarkPlugins: [remarkDirective, remarkImageWidth, remarkMediaCard],

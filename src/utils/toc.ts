@@ -13,7 +13,7 @@ function injectChild(items: TocHeading[], item: TocHeading): void {
   } else {
     const depthDiff = item.depth - lastItem.depth
 
-    if (depthDiff > 1) {
+    if (depthDiff > 1 && lastItem.children.length === 0) {
       let currentDepth = lastItem.depth + 1
       let currentItems = lastItem.children
 

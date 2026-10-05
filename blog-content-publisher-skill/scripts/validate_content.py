@@ -7,6 +7,7 @@ import argparse
 import datetime as dt
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 from urllib.parse import urlparse
@@ -24,21 +25,38 @@ def is_http_url(value: object) -> bool:
     return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
 
 
-def frontmatter(path: Path) -> dict[str, object]:
+def frontmatter(path: Path, root: Path) -> dict[str, object]:
     text = path.read_text(encoding="utf-8")
     match = re.match(r"^---\s*\n(.*?)\n---\s*(?:\n|$)", text, re.DOTALL)
     if not match:
         fail(f"{path}: expected YAML frontmatter fenced by ---")
 
-    values: dict[str, object] = {}
-    for line in match.group(1).splitlines():
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#"):
-            continue
-        key, separator, value = stripped.partition(":")
-        if not separator:
-            continue
-        values[key.strip()] = value.strip().strip("'\"")
+    # Reuse Astro's parser: comments, quoted scalars and dates have YAML semantics.
+    parser = """
+import { readFileSync } from 'node:fs';
+import { parseFrontmatter } from '@astrojs/markdown-remark';
+try {
+  console.log(JSON.stringify(parseFrontmatter(readFileSync(0, 'utf8')).frontmatter));
+} catch (error) {
+  console.error(error.message);
+  process.exitCode = 1;
+}
+"""
+    try:
+        result = subprocess.run(
+            ["node", "--input-type=module", "-e", parser],
+            input=text, text=True, capture_output=True, cwd=root,
+        )
+    except OSError as exc:
+        fail(f"{path}: Node.js is required for Astro YAML parsing ({exc})")
+    if result.returncode:
+        fail(f"{path}: YAML parsing failed (run pnpm install first): {result.stderr.strip()}")
+    try:
+        values = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        fail(f"{path}: invalid YAML parser output ({exc})")
+    if not isinstance(values, dict):
+        fail(f"{path}: YAML frontmatter must be a mapping")
     return values
 
 
@@ -50,7 +68,7 @@ def validate_blog(root: Path, relative_path: str) -> None:
     if path.suffix not in {".md", ".mdx"}:
         fail(f"{relative_path}: expected a .md or .mdx file")
 
-    data = frontmatter(path)
+    data = frontmatter(path, root)
     title = data.get("title")
     if not isinstance(title, str) or not title:
         fail(f"{relative_path}: title is required")
@@ -61,9 +79,9 @@ def validate_blog(root: Path, relative_path: str) -> None:
     if not isinstance(pub_date, str) or not pub_date:
         fail(f"{relative_path}: pubDate is required")
     try:
-        dt.date.fromisoformat(pub_date)
+        dt.datetime.fromisoformat(pub_date.replace("Z", "+00:00"))
     except ValueError:
-        fail(f"{relative_path}: pubDate must use YYYY-MM-DD")
+        fail(f"{relative_path}: pubDate must be an ISO date or timestamp")
 
     category = data.get("category")
     if not isinstance(category, str) or not category.strip():

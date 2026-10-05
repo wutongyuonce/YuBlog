@@ -21,8 +21,23 @@ test('buckets a publication by its Shanghai calendar day', () => {
   assert.equal(formatHeatmapLabel('2026-03-18'), '2026年3月18日星期三')
 })
 
-test('keeps one post visible and caps the darkest cell at four', () => {
+test('caps the darkest cell at four posts', () => {
   assert.deepEqual([0, 1, 2, 3, 4, 9].map(levelForCount), [0, 1, 2, 3, 4, 4])
+})
+
+test('distinct days retain one article apiece without needing a multi-post day', () => {
+  const heatmap = buildWritingHeatmap(
+    [entry('2026-03-18', '甲', '/a/'), entry('2026-03-19', '乙', '/b/')],
+    new Date('2026-06-01T00:00:00+08:00')
+  )
+  const active = heatmap.years[0].weeks.flat().filter((cell) => cell.count > 0)
+  assert.deepEqual(
+    active.map(({ key, count }) => [key, count, heatmap.postsByDate[key]]),
+    [
+      ['2026-03-18', 1, [{ title: '甲', href: '/a/' }]],
+      ['2026-03-19', 1, [{ title: '乙', href: '/b/' }]],
+    ]
+  )
 })
 
 test('merges posts that fall on the same Shanghai day', () => {

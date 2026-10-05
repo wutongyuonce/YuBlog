@@ -88,11 +88,25 @@ for (const width of [1440, 390, 320]) {
   }
 }
 
-// Exercise the real component handlers with a small viewport and long titles.
-// Capture timers scheduled by these handlers, then fire them deterministically.
+// Build a multi-post fixture from any calendar day, even if real days are all single-post.
+// Exercise the real handlers and fire their captured timers deterministically.
 const state = await page.evaluate(() => {
   const root = document.querySelector('[data-writing-heatmap]')
-  const button = root.querySelector('button[data-date]')
+  if (!root) {
+    if (document.querySelector('.recent-writing__item'))
+      throw new Error('Published posts require a writing heatmap')
+    return { emptyState: true }
+  }
+  const cell = root.querySelector('[data-date]')
+  const button = document.createElement('button')
+  for (const { name, value } of cell.attributes)
+    button.setAttribute(name, value)
+  button.removeAttribute('href')
+  button.removeAttribute('aria-hidden')
+  button.type = 'button'
+  button.dataset.level = '4'
+  button.setAttribute('aria-label', 'Test fixture: 30 posts')
+  cell.replaceWith(button)
   const panel = button.closest('[data-year-panel]')
   const yearInput = root.querySelector(
     `#writing-heatmap-year-${panel.dataset.yearPanel}`
@@ -163,6 +177,10 @@ const state = await page.evaluate(() => {
 })
 for (const [name, passed] of Object.entries(state))
   assert.equal(passed, true, name)
+if (state.emptyState)
+  console.log(
+    'No published posts: heatmap absent; tooltip checks not applicable'
+  )
 
 await page.cdp('Emulation.setScriptExecutionDisabled', { value: true })
 try {
@@ -200,5 +218,5 @@ try {
   await page.cdp('Emulation.setScriptExecutionDisabled', { value: false })
 }
 console.log(
-  'Home cards, tooltip focus/lifecycle/viewport bounds and no-JS years: passed'
+  'Home cards, heatmap state/fixture interaction and no-JS years: passed'
 )

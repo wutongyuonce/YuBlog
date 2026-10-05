@@ -30,7 +30,7 @@ data = projects
     const { category, ...rest } = item
     ;(acc[category] ??= []).push(rest)
     return acc
-  }, {})
+  }, Object.create(null))
 ---
 
 {isEmpty ? (

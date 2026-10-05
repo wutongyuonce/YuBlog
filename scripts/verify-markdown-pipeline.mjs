@@ -9,9 +9,19 @@ import { visit } from 'unist-util-visit'
 import { createMarkdownProcessor } from '@astrojs/markdown-remark'
 import remarkDirective from 'remark-directive'
 import remarkMediaCard from '../plugins/remark-media-card.ts'
+import { SITE } from '../src/config.ts'
 
+const siteBase = new URL(
+  SITE.base.endsWith('/') ? SITE.base : `${SITE.base}/`,
+  SITE.website
+)
 const built = (path) => new URL(`../dist/${path}`, import.meta.url)
 const html = (path) => readFile(built(path), 'utf8')
+const localImage = (url) => {
+  assert.equal(url.origin, siteBase.origin)
+  assert.ok(url.pathname.startsWith(siteBase.pathname))
+  return built(url.pathname.slice(siteBase.pathname.length))
+}
 
 test('static routes, feed, sitemap and search index exist', async () => {
   await Promise.all(
@@ -206,10 +216,15 @@ test('home and interest cards preserve authored content through the shared pipel
     for (const card of elements(page, 'article').filter((node) =>
       node.properties.className?.includes('media-card')
     )) {
-      for (const image of elements(card, 'img')) {
-        assert.ok(image.properties.className?.includes('media-card__cover'))
-        assert.equal(image.properties.dataAstroImage, 'constrained')
-        await access(built(image.properties.src.slice(1)))
+      // The shared plugin owns rejection; this checks its rendered cover and resources.
+      const covers = elements(card, 'img')
+      assert.ok(covers.length <= 1, `${file}: cards have at most one cover`)
+      for (const cover of covers) {
+        assert.ok(cover.properties.className?.includes('media-card__cover'))
+        const url = new URL(cover.properties.src, siteBase)
+        if (url.origin !== siteBase.origin) continue // Remote covers are not fetched.
+        assert.equal(cover.properties.dataAstroImage, 'constrained')
+        await access(localImage(url))
       }
     }
   }
@@ -247,7 +262,7 @@ test('rendered Markdown headings and processed images remain usable', async () =
         assert.doesNotMatch(image.properties.alt || '', /\|w\d+$/)
         if (!image.properties.dataAstroImage) continue
         assert.ok(image.properties.width > 0 && image.properties.height > 0)
-        await access(built(image.properties.src.slice(1)))
+        await access(localImage(new URL(image.properties.src, siteBase)))
       }
     }
   }

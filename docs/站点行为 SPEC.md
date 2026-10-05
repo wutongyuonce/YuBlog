@@ -57,13 +57,15 @@
 
 拾趣入口与全部分类子页均使用点状背景。分类来自 `src/content/interests/` 顶层的 `.md` / `.mdx` 文件，排除 `intro.md` 和 `recent.md`，不限定分类 ID 或数量。
 
-每个分类必须提供非空 `title`、`description` 和非负整数 `order`；入口与菜单按 `order` 升序展示，子页路径为 `/interests/<文件名去掉扩展名>/`。新增分类重新构建后自动生成页面、入口和菜单，无需修改路由或导航数组。图标唯一配置为 `src/config.ts` 的 `INTEREST_ICONS`，键为分类 ID，未配置时菜单只显示文字，不渲染图标容器或占位；图标值自动加入 UnoCSS safelist。拾趣没有博客的 `draft` 过滤，新增文件随下一次构建发布。
+每个分类必须提供非空 `title`、`description` 和非负整数 `order`；入口与菜单按 `order` 升序展示，子页路径为 `/interests/<文件名去掉扩展名>/`。新增分类重新构建后自动生成页面、入口和菜单，无需修改路由或导航数组。图标唯一配置为 `src/config.ts` 的 `INTEREST_ICONS`，键为分类 ID，仅查询映射自身的键，不读取原型链；未配置时菜单只显示文字，不渲染图标容器或占位；图标值自动加入 UnoCSS safelist。拾趣没有博客的 `draft` 过滤，新增文件随下一次构建发布。
 
 入口列表下方的说明只来自 `intro.md`，首页近期书影游只来自 `recent.md`，二者不生成分类子页或菜单项。当前分类包括设备、动漫、电影、电视剧、游戏、书、Kpop；这是内容现状，不是允许列表。各分类说明以内容元数据为准。电影、电视剧、动漫、游戏、书的条目使用 `:::card`，按容器宽度自动分列，当前版心最多两列。评分由作者按需填写，与观看／游玩状态无关；未填写时不生成评分。关于页只渲染 `about.md`，没有子页切换。
 
 博客、拾趣、首页近期书影游与关于正文在 `prose.css` 共用标题字号和间距：h1 为 34px、h2 为 25.6px、h3 为 19px、h4–h6 为 16px（根字号 16px 时）。Markdown 的一至六个 `#` 按原样生成 h1–h6，不将文中最高级标题提升为 h1；标题旁单个 `#` 是 `rehype-autolink-headings` 添加的锚点链接，与层级无关。页面顶部的宋体标题独立渲染，不属于正文 Markdown。
 
 ### S5：归档和友链
+
+项目按 JSON 的 `category` 原值分组，不设分类允许名单；`constructor`、`__proto__` 等合法名称也必须正常分组，每条项目只呈现一次。
 
 归档按共享发布日期顺序排成一条时间线，年份为宋体 22px，日期为宋体，文章标题为宋体常规字重（400）、字号 14.72px；日期列右对齐并靠近时间线，年份在同一列展示。日期、标记与标题首行共用 24px 行高。所有分类的小点均为灰色，悬停／焦点均为粉色短竖线；标题右侧的圆角徽标包含分类文字，不能仅靠颜色区分。所有分类统一依据原始名称的稳定 hash 获得深浅主题配色，不设固定类别调色板；分类增删或文章排序不改变已有分类颜色。允许不同分类颜色相近，不保证颜色唯一。长分类徽标限制宽度并换行，不挤出手机页面。
 
@@ -72,6 +74,8 @@
 ### S6：有封面和无封面文章
 
 文章始终保留一个独立宋体 h1 及日期／阅读时长／标签信息。有封面时在其下渲染图片卡片：重复标题用段落，描述取 `description`、缺失时取 `subtitle`，作者行只含 40px 头像、梧桐雨与日期。封面白字和深色渐变遮罩适配两种主题。无封面时保持标题和正文结构，不构造假封面。
+
+目录按标题顺序与真实层级嵌套：h2 → h3 → h4 的 h4 属于已有 h3，仅在实际缺失中间层级时补空项，不制造重复父级。
 
 桌面 1200px 及以上目录常驻、无顶部 TOC 按钮；小屏保留浮动目录入口。目录在正文边缘和视口外边距之间的留白中线基础上向外移 16px，最大宽度 208px，宽度为侧边留白减 48px 与该上限中的较小值，靠正文一侧至少保留 40px，外侧至少保留 8px（另有视口外边距）；中心比视口中线高 32px；高度不超过 `min(50vh, 28rem)`，长目录在内部滚动，当前项移入可视范围。
 
@@ -113,12 +117,14 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 | 滑块位置与过渡起点 | `utils/sliding-indicator.js` | 导航和菜单预览 | `sliding-indicator.test.mjs` |
 | 累计滚动状态与显隐阈值 | `utils/nav-scroll.js` | `NavBar`、TOC点击预测 | `nav-scroll.test.mjs` |
 | 下拉展开与类别预览状态 | `NavDropdown` | 文稿／拾趣顶层入口，集合提供数据 | `verify-nav-dropdown.mjs` |
+| 目录树与跳级补层 | `utils/toc.ts` | `TocSidebar`、`MobileTocControl` 共用生成结果 | `toc.test.mjs` |
 | 章节判定 | `utils/toc-active.js` | `Toc` | `toc-active.test.mjs` |
 | 锚点间距、同步与内部揭示 | `Toc` | 桌面／移动目录；仅它写 `--post-anchor-offset` | `verify-toc-navigation.mjs` |
-| 内容 schema | `content/schema.ts` 和 `content.config.ts` | Astro 集合、作者校验；发布脚本只作轻量预检 | `pnpm check/build` |
+| 项目原值分类分组 | `GroupView` | `projects` JSON 的分类键；分组字典不读取原型链 | 构建项目分组检查 |
+| 内容 schema | `content/schema.ts` 和 `content.config.ts` | Astro 集合、作者校验；发布脚本复用 Astro frontmatter 解析后只作轻量预检，不自行拆 YAML | `pnpm check/build`、`content-publisher.test.mjs` |
 | 更多菜单条目 | `config.ts` `MORE_LINKS` | `NavDropdown` 呈现，UnoCSS 提取图标；友链路由归属由 `nav-path.js` 维护 | 导航路径与构建产物检查 |
 | 拾趣分类／标题／顺序／说明 | `content/interests/*.{md,mdx}`；集合范围由 `content.config.ts` 维护 | 入口、子页和导航；`intro.md` 与首页 `recent.md` 排除出集合。可选图标唯一映射 `config.ts` 的 `INTEREST_ICONS`，UnoCSS 自动加入 safelist | 构建页面与可选图标检查 |
-| 封面卡片（属性、链接安全、评分及分组） | `plugins/remark-media-card.ts` | 博客、拾趣、关于的 Markdown；样式只在 `prose.css` | `remark-media-card.test.mjs` |
+| 封面卡片（单封面／文字介绍边界、属性、链接安全、评分及分组） | `plugins/remark-media-card.ts` | 博客、拾趣、关于的 Markdown；样式只在 `prose.css` | `remark-media-card.test.mjs` |
 | 社交身份 | `config.ts` `AUTHOR_LINKS` | 首页读取配置，关于正文独立维护联系方式 | 构建产物检查核对身份 |
 | 访问统计 | `Head.astro` 的 Umami 脚本 | 全站经 `BaseLayout` 加载；不在页脚或正文渲染 | 构建产物头部含该脚本 |
 | RSS HTML／XML与失败 | `rss-content.js`／`rss-feed.js`；endpoint编排 | `render(Content)` → 转换 → 序列化 | RSS owner-level 与产物检查 |
@@ -128,6 +134,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 
 ## 5. 失败、并发和资源语义
 
+- `:::card` 最多一张独立 Markdown 图片作为封面，可无封面；介绍只允许文字及其排版和链接，不接受额外图片或嵌入媒体，包括嵌套 Markdown 图片和 HTML／静态 MDX 媒体。违规由 Markdown 插件明确报错并使构建失败，不静默删图；卡片外的正文配图不受此限制。
 - `:::card` 的评分可省略；提供时必须是 0–5 的半星步进，非法评分和嵌套卡片构建失败，不改写分数。评分为真实文本，读屏与 RSS 不依赖星星 CSS；危险标题链接降级为纯文本。
 - 静态内容在构建时验证。缺少作者介绍或无效 schema 明确报错；无文章／无匹配结果展示空状态。未知博客分类保留，非法友链类别由 schema 拒绝，不静默丢条目。写作热力遇到非法日期在构建时抛错；没有已发布文章时不渲染，不补第一篇文章之前的空年。
 - 导航 pending 状态由对应 AbortSignal 拥有；后发目标替代先发目标，过期取消不能回退最新预览；只有 pathname 追上 pending 目标才完成预览，已排队的旧交换不能冒充另一个新目标完成。页面加载后的实际路径最终决定选中父级。
@@ -148,9 +155,9 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 
 ## 7. 验收入口
 
-测试保护功能正确性、内容完整性、安全和可用性。算法与边界测试使用固定夹具；构建检查从当前配置、内容及产物推导预期，不把个人账号、文章标题、友链名单、兴趣分类数量、观看状态或具体 CSS 写法另设为不可修改规则。视觉调整通过实际可读性、视口边界和交互效果验证，不用调色板或像素值快照阻拦正常调整。
+测试保护功能正确性、内容完整性、安全和可用性。算法与边界测试使用固定夹具；热力图弹层检查自行构造同日多篇场景，不要求真实内容存在同日多篇。构建检查从当前配置、内容及产物推导预期，地址通过 `SITE.website`／`SITE.base` 和 URL 生成，不锁定根路径部署；不把个人账号、文章标题、友链名单、兴趣分类数量、观看状态或具体 CSS 写法另设为不可修改规则。视觉调整通过实际可读性、视口边界和交互效果验证，不用调色板或像素值快照阻拦正常调整。
 
-1. `pnpm test`、`pnpm check`、`pnpm lint`、`pnpm format`、`pnpm build`。
+1. `pnpm test`、`pnpm check`、`pnpm lint`、`pnpm format`、`pnpm build`。发布预检的回归通过 Python 3 调用现有 Astro 解析器，测试环境需提供 `python3` 与已安装的 Node.js 依赖。
 2. 构建后 `pnpm test:built-restructure`、`pnpm test:built-pagination`、`pnpm test:built-markdown`：集合范围、页面结构、拾趣自动分类与可选图标、友链分组、目录、封面语义、图片／RSS资源。
 3. 在现有 Ego TaskSpace 中运行 `sed 's/__TASK_SPACE_ID__/<id>/g' scripts/verify-nav-dropdown.mjs | ego-browser nodejs` 、`verify-home-content.mjs` 和同样的 `verify-toc-navigation.mjs`；脚本不创建或结束 TaskSpace。
 4. 深浅主题、1440／390／320px检查：首页作者中心、进度顺序、页头一致、归档日期对齐、卡片、点状背景、目录在右侧留白中线基础上向外移且上移、无横向溢出。目录另检查1200px阈值和不同视口高度。

@@ -119,7 +119,7 @@ const noScriptPreviewCss =
         {interests.map(({ id, data }) => (
           <li>
             <a href={withBasePath(`/interests/${id}/`)}>
-              {INTEREST_ICONS[id] && (
+              {Object.hasOwn(INTEREST_ICONS, id) && INTEREST_ICONS[id] && (
                 <span
                   class:list={['nav-dropdown__icon', INTEREST_ICONS[id]]}
                   aria-hidden="true"
