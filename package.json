@@ -64,7 +64,7 @@
     "hast-util-from-html": "^2.0.3",
     "hast-util-sanitize": "^5.0.2",
     "hast-util-to-html": "^9.0.5",
-    "katex": "^0.16.45",
+    "katex": "^0.19.0",
     "mdast-util-to-string": "^4.0.0",
     "pagefind": "^1.5.2",
     "postcss": "^8.5.28",
