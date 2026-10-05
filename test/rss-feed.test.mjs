@@ -1,7 +1,58 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { register } from 'node:module'
 
 import { encodePathSegments, escapeXml } from '../src/utils/rss-feed.js'
+
+test('RSS excludes drafts even when page previews include them in development', async () => {
+  const endpoint = new URL('../src/pages/rss.xml.js', import.meta.url).href
+  const modules = {
+    'astro/container': `export const experimental_AstroContainer = {
+      create: async () => ({ renderToString: async (content) => content })
+    }`,
+    'astro:content': `export async function render(post) {
+      if (post.data.draft) throw new Error('RSS must not render drafts')
+      return { Content: '<p>Published content</p>' }
+    }`,
+    '~/config': `export const SITE = {
+      website: 'https://example.com/', title: 'Blog', description: 'Feed', lang: 'zh-CN'
+    }`,
+    '~/utils/data': `const posts = [
+      { id: 'published', data: { title: 'Published', pubDate: new Date('2026-09-01'), draft: false } },
+      { id: 'draft', data: { title: 'Draft', pubDate: new Date('2026-09-02'), draft: true } }
+    ];
+    export const getFilteredPosts = async () => posts;
+    export const getPublishedBlogPosts = async () => posts.filter(post => !post.data.draft);
+    export const getSortedPosts = posts => [...posts].sort((a, b) => b.data.pubDate - a.data.pubDate);`,
+    '~/utils/path': 'export const withBasePath = path => path',
+  }
+  // Scope Astro mocks to this endpoint; use the loader API supported by Node 22.12.
+  const loader = `
+    const modules = ${JSON.stringify(modules)};
+    export function resolve(specifier, context, nextResolve) {
+      if (context.parentURL === ${JSON.stringify(endpoint)}) {
+        if (Object.hasOwn(modules, specifier))
+          return { url: 'data:text/javascript,' + encodeURIComponent(modules[specifier]), shortCircuit: true };
+        if (specifier.startsWith('~/utils/'))
+          return nextResolve(new URL(specifier.slice(2), ${JSON.stringify(new URL('../src/', import.meta.url).href)}).href, context);
+      }
+      return nextResolve(specifier, context);
+    }
+  `
+  register(
+    `data:text/javascript,${encodeURIComponent(loader)}`,
+    import.meta.url
+  )
+  const { GET } = await import(endpoint)
+  const response = await GET()
+  const { XMLParser } = await import('fast-xml-parser')
+  const channel = new XMLParser().parse(await response.text()).rss.channel
+  assert.deepEqual(
+    [].concat(channel.item || []).map((item) => item.title),
+    ['Published'],
+    'RSS publishes non-drafts without exposing preview content'
+  )
+})
 
 test('RSS path encoding preserves nested routes and escapes reserved slug characters', () => {
   assert.equal(

@@ -24,7 +24,7 @@
 
 当前博客集合使用 Markdown，schema 仍支持 MDX；文章数量随内容变化，不作为规则常量。Astro 项目采用 7 系列。正文已经由 `astro.config.ts` 和 `plugins/index.ts` 统一处理本地图片、CJK 强调、代码、数学公式、提示框和指令。文章页通过 `render(post)` 获取 `Content`。
 
-文章范围与顺序由集合工具定义：`getFilteredPosts()` 在生产排除草稿、开发包含草稿；`getSortedPosts()` 按发布日期降序、同日期按 ID 排序；路径使用 `withBasePath()` 和逐段编码。日期排序不排除未来日期；本项目没有定时发布规则。
+文章范围与顺序由集合工具定义：RSS 使用 `getPublishedBlogPosts()`，在开发和生产环境均排除草稿；网页预览仍使用 `getFilteredPosts()`，开发包含草稿、生产排除草稿；`getSortedPosts()` 按发布日期降序、同日期按 ID 排序；路径使用 `withBasePath()` 和逐段编码。日期排序不排除未来日期；本项目没有定时发布规则。
 
 文稿分类入口自动扩展、片段（如 `/blogs/#旅行`）和兼容的 `?category=` 只影响网页筛选，不影响 RSS 范围。新分类的已发布文章进入同一个 `/rss.xml`；分类映射和颜色不修改 GUID、发布日期或正文。源不输出分类元数据，不提供按分类订阅的独立源。
 
@@ -38,7 +38,7 @@
 
 ### S2：发布或修改文章
 
-作者新增文章并成功构建后，源中出现对应条目及全部正文。修改现有文章只更新内容，不使用 `lastModDate` 替换 `pubDate`，也不改变 GUID。生产草稿不进入源；空集合生成合法空 channel。源文件正文为空时允许空全文，不伪造摘要作为正文。
+作者新增文章并成功构建后，源中出现对应条目及全部正文。修改现有文章只更新内容，不使用 `lastModDate` 替换 `pubDate`，也不改变 GUID。开发和生产环境的草稿均不进入源；空集合生成合法空 channel。源文件正文为空时允许空全文，不伪造摘要作为正文。
 
 ### S3：阅读技术文章
 
@@ -56,7 +56,7 @@
 
 | ID | 规则 / 不变量 | 场景与违约表现 |
 | --- | --- | --- |
-| R1 | 文章范围与顺序沿用现有集合工具，生产不含草稿，不新增数量限制或日期过滤 | S1、S2；漏文、草稿泄露或重排 |
+| R1 | 文章范围与顺序沿用现有集合工具，开发和生产均不含草稿，不新增数量限制或日期过滤 | S1、S2；漏文、草稿泄露或重排 |
 | R2 | `/rss.xml` 与现有 GUID 保持；保留 pubDate、可选摘要和 redirect 链接语义 | S1、S2、S4；去重被破坏、发布日期变化 |
 | R3 | 每条提供正文 HTML，不截断；正文内容不能因剥离样式/控件丢失 | S2、S3；只剩摘要、代码拼行、提示内容丢失 |
 | R4 | 图片指向 Astro 已解析资源，链接在站外可用；保持中文和嵌套路径编码 | S3、S4；图片占位符或相对资源残留 |
@@ -126,7 +126,7 @@ channel 的标题、介绍、语言来自 `SITE.title`、`SITE.description`、`S
 
 ```text
 GET /rss.xml
-  → getFilteredPosts + getSortedPosts
+  → getPublishedBlogPosts + getSortedPosts
   → 路径工具生成 articleUrl
   → 逐篇 render(post) → Container.renderToString(Content)
   → toRssHtml(html, articleUrl)
@@ -138,7 +138,7 @@ GET /rss.xml
 
 | 规则 / 状态 / 资源 | 唯一属主 | Interface / seam | 调用方与证据 |
 | --- | --- | --- | --- |
-| R1：文章筛选与排序 | `src/utils/data.ts` | `getFilteredPosts()`、`getSortedPosts()` | endpoint 直接复用，不再写过滤/排序 |
+| R1：文章筛选与排序 | `src/utils/data.ts` | `getPublishedBlogPosts()`、`getSortedPosts()` | endpoint 直接复用，不再写过滤/排序 |
 | R2、R4：base、逐段编码 | `src/utils/path.ts`、`src/utils/rss-feed.js` 各管自己的路径操作 | `withBasePath()`、`encodePathSegments()` | endpoint 沿用原表达式生成一次 articleUrl |
 | Markdown 插件和源图片解析 | Astro 配置及内容 API | `render(post)` 的 `Content` | endpoint 用公共 Container 转字符串，不接管图片内部实现 |
 | R3–R5：RSS 正文表达、清洗与 URL 策略 | `src/utils/rss-content.js` | `toRssHtml(html, articleUrl): string`，同步纯转换；错误抛出 | endpoint 唯一生产 caller；小型 HTML fixture 测试 |
@@ -166,7 +166,7 @@ GET /rss.xml
 | A3：站外资源与链接可用 | R4；正文工具 | 中文、嵌套路径、base、`../`、`#`、协议相对地址、mailto；img 无 srcset/懒加载；产物内同站图片可映射到真实 dist 文件，无 Astro 图片占位符 |
 | A4：去掉执行及样式依赖 | R5；正文工具 | 事件属性、脚本、style、危险协议被移除；正常图片/链接和原文入口仍在 |
 | A5：身份兼容和 XML 完整性 | R2、R6；feed wrapper | 调用真实官方包，解析 XML：redirect link 与原 GUID 独立；日期、摘要、语言、self、base 正确；`&`、`<`、`]]>` 不破坏 XML、不重复转义；空集合合法 |
-| A6：集合接线正确 | R1；endpoint + 既有工具 | 从实际构建文章页 canonical 集合核对 feed 条目集合，核对日期顺序；临时草稿 fixture 在生产 feed 不存在，不硬编码文章数量 |
+| A6：集合接线正确 | R1；endpoint + 既有工具 | 入口回归测试模拟开发页面可见草稿，断言 RSS 不渲染草稿且保留已发布条目；从实际构建文章页 canonical 集合核对 feed 条目集合，核对日期顺序；临时草稿 fixture 在生产 feed 不存在，不硬编码文章数量 |
 | A7：失败没有隐藏 | R7；正文工具 + endpoint | 工具对缺公式源码/非法图片抛错；临时引入一个坏文章的构建验证非零退出并包含文章上下文，恢复后成功；不得把失败 dist 当成功产物 |
 | A8：构建资源接线和成本 | R8；endpoint | 检查实现为调用内单 Container、顺序处理、无抓取/缓存；不用时间阈值测试猜测并发 |
 

@@ -2,7 +2,7 @@ import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import { render } from 'astro:content'
 
 import { SITE } from '~/config'
-import { getFilteredPosts, getSortedPosts } from '~/utils/data'
+import { getPublishedBlogPosts, getSortedPosts } from '~/utils/data'
 import { withBasePath } from '~/utils/path'
 import { createRssXml, encodePathSegments } from '~/utils/rss-feed.js'
 import { toRssHtml } from '~/utils/rss-content.js'
@@ -10,7 +10,7 @@ import { toRssHtml } from '~/utils/rss-content.js'
 export async function GET() {
   const homeUrl = new URL(withBasePath('/'), SITE.website).href
   const feedUrl = new URL(withBasePath('/rss.xml'), SITE.website).href
-  const posts = getSortedPosts(await getFilteredPosts('blogs'))
+  const posts = getSortedPosts(await getPublishedBlogPosts())
   const container = await AstroContainer.create()
   const items = []
 
