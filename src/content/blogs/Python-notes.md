@@ -2,7 +2,7 @@
 title: Python
 description: 涵盖 Python 语言基础、标准库、类型标注、环境与依赖管理、代码质量、构建发布和自动化实践。
 pubDate: 2026-03-12
-category: 技术向
+category: 技术
 tags: [Python]
 toc: true
 search: true

@@ -37,7 +37,7 @@ https://www.wutongyu.site/blogs/foo/?page=2
 ### 设计时要想清楚的
 
 - 官方地址要稳定：本站文章永远是 `/blogs/<slug>/`，带尾斜杠。
-- 筛选、分页、追踪参数**不要**写进 canonical。文稿 `/blogs/?category=技术向`、`/blogs/#tech` 和新增分类 `/blogs/#旅行` 的官方地址仍是 `/blogs/`；首页兼容筛选书签在客户端转到文稿页。
+- 筛选、分页、追踪参数**不要**写进 canonical。文稿 `/blogs/?category=技术`、`/blogs/#tech` 和新增分类 `/blogs/#旅行` 的官方地址仍是 `/blogs/`；首页兼容筛选书签在客户端转到文稿页。
 - 全站一个生成点，避免有的页面忘了写。
 
 ### 本站怎么做
@@ -52,7 +52,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site)
 
 `Astro.site` 来自配置里的 `site`。用的是 `pathname`，所以查询串和 URL 片段都不会进 canonical。
 
-分类链接里的 `#tech`／`#旅行` 是 URL 片段，不是新页面，也不是哈希计算结果。浏览器只向服务器请求 `/blogs/`；页面脚本读取 `#` 后的值，从 HTML 已有的全部文章中筛选，再分页。站内分类入口统一生成片段链接；旧 `?category=` 仍可解析，并在启用脚本后转成等价片段，保留原筛选含义、标签和页码。片段和 query 读取后进入同一套筛选逻辑。拾趣的 `/interests/movie/` 则有独立内容和静态 HTML，因此使用路径路由。
+分类链接里的 `#tech`／`#旅行` 是 URL 片段，不是新页面，也不是哈希计算结果。浏览器只向服务器请求 `/blogs/`；页面脚本读取 `#` 后的值，从 HTML 已有的全部文章中筛选，再分页。站内分类入口按 `category` 原值生成名称编码片段链接，不合并别名；旧 `#tech`、`#thought`、`#diary` 仅作 URL 兼容别名，分别精确定位“技术”“思考”“日记”。英文原值 `tech` 等使用 `#category=tech` 形式逃逸。旧 `?category=` 始终按原值精确筛选，并在启用脚本后转成等价片段，保留标签和页码。动态入口、颜色、URL 和精确筛选统一由 `src/utils/blog-browser.js` 负责。拾趣的 `/interests/movie/` 则有独立内容和静态 HTML，因此使用路径路由。
 
 这些分类筛选状态不新增 sitemap 条目；文章 `/blogs/<slug>/` 和拾趣 `/interests/<id>/` 等独立页面由构建路由进入 sitemap。在 `src/content/interests/` 顶层新增满足 schema 的 `.md` / `.mdx` 分类文件后，重新构建会自动生成分类页及其菜单入口、canonical 和 sitemap 条目，无需手写路由或 sitemap；`intro.md`、`recent.md` 不生成分类页。图标可选，不影响路由或收录；拾趣不进入只订阅博客集合的 RSS。
 
@@ -144,7 +144,7 @@ Head 里挂上总目录：
 
 正文通过 Astro 的 `render(post)` 和 Container 渲染，复用现有 Markdown 插件与图片管线；`src/utils/rss-content.js` 将结果转换成阅读器可用的 HTML：图片和链接改成绝对地址，代码保留换行，公式以 LaTeX 源码显示，去掉脚本、样式和交互控件。文末保留「阅读原文」。全文不截断、不限制篇数，也不额外复制封面。页面布局、文稿分类、拾趣、友链独立于 feed 范围：只有博客集合进入 RSS，开发和生产环境均排除草稿；`search: false` 不等于不发布，未标为草稿的文章仍进入源。页面封面卡片、作者头像行、目录和主题不会进入正文 HTML。
 
-新增或修改文章的分类无需修改 RSS：`/rss.xml` 继续订阅全部已发布博客，不按文稿页的片段或 query 筛选；不输出分类元数据，也不提供独立分类订阅源。分类分组、入口及徽标配色不会修改文章永久 URL、GUID、发布日期或正文。新分类中的已发布文章会随重新构建进入同一个源。
+新增或修改文章的分类无需修改 RSS：`/rss.xml` 继续订阅全部已发布博客，不按文稿页的片段或 query 筛选；不输出分类元数据，也不提供独立分类订阅源。原值分类入口及基于原始名称稳定 hash 的徽标配色不会修改文章永久 URL、GUID、发布日期或正文。新分类中的已发布文章会随重新构建进入同一个源。
 
 `src/utils/rss-feed.js` 负责官方包的字段装配、稳定 GUID、语言和 Atom self 链接。文章配置 redirect 时，条目 link 可以指向外站，但 GUID 和正文地址基准仍是本站文章 URL。任意文章转换失败会使生成失败，不会静默降回摘要。
 
@@ -159,7 +159,7 @@ Head 里挂上总目录：
 />
 ```
 
-自己检查：开发服务器打开 `http://127.0.0.1:4321/rss.xml`，应是 XML 而不是 HTML。
+自己检查：开发服务器打开 `http://127.0.0.1:4321/rss.xml`，应是 XML 而不是 HTML，且不含草稿；开发网页列表／正文可预览草稿不意味着 RSS 包含草稿。
 
 ### 官方包负责什么
 

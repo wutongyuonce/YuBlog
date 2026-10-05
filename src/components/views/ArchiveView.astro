@@ -1,7 +1,7 @@
 ---
 import { getGroupedPostsByYear } from '~/utils/data'
 import { withBasePath } from '~/utils/path'
-import { getBlogCategory, getBlogCategoryColors } from '~/utils/blog-browser.js'
+import { getBlogCategoryColors } from '~/utils/blog-browser.js'
 
 const groups = await getGroupedPostsByYear('blogs')
 ---
@@ -18,7 +18,7 @@ const groups = await getGroupedPostsByYear('blogs')
         {group.items.map((item) => {
           const href = item.data.redirect || withBasePath(`/blogs/${item.id}/`)
           const dateTime = item.data.pubDate.toISOString()
-          const category = getBlogCategory(item.data.category)
+          const category = item.data.category
           const colors = getBlogCategoryColors(category)
 
           return (

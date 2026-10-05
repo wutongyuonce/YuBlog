@@ -84,29 +84,25 @@ const noScriptPreviewCss =
                 aria-label={`${label}最近文稿`}
               >
                 <h2>{label} · 最近</h2>
-                {posts.length ? (
-                  <ul>
-                    {posts.map(({ id: postId, data }) => (
-                      <li>
-                        <time datetime={data.pubDate.toISOString()}>
-                          {data.pubDate
-                            .toISOString()
-                            .slice(5, 10)
-                            .replace('-', '.')}
-                        </time>
-                        <a
-                          href={
-                            data.redirect || withBasePath(`/blogs/${postId}/`)
-                          }
-                        >
-                          {data.title}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>还没有发布{label}文稿。</p>
-                )}
+                <ul>
+                  {posts.map(({ id: postId, data }) => (
+                    <li>
+                      <time datetime={data.pubDate.toISOString()}>
+                        {data.pubDate
+                          .toISOString()
+                          .slice(5, 10)
+                          .replace('-', '.')}
+                      </time>
+                      <a
+                        href={
+                          data.redirect || withBasePath(`/blogs/${postId}/`)
+                        }
+                      >
+                        {data.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
               </section>
             ))}
           </div>

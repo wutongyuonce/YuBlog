@@ -1,6 +1,6 @@
 {
   "name": "yublog",
-  "version": "2.4.0",
+  "version": "1.1.0",
   "packageManager": "pnpm@12.6.0",
   "type": "module",
   "private": true,

@@ -2,7 +2,7 @@
 title: FastAPI
 description: 从 ASGI 请求链路、路由、依赖注入到数据库与部署，梳理 FastAPI 的核心用法和运行机制。
 pubDate: 2026-03-18
-category: 技术向
+category: 技术
 tags: [Python, FastAPI]
 toc: true
 search: true

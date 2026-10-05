@@ -1,6 +1,5 @@
 ---
 import { getRecentBlogPosts } from '~/utils/data'
-import { getBlogCategory } from '~/utils/blog-browser.js'
 import { formatRecentPostDate } from '~/utils/recent-post-date.js'
 import { withBasePath } from '~/utils/path'
 
@@ -28,9 +27,7 @@ const posts = await getRecentBlogPosts()
               >
                 {data.title}
               </a>
-              <p class="recent-writing__category">
-                文稿 · {getBlogCategory(data.category)}
-              </p>
+              <p class="recent-writing__category">文稿 · {data.category}</p>
             </div>
             <time
               class="recent-writing__date"

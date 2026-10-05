@@ -2,7 +2,7 @@
 title: Transformer 与 LLM 基础
 description: 从输入准备、自注意力与前馈网络的核心计算，到输出采样，梳理 Transformer 的完整链路、三种主流架构、训练与推理的区别，以及长上下文、MoE 和 thinking 的工程背景。
 pubDate: 2026-07-10
-category: 技术向
+category: 技术
 tags: [Transformer, LLM]
 titleImage: ./_title-images/transformer-llm.webp
 titleImageAlt: 经典 Transformer 架构图，含编码器—解码器结构、多头注意力与缩放点积注意力的展开

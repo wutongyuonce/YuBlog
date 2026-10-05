@@ -5,7 +5,6 @@ import {
   parseBlogQuery,
   serializeBlogQuery,
   selectBlogPage,
-  getBlogCategory,
   getBlogCategoryColors,
   getCategoryPreviews,
   getPageNumbers,
@@ -207,7 +206,7 @@ test('new fragment categories round-trip with tags and pages; legacy queries sti
   const query = parseBlogQuery('?tag=Agent&page=2', '#tech')
   assert.deepEqual(query, { category: '技术', tags: ['Agent'], page: 2 })
   const url = new URL(serializeBlogQuery(query), 'https://example.test/blogs/')
-  assert.equal(url.hash, '#tech')
+  assert.equal(url.hash, '#%E6%8A%80%E6%9C%AF')
   assert.equal(url.searchParams.has('category'), false)
   assert.deepEqual(parseBlogQuery(url.search, url.hash), query)
   assert.equal(parseBlogQuery('?category=技术向', '#diary').category, '日记')
@@ -219,11 +218,11 @@ test('new fragment categories round-trip with tags and pages; legacy queries sti
   assert.equal(parseBlogQuery('?category=旅行', '#%broken').category, '旅行')
 })
 
-test('category grouping combines tools with tech without losing legacy exact filters', () => {
+test('categories filter by exact frontmatter values without merging aliases', () => {
   const entries = [
     { id: 'tools', data: { category: '工具向', tags: ['Agent'] } },
-    { id: 'tech', data: { category: '技术向', tags: ['Agent'] } },
-    { id: 'essay', data: { category: '思考向', tags: [] } },
+    { id: 'tech', data: { category: '技术', tags: ['Agent'] } },
+    { id: 'essay', data: { category: '思考', tags: [] } },
     { id: 'diary', data: { category: '日记', tags: [] } },
     { id: 'custom', data: { category: '自定义', tags: [] } },
   ]
@@ -231,7 +230,7 @@ test('category grouping combines tools with tech without losing legacy exact fil
     selectBlogPage(entries, parseBlogQuery('', '#tech')).items.map(
       ({ id }) => id
     ),
-    ['tools', 'tech']
+    ['tech']
   )
   assert.deepEqual(
     selectBlogPage(entries, parseBlogQuery('?category=工具向')).items.map(
@@ -253,9 +252,8 @@ test('category grouping combines tools with tech without losing legacy exact fil
   )
   assert.equal(
     serializeBlogQuery({ category: '思考', tags: [], page: 1 }),
-    '#thought'
+    '#%E6%80%9D%E8%80%83'
   )
-  assert.equal(getBlogCategory('自定义'), '自定义')
   assert.equal(
     selectBlogPage(entries, parseBlogQuery('?tag=Missing', '#tech')).total,
     0
@@ -272,20 +270,17 @@ test('navigation previews count published groups and show at most four in suppli
     { id: 'diary', data: { category: '日记' } },
     { id: 'custom', data: { category: '自定义' } },
   ]
-  const [tech, thought, diary] = getCategoryPreviews(entries)
-  assert.equal(tech.count, 6)
-  assert.deepEqual(
-    tech.posts.map(({ id }) => id),
-    [0, 1, 2, 3]
-  )
-  assert.equal(diary.count, 1)
-  assert.equal(diary.posts[0].id, 'diary')
-  assert.equal(thought.count, 1)
-  assert.equal(thought.posts[0].id, 'thought')
-  assert.deepEqual(
-    getCategoryPreviews([]).map(({ posts }) => posts),
-    [[], [], []]
-  )
+  const groups = getCategoryPreviews(entries)
+  assert.equal(groups.length, 5, 'raw category names remain separate')
+  for (const category of ['技术向', '工具向']) {
+    const group = groups.find(({ label }) => label === category)
+    assert.equal(group.count, 3)
+    assert.deepEqual(
+      group.posts.map(({ id }) => id),
+      category === '技术向' ? [1, 3, 5] : [0, 2, 4]
+    )
+  }
+  assert.deepEqual(getCategoryPreviews([]), [], 'no fixed empty categories')
 })
 
 test('arbitrary category names share fragment URLs without reserved-name or encoding collisions', () => {
@@ -296,6 +291,8 @@ test('arbitrary category names share fragment URLs without reserved-name or enco
     'thought',
     'diary',
     'category=tech',
+    'toString',
+    '__proto__',
     'C++ / C# & 100%',
     '<script>',
     '👩‍💻',
@@ -335,15 +332,20 @@ test('published custom categories are discovered once with counts and bounded da
       id,
       data: { category: '旅行' },
     })),
-    { id: 'reading', data: { category: '读书' } },
+    { id: 'reading-1', data: { category: '读书' } },
+    { id: 'reading-2', data: { category: '读书' } },
     { id: 'tools', data: { category: '工具向' } },
   ]
   const groups = getCategoryPreviews(entries)
   assert.deepEqual(
-    groups.slice(0, 3).map(({ label }) => label),
-    ['技术', '思考', '日记']
+    groups.map(({ label, count }) => [label, count]),
+    [
+      ['旅行', 9],
+      ['读书', 2],
+      ['工具向', 1],
+    ]
   )
-  assert.equal(groups.length, 5)
+  assert.equal(groups.length, 3)
   const travel = groups.find(({ label }) => label === '旅行')
   assert.equal(travel.count, 9)
   assert.deepEqual(
@@ -363,24 +365,35 @@ test('published custom categories are discovered once with counts and bounded da
   )
 })
 
-test('category colors preserve aliases and assign stable theme colors without CSS injection', () => {
-  for (const [alias, group] of [
-    ['工具向', '技术'],
-    ['思考向', '思考'],
-    ['日记向', '日记'],
-  ]) {
-    assert.deepEqual(getBlogCategoryColors(alias), getBlogCategoryColors(group))
-  }
+test('equally populated categories sort by name regardless of article order', () => {
+  const entries = [{ data: { category: '安' } }, { data: { category: '阿' } }]
+  assert.deepEqual(
+    getCategoryPreviews(entries).map(({ label }) => label),
+    ['阿', '安']
+  )
+  assert.deepEqual(
+    getCategoryPreviews([...entries].reverse()).map(({ label }) => label),
+    ['阿', '安']
+  )
+})
+
+test('raw category names receive stable theme colors without CSS injection', () => {
   const colors = getBlogCategoryColors('旅行')
-  for (const name of ['读书', '旅行', '旅行; color: red', '👩‍💻']) {
+  for (const name of [
+    '技术',
+    '思考',
+    '日记',
+    '读书',
+    '旅行',
+    '旅行; color: red',
+    '👩‍💻',
+  ]) {
     const { light, dark } = getBlogCategoryColors(name)
     for (const color of [light, dark]) {
-      assert.equal(typeof color, 'string')
-      assert.ok(color.trim())
-      assert.doesNotMatch(
+      assert.match(
         color,
-        /[;{}<>]/,
-        'category names cannot inject CSS declarations'
+        /^hsl\(\d+ \d+% \d+%\)$/,
+        'all category names use the generated palette without CSS injection or fixed overrides'
       )
     }
   }

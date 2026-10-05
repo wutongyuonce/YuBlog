@@ -2,7 +2,7 @@
 title: Astro Notes
 description: Astro Grammer & Blog Development
 pubDate: 2026-04-01
-category: 技术向
+category: 技术
 tags: [Astro]
 toc: true
 search: true

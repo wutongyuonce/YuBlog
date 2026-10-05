@@ -2,51 +2,18 @@ import { matchesAllTags, normalizePostTags } from './blog-tag-filter.js'
 
 export const BLOG_PAGE_SIZE = 7
 
-export const BLOG_CATEGORIES = [
-  {
-    id: 'tech',
-    label: '技术',
-    sources: ['技术向', '工具向', '技术', '工具', 'tech'],
-    colors: { light: '#526b80', dark: '#a0b4c6' },
-  },
-  {
-    id: 'thought',
-    label: '思考',
-    sources: ['思考向', '思考', 'thought'],
-    colors: { light: 'var(--accent)', dark: 'var(--accent)' },
-  },
-  {
-    id: 'diary',
-    label: '日记',
-    sources: ['日记', '日记向', 'diary'],
-    colors: { light: '#62785f', dark: '#a9bca1' },
-  },
-]
-
-/** Preserve custom categories outside the explicit navigation groups.
- * @param {string} category
- */
-export function getBlogCategory(category) {
-  return (
-    BLOG_CATEGORIES.find(
-      (group) => group.label === category || group.sources.includes(category)
-    )?.label ?? category
-  )
-}
+// URL compatibility only; these aliases never create or merge categories.
+const LEGACY_CATEGORY_HASHES = { tech: '技术', thought: '思考', diary: '日记' }
 
 /** Date-sorted published posts in; discover categories and keep at most four previews.
- * @template {{data: {category: string, draft?: boolean}}} T
+ * @template {{data: {category: string}}} T
  * @param {T[]} posts
  */
 export function getCategoryPreviews(posts) {
-  const groups = new Map(
-    BLOG_CATEGORIES.map(({ id, label }) => [
-      label,
-      { id, label, count: 0, posts: /** @type {T[]} */ ([]) },
-    ])
-  )
+  /** @type {Map<string, {id: string, label: string, count: number, posts: T[]}>} */
+  const groups = new Map()
   for (const post of posts) {
-    const label = getBlogCategory(post.data.category)
+    const label = post.data.category
     let group = groups.get(label)
     if (!group) {
       group = {
@@ -60,24 +27,17 @@ export function getCategoryPreviews(posts) {
     group.count++
     if (group.posts.length < 4) group.posts.push(post)
   }
-  const knownLabels = BLOG_CATEGORIES.map(({ label }) => label)
-  return [
-    ...Array.from(groups.values()).slice(0, BLOG_CATEGORIES.length),
-    ...Array.from(groups.values())
-      .filter(({ label }) => !knownLabels.includes(label))
-      .sort((a, b) => a.label.localeCompare(b.label, 'zh-Hans-CN')),
-  ]
+  return Array.from(groups.values()).sort(
+    (a, b) => b.count - a.count || a.label.localeCompare(b.label, 'zh-Hans-CN')
+  )
 }
 
 /** Stable theme colors; content order and other categories do not affect the hue.
  * @param {string} category
  */
 export function getBlogCategoryColors(category) {
-  const label = getBlogCategory(category)
-  const known = BLOG_CATEGORIES.find((group) => group.label === label)
-  if (known) return known.colors
   let hash = 0
-  for (const char of label)
+  for (const char of category)
     hash = (Math.imul(hash, 31) + (char.codePointAt(0) ?? 0)) >>> 0
   const hue = hash % 360
   return { light: `hsl(${hue} 32% 36%)`, dark: `hsl(${hue} 32% 72%)` }
@@ -85,9 +45,10 @@ export function getBlogCategoryColors(category) {
 
 /** @param {string} hash */
 function categoryFromHash(hash) {
-  const group = BLOG_CATEGORIES.find(({ id }) => hash === `#${id}`)
-  if (group) return group.label
   if (!hash.startsWith('#')) return ''
+  const legacyId = hash.slice(1)
+  if (Object.hasOwn(LEGACY_CATEGORY_HASHES, legacyId))
+    return LEGACY_CATEGORY_HASHES[legacyId]
   try {
     return decodeURIComponent(
       hash.startsWith('#category=') ? hash.slice(10) : hash.slice(1)
@@ -165,17 +126,14 @@ export function parseBlogQuery(search, hash = '') {
 /** @param {BlogQuery} query */
 export function serializeBlogQuery(query) {
   const params = new URLSearchParams()
-  const group = BLOG_CATEGORIES.find(({ label }) => label === query.category)
   for (const tag of normalizePostTags(query.tags)) params.append('tag', tag)
   if (query.page > 1) params.set('page', String(query.page))
   const search = params.toString()
   const categoryId = encodeURIComponent(query.category)
-  const reserved = BLOG_CATEGORIES.some(({ id }) => id === categoryId)
-  const hash = group
-    ? `#${group.id}`
-    : query.category
-      ? `#${reserved ? 'category=' : ''}${categoryId}`
-      : ''
+  const reserved = Object.hasOwn(LEGACY_CATEGORY_HASHES, categoryId)
+  const hash = query.category
+    ? `#${reserved ? 'category=' : ''}${categoryId}`
+    : ''
   return (search ? `?${search}` : '') + hash
 }
 
@@ -188,10 +146,7 @@ export function serializeBlogQuery(query) {
 export function selectBlogPage(posts, query) {
   const matches = posts.filter(
     ({ data }) =>
-      (!query.category ||
-        data.category === query.category ||
-        (BLOG_CATEGORIES.some(({ label }) => label === query.category) &&
-          getBlogCategory(data.category) === query.category)) &&
+      (!query.category || data.category === query.category) &&
       matchesAllTags(data.tags, query.tags)
   )
   const pageCount = Math.ceil(matches.length / BLOG_PAGE_SIZE)

@@ -11,7 +11,6 @@ import {
   SITE,
 } from '../src/config.ts'
 import {
-  BLOG_CATEGORIES,
   getBlogCategoryColors,
   parseBlogQuery,
 } from '../src/utils/blog-browser.js'
@@ -186,7 +185,28 @@ test('home social links follow author configuration independently of about conte
   )
 })
 
-test('archive shows readable category labels on a single timeline', () => {
+test('list and archive preserve raw category labels on a single timeline', () => {
+  const listedPosts = elements(
+    blogs,
+    (node) => 'dataBlogItem' in node.properties
+  )
+  for (const post of listedPosts) {
+    const category = elements(
+      post,
+      (node) => 'dataBlogCategory' in node.properties
+    )[0]
+    assert.equal(textOf(category).trim(), post.properties.dataCategory)
+    assert.equal(
+      category.properties.dataBlogCategory,
+      post.properties.dataCategory
+    )
+  }
+  assert.deepEqual(
+    elements(archives, (node) => hasClass(node, 'archive-post'))
+      .map((node) => node.properties.dataCategory)
+      .sort(),
+    listedPosts.map((node) => node.properties.dataCategory).sort()
+  )
   assert.equal(
     elements(archives, (node) => hasClass(node, 'archive-timeline')).length,
     1
@@ -255,7 +275,7 @@ test('navigation previews count current categories and only link published artic
   const archivedPosts = elements(archives, (node) =>
     hasClass(node, 'archive-post')
   )
-  const counts = new Map(BLOG_CATEGORIES.map(({ label }) => [label, 0]))
+  const counts = new Map()
   for (const post of archivedPosts) {
     const category = post.properties.dataCategory
     counts.set(category, (counts.get(category) ?? 0) + 1)
@@ -283,7 +303,14 @@ test('navigation previews count current categories and only link published artic
     assert.equal(textOf(spans[0]), label)
     assert.equal(Number(textOf(spans[1])), counts.get(label))
   }
-  assert.deepEqual(seen, new Set(counts.keys()))
+  assert.deepEqual(
+    [...seen],
+    [...counts.keys()].sort(
+      (a, b) =>
+        counts.get(b) - counts.get(a) || a.localeCompare(b, 'zh-Hans-CN')
+    ),
+    'only published categories appear, ordered by count then name'
+  )
   for (const preview of previews) {
     const links = elements(preview, (node) => node.tagName === 'a')
     assert.ok(links.length <= 4)

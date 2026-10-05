@@ -2,7 +2,7 @@
 import { Image } from 'astro:assets'
 import Link from '~/components/base/Link.astro'
 import { withBasePath } from '~/utils/path'
-import { serializeBlogQuery, getBlogCategory } from '~/utils/blog-browser.js'
+import { serializeBlogQuery } from '~/utils/blog-browser.js'
 import type { GroupedBlogItem } from '~/utils/data'
 interface Props {
   item: GroupedBlogItem
@@ -14,7 +14,7 @@ const {
 } = Astro.props
 const image = data.titleImage
 const alt = data.titleImageAlt
-const category = getBlogCategory(data.category)
+const category = data.category
 const href = data.redirect || withBasePath(`/blogs/${id}/`)
 ---
 
