@@ -32,3 +32,6 @@ pnpm-debug.log*
 .pnpm-store
 
 .pi
+
+# obsidian vault config
+.obsidian/

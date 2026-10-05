@@ -35,6 +35,14 @@ order: 0
 
 * deepseek API
 
+### 会员订阅
+
+* qq 音乐
+* apple music
+* b 站年会
+* vpn
+* netflix：已停
+
 ### 我的 Mac 软件
 
 - **笔记、日程管理：** Typora、Obsidian、飞书、语雀、滴答清单、Pomodoro
