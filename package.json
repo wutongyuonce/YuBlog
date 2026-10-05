@@ -80,7 +80,7 @@
     "remark-math": "^6.0.0",
     "sharp": "^0.35.0",
     "subset-font": "^2.9.0",
-    "typescript": "^5.9.3",
+    "typescript": "^7.0.0",
     "typescript-eslint": "^8.70.1",
     "unist-util-visit": "^5.1.0",
     "unocss": "66.10.5",
