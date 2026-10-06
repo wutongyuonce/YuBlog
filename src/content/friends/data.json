@@ -194,5 +194,14 @@
     "category": "推荐",
     "siteLabel": "喜欢就买 不行就分",
     "order": 24
+  },
+  {
+    "id": "nekro-sekai",
+    "name": "Nekro’s SEKAI",
+    "link": "https://www.nekro.top/",
+    "avatar": "https://avatars.githubusercontent.com/u/90670998?v=4",
+    "desc": "どんな結末がお望みだい？",
+    "category": "推荐",
+    "order": 25
   }
 ]
