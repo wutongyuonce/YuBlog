@@ -9,13 +9,13 @@ order: 4
 :::card{title="影之刃零" href="https://zh.wikipedia.org/wiki/影之刃零" label="游戏"}
 ![影之刃零海报](./game/shadowblade.jpg)
 
-准备玩。
+摩拳擦掌 ing。
 :::
 
 :::card{title="巫师3重制" href="https://zh.wikipedia.org/wiki/巫师3：狂猎" label="游戏"}
 ![巫师3重制海报](./game/witcher3.jpg)
 
-准备玩重制版。
+准备试试重制版。
 :::
 
 :::card{title="星露谷物语" href="https://zh.wikipedia.org/wiki/星露谷物语" label="游戏"}
@@ -35,25 +35,25 @@ order: 4
 :::card{title="无畏契约" href="https://zh.wikipedia.org/wiki/无畏契约" score="4.5" label="游戏"}
 ![无畏契约海报](./game/valorant.png)
 
-五对五的战术射击。枪法要准，技能和报点也得一起练。
+两三个赛季没打了，铂钻是我老家。
 :::
 
 :::card{title="反恐精英：全球攻势" href="https://zh.wikipedia.org/wiki/反恐精英：全球攻势" score="4.5" label="游戏"}
 ![反恐精英：全球攻势海报](./game/csgo.jpg)
 
-拆包和架枪的老游戏。经济局和那一声脚步仍然最纯粹。
+爱看点绿龙 Spirit。
 :::
 
 :::card{title="Apex 英雄" href="https://zh.wikipedia.org/wiki/Apex_英雄" score="4.5" label="游戏"}
 ![Apex 英雄海报](./game/apex.jpg)
 
-英雄大逃杀。滑铲、复活和三人配合比单人吃鸡更要紧。
+上大学玩的第一个 fps 游戏，抛开 EA 不谈最好玩的 fps 游戏😂。
 :::
 
 :::card{title="赛博朋克 2077" href="https://zh.wikipedia.org/wiki/賽博朋克2077" score="4.5" label="游戏"}
-![赛博朋克 2077海报](./game/cp2077.jpg)
+![赛博朋克 2077 海报](./game/cp2077.jpg)
 
-夜之城可以逛很久。主线有坑，城市和人物还是值回票。
+边缘行者入的坑。
 :::
 
 :::card{title="黑神话：悟空" href="https://zh.wikipedia.org/wiki/黑神话：悟空" score="5" label="游戏"}
@@ -63,13 +63,13 @@ order: 4
 :::
 
 :::card{title="小小梦魇 2" href="https://zh.wikipedia.org/wiki/小小梦魇2" score="5" label="游戏"}
-![小小梦魇 2海报](./game/little-nightmares.jpg)
+![小小梦魇 2 海报](./game/little-nightmares.jpg)
 
-两个小孩穿过一张张坏掉的画。吓人，但同伴那只手是暖的。
+第一个玩的带点恐怖的游戏？很好玩，故事也很有意思。
 :::
 
 :::card{title="荒野大镖客：救赎 2" href="https://zh.wikipedia.org/wiki/荒野大镖客：救赎2" score="4.5" label="游戏"}
-![荒野大镖客：救赎 2海报](./game/rdr2.jpg)
+![荒野大镖客：救赎 2 海报](./game/rdr2.jpg)
 
 一个帮派在西部的最后几年。骑马慢，亚瑟的结局不慢。
 :::
