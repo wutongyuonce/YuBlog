@@ -53,7 +53,7 @@ See the [content skill](blog-content-publisher-skill/SKILL.md), [image pipeline]
 
 ## Run
 
-Node.js `22.12+` (we recommend `24`, as used in CI), and `pnpm@12.6.0`.
+Node.js `22.12+` (we recommend `24`, as used in CI), and `pnpm@12.9.1`.
 
 ```bash
 pnpm install
