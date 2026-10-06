@@ -4,7 +4,8 @@ description: >
   维护 YuBlog（Wutong-Yu Astro 站）所有可改内容。按页面改：文稿与配图、首页近期笔墨和标签/归档所依赖的文章元数据、
   项目 JSON、关于作者介绍、拾趣分类（可新增、图标可选）与个人社交、友链 JSON、顶栏导航与顶栏 GitHub、友链申请模板文案。
   触发：发博客、改文章、改封面、改 titleImage、改分类、改关于、改拾趣、新增拾趣分类、给拾趣分类补图标、改设备、改动漫、改影视、改游戏、改书、改 Kpop、改友链、改项目、改导航、改顶栏 GitHub、改关于页社交、改名片站名。
-  不要用来做布局/CSS 重构；那些看 docs/项目解析.md。
+  可用 gallery/figure 语法排版正文；写完或改完含这些布局的博客默认启动或复用同一 worktree 的 dev 并核实文章预览链接。
+  不要用来做布局实现/CSS 重构；那些看 docs/项目解析.md。
 ---
 
 # YuBlog 内容维护
@@ -28,7 +29,7 @@ description: >
 | 个人社交（名字、链接、图标） | 首页与关于 | `config.ts` 的 `AUTHOR_LINKS`；若 `about.md` 也展示同一联系方式，再同步该字段 |
 | 站点标题、域名 | 全站 SEO | `src/config.ts` 的 `SITE` |
 
-本 skill 管理内容与配置；布局、CSS 和交互逻辑按 `docs/项目解析.md` 的权威表处理，不混入一次内容更新。
+本 skill 管理内容与配置，可以用现有 gallery／figure 语法排版正文；布局实现、CSS 和交互逻辑按 `docs/项目解析.md` 的权威表处理，不混入一次内容更新。
 
 读 schema，再读同目录一份现成文件当样例。
 
@@ -100,6 +101,54 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 - 视频旁建议补一行文字链接（否则订阅者在 RSS 里只看到空白），指向同一个文件即可：`[本视频](./demo.mp4)`。指向本地媒体文件的链接会和 `src` 一起被改写。
 - 下面这些会**构建期报错**（带文件路径与行号），不会静默 404：原生 `<img>` 写相对路径（改用 Markdown 语法；处于 `.mdx` 页面或同一路径也被 Markdown 图片语法引用时例外，见 SPEC）、`<video poster="…">` 写相对路径（poster 是图片，不进管线也不被镜像，请把图片放进 `public/`、不要放 `public/_media/`，再用 `/…` 引用）、`data:` 内联内容（先存成文件）、`file:` 等浏览器打不开的协议、相对路径逃出 `src/` 目录、媒体文件不存在或指向的是目录／符号链接、扩展名不在支持列表、相对路径里含 `#` 或 `?`（文件名与目录名都算，本站取不到，改名即可）。报错给出的是**源文件**行号与作者写的原始路径，可以直接照着改。
 - RSS 会删掉 `<video>`／`<iframe>`／`<style>`／`class`，公式降级为 TeX 源码；视频旁的文字链接会保留。
+
+---
+
+## 正文图片排版选择
+
+先读正文与 [图片管线指南](../docs/Astro图片管线指南.md)，按内容选最简单的排版，不为了展示功能把全部图片改成相册：单张需要看清细节用普通 Markdown 图；需要并排对照用 grid；一组按顺序浏览的图片用 scroll；一张图配连续正文用 figure。保持作者图片与文字的源顺序，不虚构说明。
+
+```md
+:::gallery
+![第一张](./文章-img/a.png)
+
+![第二张](./文章-img/b.png)
+:::
+
+:::gallery{layout="grid" columns="3"}
+![第一张|w330](./文章-img/a.png) ![第二张|w330](./文章-img/b.png)
+
+![第三张|w330](./文章-img/c.png)
+:::
+
+:::gallery{layout="scroll"}
+![第一张](./文章-img/a.png)
+
+![第二张](./文章-img/b.png)
+:::
+
+:::figure{side="left"}
+![图示|w240](./文章-img/detail.png)
+
+至少一块正文，桌面围绕图片阅读。
+:::
+```
+
+- gallery 仅允许 `layout`／`columns`。layout 只可 grid／scroll，默认 grid；grid 默认两列，columns 只可 `2`／`3`；scroll 不接受 columns。至少一张独立 Markdown 直接图片，可同段多图但段中只能有图片和空白。文字、列表、引用式图片、链接包图、HTML／MDX 图都不作为相册项，说明写在相册外。
+- figure 仅允许 side，left／right，默认 right。第一段恰好一张直接图片，后面至少一块正文。gallery／figure 不能嵌套或相互嵌套；非法属性、属性值和结构会 build fail 并带源位置，不删图规避报错。
+- 图片仍用相对源路径并走 Astro，原有 `|w` 含义不变；显式像素宽度用标记，容器响应式尺寸由既有 CSS 管理。660px 版心内不 breakout、不裁切；600px 及以下 grid 单列、figure 上下。scroll 全部图片静态存在，横滚 snap 加 JS 箭头／圆点，不自动播放，无 JS 仍可阅读和横滚。
+- 普通 Markdown 正文图可点图或用独立按钮在原生 dialog 放大；Esc／遮罩／关闭按钮退出，恢复焦点与滚动锁。作者图片链接仍跳转，另有链接外放大按钮；`titleImage` 头图／文稿列表缩略图和头像不属于此范围，`:::card` 配图仍可放大。原尺寸图在 inert template 内仍由 Astro 解析，打开前不加载，不手写资源 URL。RSS 沿用 sanitizer 去 template／样式／控件，剩余全部图文按源顺序降级。
+- 不为内容排版引入依赖、轮播库、第二解析器、预览后台、preview manager 脚本或测试框架；不修改交互 authority，组件与资源职责见 `docs/项目解析.md` §4.9。
+
+### 含布局博客的自动 dev 预览
+
+写完或改完博客后，读文章正文判断是否实际包含 gallery／figure；普通代码块里的示例不是实际布局，不为判断增加正则脚本。实际含布局时，默认执行以下步骤，不必再要求用户手动启动：
+
+1. 确认本次编辑的仓库／worktree 绝对路径，后续命令都在该目录执行。先查平台可用的长期 pane／task 和服务进程；复用 dev 前必须确认服务进程 cwd 是这个 worktree（例如用平台任务信息或 `lsof -a -p <pid> -d cwd`），不能只凭端口、页面标题或仓库名，也不能复用其他 worktree 的服务。
+2. 若没有同 worktree 的 dev，通过平台可用的后台 pane／task 在该目录运行 `pnpm dev`（需要打开浏览器时可用 `pnpm dev --open`；pnpm 不在 PATH 而 Corepack 可用时用 `corepack pnpm dev`），保留日志并让服务持续运行供用户查看；不强绑定 Herdr，不新增进程管理脚本。端口占用时让 Astro 选择可用端口，不终止别人的服务，不依赖固定 4321。
+3. 从该服务日志核实真实 `Local` 地址，按实际 base 和文章路由构造预览 URL。请求该文章（如 `curl --fail '<实际文章 URL>'`），确认 HTTP 成功且返回目标文章而非错误页，再给用户链接；不能仅凭启动命令退出码、首页可达或猜测 slug 称已预览。博客草稿在 dev 可读，开发／生产 RSS 仍排除草稿。
+4. 用户明确禁止启动、环境不能保持后台进程或启动／请求失败时，报告“未预览”及原因，不给未经验证的链接、不称已验证；已经有同 worktree 服务时也遵守用户限制。成功预览只证明 dev 页面可访问，不代替 `pnpm build` 或交互／资源验收。
+5. 交接包含实际文章预览链接、同 worktree 服务状态及仍未验证的项目；不把临时运行日志、端口或检查快照写进仓库文档。
 
 ---
 
@@ -233,6 +282,8 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --frie
 改完先跑 `pnpm check`；文章或友链再跑上面的 `validate_content.py`，它只检查基础元数据，**不完整验证 schema、图片或封面**，并拦住正文里指向 `.md`／`.mdx` 的相对链接；站内链接能否打开、锚点是否有落点由 `pnpm test:built-markdown` 判定。
 
 发文章涉及订阅时，构建后运行 `pnpm test:built-markdown` 核对全文与资源。列表／内容结构或拾趣分类／图标修改运行 `pnpm test:built-restructure`；拾趣正文修改运行 `pnpm test:built-markdown`；分页修改运行 `pnpm test:built-pagination`。构建测试跟随当前配置和内容，不要求保留具体文章、友链名单、拾趣分类数量或观看状态。
+
+含实际 gallery／figure 布局的博客还要按上面的自动 dev 预览步骤交付文章链接，不能以 dev 预览替代上述内容构建校验。布局实现的单测与浏览器检查入口见 `docs/项目解析.md` §4.9，不要求每次发文章重复执行整套交互测试。
 
 文章、关于、拾趣、项目、友链等内容数据不记入 `CHANGELOG.md`。只有这次改动同时改变了网页结构、交互或代码时，才把那部分结构或代码结果写入「未发布」；未发布条目不填写已发布版本或日期。README、SPEC 和指南保持当前状态，不添加开发过程记录。
 

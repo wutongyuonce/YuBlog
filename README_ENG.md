@@ -36,6 +36,8 @@ Content targets 660px. Navigation uses the same width variable and responsive co
 
 Covers use `titleImage`/`titleImageAlt` under `src/content/blogs/_title-images/`. Body images belong inside the article directory or a child directory; reference them relatively without traversing upward. Interest images live under `src/content/interests/<id>/`. The interests index note lives in `intro.md`; home media lives in `recent.md`. Neither creates a subpage or menu item. Both use the shared Markdown pipeline and `prose.css`. Consecutive `:::card` entries form responsive grids (up to two columns at the current shell width); headings separate groups and share `.markdown-content` typography. Author scores are optional regardless of watching/playing status; omitted scores are not invented. About content is maintained only in `src/content/about/about.md`.
 
+Body images support `:::gallery` (a two-column grid by default, three columns or `layout="scroll"`) and `:::figure` (right-side text wrapping by default, optionally left). Ordinary Markdown body images have click-to-zoom and a separate zoom button; authored image links still navigate. Images retain Astro processing and the existing `|w` marker. Layouts stay inside the 660px reading column without cropping; at 600px or below, grids become single-column and figures stack. Reading and horizontal scrolling work without JavaScript; RSS retains images and text in source order.
+
 See the [content skill](blog-content-publisher-skill/SKILL.md), [image pipeline](docs/Astro图片管线指南.md), [site behavior SPEC](docs/站点行为%20SPEC.md), [architecture](docs/项目解析.md) and [full-content RSS SPEC](docs/RSS%20全文支持%20SPEC.md).
 
 ## Stack
@@ -57,8 +59,10 @@ Node.js `22.12+` (we recommend `24`, as used in CI), and `pnpm@12.9.1`.
 
 ```bash
 pnpm install
-pnpm dev
+pnpm dev --open            # start the dev server and open the browser
 ```
+
+Use the actual `Local` URL reported in the log, not a fixed port such as 4321; never stop someone else's service to free a port. After writing or editing a blog containing image layouts, the content skill starts or reuses `pnpm dev` in the **same worktree** by default, verifies the process cwd before reuse, and confirms a successful article HTTP response before sharing the preview link. If startup is prohibited or unavailable, report that no preview was performed. Drafts are readable in dev but excluded from RSS; dev preview does not replace a production build.
 
 ```bash
 pnpm check                 # Astro type and content checks
@@ -73,6 +77,7 @@ pnpm test:blog-tags        # tag AND filtering
 pnpm test:blog-stats       # readable word counts and formatting
 node --test test/blog-heatmap.test.mjs # Shanghai calendar and yearly totals
 node --test test/remark-media-card.test.mjs # Markdown cards
+node --test test/remark-image-layouts.test.mjs # image layout syntax, structure and positioned errors
 pnpm test:recent-post-date # recent-post dates
 pnpm test:progress-stats   # day-of-year and progress
 pnpm test:cjk-emphasis     # emphasis next to CJK punctuation
@@ -116,6 +121,6 @@ The skill lives at `blog-content-publisher-skill/SKILL.md`.
 - Put it in your agent’s skills directory.
 - Say which page to change, e.g. new post, edit equipment, add an interest category, add a category icon, add a friend link, change the navbar GitHub link, or edit About socials. The agent should match the page table first, then edit files.
 - It edits Markdown / JSON / site configuration in `src/config.ts`. New blog posts keep `draft: true` unless you asked to publish; this does not apply to interests. Do not commit, push or deploy without explicit authorization.
-- Do not use this skill for structure, CSS, or pagination logic — use `docs/项目解析.md`.
+- Use the existing `gallery` / `figure` syntax to arrange body content and get a same-worktree dev preview by default. For layout implementation, CSS, or pagination logic, use `docs/项目解析.md`.
 
 [MIT](LICENSE)

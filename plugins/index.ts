@@ -6,6 +6,7 @@ import remarkDirective from 'remark-directive' // 支持通用指令语法（::n
 import remarkDirectiveSugar from 'remark-directive-sugar' // 提供 :badge、:link、:image 等内置指令
 import remarkImageWidth from './remark-image-width' // 正文图片宽度标记（|w353）
 import remarkMediaCard from './remark-media-card' // :::card 封面卡片
+import remarkImageLayouts, { rehypeImageSources } from './remark-image-layouts' // 相册、绕图与放大图源
 import remarkMath from 'remark-math' // 解析数学公式（$...$ 和 $$...$$）
 import remarkReadingTime from './remark-reading-time' // 计算文章阅读时间（自定义）
 
@@ -159,6 +160,9 @@ export const remarkPlugins: RemarkPlugins = [
 
   // 6. 封面卡片。必须在指令解析和图片宽度标记之后，封面图片才能继续进图片管线。
   remarkMediaCard,
+
+  // 7. 布局必须保留图片节点；放大图源与缩略图一起交给 Astro 解析。
+  remarkImageLayouts,
 ]
 
 // ==================== 导出 Rehype 插件配置 ====================
@@ -167,6 +171,7 @@ export const rehypePlugins: RehypePlugins = [
   //    文本节点，下面所有插件 visit 的都是 element，看不见它们。
   //    Astro 内部管线末尾还会再跑一次 rehype-raw，此时已无 raw 节点，是空操作。
   rehypeRaw,
+  rehypeImageSources, // 生成的大图 template 需保持 Astro 图片 visitor 可见
 
   // 1. 正文媒体引用：相对路径的视频/音频改写为 /_media/…，无法服务的引用直接报错。
   //    必须在 rehype-raw 之后，否则写在 HTML 里的 src 还只是一串文本。

@@ -1,0 +1,8 @@
+<image-interactions hidden></image-interactions>
+
+<script>
+  import { ImageInteractions } from '~/utils/image-interactions'
+
+  if (!customElements.get('image-interactions'))
+    customElements.define('image-interactions', ImageInteractions)
+</script>

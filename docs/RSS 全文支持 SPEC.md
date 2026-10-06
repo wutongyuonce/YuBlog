@@ -88,6 +88,7 @@ Expressive Code 已有输出用 `.ec-line` 包裹每一行，部分换行仅由�
 ### 4.2 图片、地址与清洗
 
 - 每张正文图片保留 `src`、`alt`、有效尺寸和可选 `title`；不追加封面。使用 Astro 渲染后的图片地址，不从源 Markdown 路径猜产物名称。
+- `gallery`／`figure` 与普通正文图的放大包装沿用既有 sanitizer 去掉 inert `template`、样式及控件，剩余全部图片和文字按源顺序降级，不新增 RSS 图片布局解析器。
 - 去掉 `srcset`、`sizes`、懒加载属性与样式，仅保留一个有效 `src`。有 `picture` 时保留其中的 `img`，不维护第二套响应式图片策略。
 - HTTP(S) 绝对地址保持可用；`//host/path` 按站点协议解析；相对 `href` 和 `#fragment` 基于本站文章 URL 解析。渲染后的根路径资源基于站点 origin 解析，不重复追加 base。
 - `a.href` 允许 HTTP(S)、`mailto:`、`tel:`；图片只允许 HTTP(S)。不允许 `javascript:`、`data:`、`file:` 等。非法链接移除地址并保留文字；无法获得合法 `src` 的正文图片明确失败，不能假装图片完整。

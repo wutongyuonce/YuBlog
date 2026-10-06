@@ -50,9 +50,69 @@ src/content/interests/
 
 `|w330` 只表示 330 像素，不接受百分比。桌面正文列宽 660px，半宽可写 `|w330`；窄屏按实际列宽限制。标记由 `plugins/remark-image-width.ts` 从 alt 剥离，转成图片节点的 `width`。
 
-必须用 `width`，不要用 CSS 限宽。管线按 `width` 生成 `srcset` 和 `sizes`；只写 CSS 时浏览器仍按原图宽度选图。不写标记时，管线按原图宽度出变体，显示上仍会被列宽限制。源图比目标宽度更宽时才需要标记；图本身已经更窄时不必写。
+作者显式指定像素宽度时使用 `|w`，不要只用 CSS 代替标记：管线按节点 `width` 生成 `srcset` 和 `sizes`；只写 CSS 时浏览器仍按原图宽度选图。不写标记时，管线按原图宽度出变体，显示上仍会被列宽限制。源图比目标宽度更宽时才需要标记；图本身已经更窄时不必写。
+
+这不禁止布局容器的响应式 CSS：gallery／figure 在版心、网格单元或窄屏中收窄显示尺寸并保持宽高比，不裁切图片；容器尺寸与作者显式像素宽度是不同职责，布局不改变原有 `|w` 语义。
 
 **不要用 `style="zoom:50%"`**（Typora 拖拽缩放、LeetCode 等站点粘贴时自带）。它按原图的百分比缩放：窄屏上会先被 `max-width:100%` 限制、再缩一半，尺寸不可预测。尺寸一律写进 alt 的 `|w` 标记。
+
+## 正文图片布局
+
+### 网格相册
+
+默认 grid／两列，可以省略属性；三列用 `columns="3"`。`columns` 只接受 `2` 或 `3`，不是字面量 `2|3`。
+
+```md
+:::gallery
+![第一张](./文章-img/a.png)
+
+![第二张](./文章-img/b.png)
+:::
+
+:::gallery{layout="grid" columns="3"}
+![第一张|w330](./文章-img/a.png) ![第二张|w330](./文章-img/b.png)
+
+![第三张|w330](./文章-img/c.png)
+:::
+```
+
+相册至少一张图，只接受独立 Markdown 直接图片（`![说明](路径)`），可以同段多图，段内除图片外只能有空白。不接受文字说明、列表、引用式图片（`![说明][id]`）、链接包图或 HTML／MDX 图片；说明写在相册外。
+
+### 横滚相册
+
+```md
+:::gallery{layout="scroll"}
+![第一张](./文章-img/a.png)
+
+![第二张](./文章-img/b.png)
+:::
+```
+
+scroll 不接受 `columns`。全部图片静态存在，原生横滚与 scroll snap 无 JS 也可用；启用 JS 后有箭头和圆点，当前位置跟随实际滚动，无自动播放。gallery 只允许 `layout`／`columns`，不能加标题、类名等额外属性。
+
+### 图文绕排
+
+```md
+:::figure{side="left"}
+![图示|w240](./文章-img/detail.png)
+
+这段正文在桌面围绕左侧图片阅读。
+
+后面可以继续写正文块。
+:::
+```
+
+figure 只允许 `side="left"` 或 `side="right"`，省略属性默认 right。第一段恰好一个直接图片，后面至少一块正文；不把图片塞进正文段，也不先写文字再放图。
+
+gallery／figure 不能嵌套或相互嵌套。非法属性、属性值或结构使 build 失败并带源位置，不静默删图。普通代码块里的写法是示例，不作为实际布局。
+
+所有布局保持 660px 版心、不 breakout、不裁切。600px 及以下 grid 单列，figure 图片在前、正文在后；scroll 仍横滚。图片路径和 Astro 处理规则不变。
+
+## 普通正文图的大图
+
+普通 Markdown 正文图（包括 gallery／figure）启用 JS 后可点图或用独立放大按钮打开原生 dialog。作者用 `[![说明](./文章-img/a.png)](https://example.com/)` 写的图片链接仍跳转，放大按钮放在链接外；混合文字的图片链接 `[![图](./photo.jpg) 文字](url)` 同样保留跳转，放大按钮位于整个链接之后；这种链接包图可用于普通正文，但不满足 gallery／figure 首图的直接图片约束。Esc、遮罩或关闭按钮退出后恢复焦点与打开前滚动锁。`titleImage` 的文章头图／文稿列表缩略图和站点头像不属于放大范围；`:::card` 配图属于正文，仍支持放大。
+
+`plugins/remark-image-layouts.ts` 在 `remarkMediaCard` 后生成布局和 image-view 包装；同模块的 `rehypeImageSources` 在 HTML 解析后保持 template 内大图对 Astro 图片 visitor 可见；每个普通 Markdown 正文图旁的 inert template 内有原尺寸 img，仍从图片节点交给 Astro 解析，不是作者手写 `<img>` 或资源 URL。可见图片沿用 `|w`；大图不沿用缩略图宽度，Astro 处理的大图副本只生成一个原尺寸版本，不生成无法使用的响应式变体；打开前不加载、不预加载。浏览器唯一交互属主是 `src/utils/image-interactions.ts`，widget 在 BaseLayout 只接线；关闭／disconnect 负责清理，并释放 `misc.ts` 的共享滚动锁。本地图继续走 Astro；远程图保持既有管线策略，不为放大新增外链抓取。
 
 ## 页面与 RSS 渲染
 
@@ -65,7 +125,8 @@ src/content/interests/
 
 `titleImage` 用 schema 工厂提供的 `image().optional()`；不要从 `astro:content` 导入独立 `image`。文章页独立 h1 在封面之前，封面内的重复标题、描述、作者行只属于页面，不复制到 RSS。
 
-RSS endpoint 只渲染集合 `Content`，复用相同图片解析；`rss-content.js` 把图片 `src` 转为绝对 URL，去掉 `srcset`／`sizes`／懒加载等站点属性，只留一个 `src`（即与声明宽度匹配的那一档，`width`／`height` 保留）。feed 中引用的本地资源必须在 `dist/` 存在，`pnpm test:built-markdown` 验证完整文章与资源，不生成另一套图片。
+RSS endpoint 只渲染集合 `Content`，复用相同图片解析；`rss-content.js` 把图片 `src` 转为绝对 URL，去掉 `srcset`／`sizes`／懒加载等站点属性，只留一个 `src`（即与声明宽度匹配的那一档，`width`／`height` 保留）。gallery／figure 和普通正文图沿用既有 sanitizer 去掉 template、样式和控件，剩余全部可见图片与文字按源顺序输出，不复刻布局、不增加 RSS 解析器。feed 中引用的本地资源必须在 `dist/` 存在，`pnpm test:built-markdown` 验证完整文章与资源，不生成另一套图片。
+
 
 ## 硬规则
 
@@ -87,4 +148,6 @@ RSS endpoint 只渲染集合 `Content`，复用相同图片解析；`rss-content
 - RSS 包含正文图片，不额外复制文章封面和页面布局。`scripts/gen-og-cover.mjs` 只生成 `public/og/default.png`。
 - 站点图标、头像、字体留在 `public/`。友链头像是远程 URL。
 
-模块归属见 `docs/项目解析.md` §4.8。作者步骤见 `blog-content-publisher-skill/SKILL.md`。
+布局验证入口为 `test/remark-image-layouts.test.mjs`（语法、结构、带位置失败）和 `scripts/verify-image-layouts.mjs`（浏览器用户行为、Astro 模板大图资源及打开前无加载，不锁定视觉像素），最终还需 check／test／build／built 检查；这里只规定验收，不表示已通过。
+
+模块归属见 `docs/项目解析.md` §4.8–4.9。作者步骤见 `blog-content-publisher-skill/SKILL.md`。
