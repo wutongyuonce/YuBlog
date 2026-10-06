@@ -118,4 +118,4 @@ The skill lives at `blog-content-publisher-skill/SKILL.md`.
 - It edits Markdown / JSON / site configuration in `src/config.ts`. New blog posts keep `draft: true` unless you asked to publish; this does not apply to interests. Do not commit, push or deploy without explicit authorization.
 - Do not use this skill for structure, CSS, or pagination logic — use `docs/项目解析.md`.
 
-MIT
+[MIT](LICENSE)

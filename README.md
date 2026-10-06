@@ -120,4 +120,4 @@ README、SPEC 和操作指南描述当前实现。网页结构、交互和代码
 - 它会改 Markdown / JSON / `src/config.ts` 里的站点信息；新博客文章在用户没说发布时保持 `draft: true`（不适用于拾趣）；没有明确授权就不要 commit、push 或部署。
 - 改结构、CSS、分页算法时不要走这个 skill，用 `docs/项目解析.md`。
 
-MIT
+[MIT](LICENSE)
