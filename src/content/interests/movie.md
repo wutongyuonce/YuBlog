@@ -4,6 +4,12 @@ description: 银幕里的故事
 order: 2
 ---
 
+:::card{title="生化危机：爆发夜" href="https://zh.wikipedia.org/wiki/恶灵古堡：爆发夜" score="3" label="电影"}
+![生化危机：爆发夜海报](./movie/resident-evil.jpg)
+
+2026 年重启的生化危机。看到最后快被气死了 hhh
+:::
+
 :::card{title="疯狂的石头" href="https://zh.wikipedia.org/wiki/疯狂的石头" score=" 4.5" label="电影"}
 ![疯狂的石头海报](./movie/crazy-stone.jpg)
 
