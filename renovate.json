@@ -3,7 +3,18 @@
   "extends": ["config:recommended"],
   "timezone": "Asia/Shanghai",
   "dependencyDashboard": true,
+  "minimumReleaseAge": "1 day",
   "packageRules": [
+    {
+      "description": "TypeScript 7 is outside the range supported by typescript-eslint. Hold until a dedicated tooling migration.",
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<7.0.0"
+    },
+    {
+      "description": "Keep KaTeX styles on the same minor as the renderer bundled by rehype-katex. Upgrade both together in a dedicated migration.",
+      "matchPackageNames": ["katex"],
+      "allowedVersions": "<0.17.0"
+    },
     {
       "description": "Astro 7 removes experimental flags this site still uses and moves markdown plugin config. Hold majors until a dedicated migration.",
       "matchPackageNames": ["astro", "/^@astrojs\\//"],
