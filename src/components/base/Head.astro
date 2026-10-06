@@ -99,11 +99,21 @@ const webPageData = {
 <!-- Initialize as inline scripts for faster response, avoiding FOUC  -->
 <script is:inline data-astro-rerun>
   ;(() => {
-    const storedTheme = localStorage.getItem('theme')
+    let storedTheme = null
+    try {
+      storedTheme = window.localStorage.getItem('theme')
+    } catch {
+      // 禁止本地存储时仍按系统主题显示。
+    }
     const prefersDark = window.matchMedia(
       '(prefers-color-scheme: dark)'
     ).matches
-    const theme = storedTheme || (prefersDark ? 'dark' : 'light')
+    const theme =
+      storedTheme === 'dark' || storedTheme === 'light'
+        ? storedTheme
+        : prefersDark
+          ? 'dark'
+          : 'light'
     const themeColor = theme === 'dark' ? '#050505' : '#fff'
 
     if (theme === 'dark') {
@@ -111,16 +121,17 @@ const webPageData = {
     } else {
       document.documentElement.classList.remove('dark')
     }
-    window.localStorage.setItem('theme', theme)
-
     const colorScheme = document.querySelector("meta[name='color-scheme']")
-    colorScheme?.setAttribute(
-      'content',
-      theme === 'dark' ? 'dark light' : 'light dark'
-    )
+    colorScheme?.setAttribute('content', theme === 'dark' ? 'dark' : 'light')
 
     const themeColorMeta = document.querySelector("meta[name='theme-color']")
     themeColorMeta?.setAttribute('content', themeColor)
+
+    try {
+      window.localStorage.setItem('theme', theme)
+    } catch {
+      // 保存失败不影响当次主题；后续导航或刷新不保证保留选择。
+    }
   })()
 </script>
 

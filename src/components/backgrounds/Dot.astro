@@ -9,6 +9,7 @@
 <script>
   import { sizeCanvasForViewport } from '~/utils/canvas-size.js'
   import { createReducedMotionGate } from '~/utils/reduced-motion.js'
+  import { observeTheme } from '~/utils/theme-observer.js'
 
   class BgDotElement extends HTMLElement {
     canvas: HTMLCanvasElement | null = null
@@ -17,6 +18,7 @@
     lastFrameAt = 0
     points: { x: number; y: number; opacity: number }[] = []
     cleanupResize: (() => void) | null = null
+    cleanupTheme: (() => void) | null = null
     motionGate: { start: () => void; stop: () => void } | null = null
 
     static readonly SCALE = 200
@@ -57,6 +59,7 @@
         },
       })
       this.motionGate.start()
+      this.cleanupTheme = observeTheme(() => this.draw(performance.now()))
     }
 
     disconnectedCallback() {
@@ -64,6 +67,8 @@
       this.rafId = null
       this.cleanupResize?.()
       this.cleanupResize = null
+      this.cleanupTheme?.()
+      this.cleanupTheme = null
       this.motionGate?.stop()
       this.motionGate = null
       this.ctx = null

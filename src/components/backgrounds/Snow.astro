@@ -11,6 +11,7 @@
 <script>
   import { sizeCanvasForViewport } from '~/utils/canvas-size.js'
   import { createReducedMotionGate } from '~/utils/reduced-motion.js'
+  import { observeTheme } from '~/utils/theme-observer.js'
 
   interface Snowflake {
     x: number
@@ -31,6 +32,7 @@
     lastFrameAt = 0
     flakes: Snowflake[] = []
     cleanupResize: (() => void) | null = null
+    cleanupTheme: (() => void) | null = null
     motionGate: { start: () => void; stop: () => void } | null = null
 
     static readonly FPS = 40
@@ -70,6 +72,9 @@
         },
       })
       this.motionGate.start()
+      this.cleanupTheme = observeTheme(() => {
+        this.draw(performance.now(), BgSnowElement.STATIC_FRAME_STEP_MS)
+      })
     }
 
     disconnectedCallback() {
@@ -77,6 +82,8 @@
       this.rafId = null
       this.cleanupResize?.()
       this.cleanupResize = null
+      this.cleanupTheme?.()
+      this.cleanupTheme = null
       this.motionGate?.stop()
       this.motionGate = null
       this.flakes = []
