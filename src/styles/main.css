@@ -52,7 +52,7 @@ html:has(#bg-rose) {
 }
 
 body {
-  /* Keep negative-z decorations above even an externally darkened body fill. */
+  /* Keep negative-z decorations above the body fill and below content. */
   isolation: isolate;
   overflow-x: hidden;
   overflow-y: scroll;

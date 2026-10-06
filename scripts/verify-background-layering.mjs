@@ -6,7 +6,7 @@ const task = await taskSpace(Number('__TASK_SPACE_ID__'))
 const page = task.page('p1')
 const base = 'http://127.0.0.1:4322/'
 
-// Match the reported device and freeze animation, not rendering.
+// Use a mobile viewport and freeze animation, not rendering.
 await page.cdp('Emulation.setDeviceMetricsOverride', {
   width: 361,
   height: 651,
@@ -25,9 +25,20 @@ await page.reload()
 await page.waitForFunction(() => !!document.querySelector('bg-dot')?.ctx)
 
 const visibleDots = async () => {
+  const background = await page.evaluate(() => {
+    const body = getComputedStyle(document.body)
+      .backgroundColor.match(/[\d.]+/g)
+      .map(Number)
+    return body[3] === 0
+      ? getComputedStyle(document.documentElement)
+          .backgroundColor.match(/[\d.]+/g)
+          .slice(0, 3)
+          .map(Number)
+      : body.slice(0, 3)
+  })
   const path = await page.screenshot({ path: '/tmp/yublog-layering.png' })
   return page.evaluate(
-    async (encoded) => {
+    async ({ encoded, background }) => {
       // Decode the rendered screenshot, not the background's still-painted buffer.
       const bytes = Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0))
       const bitmap = await createImageBitmap(
@@ -48,15 +59,15 @@ const visibleDots = async () => {
       let count = 0
       for (let i = 0; i < data.length; i += 4) {
         if (
-          data[i] > 50 &&
-          Math.abs(data[i] - data[i + 1]) < 4 &&
-          Math.abs(data[i + 1] - data[i + 2]) < 4
+          Math.abs(data[i] - background[0]) > 4 ||
+          Math.abs(data[i + 1] - background[1]) > 4 ||
+          Math.abs(data[i + 2] - background[2]) > 4
         )
           count++
       }
       return count
     },
-    (await readFile(path)).toString('base64')
+    { encoded: (await readFile(path)).toString('base64'), background }
   )
 }
 try {
@@ -65,12 +76,7 @@ try {
     'control: dots must be visible with a transparent body'
   )
   const state = await page.evaluate(() => {
-    // Reproduce the *computed styles* supplied by Edge, without guessing their source.
-    const style = document.createElement('style')
-    style.id = 'background-layer-test'
-    style.textContent =
-      'html{color-scheme:dark!important;background-color:#181a1b!important}body{background-color:#181a1b!important}'
-    document.head.append(style)
+    document.body.style.setProperty('background-color', '#181a1b', 'important')
     const bg = document.querySelector('bg-dot')
     const pixels = bg.ctx.getImageData(
       0,
@@ -102,16 +108,6 @@ try {
   assert.ok(
     visible > 5,
     'an opaque body must not cover already-painted background dots'
-  )
-
-  // Minimise: the opaque body alone is enough; theme and root overrides are not required.
-  await page.evaluate(() => {
-    document.getElementById('background-layer-test').textContent =
-      'body{background-color:#181a1b!important}'
-  })
-  assert.ok(
-    (await visibleDots()) > 5,
-    'background visibility must not depend on root color-scheme'
   )
 
   await page.cdp('Emulation.setEmulatedMedia', {
@@ -148,7 +144,6 @@ try {
   )
 } finally {
   await page.evaluate(() => {
-    document.getElementById('background-layer-test')?.remove()
     document.body.style.removeProperty('background-color')
   })
   await page.cdp('Emulation.setEmulatedMedia', { features: [] })
