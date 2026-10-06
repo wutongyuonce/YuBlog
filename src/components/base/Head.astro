@@ -135,6 +135,30 @@ const webPageData = {
   })()
 </script>
 
+<!-- Temporary, opt-in diagnostics; normal visits do not load the script. -->
+<script
+  is:inline
+  data-astro-rerun
+  data-theme-diagnostics-src={withBasePath('/debug/theme-v1.js')}
+>
+  ;(() => {
+    if (new URL(location.href).searchParams.get('debug-theme') !== '1') {
+      window.__themeDiagnostics?.stop()
+      document.querySelector('[data-theme-diagnostics-script]')?.remove()
+      return
+    }
+    if (window.__themeDiagnostics) {
+      window.__themeDiagnostics.update()
+      return
+    }
+    if (document.querySelector('[data-theme-diagnostics-script]')) return
+    const script = document.createElement('script')
+    script.src = document.currentScript.dataset.themeDiagnosticsSrc
+    script.dataset.themeDiagnosticsScript = ''
+    document.head.append(script)
+  })()
+</script>
+
 <!-- Canonical URL -->
 <link rel="canonical" href={canonicalURL} />
 
