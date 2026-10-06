@@ -34,7 +34,7 @@
     "lint:fix": "eslint . --fix --cache",
     "toolbar:on": "astro preferences enable devToolbar",
     "toolbar:off": "astro preferences disable devToolbar",
-    "postbuild": "pagefind --site dist --exclude-selectors \"pre\" --include-characters \"<>\" && node ./scripts/postbuild.mjs"
+    "postbuild": "pagefind --site dist --exclude-selectors \"pre\" --include-characters \"<>\" && node ./scripts/postbuild.mjs && node ./scripts/check-content-rendered.mjs"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
@@ -74,6 +74,7 @@
     "rehype-callouts": "^2.1.2",
     "rehype-external-links": "^3.0.0",
     "rehype-katex": "^7.0.1",
+    "rehype-raw": "^7.0.0",
     "remark-cjk-friendly": "^2.3.1",
     "remark-directive": "^4.0.0",
     "remark-directive-sugar": "^2.0.0",

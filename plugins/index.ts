@@ -11,11 +11,13 @@ import remarkReadingTime from './remark-reading-time' // 计算文章阅读时�
 
 // ==================== Rehype 插件（MDAST → HTML） ====================
 import { rehypeHeadingIds } from '@astrojs/markdown-remark' // 为标题自动添加 ID
+import rehypeRaw from 'rehype-raw' // 把原生 HTML 解析成真元素，让后续 rehype 插件看得见
 import rehypeCallouts from 'rehype-callouts' // 创建提示框/标注（注、警告等）
 import rehypeKatex from 'rehype-katex' // 渲染数学公式（LaTeX → HTML）
 import rehypeExternalLinks from 'rehype-external-links' // 处理外部链接（新窗口、图标等）
 import rehypeAutolinkHeadings from 'rehype-autolink-headings' // 标题自动添加锚点链接
 import rehypeWrapAll from './rehype-wrap-all' // 用 div 包裹指定元素
+import rehypeMediaAssets from './rehype-media-assets' // 正文媒体引用改写与校验
 
 import { UI } from '../src/config' // 导入项目配置
 
@@ -161,14 +163,23 @@ export const remarkPlugins: RemarkPlugins = [
 
 // ==================== 导出 Rehype 插件配置 ====================
 export const rehypePlugins: RehypePlugins = [
-  // 1. 为标题添加 ID（用于锚点链接）
+  // 0. 必须先跑：在这之前，正文里写的 <h2> / <table> / <a> 在 AST 里只是一串
+  //    文本节点，下面所有插件 visit 的都是 element，看不见它们。
+  //    Astro 内部管线末尾还会再跑一次 rehype-raw，此时已无 raw 节点，是空操作。
+  rehypeRaw,
+
+  // 1. 正文媒体引用：相对路径的视频/音频改写为 /_media/…，无法服务的引用直接报错。
+  //    必须在 rehype-raw 之后，否则写在 HTML 里的 src 还只是一串文本。
+  rehypeMediaAssets,
+
+  // 2. 为标题添加 ID（用于锚点链接）
   // 例如：## 标题 → <h2 id="标题">标题</h2>
   [rehypeHeadingIds, { headingIdCompat: true }],
 
-  // 2. 渲染数学公式（使用 KaTeX）
+  // 3. 渲染数学公式（使用 KaTeX）
   rehypeKatex, // 将 LaTeX 公式转换为 HTML/CSS
 
-  // 3. 提示框/标注组件
+  // 4. 提示框/标注组件
   [
     rehypeCallouts,
     {
@@ -176,7 +187,7 @@ export const rehypePlugins: RehypePlugins = [
     },
   ],
 
-  // 4. 外部链接处理
+  // 5. 外部链接处理
   [
     rehypeExternalLinks,
     {
@@ -194,7 +205,7 @@ export const rehypePlugins: RehypePlugins = [
     },
   ],
 
-  // 5. 标题自动添加锚点链接（生成可点击的链接图标）
+  // 6. 标题自动添加锚点链接（生成可点击的链接图标）
   [
     rehypeAutolinkHeadings,
     {
@@ -211,7 +222,7 @@ export const rehypePlugins: RehypePlugins = [
     },
   ],
 
-  // 6. 包装表格（使表格可以横向滚动）
+  // 7. 包装表格（使表格可以横向滚动）
   [
     rehypeWrapAll,
     {

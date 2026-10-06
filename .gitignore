@@ -35,3 +35,6 @@ pnpm-debug.log*
 
 # obsidian vault config
 .obsidian/
+
+# 由 astro-media-sync 从 src/ 镜像出来的视频/音频
+public/_media/

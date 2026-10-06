@@ -132,12 +132,22 @@ function buildYear(year, postsByDate) {
  * Readable units already counted for one post. Every entry must provide a
  * non-negative integer; incomplete metadata must not silently lower totals.
  *
- * @param {{ words?: number }} entry
+ * 字数由 `remark-reading-time` 在渲染文章时写进 frontmatter，所以这个字段缺失
+ * 几乎总是意味着那篇文章渲染失败了。构建时真正的错误已经在更上面由
+ * `[glob-loader]` 报过一次（Astro 会捕获它并继续），这里只负责把它指出来，
+ * 不要让一个次生错误看起来像是新问题。
+ *
+ * @param {{ words?: number, href?: string, title?: string }} entry
  */
 function entryWords(entry) {
-  if (entry.words === undefined) throw new Error('Missing rendered word count')
+  const identity = entry.href ?? entry.title ?? '(unknown post)'
+  if (entry.words === undefined)
+    throw new Error(
+      `Missing rendered word count for ${identity}; ` +
+        `the article likely failed to render — see the [glob-loader] error above`
+    )
   if (!Number.isInteger(entry.words) || entry.words < 0) {
-    throw new Error('Invalid word count')
+    throw new Error(`Invalid word count for ${identity}: ${entry.words}`)
   }
   return entry.words
 }

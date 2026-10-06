@@ -48,8 +48,8 @@ description: >
    - 图片必须位于该文章所在目录或其子目录内。正文图片**不能用 `../` 向上越级**，否则构建直接报 `ImageNotFound`。
    - 图片一律走 Astro 图片管线：自动转 WebP、生成 `srcset`、注入宽高、懒加载。**不要手工压缩源图**，也不要再放进 `public/`。
    - 必要时用 alt 后缀声明显示宽度：`![说明|w480](./<短名>-img/文件.png)`。只支持像素，不支持百分比；桌面正文列宽 660px，所以「半宽」可写 `|w330`（窄屏仍受实际列宽限制）。**不要把 `|w480` 写进图片 URL**，构建可能不报错但输出不可见的占位图。不写标记就是原图宽度（超过列宽时按列宽显示）。
-   - **不要用原始 `<img>` 标签**：它完全不进管线，浏览器会直接 404。代码块里的示例除外。
-   - 远程图片（外链到别人的站）目前仍是原始 `<img>`，不受管线管。
+   - **不要用原始 `<img>` 标签**：本地相对路径会在构建期直接报错并提示改用 Markdown 语法，不会静默 404。代码块里的示例除外。
+   - 外链图片（别的站上的图）Markdown 与原始 `<img>` 两种写法等价，都不进管线。`data:` 内联图片（从 Notion／Word／部分网页粘贴时会带出来）构建期报错，先把图存成文件。
 
 7. 列表和详情标题块的封面**只有一条路**：文件放 `src/content/blogs/_title-images/`，frontmatter 用 `titleImage` / `titleImageAlt`。
 
@@ -65,6 +65,8 @@ description: >
    - 不要把同一张封面再当正文第一张，除非正文真的还要用。
 8. 正文不要再写一个 `# 标题`，frontmatter 的 `title` 已经是页标题。从 `##` 开始。
 9. 不编造引用、日期、数据。
+10. 跳到另一篇文章写**站内 URL**：`[27移除元素](/blogs/算法笔记/算法-1数组链表/#27)`。`./另一个文件.md#锚点` 在 Typora 里能点，站上是 404，而且**构建不报错**。改写前确认目标文章存在且不是 `draft: true`；目标不在站点上时删掉链接、保留可见文字，并说明移除了哪一条，不要猜 URL。slug 拿不准就先 `pnpm build`，再 `ls dist/blogs/<组>/` 看真实目录名。
+11. 自定义锚点写 `<a id="27"></a>`（短 ASCII id，跟在标题那一行末尾）。**不要清理看起来“没人用”的空锚点**：同页 `](#15)` 和跨文章 `/blogs/…/#27` 两类跳转都以它们为目标。
 
 ```md
 ---
@@ -85,6 +87,19 @@ titleImageAlt: 一句能读的描述
 ```bash
 python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog src/content/blogs/slug.md
 ```
+
+---
+
+## 正文里的原生 HTML 与媒体
+
+正文里的 `<h2>`、`<table>`、`<blockquote>` 和 Markdown 写法获得同样处理（标题 id、锚点、目录条目、表格滚动容器、提示框）。契约见 `docs/正文 HTML 与媒体 SPEC.md`。
+
+- `<style>` 块、`style="…"`、`class` 都生效；`<style>` 是**整页全局**的，会影响顶栏和目录，用带前缀的类名或 UnoCSS 工具类。`<div>`、`<span>`、`<br>`、`<details>` 原样透传。
+- 图片尺寸写 alt 的 `|w` 标记，例如 `![说明|w330](./x.png)`；不要用 `style="zoom:50%"`（Typora 拖拽缩放、LeetCode 粘贴会自带）。外链图 Markdown 与 `<img>` 两种写法等价。
+- 视频：外链平台用 `<iframe>`；本地文件用 `<video src="./demo.mp4">`，文件放文章旁边或子目录，构建自动镜像到 `public/_media/`，Typora 与站点两边都能播，不需要手工复制。
+- 视频旁建议补一行文字链接（否则订阅者在 RSS 里只看到空白），指向同一个文件即可：`[本视频](./demo.mp4)`。指向本地媒体文件的链接会和 `src` 一起被改写。
+- 下面这些会**构建期报错**（带文件路径与行号），不会静默 404：原生 `<img>` 写相对路径（改用 Markdown 语法；处于 `.mdx` 页面或同一路径也被 Markdown 图片语法引用时例外，见 SPEC）、`<video poster="…">` 写相对路径（poster 是图片，不进管线也不被镜像，请把图片放进 `public/`、不要放 `public/_media/`，再用 `/…` 引用）、`data:` 内联内容（先存成文件）、`file:` 等浏览器打不开的协议、相对路径逃出 `src/` 目录、媒体文件不存在或指向的是目录／符号链接、扩展名不在支持列表。
+- RSS 会删掉 `<video>`／`<iframe>`／`<style>`／`class`，公式降级为 TeX 源码。嵌入视频时旁边补一行纯文字链接，否则订阅者看到的是空白。
 
 ---
 
@@ -215,7 +230,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --frie
 
 ## 校验与交接
 
-改完先跑 `pnpm check`；文章或友链再跑上面的 `validate_content.py`，它只检查基础元数据，**不完整验证 schema、图片或封面**，最终仍以 Astro 检查／构建为准。新增文章或拾趣分类、修改正文、正文图、封面或拾趣图标时必须跑 `pnpm build`：Astro 的 schema 和图片管线才是路径解析及 `titleImageAlt` 的权威校验。含 `|w` 的图片还要人工核对标记写在 alt 而不是 URL 中（构建可能静默产出占位图）。构建失败只修这次内容，或说明是原有问题。
+改完先跑 `pnpm check`；文章或友链再跑上面的 `validate_content.py`，它只检查基础元数据，**不完整验证 schema、图片或封面**，并拦住正文里指向 `.md` 的链接；站内链接能否打开、锚点是否有落点由 `pnpm test:built-markdown` 判定。最终仍以 Astro 检查／构建为准。新增文章或拾趣分类、修改正文、正文图、本地视频／音频、封面或拾趣图标时必须跑 `pnpm build`：Astro 的 schema 和图片管线才是路径解析及 `titleImageAlt` 的权威校验。媒体**镜像**只在 `astro:config:setup`（dev 启动与每次构建）执行，没有文件监听——新增或改名视频后要重启 dev 才能看到；路径**改写**则随渲染执行。构建会校验每个带正文的页面真的渲染出了内容，空正文会让构建立即失败。含 `|w` 的图片还要人工核对标记写在 alt 而不是 URL 中（构建可能静默产出占位图）。构建失败只修这次内容，或说明是原有问题。
 
 发文章涉及订阅时，构建后运行 `pnpm test:built-markdown` 核对全文与资源。列表／内容结构或拾趣分类／图标修改运行 `pnpm test:built-restructure`；拾趣正文修改运行 `pnpm test:built-markdown`；分页修改运行 `pnpm test:built-pagination`。构建测试跟随当前配置和内容，不要求保留具体文章、友链名单、拾趣分类数量或观看状态。
 

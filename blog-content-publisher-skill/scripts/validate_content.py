@@ -25,39 +25,90 @@ def is_http_url(value: object) -> bool:
     return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
 
 
-def frontmatter(path: Path, root: Path) -> dict[str, object]:
-    text = path.read_text(encoding="utf-8")
-    match = re.match(r"^---\s*\n(.*?)\n---\s*(?:\n|$)", text, re.DOTALL)
-    if not match:
-        fail(f"{path}: expected YAML frontmatter fenced by ---")
-
-    # Reuse Astro's parser: comments, quoted scalars and dates have YAML semantics.
-    parser = """
+# 用 Astro 自己的解析器读 frontmatter，并把正文渲染成 HTML 后取出真实链接。
+# 正文走真实 Markdown 解析而不是正则：代码块里的示例会被转义成文本，
+# 不会变成 <a>，因此不需要再去猜围栏、行内代码和引用块的边界。
+# 内容按文件路径传入而不是 stdin：`node -e` 要先完成 import 才会读 stdin，
+# 而 `readFileSync(0)` 读管道时超过管道缓冲区就全 EAGAIN（实测 ~20KB），
+# 那样真实文章永远失败。
+ARTICLE_PARSER = """
 import { readFileSync } from 'node:fs';
-import { parseFrontmatter } from '@astrojs/markdown-remark';
+import { createMarkdownProcessor, parseFrontmatter } from '@astrojs/markdown-remark';
 try {
-  console.log(JSON.stringify(parseFrontmatter(readFileSync(0, 'utf8')).frontmatter));
+  const text = readFileSync(process.argv[1], 'utf8');
+  const { frontmatter, content } = parseFrontmatter(text);
+  const { code } = await (await createMarkdownProcessor()).render(content ?? '');
+  const hrefs = [...code.matchAll(/<a\\s[^>]*?href="([^"]*)"/g)].map((match) => match[1]);
+  console.log(JSON.stringify({ frontmatter, hrefs }));
 } catch (error) {
   console.error(error.message);
   process.exitCode = 1;
 }
 """
+
+
+def article(path: Path, root: Path) -> tuple[dict[str, object], list[str]]:
+    """返回 (frontmatter, 正文里真实链接的 href 列表)。"""
+    text = path.read_text(encoding="utf-8")
+    if not re.match(r"^---\s*\n(.*?)\n---\s*(?:\n|$)", text, re.DOTALL):
+        fail(f"{path}: expected YAML frontmatter fenced by ---")
+
     try:
         result = subprocess.run(
-            ["node", "--input-type=module", "-e", parser],
-            input=text, text=True, capture_output=True, cwd=root,
+            ["node", "--input-type=module", "-e", ARTICLE_PARSER, str(path)],
+            text=True, capture_output=True, cwd=root,
         )
     except OSError as exc:
-        fail(f"{path}: Node.js is required for Astro YAML parsing ({exc})")
+        fail(f"{path}: Node.js is required for Astro parsing ({exc})")
     if result.returncode:
         fail(f"{path}: YAML parsing failed (run pnpm install first): {result.stderr.strip()}")
+
     try:
-        values = json.loads(result.stdout)
+        payload = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
-        fail(f"{path}: invalid YAML parser output ({exc})")
+        fail(f"{path}: invalid parser output ({exc})")
+    if not isinstance(payload, dict):
+        fail(f"{path}: parser output must be an object")
+
+    values = payload.get("frontmatter")
     if not isinstance(values, dict):
         fail(f"{path}: YAML frontmatter must be a mapping")
-    return values
+
+    hrefs = payload.get("hrefs") or []
+    return values, [href for href in hrefs if isinstance(href, str)]
+
+
+def frontmatter(path: Path, root: Path) -> dict[str, object]:
+    """只取 frontmatter。保留这个入口给只关心元数据的调用方与测试。"""
+    return article(path, root)[0]
+
+
+def check_body_links(relative_path: str, hrefs: list[str]) -> None:
+    """正文里的链接必须是浏览器能直接打开的地址。
+
+    只拦一种写法：指向 `.md`／`.mdx` 文件的相对链接。站点不提供源文件，
+    这种链接会被浏览器按当前页面 URL 解析成 `<页面目录>/xxx.md`，点下去是 404，
+    而 `pnpm build` 不会报错。跨文章要写站内 URL。
+
+    协议用 urlparse 判断，所以 `HTTPS://…/README.md` 这类外链不受影响，
+    `./旧文.md?raw=1` 这种带查询串的写法一样会被拦下。
+    目标文章到底在不在站点上，以 `pnpm test:built-markdown` 为准 ——
+    那需要知道 slug 生成规则，不在这个预检里重复实现。
+    """
+    for href in hrefs:
+        if href.startswith("//"):
+            continue
+        parsed = urlparse(href)
+        if parsed.scheme:
+            continue
+        if not parsed.path.endswith((".md", ".mdx")):
+            continue
+        fail(
+            f"{relative_path}: 链接指向 Markdown 源文件：]({href})。"
+            "站点不提供 .md 文件，这种链接点下去是 404，且构建不会报错。"
+            "跨文章请写站内 URL，例如 /blogs/<分组>/<slug>/#锚点；"
+            "若目标文章不在站点上（未发布、已删除或写错），删掉链接保留文字，并向用户说明。"
+        )
 
 
 def validate_blog(root: Path, relative_path: str) -> None:
@@ -68,7 +119,7 @@ def validate_blog(root: Path, relative_path: str) -> None:
     if path.suffix not in {".md", ".mdx"}:
         fail(f"{relative_path}: expected a .md or .mdx file")
 
-    data = frontmatter(path, root)
+    data, hrefs = article(path, root)
     title = data.get("title")
     if not isinstance(title, str) or not title:
         fail(f"{relative_path}: title is required")
@@ -86,6 +137,8 @@ def validate_blog(root: Path, relative_path: str) -> None:
     category = data.get("category")
     if not isinstance(category, str) or not category.strip():
         fail(f"{relative_path}: category is required")
+
+    check_body_links(relative_path, hrefs)
 
     for key in ("redirect",):
         value = data.get(key)

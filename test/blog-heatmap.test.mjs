@@ -152,17 +152,19 @@ test('rejects a word count that is not a non-negative integer', () => {
   assert.throws(
     () =>
       buildWritingHeatmap([entry('2026-03-18T00:00:00Z', '坏', '/bad/', 1.5)]),
-    /Invalid word count/
+    /Invalid word count for \/bad\/: 1\.5/
   )
 })
 
 test('rejects missing words at the owning interface, not just the home caller', () => {
+  // 报错必须同时给出（1）是哪篇文章（2）真正的失败在别处，
+  // 否则构建日志里这条次生错误会看起来像一个新问题。
   assert.throws(
     () =>
       buildWritingHeatmap([
         { date: '2026-03-18', title: '缺失', href: '/missing/' },
       ]),
-    /Missing rendered word count/
+    /Missing rendered word count for \/missing\/.*glob-loader/s
   )
 })
 

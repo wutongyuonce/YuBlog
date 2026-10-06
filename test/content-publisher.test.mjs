@@ -87,3 +87,69 @@ test('publisher fails on malformed YAML and invalid dates rather than ignoring t
     assert.match(result.stderr, error)
   }
 })
+
+test('publisher rejects body links that point at Markdown sources', async (t) => {
+  const { root, path } = await fixture(t, '')
+  const front = '---\ntitle: 测试\ncategory: 技术\npubDate: 2026-09-21\n---\n'
+  const fence = '```'
+
+  // 指向 .md 的相对链接在站点上会被解析成 <页面目录>/算法1.md，点下去是 404，
+  // 而 pnpm build 不会报错 —— 预检必须拦住这种写法。
+  await writeFile(path, front + '[上篇](./算法1.md#27)\n')
+  const bad = validate(root)
+  assert.equal(bad.status, 1, bad.stderr)
+  assert.match(bad.stderr, /链接指向 Markdown 源文件/)
+  assert.match(bad.stderr, /站内 URL/)
+
+  // 外链里的 .md 是正常写法；代码块和行内代码里的示例也不是真链接。
+  await writeFile(
+    path,
+    [
+      front,
+      '[文档](https://github.com/x/y/blob/main/README.md)',
+      '',
+      fence + 'md',
+      '[上篇](./算法1.md#27)',
+      fence,
+      '',
+      '行内示例 `](./x.md)` 也不算。',
+      '',
+    ].join('\n')
+  )
+  const ok = validate(root)
+  assert.equal(ok.status, 0, ok.stderr)
+})
+
+test('publisher finds real links through the Markdown parser, not by regex', async (t) => {
+  const { root, path } = await fixture(t, '')
+  const front = '---\ntitle: 测试\ncategory: 技术\npubDate: 2026-09-21\n---\n'
+  const fence = '```'
+
+  // 代码里的示例不是链接，外链也不受影响
+  const ignored = [
+    '    [示例](./indented.md)',
+    '示例 ``](./inline.md)`` 说明',
+    `${fence}md\n[示例](./fenced.md)\n${fence}`,
+    `> ${fence}\n> [示例](./quoted.md)\n> ${fence}`,
+    '[文档](HTTPS://github.com/x/y/blob/main/README.md)',
+    '[文档](//cdn.example.com/README.md)',
+  ]
+  for (const body of ignored) {
+    await writeFile(path, `${front}\n${body}\n`)
+    const result = validate(root)
+    assert.equal(result.status, 0, `${body}\n${result.stderr}`)
+  }
+
+  // 真链接都要抓到：引用式、带查询串、以及引用块围栏之后的正文
+  const flagged = [
+    '[旧文][1]\n\n[1]: ./ref.md',
+    '[旧文](./old.md?raw=1)',
+    `> ${fence}\n> [示例](./quoted.md)\n> ${fence}\n\n[别的](./real.md)`,
+  ]
+  for (const body of flagged) {
+    await writeFile(path, `${front}\n${body}\n`)
+    const result = validate(root)
+    assert.equal(result.status, 1, `${body}\n${result.stderr}`)
+    assert.match(result.stderr, /链接指向 Markdown 源文件/)
+  }
+})
