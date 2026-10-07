@@ -162,6 +162,25 @@ test('publisher finds real links through the Markdown parser, not by regex', asy
     assert.match(result.stderr, /链接指向 Markdown 源文件/)
   }
 
+  // 浏览器解析 URL 时去掉首尾空白、删掉制表符与换行：
+  // 不照做会把带前导空格的协议相对外链当站内，也会漏掉尾随空格后的 .md
+  await writeFile(
+    path,
+    `${front}\n<a href=" //cdn.example.com/README.md">外链</a>\n`
+  )
+  assert.equal(validate(root).status, 0, '前导空格的协议相对外链是外站')
+
+  await writeFile(path, `${front}\n<a href="./missing.md ">旧文</a>\n`)
+  assert.equal(
+    validate(root).status,
+    1,
+    '浏览器会去掉尾随空白，这个链接仍然指向 Markdown 源文件'
+  )
+
+  // 站内绝对路径指向 public/ 里的真实文件，不在预检范围内（由产物测试判定）
+  await writeFile(path, `${front}\n[下载](/downloads/README.md)\n`)
+  assert.equal(validate(root).status, 0, '站内绝对路径不归预检')
+
   // 注释里的 <a> 不是链接：正则取 href 会把它当成链接误报
   await writeFile(path, `${front}\n<!-- <a href="./missing.md">旧文</a> -->\n`)
   assert.equal(validate(root).status, 0, '注释里的标签不算链接')

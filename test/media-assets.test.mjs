@@ -17,11 +17,12 @@ import test, { after } from 'node:test'
 import { pathToFileURL } from 'node:url'
 
 import { createMarkdownProcessor } from '@astrojs/markdown-remark'
+import { fromHtml } from 'hast-util-from-html'
+import { visit } from 'unist-util-visit'
 import rehypeRaw from 'rehype-raw'
 
 import {
   classifyMediaRef,
-  isMirrorableFile,
   mediaTargetFor,
   mediaUrlFor,
   MEDIA_ROOTS,
@@ -228,6 +229,44 @@ test('媒体片段与查询串在改写后原样保留', async () => {
   )
 })
 
+test('URL 路径里可以原样出现的字符不转义，站上才找得到文件', async () => {
+  for (const name of [
+    'a&b.mp4',
+    'a+b.mp4',
+    'a,b.mp4',
+    'a:b.mp4',
+    'a b.mp4',
+    '中文.mp4',
+  ])
+    scratch(name)
+
+  // `&`、`+`、`,`、`:` 属于路径里可以原样出现的字符；写成 `%26` 之类静态层不会还原，
+  // 站上会 404。空格与中文必须转义，静态层会解回来。
+  const code = await renderHtml(
+    [
+      '<video src="./a&amp;b.mp4"></video>',
+      '<video src="./a+b.mp4"></video>',
+      '<video src="./a,b.mp4"></video>',
+      '<video src="./a:b.mp4"></video>',
+      '<video src="./a b.mp4"></video>',
+      '<video src="./中文.mp4"></video>',
+    ].join('\n')
+  )
+
+  const srcs = []
+  visit(fromHtml(code, { fragment: true }), 'element', (node) => {
+    if (node.tagName === 'video') srcs.push(node.properties.src)
+  })
+  assert.deepEqual(srcs, [
+    `${MEDIA_URL_PREFIX}content/blogs/a&b.mp4`,
+    `${MEDIA_URL_PREFIX}content/blogs/a+b.mp4`,
+    `${MEDIA_URL_PREFIX}content/blogs/a,b.mp4`,
+    `${MEDIA_URL_PREFIX}content/blogs/a:b.mp4`,
+    `${MEDIA_URL_PREFIX}content/blogs/a%20b.mp4`,
+    `${MEDIA_URL_PREFIX}content/blogs/%E4%B8%AD%E6%96%87.mp4`,
+  ])
+})
+
 test('Markdown 图片语法产出的图片不归媒体层管，仍交给 Astro 图片管线', async () => {
   const { code } = await render('![说明](./pic.png)')
   assert.doesNotMatch(code, /_media/)
@@ -259,61 +298,111 @@ test('无法服务的引用明确失败，并报出文件与行号', async () =>
   writeFileSync(path.join(dir, 'nested', 'inner.mp4'), 'fixture')
   symlinkSync(path.join(dir, 'nested'), path.join(dir, 'linked-dir'))
 
+  // 每类报错都要同时给出位置（路径 + 行号）与作者写的那串原文 ——
+  // 多处引用时才分得清说的是哪一处
   const cases = [
-    ['data: 图片', '<img src="data:image/png;base64,AAAA">', /data: 内联内容/],
+    [
+      'data: 图片',
+      '<img src="data:image/png;base64,AAAA">',
+      /data: 内联内容/,
+      'data:image/png;base64,AAAA',
+    ],
     [
       'data: 视频（大写协议）',
       '<video src="DATA:video/mp4;base64,AAAA"></video>',
       /data: 内联内容/,
+      'DATA:video/mp4;base64,AAAA',
     ],
-    ['其它协议', '<video src="file:///tmp/a.mp4"></video>', /file: 协议/],
-    ['原生 img 相对路径', '<img src="./pic.png">', /Markdown 语法/],
+    [
+      '其它协议',
+      '<video src="file:///tmp/a.mp4"></video>',
+      /file: 协议/,
+      'file:///tmp/a.mp4',
+    ],
+    [
+      '原生 img 相对路径',
+      '<img src="./pic.png">',
+      /Markdown 语法/,
+      './pic.png',
+    ],
     [
       '逃出源根的路径',
       '<video src="../../../outside.mp4"></video>',
       /不在 src\/ 目录内/,
+      '../../../outside.mp4',
     ],
     [
       'poster 相对路径',
       '<video src="/a.mp4" poster="./cover.jpg"></video>',
       /poster/,
+      './cover.jpg',
     ],
     // 目录与符号链接都会产生一个打不开的 URL，按同一个判据拒绝
-    ['同名目录', '<video src="./dir.mp4"></video>', /不是一个可镜像的文件/],
-    ['符号链接', '<video src="./linked.mp4"></video>', /不是一个可镜像的文件/],
+    [
+      '同名目录',
+      '<video src="./dir.mp4"></video>',
+      /不是一个可镜像的文件/,
+      './dir.mp4',
+    ],
+    [
+      '符号链接',
+      '<video src="./linked.mp4"></video>',
+      /不是一个可镜像的文件/,
+      './linked.mp4',
+    ],
     [
       '路径中间有符号链接',
       '<video src="./linked-dir/inner.mp4"></video>',
       /不是一个可镜像的文件/,
+      './linked-dir/inner.mp4',
     ],
     [
       '文件不存在',
       '<video src="./missing.mp4"></video>',
       /不是一个可镜像的文件/,
+      './missing.mp4',
     ],
-    // 文件名或目录名带 # / ? 时本站取不到（新建的 dev 与 preview 都实测 404），
-    // 必须在构建期拦住；同一路径写在 src、Markdown 链接与 HTML href 三处都要拦
-    ['文件名带井号', '<video src="./a%23b.mp4"></video>', /取不到这种名字/],
-    ['文件名带问号', '<video src="./a%3Fb.mp4"></video>', /取不到这种名字/],
+    // 含 # / ? 的文件名与目录名在 URL 里必须转义，而静态层解码请求路径时不还原
+    // 这两个字符，所以站上取不到：渲染期就拦下。src、Markdown 链接、HTML href 三处都拦
+    [
+      '文件名带井号',
+      '<video src="./a%23b.mp4"></video>',
+      /在站上取不到/,
+      './a%23b.mp4',
+    ],
+    [
+      '文件名带问号',
+      '<video src="./a%3Fb.mp4"></video>',
+      /在站上取不到/,
+      './a%3Fb.mp4',
+    ],
     [
       '目录名带问号',
       '<video src="./dir%3Fname/clip.mp4"></video>',
-      /取不到这种名字/,
+      /在站上取不到/,
+      './dir%3Fname/clip.mp4',
     ],
     [
       '目录名带井号',
       '<video src="./dir%23name/clip.mp4"></video>',
-      /取不到这种名字/,
+      /在站上取不到/,
+      './dir%23name/clip.mp4',
     ],
-    ['媒体链接逃出源根', '[下载](../../../outside.mp4)', /不在 src\/ 目录内/],
+    [
+      '媒体链接逃出源根',
+      '[下载](../../../outside.mp4)',
+      /不在 src\/ 目录内/,
+      '../../../outside.mp4',
+    ],
     [
       '扩展名不在列表',
       '<video src="./clip.mkv"></video>',
       /不在可镜像的媒体列表里/,
+      './clip.mkv',
     ],
   ]
 
-  for (const [name, markdown, expected] of cases) {
+  for (const [name, markdown, expected, raw] of cases) {
     await assert.rejects(
       () => renderHtml(markdown),
       (error) => {
@@ -322,6 +411,8 @@ test('无法服务的引用明确失败，并报出文件与行号', async () =>
         assert.match(error.message, expected, name)
         // 能定位才有用：文件路径 + 行号
         assert.match(error.message, /article\.md:\d+/, name)
+        // 作者写的那串原文也要出现，否则不知道报的是哪一处引用
+        assert.ok(error.message.includes(raw), `${name}: 报错缺少原始值 ${raw}`)
         return true
       },
       name
@@ -385,8 +476,6 @@ test('路径段边界两侧一致：..clip.mp4 既渲染放行也能镜像，源
     mediaUrlFor(source, roots),
     `${MEDIA_URL_PREFIX}content/blogs/..clip.mp4`
   )
-  assert.equal(isMirrorableFile(source, roots.sourceRoot), true)
-  assert.equal(isMirrorableFile(source, dir), true)
 
   const target = mediaTargetFor(source, roots)
   syncMedia(roots)
@@ -453,6 +542,66 @@ const astroBody = (text) => {
   while (index < lines.length && lines[index].trim() === '') index += 1
   return lines.slice(index).join('\n')
 }
+
+test('镜像根自身是链接时不会写到它指向的外部目录', () => {
+  const roots = makeRoots()
+  const home = path.dirname(path.dirname(roots.publicDir))
+  const outsideDir = path.join(home, 'outside-root')
+  mkdirSync(outsideDir, { recursive: true })
+  writeFileSync(path.join(outsideDir, 'keep.txt'), 'KEEP')
+
+  const source = path.join(roots.sourceRoot, 'clip.mp4')
+  mkdirSync(roots.sourceRoot, { recursive: true })
+  writeFileSync(source, 'video')
+
+  // public/_media 自己是链接：复制会写进外部目录，清理会删掉那里的文件
+  mkdirSync(path.dirname(roots.publicDir), { recursive: true })
+  symlinkSync(outsideDir, roots.publicDir)
+
+  syncMedia(roots)
+
+  assert.equal(
+    existsSync(path.join(outsideDir, 'keep.txt')),
+    true,
+    '外部目录里的文件不能被清理掉'
+  )
+  assert.equal(
+    existsSync(path.join(outsideDir, 'clip.mp4')),
+    false,
+    '不能写进链接指向的外部目录'
+  )
+  assert.equal(
+    lstatSync(roots.publicDir).isSymbolicLink(),
+    false,
+    '镜像根要换成真实目录'
+  )
+  assert.equal(
+    readFileSync(path.join(roots.publicDir, 'clip.mp4'), 'utf8'),
+    'video'
+  )
+})
+
+test('目标端链接的内容与源一样也必须换成真实文件', () => {
+  const roots = makeRoots()
+  const home = path.dirname(path.dirname(roots.publicDir))
+  const outside = path.join(home, 'outside.txt')
+  const source = path.join(roots.sourceRoot, 'clip.mp4')
+  mkdirSync(roots.sourceRoot, { recursive: true })
+  writeFileSync(source, 'video')
+  writeFileSync(outside, 'VIDEO') // 与源同大小，让「是否最新」的判据命中
+
+  mkdirSync(roots.publicDir, { recursive: true })
+  const target = path.join(roots.publicDir, 'clip.mp4')
+  symlinkSync(outside, target)
+  const { atime, mtime } = statSync(source)
+  utimesSync(outside, atime, mtime)
+
+  syncMedia(roots)
+
+  assert.equal(lstatSync(target).isSymbolicLink(), false, '链接不能留在产物里')
+  assert.equal(readFileSync(target, 'utf8'), 'video')
+  assert.equal(readFileSync(outside, 'utf8'), 'VIDEO', '外部文件不能被改写')
+})
 
 test('报错按源文件行号定位，并带上作者写的原始值', async () => {
   const source = [

@@ -14,7 +14,7 @@ import remarkMediaCard from '../plugins/remark-media-card.ts'
 import { SITE } from '../src/config.ts'
 import {
   classifyMediaUrl,
-  decodeMediaPath,
+  decodeServedPath,
   MEDIA_SRC_ELEMENTS,
 } from '../plugins/media-paths.ts'
 
@@ -28,8 +28,8 @@ const DIST_DIR = resolve(fileURLToPath(built('')))
 
 /**
  * URL 路径名 → 产物里的绝对路径。产物不含 base（`public/` 与页面都直接写在
- * `dist/` 根下），所以先剥掉站点 base，再按浏览器方式解码（用规则模块的
- * `decodeMediaPath`，不在这里重写一遍分段解码规则）。
+ * `dist/` 根下），所以先剥掉站点 base，再用 `decodeServedPath`（静态层的解码语义）
+ * 还原成它真正会去找的文件名 —— 守卫必须和服务器同结论，否则会放行站上 404 的引用。
  * 返回文件系统路径而不是 URL：解码后的 `#`／`?` 若再进 URL 解析会被当成分隔符，
  * 检查的就不是同一个文件了。
  */
@@ -39,7 +39,7 @@ const distFile = (pathname) => {
     base !== '/' && pathname.startsWith(base)
       ? pathname.slice(base.length - 1)
       : pathname
-  const full = resolve(DIST_DIR, decodeMediaPath(stripped).replace(/^\/+/, ''))
+  const full = resolve(DIST_DIR, decodeServedPath(stripped).replace(/^\/+/, ''))
   assert.ok(
     full === DIST_DIR || full.startsWith(DIST_DIR + sep),
     `URL escapes dist: ${pathname}`
@@ -112,7 +112,36 @@ const fragmentTargets = (tree) => {
 }
 
 /** 剥掉 CSS 注释：`/* 粘贴痕迹 *\/zoom:50%` 是合法声明，只看声明边界会漏 */
-const withoutCssComments = (value) => value.replace(/\/\*[\s\S]*?\*\//g, '')
+import postcss from 'postcss'
+
+/** CSS 标识符里的转义：`\6f ` 与 `o` 同义，浏览器按转义后的名字认属性 */
+const unescapeCssIdentifier = (value) =>
+  value.replace(
+    /\\([0-9a-fA-F]{1,6})[ \t\n\r\f]?|\\(.)/g,
+    (_match, hex, character) =>
+      hex === undefined
+        ? character
+        : String.fromCodePoint(Number.parseInt(hex, 16))
+  )
+
+/**
+ * 一段 inline style 实际声明的属性名（小写）。
+ *
+ * 按声明解析，不按字符匹配：注释把标识符切开时（`z/**\/oom:50%`）声明无效、浏览器不认，
+ * 这里也不能把注释删掉拼成 `zoom`；`z\6f om:50%` 反过来是有效声明，必须认出来。
+ */
+const declaredProperties = (style) => {
+  try {
+    const names = []
+    postcss.parse(style).walkDecls((declaration) => {
+      names.push(unescapeCssIdentifier(declaration.prop).toLowerCase())
+    })
+    return names
+  } catch {
+    // 同一段里还有无效声明时整段解析失败；浏览器只忽略那一条，这里保守当作没有声明
+    return []
+  }
+}
 
 test('full RSS covers every built article and uses real, standalone content assets', async () => {
   const xml = await html('rss.xml')
@@ -162,7 +191,8 @@ test('full RSS covers every built article and uses real, standalone content asse
           url.pathname.startsWith(base),
           'same-site image should respect deployment base'
         )
-        assets.add(decodeURIComponent(url.pathname.slice(base.length)))
+        // 与其它站内地址同一处换算：distFile 已剥 base 并按静态层语义解码
+        assets.add(distFile(url.pathname))
       }
     }
     assert.equal(elements(body, 'a').at(-1).properties.href, canonical)
@@ -221,7 +251,7 @@ test('full RSS covers every built article and uses real, standalone content asse
         'formula source must survive'
       )
   }
-  for (const asset of assets) await access(built(asset))
+  for (const asset of assets) await access(asset)
   const dates = items.map((item) => Date.parse(item.pubDate))
   assert.deepEqual(
     dates,
@@ -302,8 +332,8 @@ test('home and interest cards preserve authored content through the shared pipel
 })
 
 test('rendered Markdown headings and processed images remain usable', async () => {
-  const files = (await readdir(built(''), { recursive: true })).filter(
-    (file) => file === 'index.html' || file.endsWith('/index.html')
+  const files = (await readdir(built(''), { recursive: true })).filter((file) =>
+    file.endsWith('.html')
   )
   for (const file of files) {
     const page = fromHtml(await html(file))
@@ -385,7 +415,7 @@ test('authored HTML is handled like Markdown and every internal anchor resolves'
   for (const file of files) {
     const page = fromHtml(await html(file))
     // 相对链接按页面 URL 解析，和浏览器一致；页面地址跟随站点 base
-    const pageUrl = new URL(file.replace(/index\.html$/, ''), siteBase)
+    const pageUrl = new URL(file.replace(/(^|\/)index\.html$/, '$1'), siteBase)
     const ids = fragmentTargets(page)
 
     // 手写空锚点 <a id="…"></a> 靠这条守着：算法笔记里 `](#15)` 这类跳转
@@ -446,12 +476,13 @@ test('authored HTML is handled like Markdown and every internal anchor resolves'
 
       // Typora / LeetCode 粘贴残留的 zoom 尺寸标记。zoom 是相对原图的百分比，
       // 已经先被 max-width:100% 限过一次，窄屏上会再缩一半，尺寸不可预测；
-      // 尺寸应该写进 alt 的 |w 标记。属性名不区分大小写，注释不能用来藏它。
+      // 尺寸应该写进 alt 的 |w 标记。
       visit(body, 'element', (node) => {
         const style = node.properties.style
-        assert.doesNotMatch(
-          withoutCssComments(typeof style === 'string' ? style : ''),
-          /(?:^|;)\s*zoom\s*:/i,
+        assert.ok(
+          !declaredProperties(typeof style === 'string' ? style : '').includes(
+            'zoom'
+          ),
           `${file}: <${node.tagName}> 不要用 style="zoom:…" 控制尺寸，改用 alt 里的 |w 标记`
         )
       })

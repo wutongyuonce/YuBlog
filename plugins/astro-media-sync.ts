@@ -96,6 +96,19 @@ function ensureRealPath(target: string, root: string) {
   }
 }
 
+/**
+ * 镜像根自己必须是真实目录：它若是符号链接，`copyFileSync` 与清理用的 `rmSync`
+ * 都会作用到链接指向的外部目录（会改写并删除那里的文件）。派生目录完全属于本模块，
+ * 所以发现链接就删掉链接本身再重建。
+ */
+function ensureRealRoot(root: string) {
+  try {
+    if (lstatSync(root).isSymbolicLink()) rmSync(root, { force: true })
+  } catch {
+    // 还不存在：交给后面的 mkdirSync
+  }
+}
+
 /** 删除没有内容的目录，但保留镜像根目录本身 */
 function pruneEmptyDirs(dir: string, root: string) {
   if (!existsSync(dir)) return
@@ -108,6 +121,9 @@ function pruneEmptyDirs(dir: string, root: string) {
 
 /** 同步一次，返回本次实际发生的变更数量 */
 export function syncMedia(roots: MediaRoots = MEDIA_ROOTS) {
+  // 必须先做：否则清理步骤会跟着链接删掉外部目录里的文件
+  ensureRealRoot(roots.publicDir)
+
   const sourceFiles = listFiles(roots.sourceRoot).filter((file) =>
     MEDIA_EXTENSIONS.has(path.extname(file).toLowerCase())
   )
@@ -120,8 +136,10 @@ export function syncMedia(roots: MediaRoots = MEDIA_ROOTS) {
 
   let copied = 0
   for (const [target, source] of mirror) {
-    if (isUpToDate(source, target)) continue
+    // 先清链接再判「是否最新」：目标是指向别处的链接时，大小与 mtime 可能恰好一致，
+    // 一旦先命中早退，链接就会永久留在产物里，站点一直在提供镜像根之外的文件。
     ensureRealPath(target, roots.publicDir)
+    if (isUpToDate(source, target)) continue
     mkdirSync(path.dirname(target), { recursive: true })
     copyFileSync(source, target)
     // 对齐 mtime，下一个构建才能用相等比较判断是否要重写

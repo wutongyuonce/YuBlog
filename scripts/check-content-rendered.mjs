@@ -33,8 +33,12 @@ const isMeaningful = (child) =>
   child.type === 'element' ||
   (child.type === 'text' && child.value.trim() !== '')
 
-/** 正文容器是否都为空；页面没有正文容器时返回 null */
-function isEmptyBody(html) {
+/**
+ * 页面上每个空的正文容器；页面没有正文容器时返回 null。
+ * 逐个容器判断而不是「全都空才算空」：一页里有两个独立正文时（首页的正文与拾趣精选），
+ * 只要求「至少一个非空」会让另一个静默丢内容。
+ */
+function emptyBodies(html) {
   const tree = fromHtml(html, { fragment: true })
   const bodies = []
   visit(tree, 'element', (node) => {
@@ -43,9 +47,9 @@ function isEmptyBody(html) {
       bodies.push(node)
   })
   if (bodies.length === 0) return null
-  return bodies.every(
+  return bodies.filter(
     (node) => (node.children ?? []).filter(isMeaningful).length === 0
-  )
+  ).length
 }
 
 const pages = await listPages(DIST)
@@ -53,25 +57,21 @@ const empty = []
 let checked = 0
 
 for (const page of pages) {
-  const html = await readFile(page, 'utf8')
-  // 先按字符串粗筛，避免为没有正文容器的页面做一次解析
-  if (!html.includes(CONTENT_CLASS)) continue
-
-  const isEmpty = isEmptyBody(html)
-  if (isEmpty === null) continue
+  // 直接按 DOM 判定，不做字符串粗筛：class 写成实体（markdown&#45;content）时
+  // 粗筛会跳过整页，而 DOM 里它就是 markdown-content
+  const emptyCount = emptyBodies(await readFile(page, 'utf8'))
+  if (emptyCount === null) continue
 
   checked++
-  if (isEmpty) empty.push(relative(DIST, page))
+  if (emptyCount > 0) empty.push(relative(DIST, page))
 }
 
 if (empty.length > 0) {
-  console.error(
-    'ERROR: 以下页面没有渲染出任何正文，内容很可能在渲染时失败并被丢弃：'
-  )
+  console.error('ERROR: 以下页面的正文容器是空的：')
   for (const page of empty) console.error(`  - ${page}`)
   console.error(
-    '往上找构建日志里的 [glob-loader] 报错，那才是真正的原因；' +
-      '本校验只负责不让空白页面通过构建。'
+    '正文有内容却渲染失败时，往上找构建日志里的 [glob-loader] 报错；' +
+      '内容本来就不该有正文时，不要使用 markdown-content 容器。'
   )
   process.exit(1)
 }

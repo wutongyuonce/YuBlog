@@ -5,7 +5,7 @@ import { visit } from 'unist-util-visit'
 
 import {
   classifyMediaRef,
-  decodeMediaPath,
+  decodeRefPath,
   findUnservableSegment,
   isMirrorableFile,
   mediaSuffix,
@@ -92,13 +92,25 @@ const fail = (file: VFile, node: Element, message: string): never => {
   throw new Error(`[media] ${describe(file, node)} ${message}`)
 }
 
+/**
+ * 报错要带上作者写的那串原文，否则在多处引用时不知道说的是哪一处。
+ * `data:` 这类内联内容可能很长，截断以免淹没真正的原因。
+ */
+const echo = (value: string) =>
+  value.length > 80 ? `${value.slice(0, 80)}…` : value
+
 /** `data:` 内联内容一律拒绝：产物里是巨型字符串，RSS 也无法取材 */
-const rejectInline = (file: VFile, node: Element, attribute: string) =>
+const rejectInline = (
+  file: VFile,
+  node: Element,
+  attribute: string,
+  value: string
+) =>
   fail(
     file,
     node,
-    `的 ${attribute} 是 data: 内联内容。请把这段内容存成独立文件再引用：` +
-      `视频/音频放 md 旁边写相对路径，图片用 Markdown 语法 ![](./name.png)。`
+    `的 ${attribute} 是 ${echo(value)}（data: 内联内容），本站不提供这种引用。` +
+      `请把内容存成独立文件再引用：视频/音频放 md 旁边写相对路径，图片用 Markdown 语法 ![](./name.png)。`
   )
 
 /** 相对路径的媒体：确认路径可取、扩展名可镜像、文件确实存在，然后改写地址 */
@@ -111,14 +123,15 @@ const rewriteLocal = (
   suffix: string,
   roots: MediaRoots
 ) => {
-  const badSegment = findUnservableSegment(ref.file, roots.sourceRoot)
-  if (badSegment)
+  const unservable = findUnservableSegment(ref.file, roots.sourceRoot)
+  if (unservable)
     fail(
       file,
       node,
-      `的 ${attribute} 是 ${value}，路径里的 \`${badSegment}\` 含 \`#\` 或 \`?\`：` +
-        `本站的静态服务器取不到这种名字（新建的 dev 与 preview 都实测 404，` +
-        `而构建不会失败），文件与目录名都算。请把这两个字符换成别的字符。`
+      `的 ${attribute} 是 ${value}，路径里的 \`${unservable.segment}\` 含 ` +
+        `${unservable.characters.map((character) => `\`${character}\``).join('、')}：` +
+        `这些字符在 URL 里必须转义，而静态层解码请求路径时不还原它们，` +
+        `所以这种文件与目录名在站上取不到（构建本身不会报错）。请改名，并用 preview 复核。`
     )
 
   const extension = path.extname(ref.file).toLowerCase()
@@ -126,8 +139,9 @@ const rewriteLocal = (
     fail(
       file,
       node,
-      `的 ${attribute} 指向 ${extension === '' ? '没有扩展名的文件' : extension}，` +
-        `这个类型不在可镜像的媒体列表里（可镜像：${[...MEDIA_EXTENSIONS].join(' ')}）。` +
+      `的 ${attribute} 是 ${echo(value)}，扩展名 ${
+        extension === '' ? '（没有扩展名）' : extension
+      } 不在可镜像的媒体列表里（可镜像：${[...MEDIA_EXTENSIONS].join(' ')}）。` +
         `图片请改用 Markdown 语法 ![](./name.png) 走 Astro 图片管线；字幕等其它类型` +
         `请放进 public/ 并用站内绝对路径引用，例如 <track src="/subs.vtt">。`
     )
@@ -153,7 +167,7 @@ const checkSrc = (
   roots: MediaRoots
 ) => {
   // 由 Markdown 图片语法产出的图片：所有权属于 Astro 图片管线
-  if (node.tagName === 'img' && owned.has(decodeMediaPath(value))) return
+  if (node.tagName === 'img' && owned.has(decodeRefPath(value))) return
 
   const ref = classifyMediaRef(value, markdownPath, roots)
   switch (ref.kind) {
@@ -161,13 +175,13 @@ const checkSrc = (
     case 'rooted':
       return
     case 'inline':
-      return rejectInline(file, node, 'src')
+      return rejectInline(file, node, 'src', value)
     case 'unsupported':
       return fail(
         file,
         node,
-        `的 src 用了 ${ref.scheme}: 协议，浏览器在站上打不开，外链也不是可用地址。` +
-          `本地文件请放 md 旁边写相对路径，网络资源请用 http(s)。`
+        `的 src 是 ${echo(value)}，用了 ${ref.scheme}: 协议，浏览器在站上打不开，` +
+          `外链也不是可用地址。本地文件请放 md 旁边写相对路径，网络资源请用 http(s)。`
       )
     case 'outside':
       return fail(
@@ -240,12 +254,13 @@ const checkPoster = (
 
   const ref = classifyMediaRef(poster, markdownPath, roots)
   if (ref.kind === 'external' || ref.kind === 'rooted') return
-  if (ref.kind === 'inline') return rejectInline(file, node, 'poster')
+  if (ref.kind === 'inline') return rejectInline(file, node, 'poster', poster)
   if (ref.kind === 'unsupported')
     return fail(
       file,
       node,
-      `的 poster 用了 ${ref.scheme}: 协议，图片请用 http(s) 或站内绝对路径。`
+      `的 poster 是 ${echo(poster)}，用了 ${ref.scheme}: 协议，` +
+        `图片请用 http(s) 或站内绝对路径。`
     )
 
   fail(

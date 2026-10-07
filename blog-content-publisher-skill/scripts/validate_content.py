@@ -18,6 +18,16 @@ def fail(message: str) -> None:
     raise SystemExit(1)
 
 
+# 浏览器解析 URL 前会去掉首尾的 C0 控制符与空格，并删掉值里所有的制表符与换行。
+# 不照做就会把 ` //cdn.example.com/README.md` 当成站内（其实会去外站），
+# 也会让 `./missing.md ` 漏过 `.md` 判断（浏览器照样请求 missing.md）。
+_STRIP = "".join(chr(code) for code in range(0x21))
+
+
+def normalize_url_value(value: str) -> str:
+    return re.sub(r"[\t\n\r]", "", value.strip(_STRIP))
+
+
 def is_http_url(value: object) -> bool:
     if not isinstance(value, str):
         return False
@@ -102,8 +112,11 @@ def check_body_links(relative_path: str, hrefs: list[str]) -> None:
     目标文章到底在不在站点上，以 `pnpm test:built-markdown` 为准 ——
     那需要知道 slug 生成规则，不在这个预检里重复实现。
     """
-    for href in hrefs:
-        if href.startswith("//"):
+    for raw_href in hrefs:
+        href = normalize_url_value(raw_href)
+        # 只看相对链接：外链不抓取；站内绝对路径（`/downloads/README.md`）指向
+        # public/ 里的真实文件，能不能取到由产物测试判定，不在这里重复实现路径解析。
+        if href.startswith(("//", "/")):
             continue
         parsed = urlparse(href)
         if parsed.scheme:

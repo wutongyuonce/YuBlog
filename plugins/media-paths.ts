@@ -50,12 +50,10 @@ export const MEDIA_EXTENSIONS = new Set([
 export const MEDIA_SRC_ELEMENTS = ['video', 'audio', 'source', 'track']
 
 /** 镜像源：项目根下的 `src/` */
-export const MEDIA_SOURCE_ROOT = fileURLToPath(
-  new URL('../src/', import.meta.url)
-)
+const MEDIA_SOURCE_ROOT = fileURLToPath(new URL('../src/', import.meta.url))
 
 /** 镜像目标：`public/` 会被 Astro 原样拷进产物根 */
-export const MEDIA_PUBLIC_DIR = fileURLToPath(
+const MEDIA_PUBLIC_DIR = fileURLToPath(
   new URL('../public/_media/', import.meta.url)
 )
 
@@ -115,11 +113,15 @@ export function classifyMediaUrl(rawSrc: string): MediaUrlKind {
   return { kind: 'relative' }
 }
 
+/** URL 路径段里可以原样出现的字符：RFC 3986 的 `pchar`，去掉必须转义的 `%`。 */
+const PATH_SEGMENT_SAFE = /^[A-Za-z0-9\-._~!$&'()*+,;=:@]$/
+
 /**
- * 按浏览器的方式把 URL 路径还原成文件名：逐段解码，这样 `%20`、`%23`
- * 这些转义都能还原成真实字符（`decodeURI` 不会解码保留字符）。
+ * 作者写的引用 → 他想引用的文件名。逐段 `decodeURIComponent`：把 `%20`、`%23`、
+ * `%25` 都还原成真实字符，得到的是文件在磁盘上的名字（作者意图）。
+ * 用它去找文件、判断扩展名与「文件名里有没有取不到的字符」。
  */
-export function decodeMediaPath(value: string): string {
+export function decodeRefPath(value: string): string {
   return value
     .split('/')
     .map((segment) => {
@@ -132,9 +134,46 @@ export function decodeMediaPath(value: string): string {
     .join('/')
 }
 
-/** 反向操作：逐段编码，`%`、`#`、`?`、空格在 URL 里都有确定含义。 */
+/**
+ * 站上请求的 URL 路径 → 静态层会去找的文件名，与 `decodeURI` 同语义：
+ * 还原空格、`%`、非 ASCII，**不还原**保留字符（`&`、`+`、`#`、`?`、`:`…）。
+ *
+ * 产物守卫必须用它，不能用 `decodeRefPath`：后者会把 `%23` 解回 `#`，于是守卫找到文件、
+ * 服务器却按字面名 `%23` 去找，守卫就放行了一个站上 404 的引用。
+ * 反过来也不能把 `decodeRefPath` 换成它，那会让「文件名不可用」的诊断退化成「文件缺失」。
+ * 两者分别对应「作者想要哪个文件」和「站点实际能不能取到」，都只有一处实现。
+ */
+export function decodeServedPath(value: string): string {
+  return value
+    .split('/')
+    .map((segment) => {
+      try {
+        return decodeURI(segment)
+      } catch {
+        return segment
+      }
+    })
+    .join('/')
+}
+
+/**
+ * 逐段编码成 URL 里的写法，只转义必须转义的字符（`%`、`#`、`?`、空格、非 ASCII）。
+ * 不能整段用 `encodeURIComponent`：它会把 `&`、`+`、`,`、`:` 也写成 `%26` 之类，
+ * 而静态层按 `decodeURI` 语义不还原这些字符，站上就找不到文件了。
+ */
 function encodeMediaPath(value: string): string {
-  return value.split('/').map(encodeURIComponent).join('/')
+  return value
+    .split('/')
+    .map((segment) =>
+      [...segment]
+        .map((character) =>
+          PATH_SEGMENT_SAFE.test(character)
+            ? character
+            : encodeURIComponent(character)
+        )
+        .join('')
+    )
+    .join('/')
 }
 
 /** 取出 `?query`／`#fragment`。它们不属于文件名，改写时要原样拼回（如 `#t=10`）。 */
@@ -160,28 +199,42 @@ function isInsideRelative(relative: string): boolean {
 }
 
 /**
- * 相对 `root` 的路径里哪一段含 `#` 或 `?`（没有任何一段则返回 null）。
+ * 一个字符能否放进 URL 路径段，并且被静态层还原成文件名。
  *
- * 这两个字符在 `src` 里属于 URL 语法，引用只能写成 `%23`／`%3F`；服务器拿到请求后
- * 虽然会把它们解码回字面名字，但已经先按 `#`／`?` 截断过路径，于是 404。
- * 新建的 dev 与 preview 上都实测过（`a%23b.mp4` 404、`plain.mp4` 200），
- * 叶子名与父目录名一样取不到，所以目录段也要查。同目录下 `%`（写 `%25`）、
- * 空格（写 `%20`）、中文都能正常取到，所以只拦这两个字符。
+ * 两条出路：要么它本来就可以原样写在路径里（`pchar`），要么它必须转义、而静态层
+ * 会把它解回来。两条都不满足的字符，含它的文件与目录名在站上取不到。
+ * 判据直接由编码/解码规则推导，不手写字符表 —— 改编码就自动跟着改。
+ */
+const isServableCharacter = (character: string): boolean => {
+  if (PATH_SEGMENT_SAFE.test(character)) return true
+  try {
+    return decodeURI(encodeURIComponent(character)) === character
+  } catch {
+    return false
+  }
+}
+
+/**
+ * 相对 `root` 的路径里哪一段含取不到的字符（没有任何一段则返回 null），
+ * 以及具体是哪些字符。
  *
- * 只在**相对源根**的路径上判断：项目目录名里带 `?` 不该误伤。
- *
- * 复测时注意别把夹具做坏：同一目录里若同时存在字面叫 `a%23b.mp4` 的文件，
- * 请求 `a%23b.mp4` 会命中那个字面名而返回 200，看起来像「`#` 其实能服务」。
+ * 目前这些字符只有 `#` 与 `?`（`&`、`+`、`,`、`:` 之类可以原样写在路径里，不受影响）。
+ * 目录段与文件段一样算。只在**相对源根**的路径上判断，项目目录名里带 `?` 不会误伤。
  */
 export function findUnservableSegment(
   file: string,
   root: string = MEDIA_SOURCE_ROOT
-): string | null {
+): { segment: string; characters: string[] } | null {
   const relative = path.relative(root, file)
   if (!isInsideRelative(relative)) return null
-  return (
-    relative.split(path.sep).find((segment) => /[?#]/.test(segment)) ?? null
-  )
+
+  for (const segment of relative.split(path.sep)) {
+    const characters = [...new Set([...segment])].filter(
+      (character) => !isServableCharacter(character)
+    )
+    if (characters.length > 0) return { segment, characters }
+  }
+  return null
 }
 
 /** 把绝对路径换算成 `/_media/` 下的 URL；不在源根下时返回 null */
@@ -237,10 +290,7 @@ export function classifyMediaRef(
 
   // `?query` 与 `#fragment` 不属于文件名；`#t=10` 是合法的媒体片段
   const [pathname = ''] = src.split(/[?#]/)
-  const file = path.resolve(
-    path.dirname(markdownPath),
-    decodeMediaPath(pathname)
-  )
+  const file = path.resolve(path.dirname(markdownPath), decodeRefPath(pathname))
   const target = mediaUrlFor(file, roots)
   return target
     ? { kind: 'local', file, url: target }
