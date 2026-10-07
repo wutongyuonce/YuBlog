@@ -321,6 +321,15 @@ test('home and interest cards preserve authored content through the shared pipel
       cardContent(fromHtml(code)),
       `${file}: card titles, metadata and optional ratings match the shared renderer`
     )
+    const groups = (tree) =>
+      elements(tree, 'div')
+        .filter((node) => node.properties.className?.includes('media-cards'))
+        .map(cardContent)
+    assert.deepEqual(
+      groups(page),
+      groups(fromHtml(code)),
+      `${file}: heading-separated card groups remain independent in the real page`
+    )
     for (const card of elements(page, 'article').filter((node) =>
       node.properties.className?.includes('media-card')
     )) {

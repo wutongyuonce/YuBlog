@@ -862,6 +862,24 @@ main:has(.post-content) > footer.prose :is(a, span) {
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
+/* 只切换滑块颜色，不改变滚动区域宽度，避免显隐时文字重排。 */
+.prose :is(.media-card__meta, .media-card__review) {
+  --card-scrollbar-thumb: transparent;
+  scrollbar-color: var(--card-scrollbar-thumb) transparent;
+}
+.prose :is(.media-card__meta, .media-card__review)[data-scrolling] {
+  --card-scrollbar-thumb: var(--c-scrollbar);
+}
+.prose :is(.media-card__meta, .media-card__review)::-webkit-scrollbar {
+  width: 6px;
+}
+.prose :is(.media-card__meta, .media-card__review)::-webkit-scrollbar-track {
+  background: transparent;
+}
+.prose :is(.media-card__meta, .media-card__review)::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background: var(--card-scrollbar-thumb);
+}
 .prose .media-card__meta:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;

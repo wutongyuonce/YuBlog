@@ -1,0 +1,25 @@
+<script>
+  // 捕获不冒泡的 scroll；持久 document 监听也覆盖 Astro 导航后的新卡片。
+  const timers = new WeakMap<HTMLElement, number>()
+  document.addEventListener(
+    'scroll',
+    (event) => {
+      const area = event.target
+      if (
+        !(area instanceof HTMLElement) ||
+        !area.matches('.media-card__meta, .media-card__review')
+      )
+        return
+      window.clearTimeout(timers.get(area))
+      area.dataset.scrolling = ''
+      timers.set(
+        area,
+        window.setTimeout(() => {
+          delete area.dataset.scrolling
+          timers.delete(area)
+        }, 700)
+      )
+    },
+    { capture: true, passive: true }
+  )
+</script>
