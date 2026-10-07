@@ -62,7 +62,7 @@ pnpm install
 pnpm dev --open            # start the dev server and open the browser
 ```
 
-Use the actual `Local` URL reported in the log, not a fixed port such as 4321; never stop someone else's service to free a port. After writing or editing a blog containing image layouts, the content skill starts or reuses `pnpm dev` in the **same worktree** by default, verifies the process cwd before reuse, and confirms a successful article HTTP response before sharing the preview link. If startup is prohibited or unavailable, report that no preview was performed. Drafts are readable in dev but excluded from RSS; dev preview does not replace a production build.
+Use the actual `Local` URL reported in the log, not a fixed port such as 4321; never stop someone else's service to free a port. After writing or editing a blog containing image layouts or cards, the content skill starts or reuses `pnpm dev` in the **same worktree** by default, verifies the process cwd before reuse, and confirms a successful article HTTP response before sharing the preview link; plain-text posts and posts with only ordinary body images do not need a preview. If startup is prohibited or unavailable, report that no preview was performed. Drafts are readable in dev but excluded from RSS; dev preview does not replace a production build.
 
 ```bash
 pnpm check                 # Astro type and content checks
@@ -121,6 +121,6 @@ The skill lives at `blog-content-publisher-skill/SKILL.md`.
 - Put it in your agent’s skills directory.
 - Say which page to change, e.g. new post, edit equipment, add an interest category, add a category icon, add a friend link, change the navbar GitHub link, or edit About socials. The agent should match the page table first, then edit files.
 - It edits Markdown / JSON / site configuration in `src/config.ts`. New blog posts keep `draft: true` unless you asked to publish; this does not apply to interests. Do not commit, push or deploy without explicit authorization.
-- Use the existing `gallery` / `figure` syntax to arrange body content and get a same-worktree dev preview by default. For layout implementation, CSS, or pagination logic, use `docs/项目解析.md`.
+- Lands the author's draft: local images are copied into the article image directory and their references rewritten (external links stay external), body images are arranged automatically (grid / scroll / wrap), book, film and TV entries become cards (links and covers may be filled in from the web), and a same-worktree dev preview is delivered when the post has layouts or cards. For layout implementation, CSS, or pagination logic, use `docs/项目解析.md`.
 
 [MIT](LICENSE)
