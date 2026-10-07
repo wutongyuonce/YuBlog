@@ -76,6 +76,24 @@ src/content/interests/
 :::
 ```
 
+列宽可用 `widths` 控制，它不是图片源宽度，也不替代 `|w`：
+
+```md
+:::gallery{widths="1fr 2fr"}
+![窄列竖图](./文章-img/a.png)
+
+![宽列横图](./文章-img/b.png)
+:::
+
+:::gallery{widths="240px 1fr"}
+![第一列](./文章-img/a.png)
+
+![剩余列](./文章-img/b.png)
+:::
+```
+
+`fr` 是扣除间距后的空间份数；`px` 是列宽目标，窄容器可收窄。支持二／三个正有限数的 `px`／`fr` 值（可小数），不接受 `%`、`auto`、`calc()` 或任意 CSS。省略 columns 时按值数量推导；同时写 columns 时数量必须匹配。`widths="1fr 2fr 1fr"` 为三列 1:2:1。固定列不宜过大，否则剩余列会被挤窄。600px 及以下仍单列。仅想缩小某一张图，用 `|w`；它在原列内居中，不把空位让给邻列。
+
 相册至少一张图，只接受独立 Markdown 直接图片（`![说明](路径)`），可以同段多图，段内除图片外只能有空白。不接受文字说明、列表、引用式图片（`![说明][id]`）、链接包图或 HTML／MDX 图片；说明写在相册外。
 
 ### 横滚相册
@@ -88,7 +106,7 @@ src/content/interests/
 :::
 ```
 
-scroll 不接受 `columns`。全部图片静态存在，原生横滚与 scroll snap 无 JS 也可用；启用 JS 后有箭头和圆点，当前位置跟随实际滚动，无自动播放。gallery 只允许 `layout`／`columns`，不能加标题、类名等额外属性。
+scroll 不接受 `columns` 或 `widths`。全部图片静态存在，原生横滚与 scroll snap 无 JS 也可用；启用 JS 后白色圆形箭头位于图片区域左右边缘，首尾隐藏不可用的箭头，图片底部叠加一图一点的页码，深色点表示当前图。没有底部工具条、可见滚动条或自动播放；圆点多于分页可见宽度时容器自己滚动到当前点、不移动文章，当前位置跟随实际滚动，区域高度随当前图片变化，混合横竖图不会留下非当前图撑高的底部空白。图片完整保持比例。gallery 只允许 `layout`／`columns`／`widths`，不能加标题、类名等额外属性。
 
 ### 图文绕排
 
@@ -106,11 +124,11 @@ figure 只允许 `side="left"` 或 `side="right"`，省略属性默认 right。�
 
 gallery／figure 不能嵌套或相互嵌套。非法属性、属性值或结构使 build 失败并带源位置，不静默删图。普通代码块里的写法是示例，不作为实际布局。
 
-所有布局保持 660px 版心、不 breakout、不裁切。600px 及以下 grid 单列，figure 图片在前、正文在后；scroll 仍横滚。图片路径和 Astro 处理规则不变。
+所有布局保持 660px 版心、不 breakout，静止时不裁切。600px 及以下 grid 单列，figure 图片在前、正文在后；scroll 仍横滚。图片路径和 Astro 处理规则不变。
 
 ## 普通正文图的大图
 
-普通 Markdown 正文图（包括 gallery／figure）启用 JS 后可点图或用独立放大按钮打开原生 dialog。作者用 `[![说明](./文章-img/a.png)](https://example.com/)` 写的图片链接仍跳转，放大按钮放在链接外；混合文字的图片链接 `[![图](./photo.jpg) 文字](url)` 同样保留跳转，放大按钮位于整个链接之后；这种链接包图可用于普通正文，但不满足 gallery／figure 首图的直接图片约束。Esc、遮罩或关闭按钮退出后恢复焦点与打开前滚动锁。`titleImage` 的文章头图／文稿列表缩略图和站点头像不属于放大范围；`:::card` 配图属于正文，仍支持放大。
+普通 Markdown 正文图（包括 gallery／figure）启用 JS 后直接点击即可打开原生 dialog，不显示角落放大标识。鼠标悬浮时图片在原边框内轻微放大、移开复原，光标为 `zoom-in`；减少动态偏好下不缩放。键盘聚焦图片后可用 Enter／空格打开。大图光标为 `zoom-out`，点击图片、Esc、遮罩或关闭按钮均可退出，恢复焦点与打开前滚动锁；浅色遮罩灰白、深色暗色。作者用 `[![说明](./文章-img/a.png)](https://example.com/)` 或混合文字 `[![图](./photo.jpg) 文字](url)` 写的图片链接仍跳转，链接外的独立大图入口只在键盘焦点时显示；这种链接包图可用于普通正文，但不满足 gallery／figure 首图的直接图片约束。`titleImage` 的文章头图／文稿列表缩略图和站点头像不属于放大范围；`:::card` 配图属于正文，仍支持放大。
 
 `plugins/remark-image-layouts.ts` 在 `remarkMediaCard` 后生成布局和 image-view 包装；同模块的 `rehypeImageSources` 在 HTML 解析后保持 template 内大图对 Astro 图片 visitor 可见；每个普通 Markdown 正文图旁的 inert template 内有原尺寸 img，仍从图片节点交给 Astro 解析，不是作者手写 `<img>` 或资源 URL。可见图片沿用 `|w`；大图不沿用缩略图宽度，Astro 处理的大图副本只生成一个原尺寸版本，不生成无法使用的响应式变体；打开前不加载、不预加载。浏览器唯一交互属主是 `src/utils/image-interactions.ts`，widget 在 BaseLayout 只接线；关闭／disconnect 负责清理，并释放 `misc.ts` 的共享滚动锁。本地图继续走 Astro；远程图保持既有管线策略，不为放大新增外链抓取。
 

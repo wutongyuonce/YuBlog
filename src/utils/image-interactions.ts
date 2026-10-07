@@ -27,6 +27,7 @@ export class ImageInteractions extends HTMLElement {
       this.restore()
     }
     dialog.querySelector('button')!.addEventListener('click', close, { signal })
+    dialog.querySelector('img')!.addEventListener('click', close, { signal })
     dialog.addEventListener(
       'click',
       (event) => {
@@ -48,19 +49,26 @@ export class ImageInteractions extends HTMLElement {
     )) {
       const image = view.querySelector<HTMLImageElement>('img')
       if (!image) continue
-      const button = document.createElement('button')
-      button.type = 'button'
-      button.className = 'image-view__zoom'
-      button.textContent = '放大'
-      button.setAttribute('aria-label', `查看大图：${image.alt || '图片'}`)
-      const link = view.closest('a')
+      const link = image.closest('a')
+      let trigger: HTMLElement = image
       if (link) {
-        button.classList.add('image-view__zoom--linked')
+        // Keep authored navigation; expose its separate zoom action on keyboard focus only.
+        const button = document.createElement('button')
+        button.type = 'button'
+        button.className = 'image-view__linked-zoom'
+        button.textContent = '查看大图'
         link.after(button)
-      } else view.append(button)
+        trigger = button
+      } else {
+        view.classList.add('image-view--interactive')
+        image.tabIndex = 0
+        image.setAttribute('role', 'button')
+      }
+      trigger.setAttribute('aria-label', `查看大图：${image.alt || '图片'}`)
+      trigger.setAttribute('aria-haspopup', 'dialog')
       const open = () => {
         if (dialog.open) return
-        this.trigger = button
+        this.trigger = trigger
         const source =
           view
             .querySelector<HTMLTemplateElement>('template')
@@ -72,7 +80,7 @@ export class ImageInteractions extends HTMLElement {
         this.releaseScroll = lockScroll()
         dialog.showModal()
       }
-      button.addEventListener(
+      trigger.addEventListener(
         'click',
         (event) => {
           event.preventDefault()
@@ -81,14 +89,17 @@ export class ImageInteractions extends HTMLElement {
         },
         { signal }
       )
-      image.addEventListener(
-        'click',
-        () => {
-          // Authored image links keep their navigation; the zoom button still works.
-          if (!image.closest('a')) open()
-        },
-        { signal }
-      )
+      if (!link) {
+        image.addEventListener(
+          'keydown',
+          (event) => {
+            if (!['Enter', ' '].includes(event.key)) return
+            event.preventDefault()
+            open()
+          },
+          { signal }
+        )
+      }
     }
 
     for (const gallery of document.querySelectorAll<HTMLElement>(
@@ -103,22 +114,35 @@ export class ImageInteractions extends HTMLElement {
       ...gallery.querySelectorAll<HTMLElement>(':scope > .image-gallery__item'),
     ]
     if (items.length < 2) return
-    const controls = document.createElement('div')
-    controls.className = 'image-gallery__controls'
-    const button = (label: string, text: string) => {
+    const viewport = document.createElement('div')
+    viewport.className = 'image-gallery__viewport'
+    gallery.before(viewport)
+    viewport.append(gallery)
+    const button = (label: string, className: string) => {
       const node = document.createElement('button')
       node.type = 'button'
+      node.className = className
       node.setAttribute('aria-label', label)
-      node.textContent = text
-      controls.append(node)
       return node
     }
-    const previous = button('上一张图片', '‹')
-    const dots = items.map((_, index) =>
-      button(`显示第 ${index + 1} 张图片`, '•')
+    const previous = button(
+      '上一张图片',
+      'image-gallery__arrow image-gallery__arrow--previous'
     )
-    const next = button('下一张图片', '›')
-    gallery.after(controls)
+    const next = button(
+      '下一张图片',
+      'image-gallery__arrow image-gallery__arrow--next'
+    )
+    const controls = document.createElement('div')
+    controls.className = 'image-gallery__controls'
+    controls.setAttribute('role', 'group')
+    controls.setAttribute('aria-label', '相册页码')
+    const dots = items.map((_, index) => {
+      const dot = button(`显示第 ${index + 1} 张图片`, 'image-gallery__dot')
+      controls.append(dot)
+      return dot
+    })
+    viewport.append(previous, next, controls)
     gallery.tabIndex = 0
     gallery.setAttribute('role', 'region')
     gallery.setAttribute('aria-label', '横向图片相册')
@@ -133,11 +157,23 @@ export class ImageInteractions extends HTMLElement {
             : nearest,
         0
       )
+      // Match the active frame, not the tallest off-screen portrait.
+      const frame = items[current].querySelector<HTMLElement>('.image-view')
+      if (frame)
+        gallery.style.height = `${frame.getBoundingClientRect().height}px`
       previous.disabled = current === 0
       next.disabled = current === items.length - 1
       dots.forEach((dot, index) => {
         dot.setAttribute('aria-current', index === current ? 'true' : 'false')
       })
+      // Long galleries scroll their own pagination; reveal the active dot there
+      // instead of moving the article.
+      const dot = dots[current]
+      const right = dot.offsetLeft + dot.offsetWidth
+      if (dot.offsetLeft < controls.scrollLeft)
+        controls.scrollLeft = dot.offsetLeft
+      else if (right > controls.scrollLeft + controls.clientWidth)
+        controls.scrollLeft = right - controls.clientWidth
     }
     const go = (index: number) => {
       const item = items[Math.max(0, Math.min(items.length - 1, index))]
@@ -170,6 +206,14 @@ export class ImageInteractions extends HTMLElement {
     )
     gallery.addEventListener('scroll', update, { signal })
     window.addEventListener('resize', update, { signal })
+    const observer = new ResizeObserver(update)
+    for (const item of items) {
+      const frame = item.querySelector('.image-view')
+      if (frame) observer.observe(frame)
+    }
+    signal.addEventListener('abort', () => observer.disconnect(), {
+      once: true,
+    })
     update()
   }
 

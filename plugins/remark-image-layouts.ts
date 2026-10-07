@@ -50,7 +50,7 @@ export default function remarkImageLayouts() {
         transform(node, true)
         const attrs = node.attributes ?? {}
         const allowed =
-          node.name === 'gallery' ? ['layout', 'columns'] : ['side']
+          node.name === 'gallery' ? ['layout', 'columns', 'widths'] : ['side']
         for (const key of Object.keys(attrs)) {
           if (!allowed.includes(key))
             fail(`Unknown ${node.name} attribute: ${key}`, node)
@@ -60,11 +60,34 @@ export default function remarkImageLayouts() {
           const layout = attrs.layout === undefined ? 'grid' : attrs.layout
           if (layout !== 'grid' && layout !== 'scroll')
             fail('Gallery layout must be grid or scroll', node)
-          const columns = attrs.columns === undefined ? '2' : attrs.columns
           if (layout === 'scroll' && attrs.columns !== undefined)
             fail('Scroll galleries do not accept columns', node)
+          if (layout === 'scroll' && attrs.widths !== undefined)
+            fail('Scroll galleries do not accept widths', node)
+          let tracks: string[] | undefined
+          if (attrs.widths !== undefined) {
+            tracks = (attrs.widths ?? '').trim().split(/\s+/)
+            if (
+              ![2, 3].includes(tracks.length) ||
+              tracks.some((token) => {
+                const match = /^(\d+(?:\.\d+)?|\.\d+)(px|fr)$/.exec(token)
+                const value = match ? Number(match[1]) : NaN
+                return !Number.isFinite(value) || value <= 0
+              })
+            )
+              fail(
+                'Grid gallery widths must be 2 or 3 positive finite px/fr tracks',
+                node
+              )
+          }
+          const columns =
+            attrs.columns === undefined
+              ? (tracks?.length.toString() ?? '2')
+              : attrs.columns
           if (columns !== '2' && columns !== '3')
             fail('Grid gallery columns must be 2 or 3', node)
+          if (tracks && Number(columns) !== tracks.length)
+            fail('Grid gallery columns must match widths count', node)
           const images = node.children.flatMap((item) => {
             const images = imagesIn(item)
             if (!images)
@@ -82,7 +105,16 @@ export default function remarkImageLayouts() {
             images.map((image) =>
               element('div', 'image-gallery__item', [image])
             ),
-            layout === 'grid' ? { 'data-columns': columns } : {}
+            layout === 'grid'
+              ? {
+                  'data-columns': columns,
+                  ...(tracks
+                    ? {
+                        style: `--image-gallery-columns: ${tracks.map((token) => `minmax(0, ${token})`).join(' ')}`,
+                      }
+                    : {}),
+                }
+              : {}
           )
         }
 

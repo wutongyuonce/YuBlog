@@ -60,6 +60,54 @@ test('gallery preserves explicit groups and image order, including same-paragrap
   )
 })
 
+test('grid widths control constrained tracks while preserving images and authored thumbnail widths', async () => {
+  for (const [attrs, columns, style] of [
+    [
+      'columns="2" widths="1fr 2fr"',
+      '2',
+      '--image-gallery-columns: minmax(0, 1fr) minmax(0, 2fr)',
+    ],
+    [
+      'columns="2" widths="240px 1fr"',
+      '2',
+      '--image-gallery-columns: minmax(0, 240px) minmax(0, 1fr)',
+    ],
+    [
+      'widths=".5fr 1.25fr 2fr"',
+      '3',
+      '--image-gallery-columns: minmax(0, .5fr) minmax(0, 1.25fr) minmax(0, 2fr)',
+    ],
+    [
+      'widths=" \t240.5px\t  .5fr  "',
+      '2',
+      '--image-gallery-columns: minmax(0, 240.5px) minmax(0, .5fr)',
+    ],
+  ]) {
+    const { code } = await processor.render(`:::gallery{${attrs}}
+![一|w220](https://example.com/1.jpg)
+
+![二](https://example.com/2.jpg)
+:::`)
+    const grid = nodes(code, hasClass('image-gallery--grid'))[0]
+    assert.equal(grid.properties.dataColumns, columns)
+    assert.equal(grid.properties.style, style)
+    const images = nodes(code, (node) => node.tagName === 'img')
+    assert.deepEqual(
+      images.map((image) => [image.properties.alt, image.properties.src]),
+      [
+        ['一', 'https://example.com/1.jpg'],
+        ['二', 'https://example.com/2.jpg'],
+      ]
+    )
+    assert.equal(images[0].properties.width, 220)
+    const full = nodes(code, hasClass('image-view'))[0].children.find(
+      (node) => node.tagName === 'template'
+    ).content.children[0]
+    assert.equal(full.properties.src, 'https://example.com/1.jpg')
+    assert.equal(full.properties.width, undefined)
+  }
+})
+
 test('figure scopes its first image and retains Markdown prose after it', async () => {
   for (const side of ['left', 'right']) {
     const { code } = await processor.render(`:::figure{side="${side}"}
@@ -99,7 +147,13 @@ test('ordinary images keep authored thumbnail width and a separate full-size Ast
 })
 
 test('RSS degrades both gallery modes and figures without duplicate sources or missing pictures', async () => {
-  const { code } = await processor.render(`:::gallery{layout="scroll"}
+  const { code } = await processor.render(`:::gallery{widths="240px 1fr"}
+![定宽](https://example.com/fixed.jpg)
+
+![自适应](https://example.com/flexible.jpg)
+:::
+
+:::gallery{layout="scroll"}
 ![一](https://example.com/1.jpg)
 
 ![二](https://example.com/2.jpg)
@@ -111,10 +165,23 @@ test('RSS degrades both gallery modes and figures without duplicate sources or m
 最后的正文。
 :::`)
   assert.equal(nodes(code, hasClass('image-figure--right')).length, 1)
+  assert.equal(
+    nodes(code, hasClass('image-gallery--grid'))[0].properties.style,
+    '--image-gallery-columns: minmax(0, 240px) minmax(0, 1fr)'
+  )
   const rss = toRssHtml(code, 'https://example.com/blogs/demo/')
   assert.deepEqual(
-    nodes(rss, (n) => n.tagName === 'img').map((n) => n.properties.alt),
-    ['一', '二', '三']
+    nodes(rss, (n) => n.tagName === 'img').map((n) => [
+      n.properties.alt,
+      n.properties.src,
+    ]),
+    [
+      ['定宽', 'https://example.com/fixed.jpg'],
+      ['自适应', 'https://example.com/flexible.jpg'],
+      ['一', 'https://example.com/1.jpg'],
+      ['二', 'https://example.com/2.jpg'],
+      ['三', 'https://example.com/3.jpg'],
+    ]
   )
   assert.match(rss, /最后的正文/)
   assert.doesNotMatch(rss, /template|class=|style=|data-columns|layout=/)
@@ -124,6 +191,31 @@ test('invalid layout intent fails explicitly rather than dropping or guessing au
   for (const source of [
     ':::gallery{layout}\n![图](./x.png)\n:::',
     ':::gallery{columns}\n![图](./x.png)\n:::',
+    ':::gallery{widths}\n![图](./x.png)\n:::',
+    ':::gallery{widths=""}\n![图](./x.png)\n:::',
+    ':::gallery{widths=" \t "}\n![图](./x.png)\n:::',
+    ':::gallery{widths="1fr"}\n![图](./x.png)\n:::',
+    ':::gallery{widths="1fr 1fr 1fr 1fr"}\n![图](./x.png)\n:::',
+    ':::gallery{columns="2" widths="1fr 1fr 1fr"}\n![图](./x.png)\n:::',
+    ':::gallery{columns="3" widths="1fr 1fr"}\n![图](./x.png)\n:::',
+    ':::gallery{columns="4" widths="1fr 1fr"}\n![图](./x.png)\n:::',
+    ':::gallery{columns widths="1fr 1fr"}\n![图](./x.png)\n:::',
+    ':::gallery{widths="1fr; color:red"}\n![图](./x.png)\n:::',
+    ':::gallery{widths="1fr calc(2fr)"}\n![图](./x.png)\n:::',
+    ':::gallery{widths="1fr var(--track)"}\n![图](./x.png)\n:::',
+    ':::gallery{widths="0fr 1fr"}\n![图](./x.png)\n:::',
+    ':::gallery{widths="1fr 0.0px"}\n![图](./x.png)\n:::',
+    ':::gallery{widths="-1px 1fr"}\n![图](./x.png)\n:::',
+    ':::gallery{widths="1fr -.5fr"}\n![图](./x.png)\n:::',
+    ':::gallery{widths="Infinitypx 1fr"}\n![图](./x.png)\n:::',
+    ':::gallery{widths="NaNfr 1fr"}\n![图](./x.png)\n:::',
+    `:::gallery{widths="${'9'.repeat(309)}px 1fr"}\n![图](./x.png)\n:::`,
+    ':::gallery{widths="1e3px 1fr"}\n![图](./x.png)\n:::',
+    ':::gallery{widths="50% 1fr"}\n![图](./x.png)\n:::',
+    ':::gallery{widths="20em 1fr"}\n![图](./x.png)\n:::',
+    ':::gallery{widths="240 1fr"}\n![图](./x.png)\n:::',
+    ':::gallery{layout="scroll" widths="1fr 2fr"}\n![图](./x.png)\n:::',
+    ':::gallery{layout="scroll" widths}\n![图](./x.png)\n:::',
     ':::figure{side}\n![图](./x.png)\n\n正文\n:::',
     ':::gallery{layout="carousel"}\n![图](./x.png)\n:::',
     ':::gallery{columns="4"}\n![图](./x.png)\n:::',
@@ -143,7 +235,9 @@ test('invalid layout intent fails explicitly rather than dropping or guessing au
       (error) =>
         /Gallery|Grid gallery|Scroll galleries|Figure|Unknown gallery|Image layouts/.test(
           error.message
-        ) && error.line > 0
+        ) &&
+        error.line > 0 &&
+        error.column > 0
     )
   }
 })

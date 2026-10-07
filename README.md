@@ -38,7 +38,7 @@
 
 封面用 `titleImage`／`titleImageAlt`，源图位于 `src/content/blogs/_title-images/`；正文图位于文章所在目录或子目录，以相对路径引用，不能向上越级。拾趣图片位于 `src/content/interests/<id>/`。入口说明只维护 `intro.md`，首页近期书影游只维护 `recent.md`；二者不生成拾趣子页或菜单项。`:::card` 与标题都使用共享 Markdown 管线和 `prose.css`：连续卡片按容器宽度自动分列，当前版心最多两列，标题将卡片分组。正文标题共用 `.markdown-content`。评分由作者按需填写，与观看／游玩状态无关；未填写时不生成评分。关于内容只维护 `src/content/about/about.md`。
 
-正文图片支持 `:::gallery`（默认两列网格，可选三列或 `layout="scroll"` 横滚）和 `:::figure`（默认右侧绕排，可选左侧）。普通 Markdown 正文图可点击或用独立按钮放大，作者图片链接仍保留跳转；图片继续走 Astro 和原有 `|w` 标记。布局不超出 660px 版心、不裁切；600px 及以下网格单列、绕排上下，无 JS 仍可阅读和横滚，RSS 按源顺序保留图片与文字。
+正文图片支持 `:::gallery`（默认两列网格，可选三列、`widths="1fr 2fr"` 比例列宽、`widths="240px 1fr"` 固定列＋剩余列，或 `layout="scroll"` 横滚；横滚配图片边缘箭头与底部深色当前位置小点）和 `:::figure`（默认右侧绕排，可选左侧）。普通 Markdown 正文图可直接点击放大，悬浮时在原边框内轻微缩放；大图可点击收回，遮罩跟随深浅主题。作者图片链接仍保留跳转，另有仅键盘焦点时显示的大图入口；图片继续走 Astro 和原有 `|w` 标记。布局不超出 660px 版心、不裁切；600px 及以下网格单列、绕排上下，无 JS 仍可阅读和横滚，RSS 按源顺序保留图片与文字。
 
 作者操作见 [内容发布 skill](blog-content-publisher-skill/SKILL.md)，图片写法见 [图片管线指南](docs/Astro图片管线指南.md)。页面行为契约见 [站点行为 SPEC](docs/站点行为%20SPEC.md)，模块权威与边界见 [项目解析](docs/项目解析.md)，全文订阅见 [RSS SPEC](docs/RSS%20全文支持%20SPEC.md)。
 
