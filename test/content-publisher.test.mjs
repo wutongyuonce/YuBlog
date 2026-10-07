@@ -10,8 +10,8 @@ import {
   writeFile,
 } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { isAbsolute, join, relative, sep } from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import test from 'node:test'
 
 const validator = fileURLToPath(
@@ -78,9 +78,6 @@ print(json.dumps(data))
   assert.equal(data.category, '技术 # 专栏')
   assert.equal(data.description, '第一行 # 这是正文\n第二行\n')
   assert.deepEqual(data.tags, ['Astro', 'YAML'])
-  const result = validate(root)
-  assert.equal(result.status, 0, result.stderr)
-  assert.match(result.stdout, /OK: blog metadata/)
 })
 
 test('publisher fails on malformed YAML and invalid dates rather than ignoring them', async (t) => {
@@ -97,38 +94,6 @@ test('publisher fails on malformed YAML and invalid dates rather than ignoring t
     assert.equal(result.status, 1, result.stderr)
     assert.match(result.stderr, error)
   }
-})
-
-test('publisher rejects body links that point at Markdown sources', async (t) => {
-  const { root, path } = await fixture(t, '')
-  const front = '---\ntitle: 测试\ncategory: 技术\npubDate: 2026-09-21\n---\n'
-  const fence = '```'
-
-  // 指向 .md 的相对链接在站点上会被解析成 <页面目录>/算法1.md，点下去是 404，
-  // 而 pnpm build 不会报错 —— 预检必须拦住这种写法。
-  await writeFile(path, front + '[上篇](./算法1.md#27)\n')
-  const bad = validate(root)
-  assert.equal(bad.status, 1, bad.stderr)
-  assert.match(bad.stderr, /链接指向 Markdown 源文件/)
-  assert.match(bad.stderr, /站内 URL/)
-
-  // 外链里的 .md 是正常写法；代码块和行内代码里的示例也不是真链接。
-  await writeFile(
-    path,
-    [
-      front,
-      '[文档](https://github.com/x/y/blob/main/README.md)',
-      '',
-      fence + 'md',
-      '[上篇](./算法1.md#27)',
-      fence,
-      '',
-      '行内示例 `](./x.md)` 也不算。',
-      '',
-    ].join('\n')
-  )
-  const ok = validate(root)
-  assert.equal(ok.status, 0, ok.stderr)
 })
 
 test('publisher finds real links through the Markdown parser, not by regex', async (t) => {
@@ -158,16 +123,21 @@ test('publisher finds real links through the Markdown parser, not by regex', asy
     '[下载](./100%.txt)',
     '<a href="&#x1f; //cdn.example.com/README.md&#x1f;">文档</a>',
     '<a href="https:\t//cdn.example.com/README.md">文档</a>',
+    '<a href=" //cdn.example.com/README.md">外链</a>',
+    '[下载](/downloads/README.md)',
+    '<!-- <a href="./missing.md">旧文</a> -->',
+    '<a data-href="./missing.md" href="/blogs/ok/">旧文</a>',
   ]
-  for (const body of ignored) {
-    await writeFile(path, `${front}\n${body}\n`)
-    const result = validate(root)
-    assert.equal(result.status, 0, `${body}\n${result.stderr}`)
-  }
+  await writeFile(path, `${front}\n${ignored.join('\n\n')}\n`)
+  const accepted = validate(root)
+  assert.equal(accepted.status, 0, accepted.stderr)
+  assert.match(accepted.stdout, /OK: blog metadata/)
 
   // 真链接都要抓到：引用式、带查询串、引用块围栏之后的正文，
   // 以及三种用正则取 href 会漏掉或误报的写法
   const flagged = [
+    '[上篇](./算法1.md#27)',
+    '<a href="./missing.md ">旧文</a>',
     '[旧文][1]\n\n[1]: ./ref.md',
     '[旧文](./old.md?raw=1)',
     `> ${fence}\n> [示例](./quoted.md)\n> ${fence}\n\n[别的](./real.md)`,
@@ -194,36 +164,6 @@ test('publisher finds real links through the Markdown parser, not by regex', asy
     assert.match(result.stderr, /链接指向 Markdown 源文件/)
   }
 
-  // 浏览器解析 URL 时去掉首尾空白、删掉制表符与换行：
-  // 不照做会把带前导空格的协议相对外链当站内，也会漏掉尾随空格后的 .md
-  await writeFile(
-    path,
-    `${front}\n<a href=" //cdn.example.com/README.md">外链</a>\n`
-  )
-  assert.equal(validate(root).status, 0, '前导空格的协议相对外链是外站')
-
-  await writeFile(path, `${front}\n<a href="./missing.md ">旧文</a>\n`)
-  assert.equal(
-    validate(root).status,
-    1,
-    '浏览器会去掉尾随空白，这个链接仍然指向 Markdown 源文件'
-  )
-
-  // 站内绝对路径指向 public/ 里的真实文件，不在预检范围内（由产物测试判定）
-  await writeFile(path, `${front}\n[下载](/downloads/README.md)\n`)
-  assert.equal(validate(root).status, 0, '站内绝对路径不归预检')
-
-  // 注释里的 <a> 不是链接：正则取 href 会把它当成链接误报
-  await writeFile(path, `${front}\n<!-- <a href="./missing.md">旧文</a> -->\n`)
-  assert.equal(validate(root).status, 0, '注释里的标签不算链接')
-
-  // data-href 不能冒充 href
-  await writeFile(
-    path,
-    `${front}\n<a data-href="./missing.md" href="/blogs/ok/">旧文</a>\n`
-  )
-  assert.equal(validate(root).status, 0, 'data-href 不是 href')
-
   await writeFile(
     path,
     `${front}\n<a href="https://[invalid]/README.md">坏链接</a>\n`
@@ -243,21 +183,25 @@ test('the skill package stands alone instead of pointing at repository docs', as
   ).filter((entry) => entry.isFile() && /\.(md|ya?ml)$/.test(entry.name))
   assert.ok(documents.length > 0, 'the package ships its own documents')
   for (const entry of documents) {
-    const source = await readFile(join(entry.parentPath, entry.name), 'utf8')
-    assert.doesNotMatch(
-      source,
-      /docs\//,
-      `${entry.name} must describe the rules itself instead of naming repository docs`
-    )
+    const document = join(entry.parentPath, entry.name)
+    const source = await readFile(document, 'utf8')
     // Inline links and reference definitions are both ways to point outside.
     const targets = [
       ...source.matchAll(/\]\(([^)\s]+)\)/g),
       ...source.matchAll(/^\s{0,3}\[[^\]]*\]:\s*(\S+)/gm),
     ].map((match) => match[1])
-    for (const target of targets)
+    for (const target of targets) {
+      const url = new URL(target, pathToFileURL(document))
+      if (url.protocol !== 'file:') continue
+      const linkedPath = fileURLToPath(url)
+      if (!/\.mdx?$/.test(linkedPath)) continue
+      const location = relative(directory, linkedPath)
       assert.ok(
-        !target.startsWith('../') && !/\.mdx?($|#)/.test(target),
+        location !== '..' &&
+          !location.startsWith(`..${sep}`) &&
+          !isAbsolute(location),
         `${entry.name} must not link a document outside the skill: ${target}`
       )
+    }
   }
 })

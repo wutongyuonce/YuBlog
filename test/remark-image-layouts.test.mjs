@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { VFile } from 'vfile'
 import { createMarkdownProcessor } from '@astrojs/markdown-remark'
 import remarkDirective from 'remark-directive'
 import rehypeRaw from 'rehype-raw'
@@ -109,8 +110,9 @@ test('grid widths control constrained tracks while preserving images and authore
 })
 
 test('figure scopes its first image and retains Markdown prose after it', async () => {
-  for (const side of ['left', 'right']) {
-    const { code } = await processor.render(`:::figure{side="${side}"}
+  for (const side of [undefined, 'left', 'right']) {
+    const { code } =
+      await processor.render(`:::figure${side ? `{side="${side}"}` : ''}
 ![配图](https://example.com/1.jpg)
 
 **正文** [链接](https://example.com/)
@@ -119,10 +121,58 @@ test('figure scopes its first image and retains Markdown prose after it', async 
 :::
 
 容器外文字。`)
-    assert.equal(nodes(code, hasClass(`image-figure--${side}`)).length, 1)
+    assert.equal(
+      nodes(code, hasClass(`image-figure--${side ?? 'right'}`)).length,
+      1
+    )
     assert.match(code, /<strong>正文<\/strong>/)
     assert.match(code, /后续段落/)
     assert.match(code, /容器外文字/)
+  }
+})
+
+test('figure accepts visible HTML prose and literal markup in code', async () => {
+  for (const prose of ['<p>HTML <strong>正文</strong></p>', '`<img>`']) {
+    const { code } = await processor.render(
+      `:::figure\n![图](https://example.com/image.jpg)\n\n${prose}\n:::`
+    )
+    assert.equal(nodes(code, hasClass('image-figure')).length, 1)
+  }
+})
+
+test('static MDX media fallback does not supply figure prose but ordinary MDX text does', () => {
+  const figure = (type, name) => ({
+    type: 'containerDirective',
+    name: 'figure',
+    attributes: {},
+    children: [
+      {
+        type: 'paragraph',
+        children: [{ type: 'image', url: './x.png', alt: '图' }],
+      },
+      {
+        type,
+        name,
+        attributes: [],
+        children: [{ type: 'text', value: '文字' }],
+      },
+    ],
+  })
+  for (const type of ['mdxJsxFlowElement', 'mdxJsxTextElement']) {
+    assert.throws(
+      () =>
+        remarkImageLayouts()(
+          { type: 'root', children: [figure(type, 'video')] },
+          new VFile()
+        ),
+      /Figure requires.*prose/
+    )
+    assert.doesNotThrow(() =>
+      remarkImageLayouts()(
+        { type: 'root', children: [figure(type, 'p')] },
+        new VFile()
+      )
+    )
   }
 })
 
@@ -164,11 +214,6 @@ test('RSS degrades both gallery modes and figures without duplicate sources or m
 
 最后的正文。
 :::`)
-  assert.equal(nodes(code, hasClass('image-figure--right')).length, 1)
-  assert.equal(
-    nodes(code, hasClass('image-gallery--grid'))[0].properties.style,
-    '--image-gallery-columns: minmax(0, 240px) minmax(0, 1fr)'
-  )
   const rss = toRssHtml(code, 'https://example.com/blogs/demo/')
   assert.deepEqual(
     nodes(rss, (n) => n.tagName === 'img').map((n) => [
@@ -227,6 +272,15 @@ test('invalid layout intent fails explicitly rather than dropping or guessing au
     ':::figure\n![图](./x.png)\n:::',
     ':::figure\n![图](./x.png)\n\n![另一图](./y.png)\n:::',
     ':::figure\n![图](./x.png)\n\n[link]: https://example.com/\n:::',
+    ':::figure\n![图](./x.png)\n\n[^unused]: 这段文字没有在页面显示\n:::',
+    ...[
+      '<!-- 编辑备注 -->',
+      '<br>',
+      '<div></div>',
+      '<img src="https://example.com/only.jpg">',
+      '<script>不是正文</script>',
+      '<template>不是正文</template>',
+    ].map((html) => `:::figure\n![图](./x.png)\n\n${html}\n:::`),
     ':::figure\n正文\n\n![图](./x.png)\n:::',
     '::::figure\n![图](./x.png)\n\n:::gallery\n![图](./y.png)\n:::\n::::',
   ]) {

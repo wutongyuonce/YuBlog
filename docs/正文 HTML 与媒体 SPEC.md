@@ -16,7 +16,7 @@
 | rehype（HAST） | HTML 加工：标题 id／锚点／TOC、表格滚动容器、提示框、公式、媒体引用改写 |
 | 资源与服务 | `public/` 静态文件、Astro 图片管线、RSS 白名单 |
 
-核心约束只有一句：**未被解析的原始 HTML 在 HAST 里不是元素而是一串文本，所有 rehype 插件都 `visit` 不到它。** 所以 `rehype-raw` 必须排在自定义 rehype 插件之前；排在最后（Astro 内部管线默认位置）会让手写 `<h2>`／`<table>` 绕过全部加工。
+核心约束只有一句：**未被解析的原始 HTML 在 HAST 里不是元素而是一串文本，所有 rehype 插件都 `visit` 不到它。** 所以 `rehype-raw` 必须排在处理这些元素的 rehype 阶段之前；排在最后（Astro 内部管线默认位置）会让手写 `<h2>`／`<table>` 绕过全部加工。
 
 图片与视频互不重叠：图片有 Markdown 语法，归 Astro 图片管线；视频／音频没有，归本站媒体层。
 
@@ -54,6 +54,8 @@ src/<rel>  →  public/_media/<rel>  →  站点 URL /_media/<rel>
 
 指向本地媒体文件的 `<a href>`（例如视频旁的降级链接）与 `src` 用同一套规则改写，所以两边可以写同一个相对路径。指向 `.md` 等非媒体文件的相对链接不归这一层管（见 §4）。
 
+相对媒体引用允许 query／fragment 后缀，如 `./demo.mp4#t=10`、`./demo.mp4?download=1`；后缀不参与文件路径解析，改写后原样保留。
+
 URL 前缀跟随 `SITE.base`，子路径部署时不会请求到错误位置。
 
 ## 4. 链接与锚点
@@ -70,7 +72,7 @@ URL 前缀跟随 `SITE.base`，子路径部署时不会请求到错误位置。
 
 | 模块 | 唯一职责 |
 | --- | --- |
-| `plugins/index.ts` | 管线装配（顺序即规则）。`rehypeRaw` 必须是 `rehypePlugins[0]`，`rehypeMediaAssets` 紧随其后 |
+| `plugins/index.ts` | 管线装配。`rehypeRaw` 必须先于处理原生 HTML 元素的阶段执行，不要求与媒体插件相邻 |
 | `plugins/media-paths.ts` | 媒体引用规则：扩展名、`src/` → `public/_media/` 映射、把引用分成 external／rooted／inline／invalid／unsupported／local／outside，判定「在 `src/` 之内」「哪一段含取不到的字符」，并给出 URL 段 ↔ 文件名的两个方向（`decodeRefPath` 是作者想要的文件名，`decodeServedPath` 是静态层实际会去找的名字）。除 `isMirrorableFile` 要 lstat／realpath 外都是纯函数，不写文件 |
 | `plugins/rehype-media-assets.ts` | 按元素分派改写与报错策略；不做路径推导 |
 | `plugins/astro-media-sync.ts` | 把 `src/` 视频／音频落盘到 `public/_media/`；不做 URL 推导 |
@@ -88,7 +90,7 @@ URL 前缀跟随 `SITE.base`，子路径部署时不会请求到错误位置。
 - `<video poster>` 的相对路径（poster 是图片，不在镜像范围）
 - 逃出 `src/` 目录的相对路径（`<video src>` 与指向媒体的 `<a href>` 同一套规则）
 - 扩展名不在 `MEDIA_EXTENSIONS` 内（报错会给出两条出路：图片改用 Markdown 语法，字幕等其它类型放进 `public/`）
-- 相对路径里含 `#` 或 `?`，文件名与**目录名**都算（见下面「路径里能出现的字符」）
+- 解码后的相对文件名或**目录名**含 `#` 或 `?`（如 `%23`／`%3F`；query／fragment 后缀不算，见下面「路径里能出现的字符」）
 - 指向的不是可镜像的文件：文件缺失、目录、符号链接（枚举不进入链接，校验就不放行，两侧共用一条判据）
 
 ### 路径里能出现的字符
@@ -101,7 +103,7 @@ URL 前缀跟随 `SITE.base`，子路径部署时不会请求到错误位置。
 
 判据只看**相对源根**的路径段，项目目录名里带 `?` 不会误伤。
 
-**带 `markdown-content` 容器的页面必须有正文。** 页面里每一个正文容器都要有正文元素或非空文本，目录控件不算正文、草稿提示位于标题区；有一个容器缺少正文就让构建失败（`scripts/check-content-rendered.mjs`，串在 `postbuild` 里）。这条同时守住「渲染失败丢内容」和「一页有多个正文容器时其中一个悄悄变空」：Astro 的内容加载器会捕获单条渲染异常并继续、把该条以空正文存进集合，只有这道校验能把整次构建拦下来，而部署只跑 `pnpm build`、不跑测试。内容本来就不该有正文时，不要使用这个容器。
+**带 `markdown-content` 容器的页面必须有正文。** 页面里每一个正文容器都要有正文元素或非空文本，目录控件不算正文、草稿提示位于标题区；有一个容器缺少正文就让构建失败（`scripts/check-content-rendered.mjs`，串在 `postbuild` 里）。这条同时守住「渲染失败丢内容」和「一页有多个正文容器时其中一个悄悄变空」：Astro 的内容加载器会捕获单条渲染异常并继续、把该条以空正文存进集合；RSS endpoint 在清洗前已拒绝博客的空渲染 HTML，这道校验则覆盖全站每个正文容器（包括关于、拾趣），不依赖它们是否进入 RSS。部署只跑 `pnpm build`、不跑测试，所以校验必须留在构建链中。内容本来就不该有正文时，不要使用这个容器。
 
 这道校验检查页面渲染结果，不要求 RSS 清洗后仍有文字。只有视频等嵌入的页面正文可以通过，而 RSS 移除嵌入后会只保留原文入口；作者需要在控件外补文字说明或媒体链接。
 

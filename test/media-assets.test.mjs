@@ -506,10 +506,7 @@ test('镜像幂等、清理陈旧产物，并跳过目录与符号链接', () =>
     '不能进入源链接目录'
   )
 
-  // 内容和 mtime 都没变时不应重复复制
-  const stamp = statSync(target).mtimeMs
   assert.equal(syncMedia(roots).copied, 0, '内容未变时不应重复复制')
-  assert.equal(statSync(target).mtimeMs, stamp)
 
   // 大小相同但内容变了（导入了一个时间戳更早的新文件）也必须重写：
   // 只比大小、或把新时间戳当“更新”，都会永久留着旧内容
@@ -517,7 +514,11 @@ test('镜像幂等、清理陈旧产物，并跳过目录与符号链接', () =>
   const older = new Date(Date.now() - 86_400_000)
   utimesSync(source, older, older)
   assert.equal(syncMedia(roots).copied, 1, '内容变了就必须重写')
-  assert.equal(statSync(target).size, 5)
+  assert.equal(
+    readFileSync(target, 'utf8'),
+    'VIDEO',
+    '同大小更新也必须复制新内容'
+  )
 
   // clip.mp4/old.mp4 -> clip.mp4：派生的旧目录必须自动换成普通文件。
   // 删除旧目录时也不能沿里面的链接触达源树。

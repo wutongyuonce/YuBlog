@@ -99,8 +99,9 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 - `<style>` 块、`style="…"`、`class` 都生效；`<style>` 是**整页全局**的，会影响顶栏和目录，用带前缀的类名或 UnoCSS 工具类。`<div>`、`<span>`、`<br>`、`<details>` 原样透传。
 - 图片尺寸写 alt 的 `|w` 标记，例如 `![说明|w330](./x.png)`；不要用 `style="zoom:50%"`（Typora 拖拽缩放、LeetCode 粘贴会自带）。外链图 Markdown 与 `<img>` 两种写法等价。
 - 视频：外链平台用 `<iframe>`；本地文件用 `<video src="./demo.mp4">`，文件放文章旁边或子目录，构建与 dev 启动时镜像到 `public/_media/`，Typora 与站点两边都能播；dev 中增删或替换媒体文件后重启服务器。
+- 相对媒体引用允许 query／fragment 后缀，如 `./demo.mp4#t=10`、`./demo.mp4?download=1`；改写时保留后缀，它们不属于文件名。
 - 视频旁建议补一行文字链接（否则订阅者在 RSS 里只看到空白），指向同一个文件即可：`[本视频](./demo.mp4)`。指向本地媒体文件的链接会和 `src` 一起被改写。
-- 下面这些会**构建期报错**（带文件路径与行号），不会静默 404：原生 `<img>` 写相对路径（改用 Markdown 语法；处于 `.mdx` 页面或同一路径也被 Markdown 图片语法引用时例外）、`<video poster="…">` 写相对路径（poster 是图片，不进管线也不被镜像，请把图片放进 `public/`、不要放 `public/_media/`，再用 `/…` 引用）、`data:` 内联内容（先存成文件）、`file:` 等浏览器打不开的协议、相对路径逃出 `src/` 目录、媒体文件不存在或指向的是目录／符号链接、扩展名不在支持列表、相对路径里含 `#` 或 `?`（文件名与目录名都算，本站取不到，改名即可）。报错给出的是**源文件**行号与作者写的原始路径，可以直接照着改。
+- 下面这些会**构建期报错**（带文件路径与行号），不会静默 404：原生 `<img>` 写相对路径（改用 Markdown 语法；处于 `.mdx` 页面或同一路径也被 Markdown 图片语法引用时例外）、`<video poster="…">` 写相对路径（poster 是图片，不进管线也不被镜像，请把图片放进 `public/`、不要放 `public/_media/`，再用 `/…` 引用）、`data:` 内联内容（先存成文件）、`file:` 等浏览器打不开的协议、相对路径逃出 `src/` 目录、媒体文件不存在或指向的是目录／符号链接、扩展名不在支持列表、解码后的文件名或目录名含 `#` 或 `?`（如 `%23`／`%3F`，本站取不到，改名即可）。报错给出的是**源文件**行号与作者写的原始路径，可以直接照着改。
 - RSS 会删掉 `<video>`／`<iframe>`／`<style>`／`class`，公式降级为 TeX 源码；视频旁的文字链接会保留。
 
 ---
@@ -142,7 +143,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 ```
 
 - gallery 仅允许 `layout`／`columns`／`widths`。layout 只可 grid／scroll，默认 grid；grid 默认两列，columns 只可 `2`／`3`。不等宽用 `widths="1fr 2fr"`（1:2）或 `widths="240px 1fr"`（第一列目标 240px，第二列占剩余）；widths 为二／三个正有限数的 px／fr 值，可小数，不支持 %／auto／calc()；省略 columns 时按值数量推导，显式 columns 必须匹配。scroll 不接受 columns／widths。至少一张独立 Markdown 直接图片，可同段多图但段中只能有图片和空白。文字、列表、引用式图片、链接包图、HTML／MDX 图都不作为相册项，说明写在相册外。
-- figure 仅允许 side，left／right，默认 right。第一段恰好一张直接图片，后面至少一块正文。gallery／figure 不能嵌套或相互嵌套；非法属性、属性值和结构会 build fail 并带源位置，不删图规避报错。
+- figure 仅允许 side，left／right，默认 right。第一段恰好一张直接图片，后面至少一块有可见文字的正文；注释、`<br>`、空 HTML 或只有媒体的内容不算正文。gallery／figure 不能嵌套或相互嵌套；非法属性、属性值和结构会 build fail 并带源位置，不删图规避报错。
 - 图片仍用相对源路径并走 Astro，原有 `|w` 含义不变；显式像素宽度用标记，容器响应式尺寸由既有 CSS 管理。660px 版心内不 breakout，静止时不裁切；600px 及以下 grid 单列、figure 上下。scroll 全部图片静态存在，横滚 snap 在两张及以上时加图片边缘白色圆形箭头／底部小点（单图不生成控件），深色点表示当前图，首尾隐藏不可用箭头，无底部工具条或可见滚动条，圆点过多时只在分页容器内滚动到当前点；区域高度跟随当前图片，不自动播放，无 JS 仍可阅读和横滚。
 - 普通 Markdown 正文图直接点图或键盘 Enter／空格在原生 dialog 放大，不写额外放大标记，也不显示角落标识；悬浮时原边框内微缩放并显示 `zoom-in`，减少动态偏好下不缩放。大图显示 `zoom-out`，点图／Esc／遮罩／关闭按钮退出，恢复焦点与滚动锁；浅色遮罩灰白、深色暗色。作者图片链接仍跳转，链接外大图入口只在键盘焦点时显示；`titleImage` 头图／文稿列表缩略图和头像不属于此范围，`:::card` 配图仍可放大。原尺寸图在 inert template 内仍由 Astro 解析，打开前不加载，不手写资源 URL。RSS 沿用 sanitizer 去 template／样式／控件，剩余全部图文按源顺序降级。
 - 不为内容排版引入依赖、轮播库、第二解析器、预览后台、preview manager 脚本或测试框架；布局实现与交互 authority 不随内容更新改动。
@@ -223,7 +224,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 :::
 ```
 
-卡片最多一张独立 Markdown 图片作为封面，也可无封面。介绍只写文字及其排版／链接，不放额外图片或嵌入媒体；包括嵌套 Markdown 图片、HTML／静态 MDX 图片在内的违规会使构建失败，不会自动删图。图片需求放到卡片外的正文；代码里字面的 `<img>` 不算图片。
+卡片最多一张独立 Markdown 图片作为封面，也可无封面。介绍只写文字及其排版／链接，不放额外图片或嵌入媒体；包括嵌套 Markdown 图片、HTML／静态 MDX 媒体及指令生成的媒体在内的违规会使构建失败，不会自动删图。图片需求放到卡片外的正文；代码里字面的 `<img>` 不算图片。
 
 书卡片的作者写在正文，保留原有评分和顺序；没有封面或书评时不编造。
 
@@ -297,12 +298,12 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --frie
 
 ## 校验与交接
 
-改完先跑 `pnpm check`；文章或友链再跑上面的 `validate_content.py`，它只检查基础元数据，**不完整验证 schema、图片或封面**，并拦住正文里指向 `.md`／`.mdx` 的相对链接；站内链接能否打开、锚点是否有落点由 `pnpm test:built-markdown` 判定。
+改完先跑 `pnpm check`；文章或友链再跑上面的 `validate_content.py`，它只检查基础元数据，**不完整验证 schema、图片或封面**，并拦住正文里指向 `.md`／`.mdx` 的相对链接。内容、图片、分类或图标修改后，必须针对本次改动重新运行并成功完成 `pnpm build`，再运行 built 检查；不能用旧 `dist/` 或 dev 预览代替。站内链接能否打开、锚点是否有落点由 `pnpm test:built-markdown` 判定。
 
-发文章涉及订阅时，构建后运行 `pnpm test:built-markdown` 核对全文与资源。列表／内容结构或拾趣分类／图标修改运行 `pnpm test:built-restructure`；拾趣正文修改运行 `pnpm test:built-markdown`；分页修改运行 `pnpm test:built-pagination`。构建测试跟随当前配置和内容，不要求保留具体文章、友链名单、拾趣分类数量或观看状态。
+发文章涉及订阅时，成功构建后运行 `pnpm test:built-markdown` 核对全文与资源。列表／内容结构或拾趣分类／图标修改运行 `pnpm test:built-restructure`；拾趣正文修改运行 `pnpm test:built-markdown`；分页修改运行 `pnpm test:built-pagination`。构建测试跟随当前配置和内容，不要求保留具体文章、友链名单、拾趣分类数量或观看状态。
 
 含实际 gallery／figure 布局或卡片的博客还要按上面的自动 dev 预览步骤交付文章链接，不能以 dev 预览替代上述内容构建校验。布局实现的单测与浏览器交互检查属于实现范围，不要求每次发文章重复执行。
 
 文章、关于、拾趣、项目、友链等内容数据不记入 `CHANGELOG.md`。只有这次改动同时改变了网页结构、交互或代码时，才把那部分结构或代码结果写入「未发布」；未发布条目不填写已发布版本或日期。本 skill 只改内容与配置，不新增阶段性报告、规格或操作指南。
 
-交接时写清：改了哪一页、文件路径、上线后的路由、博客是否草稿；新增拾趣分类说明图标是否配置，以及构建与菜单／页面校验结果。用户没说部署就不要部署。
+交接时写清：改了哪一页、文件路径、上线后的路由、博客是否草稿、本次重新构建与相关菜单／页面校验结果；新增拾趣分类另说明图标是否配置。未完成或失败的构建／检查明确注明，不称已验证。用户没说部署就不要部署。

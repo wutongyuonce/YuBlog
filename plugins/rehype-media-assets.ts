@@ -17,7 +17,7 @@ import type { Element, Root } from 'hast'
 import type { VFile } from 'vfile'
 
 /**
- * 正文媒体引用的改写与校验。必须紧跟 `rehype-raw`，这样写在 HTML 里的
+ * 正文媒体引用的改写与校验。在 `rehype-raw` 之后执行，这样写在 HTML 里的
  * `<video>` / `<img>` 已经是真元素，`src` 属性才看得见。
  *
  * 每种引用的处理策略（本模块对外的契约）：
