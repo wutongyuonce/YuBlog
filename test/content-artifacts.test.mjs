@@ -52,7 +52,9 @@ const check = (root, pattern) => {
     ],
     { cwd: root, encoding: 'utf8', env: childEnv }
   )
-  assert.match(result.stdout, /# tests 1\b/, result.stderr)
+  // Node 22 打印 `# tests 1`，Node 24 打印 `ℹ tests 1`；两种都接受，否则
+  // 模式写错时子进程一个用例都没跑，这里会误判为通过。
+  assert.match(result.stdout, /(?:#|ℹ) tests 1\b/, result.stderr)
   return result
 }
 const expect = (result, status, name) =>
