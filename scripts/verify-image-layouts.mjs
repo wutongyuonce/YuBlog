@@ -320,6 +320,20 @@ ${longGallery}
   await page.cdp('Emulation.setEmulatedMedia', {
     features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
   })
+  // Hover needs a settled layout: the fixtures keep lazy images arriving.
+  // Polling explicitly beats a predicate that hides which value moved.
+  let settledTop
+  let settled = false
+  for (let i = 0; i < 40 && !settled; i++) {
+    const top = await page.evaluate((target) => {
+      const node = document.querySelector(target)
+      return node ? node.getBoundingClientRect().top : null
+    }, 'img[alt="缩略图"]')
+    settled = top !== null && top === settledTop
+    settledTop = top
+    if (!settled) await page.waitForTimeout(150)
+  }
+  assert.ok(settled, 'the thumbnail position settles before hover assertions')
   await page.mouse.move(0, 0)
   const frame = await page.evaluate(() => {
     const image = document.querySelector('img[alt="缩略图"]')
@@ -607,7 +621,25 @@ ${longGallery}
     'revealing the dot must not scroll the article'
   )
 
-  // A gallery with nothing to page through keeps its image and stays plain.
+  // Only galleries with something to page through are enhanced, and each of
+  // them carries one dot per image plus both edge arrows.
+  const enhanced = await page.evaluate(() =>
+    [...document.querySelectorAll('.image-gallery__viewport')].map(
+      (viewport) => ({
+        slides: viewport.querySelectorAll('.image-gallery__item').length,
+        dots: viewport.querySelectorAll('.image-gallery__dot').length,
+        arrows: viewport.querySelectorAll('.image-gallery__arrow').length,
+      })
+    )
+  )
+  assert.deepEqual(
+    enhanced,
+    [
+      { slides: 3, dots: 3, arrows: 2 },
+      { slides: 12, dots: 12, arrows: 2 },
+    ],
+    'a gallery with one image keeps no pager, and every other pager has one dot per image'
+  )
   const single = await page.evaluate(() => {
     const gallery = [
       ...document.querySelectorAll('.image-gallery--scroll'),
@@ -615,24 +647,10 @@ ${longGallery}
     return {
       images: gallery.querySelectorAll('img').length,
       width: gallery.firstElementChild.getBoundingClientRect().width,
-      // Unwrapped: the enhanced viewport is what carries arrows and dots.
-      wrapped: gallery.parentElement.classList.contains(
-        'image-gallery__viewport'
-      ),
-      controls: gallery.querySelectorAll(
-        '.image-gallery__arrow, .image-gallery__dot'
-      ).length,
     }
   })
   assert.equal(single.images, 1)
-  assert.ok(single.width > 0, 'the single image still renders')
-  assert.equal(single.wrapped, false)
-  assert.equal(single.controls, 0)
-  assert.equal(
-    single.controls,
-    0,
-    'a single-image gallery has nothing to page through'
-  )
+  assert.ok(single.width > 0, 'a single-image gallery still renders its image')
 
   await page.cdp('Emulation.setScriptExecutionDisabled', { value: true })
   try {
