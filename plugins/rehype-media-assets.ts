@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { visit } from 'unist-util-visit'
@@ -5,7 +6,7 @@ import { visit } from 'unist-util-visit'
 import {
   classifyMediaRef,
   decodeMediaPath,
-  hasUnservableName,
+  findUnservableSegment,
   isMirrorableFile,
   mediaSuffix,
   MEDIA_EXTENSIONS,
@@ -51,6 +52,30 @@ interface AstroOwnedImages {
   remoteImagePaths?: string[]
 }
 
+/**
+ * 正文行号 → 源文件行号。
+ *
+ * Astro 先去掉 frontmatter、再裁掉前导空行，然后才把正文交给插件，所以
+ * `node.position` 是**正文**行号：源文件第 9 行的 `<video>` 会报成第 3 行，
+ * 而那行是 `category:`。报错必须指向作者真正要改的那一行，所以这里按需读源文件，
+ * 数出正文首行在源文件里的下标（frontmatter 之后第一个非空行）。
+ * 读不到文件时退化为正文行号，报错仍然给出能定位的内容。
+ */
+function sourceLineOffset(filePath: string): number {
+  try {
+    const lines = readFileSync(filePath, 'utf8').split(/\r?\n/)
+    let index = 0
+    if (lines[0]?.trim() === '---') {
+      const end = lines.findIndex((line, at) => at > 0 && /^---\s*$/.test(line))
+      index = end === -1 ? 0 : end + 1
+    }
+    while (index < lines.length && lines[index].trim() === '') index += 1
+    return index
+  } catch {
+    return 0
+  }
+}
+
 /** 位置信息缺失时退化为文件路径。报错必须能让人直接找到那一行。 */
 const describe = (file: VFile, node: Element) => {
   const filePath = file.path ?? '(未知文件)'
@@ -58,7 +83,9 @@ const describe = (file: VFile, node: Element) => {
     ? path.relative(process.cwd(), filePath)
     : filePath
   const line = node.position?.start.line
-  return line ? `${relative}:${line}` : relative
+  if (!line) return relative
+  const offset = path.isAbsolute(filePath) ? sourceLineOffset(filePath) : 0
+  return `${relative}:${line + offset}`
 }
 
 const fail = (file: VFile, node: Element, message: string): never => {
@@ -74,22 +101,24 @@ const rejectInline = (file: VFile, node: Element, attribute: string) =>
       `视频/音频放 md 旁边写相对路径，图片用 Markdown 语法 ![](./name.png)。`
   )
 
-/** 相对路径的媒体：确认文件名可取、扩展名可镜像、文件确实存在，然后改写地址 */
+/** 相对路径的媒体：确认路径可取、扩展名可镜像、文件确实存在，然后改写地址 */
 const rewriteLocal = (
   file: VFile,
   node: Element,
   attribute: string,
   ref: { file: string; url: string },
+  value: string,
   suffix: string,
   roots: MediaRoots
 ) => {
-  if (hasUnservableName(ref.file))
+  const badSegment = findUnservableSegment(ref.file, roots.sourceRoot)
+  if (badSegment)
     fail(
       file,
       node,
-      `的 ${attribute} 指向的文件名带 \`#\` 或 \`?\`，本站的静态服务器取不到这种名字` +
-        `（实测 dev 与 preview 都返回 404，而构建不会失败）。请把文件名里的这两个字` +
-        `符换成别的字符。`
+      `的 ${attribute} 是 ${value}，路径里的 \`${badSegment}\` 含 \`#\` 或 \`?\`：` +
+        `本站的静态服务器取不到这种名字（新建的 dev 与 preview 都实测 404，` +
+        `而构建不会失败），文件与目录名都算。请把这两个字符换成别的字符。`
     )
 
   const extension = path.extname(ref.file).toLowerCase()
@@ -107,7 +136,7 @@ const rewriteLocal = (
     fail(
       file,
       node,
-      `的 ${attribute} 指向的不是一个可镜像的文件：${ref.file}` +
+      `的 ${attribute} 是 ${value}，指向的不是一个可镜像的文件：${ref.file}` +
         `（文件缺失，或是目录、符号链接，或路径中间有符号链接）。`
     )
 
@@ -154,11 +183,24 @@ const checkSrc = (
           `的 src 是本地相对路径。图片请改用 Markdown 语法 ![](${value})，` +
             `这样才能走 Astro 图片管线拿到压缩和 srcset。`
         )
-      return rewriteLocal(file, node, 'src', ref, mediaSuffix(value), roots)
+      return rewriteLocal(
+        file,
+        node,
+        'src',
+        ref,
+        value,
+        mediaSuffix(value),
+        roots
+      )
   }
 }
 
-/** `<a href="./demo.mp4">` 和 `<video src>` 指向同一份文件，一起改写 */
+/**
+ * `<a href="./demo.mp4">` 和 `<video src>` 指向同一份文件，所以用同一套规则：
+ * 能本地服务的照 `src` 改写，逃出 `src/` 的照 `src` 报错。
+ * 非媒体链接不归这一层（相对 `.md` 之类由发布预检与产物测试负责），
+ * `mailto:`／`tel:` 等协议也原样保留。
+ */
 const checkHref = (
   file: VFile,
   node: Element,
@@ -169,10 +211,22 @@ const checkHref = (
   if (typeof href !== 'string' || !href.trim()) return
 
   const ref = classifyMediaRef(href, markdownPath, roots)
-  if (ref.kind !== 'local') return
-  if (!MEDIA_EXTENSIONS.has(path.extname(ref.file).toLowerCase())) return
+  if (ref.kind === 'local') {
+    if (MEDIA_EXTENSIONS.has(path.extname(ref.file).toLowerCase()))
+      rewriteLocal(file, node, 'href', ref, href, mediaSuffix(href), roots)
+    return
+  }
 
-  rewriteLocal(file, node, 'href', ref, mediaSuffix(href), roots)
+  if (
+    ref.kind === 'outside' &&
+    MEDIA_EXTENSIONS.has(path.extname(ref.file).toLowerCase())
+  )
+    fail(
+      file,
+      node,
+      `的 href 是 ${href}，指向的媒体文件不在 src/ 目录内，无法镜像到站点。` +
+        `本地媒体要放在 md 旁边或 src/ 的子目录里。`
+    )
 }
 
 const checkPoster = (

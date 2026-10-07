@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
 import {
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   statSync,
   symlinkSync,
@@ -19,6 +21,7 @@ import rehypeRaw from 'rehype-raw'
 
 import {
   classifyMediaRef,
+  isMirrorableFile,
   mediaTargetFor,
   mediaUrlFor,
   MEDIA_ROOTS,
@@ -243,6 +246,10 @@ test('Markdown 图片语法产出的图片不归媒体层管，仍交给 Astro �
 test('无法服务的引用明确失败，并报出文件与行号', async () => {
   const dir = path.dirname(ARTICLE)
   mkdirSync(path.join(dir, 'dir.mp4'), { recursive: true })
+  mkdirSync(path.join(dir, 'dir?name'), { recursive: true })
+  mkdirSync(path.join(dir, 'dir#name'), { recursive: true })
+  writeFileSync(path.join(dir, 'dir?name', 'clip.mp4'), 'fixture')
+  writeFileSync(path.join(dir, 'dir#name', 'clip.mp4'), 'fixture')
   scratch('clip.mkv')
   scratch('a#b.mp4')
   scratch('a?b.mp4')
@@ -284,9 +291,21 @@ test('无法服务的引用明确失败，并报出文件与行号', async () =>
       '<video src="./missing.mp4"></video>',
       /不是一个可镜像的文件/,
     ],
-    // 文件名带 # 或 ? 时本站取不到（实测 dev 与 preview 都 404），必须构建期拦住
-    ['文件名带井号', '<video src="./a%23b.mp4"></video>', /文件名带/],
-    ['文件名带问号', '<video src="./a%3Fb.mp4"></video>', /文件名带/],
+    // 文件名或目录名带 # / ? 时本站取不到（新建的 dev 与 preview 都实测 404），
+    // 必须在构建期拦住；同一路径写在 src、Markdown 链接与 HTML href 三处都要拦
+    ['文件名带井号', '<video src="./a%23b.mp4"></video>', /取不到这种名字/],
+    ['文件名带问号', '<video src="./a%3Fb.mp4"></video>', /取不到这种名字/],
+    [
+      '目录名带问号',
+      '<video src="./dir%3Fname/clip.mp4"></video>',
+      /取不到这种名字/,
+    ],
+    [
+      '目录名带井号',
+      '<video src="./dir%23name/clip.mp4"></video>',
+      /取不到这种名字/,
+    ],
+    ['媒体链接逃出源根', '[下载](../../../outside.mp4)', /不在 src\/ 目录内/],
     [
       '扩展名不在列表',
       '<video src="./clip.mkv"></video>',
@@ -348,4 +367,141 @@ test('镜像幂等、清理陈旧产物，并跳过目录与符号链接', () =>
   rmSync(source)
   syncMedia(roots)
   assert.equal(existsSync(target), false, '源文件删除后应清理陈旧产物')
+})
+
+test('路径段边界两侧一致：..clip.mp4 既渲染放行也能镜像，源删除后产物消失', () => {
+  const roots = makeRoots()
+  const dir = path.join(roots.sourceRoot, 'content', 'blogs')
+  mkdirSync(dir, { recursive: true })
+  const source = path.join(dir, '..clip.mp4')
+  writeFileSync(source, 'video')
+
+  // 同一个文件相对源根是 content/blogs/..clip.mp4，相对所在目录是 ..clip.mp4。
+  // 判据必须两边同结论：曾经渲染放行、枚举拒绝，于是有 URL 没有产物，还漏清陈旧文件。
+  const ref = classifyMediaRef('./..clip.mp4', path.join(dir, 'a.md'), roots)
+  assert.equal(ref.kind, 'local')
+  assert.equal(ref.file, source)
+  assert.equal(
+    mediaUrlFor(source, roots),
+    `${MEDIA_URL_PREFIX}content/blogs/..clip.mp4`
+  )
+  assert.equal(isMirrorableFile(source, roots.sourceRoot), true)
+  assert.equal(isMirrorableFile(source, dir), true)
+
+  const target = mediaTargetFor(source, roots)
+  syncMedia(roots)
+  assert.equal(existsSync(target), true, '渲染放行的文件必须真的被镜像')
+
+  // 真正的越界仍要拒绝
+  assert.equal(
+    classifyMediaRef('../../../outside.mp4', path.join(dir, 'a.md'), roots)
+      .kind,
+    'outside'
+  )
+
+  rmSync(source)
+  syncMedia(roots)
+  assert.equal(existsSync(target), false, '源删除后产物必须消失')
+})
+
+test('镜像不会经目标端符号链接改写镜像根之外的文件', () => {
+  const roots = makeRoots()
+  const home = path.dirname(path.dirname(roots.publicDir))
+  const outside = path.join(home, 'outside.txt')
+  const outsideDir = path.join(home, 'outside-dir')
+  mkdirSync(outsideDir, { recursive: true })
+  writeFileSync(outside, 'DO NOT OVERWRITE')
+  writeFileSync(path.join(outsideDir, 'keep.txt'), 'KEEP')
+
+  const leafSource = path.join(roots.sourceRoot, 'clip.mp4')
+  const nestedSource = path.join(roots.sourceRoot, 'content', 'nested.mp4')
+  mkdirSync(path.dirname(nestedSource), { recursive: true })
+  writeFileSync(leafSource, 'video')
+  writeFileSync(nestedSource, 'nested-video')
+
+  // 派生目录里手工塞进的链接：copyFileSync 会跟随它写到外面去
+  mkdirSync(roots.publicDir, { recursive: true })
+  const leafTarget = path.join(roots.publicDir, 'clip.mp4')
+  symlinkSync(outside, leafTarget)
+  symlinkSync(outsideDir, path.join(roots.publicDir, 'content'))
+
+  syncMedia(roots)
+
+  assert.equal(readFileSync(outside, 'utf8'), 'DO NOT OVERWRITE')
+  assert.equal(readFileSync(path.join(outsideDir, 'keep.txt'), 'utf8'), 'KEEP')
+  assert.equal(
+    existsSync(path.join(outsideDir, 'nested.mp4')),
+    false,
+    '不能写进链接指向的外部目录'
+  )
+  assert.equal(
+    lstatSync(leafTarget).isSymbolicLink(),
+    false,
+    '链接要换成真实文件'
+  )
+  assert.equal(readFileSync(leafTarget, 'utf8'), 'video')
+})
+
+/**
+ * 模仿 Astro 交给插件的正文：去掉 frontmatter 块，再裁掉前导空行。
+ * 真机实测：源文件第 9 行的 <video>（frontmatter 5 行 + 1 空行）报 :9，
+ * 第 10 行的（2 空行）报 :10，所以「正文第 1 行 = frontmatter 之后第一个非空行」。
+ */
+const astroBody = (text) => {
+  const lines = text.split(/\r?\n/)
+  let index = lines[0]?.trim() === '---' ? lines.indexOf('---', 1) + 1 : 0
+  while (index < lines.length && lines[index].trim() === '') index += 1
+  return lines.slice(index).join('\n')
+}
+
+test('报错按源文件行号定位，并带上作者写的原始值', async () => {
+  const source = [
+    '---',
+    'title: 行号探针',
+    'category: 测试',
+    'pubDate: 2026-01-01',
+    '---',
+    '',
+    '正文第一段。',
+    '',
+    '<video src="./missing.mp4?origin=test#t=10"></video>',
+  ].join('\n')
+  writeFileSync(ARTICLE, source)
+
+  try {
+    await assert.rejects(
+      () => render(astroBody(source)),
+      (error) => {
+        // 视频在源文件第 9 行，不是正文第 3 行（第 3 行是 category）
+        assert.match(error.message, /article\.md:9 /)
+        // 原始值要原样出现，否则作者不知道是哪一处
+        assert.match(error.message, /\.\/missing\.mp4\?origin=test#t=10/)
+        return true
+      }
+    )
+
+    // 更长的 frontmatter、多个前导空行与 CRLF 必须得到同一个源文件行号
+    const crlf = [
+      '---',
+      'title: 行号探针',
+      'description: 更长的 frontmatter',
+      'category: 测试',
+      'order: 7',
+      'pubDate: 2026-01-01',
+      '---',
+      '',
+      '',
+      '<video src="./missing.mp4"></video>',
+    ].join('\r\n')
+    writeFileSync(ARTICLE, crlf)
+    await assert.rejects(
+      () => render(astroBody(crlf)),
+      (error) => {
+        assert.match(error.message, /article\.md:10 /)
+        return true
+      }
+    )
+  } finally {
+    rmSync(ARTICLE, { force: true })
+  }
 })

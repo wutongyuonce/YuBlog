@@ -140,11 +140,19 @@ test('publisher finds real links through the Markdown parser, not by regex', asy
     assert.equal(result.status, 0, `${body}\n${result.stderr}`)
   }
 
-  // 真链接都要抓到：引用式、带查询串、以及引用块围栏之后的正文
+  // 真链接都要抓到：引用式、带查询串、引用块围栏之后的正文，
+  // 以及三种用正则取 href 会漏掉或误报的写法
   const flagged = [
     '[旧文][1]\n\n[1]: ./ref.md',
     '[旧文](./old.md?raw=1)',
     `> ${fence}\n> [示例](./quoted.md)\n> ${fence}\n\n[别的](./real.md)`,
+    // 正则会把 data-href 的值当 href，于是漏掉真正的 href
+    '<a data-href="/blogs/ok/" href="./missing.md">旧文</a>',
+    // 实体不解码时 `#` 会被当成 fragment，`.md` 后缀就看不见了
+    '[旧文](./a&b.md)',
+    // URL 语义下与 .md 等价，路径不解码就漏
+    '[旧文](./missing%2Emd)',
+    '<a href="./missing.%6Dd">旧文</a>',
   ]
   for (const body of flagged) {
     await writeFile(path, `${front}\n${body}\n`)
@@ -152,4 +160,15 @@ test('publisher finds real links through the Markdown parser, not by regex', asy
     assert.equal(result.status, 1, `${body}\n${result.stderr}`)
     assert.match(result.stderr, /链接指向 Markdown 源文件/)
   }
+
+  // 注释里的 <a> 不是链接：正则取 href 会把它当成链接误报
+  await writeFile(path, `${front}\n<!-- <a href="./missing.md">旧文</a> -->\n`)
+  assert.equal(validate(root).status, 0, '注释里的标签不算链接')
+
+  // data-href 不能冒充 href
+  await writeFile(
+    path,
+    `${front}\n<a data-href="./missing.md" href="/blogs/ok/">旧文</a>\n`
+  )
+  assert.equal(validate(root).status, 0, 'data-href 不是 href')
 })

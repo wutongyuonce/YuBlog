@@ -10,7 +10,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 
 def fail(message: str) -> None:
@@ -25,20 +25,31 @@ def is_http_url(value: object) -> bool:
     return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
 
 
-# 用 Astro 自己的解析器读 frontmatter，并把正文渲染成 HTML 后取出真实链接。
-# 正文走真实 Markdown 解析而不是正则：代码块里的示例会被转义成文本，
-# 不会变成 <a>，因此不需要再去猜围栏、行内代码和引用块的边界。
+# 用 Astro 自己的解析器读 frontmatter，把正文渲染成 HTML，再用 HTML 解析器取链接。
+#
+# 两层都是真解析，不靠正则：
+# - Markdown 阶段把代码块里的示例转义成文本，所以不用猜围栏、行内代码和引用块；
+# - HTML 阶段取真正的 <a> 元素，所以 `data-href` 不会冒充 `href`、注释里的标签不算
+#   链接、实体（`&amp;`、`&#x26;`）会被还原成真实字符——正则这三件事全都会做错。
+#
 # 内容按文件路径传入而不是 stdin：`node -e` 要先完成 import 才会读 stdin，
 # 而 `readFileSync(0)` 读管道时超过管道缓冲区就全 EAGAIN（实测 ~20KB），
 # 那样真实文章永远失败。
 ARTICLE_PARSER = """
 import { readFileSync } from 'node:fs';
 import { createMarkdownProcessor, parseFrontmatter } from '@astrojs/markdown-remark';
+import { fromHtml } from 'hast-util-from-html';
+import { visit } from 'unist-util-visit';
 try {
   const text = readFileSync(process.argv[1], 'utf8');
   const { frontmatter, content } = parseFrontmatter(text);
   const { code } = await (await createMarkdownProcessor()).render(content ?? '');
-  const hrefs = [...code.matchAll(/<a\\s[^>]*?href="([^"]*)"/g)].map((match) => match[1]);
+  const hrefs = [];
+  visit(fromHtml(code, { fragment: true }), 'element', (node) => {
+    if (node.tagName !== 'a') return;
+    const href = node.properties?.href;
+    if (typeof href === 'string') hrefs.push(href);
+  });
   console.log(JSON.stringify({ frontmatter, hrefs }));
 } catch (error) {
   console.error(error.message);
@@ -91,7 +102,8 @@ def check_body_links(relative_path: str, hrefs: list[str]) -> None:
     而 `pnpm build` 不会报错。跨文章要写站内 URL。
 
     协议用 urlparse 判断，所以 `HTTPS://…/README.md` 这类外链不受影响，
-    `./旧文.md?raw=1` 这种带查询串的写法一样会被拦下。
+    `./旧文.md?raw=1` 这种带查询串的写法一样会被拦下。路径先按 URL 语义解码一次：
+    `./missing%2Emd` 与 `./missing.md` 指向同一个文件，不解码就漏了。
     目标文章到底在不在站点上，以 `pnpm test:built-markdown` 为准 ——
     那需要知道 slug 生成规则，不在这个预检里重复实现。
     """
@@ -101,7 +113,7 @@ def check_body_links(relative_path: str, hrefs: list[str]) -> None:
         parsed = urlparse(href)
         if parsed.scheme:
             continue
-        if not parsed.path.endswith((".md", ".mdx")):
+        if not unquote(parsed.path).endswith((".md", ".mdx")):
             continue
         fail(
             f"{relative_path}: 链接指向 Markdown 源文件：]({href})。"

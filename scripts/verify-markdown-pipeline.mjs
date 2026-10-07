@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { access, readFile, readdir, stat } from 'node:fs/promises'
-import { dirname, resolve, sep } from 'node:path'
+import { resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 import { XMLParser, XMLValidator } from 'fast-xml-parser'
@@ -56,11 +56,8 @@ const artifactExists = async (pathname) => {
     return false
   }
 }
-const localImage = (url) => {
-  assert.equal(url.origin, siteBase.origin)
-  assert.ok(url.pathname.startsWith(siteBase.pathname))
-  return built(url.pathname.slice(siteBase.pathname.length))
-}
+/** 站内图片 URL → 产物里的文件路径。换算只有一处：distFile（含逃逸与解码）。 */
+const localImage = (url) => distFile(url.pathname)
 
 test('static routes, feed, sitemap and search index exist', async () => {
   await Promise.all(
@@ -86,6 +83,36 @@ const elements = (tree, tag) => {
 }
 const textOf = (node) =>
   node.type === 'text' ? node.value : (node.children || []).map(textOf).join('')
+
+/** 正文容器：只看 class，不看标签名 —— 关于页用的是 section，不是 article/div */
+const bodiesOf = (tree) => {
+  const bodies = []
+  visit(tree, 'element', (node) => {
+    if (node.properties.className?.includes('markdown-content'))
+      bodies.push(node)
+  })
+  return bodies
+}
+
+/**
+ * 能作为 `#fragment` 落点的集合：所有元素的 `id`，加上传统 `<a name>`。
+ * `<input name>`／`<form name>` 不是锚点，收进来会让失效链接伪装成有效。
+ */
+const fragmentTargets = (tree) => {
+  const ids = new Set()
+  visit(tree, 'element', (node) => {
+    const id = node.properties.id
+    if (typeof id === 'string' && id) ids.add(id)
+    if (node.tagName === 'a') {
+      const name = node.properties.name
+      if (typeof name === 'string' && name) ids.add(name)
+    }
+  })
+  return ids
+}
+
+/** 剥掉 CSS 注释：`/* 粘贴痕迹 *\/zoom:50%` 是合法声明，只看声明边界会漏 */
+const withoutCssComments = (value) => value.replace(/\/\*[\s\S]*?\*\//g, '')
 
 test('full RSS covers every built article and uses real, standalone content assets', async () => {
   const xml = await html('rss.xml')
@@ -280,9 +307,7 @@ test('rendered Markdown headings and processed images remain usable', async () =
   )
   for (const file of files) {
     const page = fromHtml(await html(file))
-    const bodies = elements(page, 'article')
-      .concat(elements(page, 'div'))
-      .filter((node) => node.properties.className?.includes('markdown-content'))
+    const bodies = bodiesOf(page)
     for (const body of bodies) {
       for (const tag of ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']) {
         for (const heading of elements(body, tag)) {
@@ -307,10 +332,12 @@ test('rendered Markdown headings and processed images remain usable', async () =
   }
 })
 test('authored HTML is handled like Markdown and every internal anchor resolves', async () => {
-  const files = (await readdir(built('blogs/'), { recursive: true })).filter(
-    (file) => file.endsWith('/index.html')
+  // 扫全站：关于页、拾趣、首页的正文容器和文章用的是同一套契约，
+  // 只枚举 dist/blogs/ 会让它们完全绕过标题 id、锚点、链接、表格与 zoom 检查。
+  const files = (await readdir(built(''), { recursive: true })).filter((file) =>
+    file.endsWith('.html')
   )
-  assert.ok(files.length > 0, 'the built site must contain articles')
+  assert.ok(files.length > 0, 'the built site must contain pages')
 
   const isFile = async (path) => {
     try {
@@ -341,48 +368,25 @@ test('authored HTML is handled like Markdown and every internal anchor resolves'
     return (await isFile(index)) ? index : null
   }
 
-  /** 页面里的 id/name 集合，按需读取并缓存，用于跨页锚点校验 */
+  /** 页面里的锚点落点，按需读取并缓存，用于跨页锚点校验 */
   const idCache = new Map()
   const idsOf = async (file) => {
     if (idCache.has(file)) return idCache.get(file)
-    const ids = new Set()
-    if (file.endsWith('.html')) {
-      const tree = fromHtml(await readFile(file, 'utf8'))
-      visit(tree, 'element', (node) => {
-        for (const key of ['id', 'name']) {
-          const value = node.properties[key]
-          if (typeof value === 'string' && value) ids.add(value)
-        }
-      })
-    }
+    // 非 HTML 目标（媒体、PDF…）没有 DOM 锚点可言，由调用方按目标类型跳过
+    const ids = file.endsWith('.html')
+      ? fragmentTargets(fromHtml(await readFile(file, 'utf8')))
+      : new Set()
     idCache.set(file, ids)
     return ids
-  }
-
-  /** 正文容器：只看 class，不看标签名 —— 关于页用的是 section */
-  const bodiesOf = (tree) => {
-    const bodies = []
-    visit(tree, 'element', (node) => {
-      if (node.properties.className?.includes('markdown-content'))
-        bodies.push(node)
-    })
-    return bodies
   }
 
   let anchors = 0
   let links = 0
   for (const file of files) {
-    const page = fromHtml(await html(`blogs/${file}`))
+    const page = fromHtml(await html(file))
     // 相对链接按页面 URL 解析，和浏览器一致；页面地址跟随站点 base
-    const pageUrl = new URL(`blogs/${dirname(file)}/`, siteBase)
-
-    const ids = new Set()
-    visit(page, 'element', (node) => {
-      for (const key of ['id', 'name']) {
-        const value = node.properties[key]
-        if (typeof value === 'string' && value) ids.add(value)
-      }
-    })
+    const pageUrl = new URL(file.replace(/index\.html$/, ''), siteBase)
+    const ids = fragmentTargets(page)
 
     // 手写空锚点 <a id="…"></a> 靠这条守着：算法笔记里 `](#15)` 这类跳转
     // 的唯一目标就是它们。清理这些「看起来没用」的锚点会静默打断跳转。
@@ -407,40 +411,46 @@ test('authored HTML is handled like Markdown and every internal anchor resolves'
       for (const node of elements(body, 'a')) {
         const href = node.properties.href
         if (typeof href !== 'string' || !href) continue
-        // 外部协议、协议相对、同页片段：分别由别的规则管
-        if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith('//')) continue
+        // 同页片段由上面的 targets 检查，这里只管跨页
         if (href.startsWith('#')) continue
 
-        const target = new URL(href, pageUrl)
+        // 判同源只能看解析后的 origin，不能看字符串里有沒有协议：`//本站/x` 和
+        // `https://本站/x` 都是站内地址，按原实现会被当外站而绕过全部检查。
+        let target
+        try {
+          target = new URL(href, pageUrl)
+        } catch {
+          assert.fail(`${file}: 链接不是合法地址：${href}`)
+        }
+        if (target.origin !== siteBase.origin) continue // 异源不抓取、不要求产物
         links++
-        // 站内绝对地址必须带上部署 base，否则子路径部署时点开就是 404
-        if (
-          href.startsWith('/') &&
-          !target.pathname.startsWith(siteBase.pathname)
+
+        // 站内地址必须落在部署 base 内：相对链接向上跳出 base 一样是 404
+        assert.ok(
+          target.pathname.startsWith(siteBase.pathname),
+          `${file}: 站内链接必须落在部署 base 内：${href}`
         )
-          assert.fail(
-            `${file}: site-absolute link must include the deployment base: ${href}`
-          )
 
         const resolved = await resolvePage(target)
         assert.ok(resolved, `${file}: same-site link has no target: ${href}`)
 
-        // 跨页锚点同样要有落点：删掉目标文章的锚点会让这些链接静默失效
+        // 跨页锚点只有 HTML 页面才有落点：`demo.mp4#t=10` 是媒体时间片段，
+        // 视频旁推荐的降级链接就是这种写法，不能当 HTML id 对待。
         const fragment = decodeFragment(target.hash.slice(1))
-        if (fragment)
-          assert.ok(
-            (await idsOf(resolved)).has(fragment),
-            `${file}: link target ${href} has no id #${fragment}`
-          )
+        if (!fragment || !resolved.endsWith('.html')) continue
+        assert.ok(
+          (await idsOf(resolved)).has(fragment),
+          `${file}: link target ${href} has no id #${fragment}`
+        )
       }
 
       // Typora / LeetCode 粘贴残留的 zoom 尺寸标记。zoom 是相对原图的百分比，
       // 已经先被 max-width:100% 限过一次，窄屏上会再缩一半，尺寸不可预测；
-      // 尺寸应该写进 alt 的 |w 标记。属性名不区分大小写。
+      // 尺寸应该写进 alt 的 |w 标记。属性名不区分大小写，注释不能用来藏它。
       visit(body, 'element', (node) => {
         const style = node.properties.style
         assert.doesNotMatch(
-          typeof style === 'string' ? style : '',
+          withoutCssComments(typeof style === 'string' ? style : ''),
           /(?:^|;)\s*zoom\s*:/i,
           `${file}: <${node.tagName}> 不要用 style="zoom:…" 控制尺寸，改用 alt 里的 |w 标记`
         )
@@ -460,7 +470,7 @@ test('authored HTML is handled like Markdown and every internal anchor resolves'
   }
 
   console.log(
-    `markdown contract: ${files.length} articles, ${anchors} anchors, ${links} same-site links resolved`
+    `markdown contract: ${files.length} pages, ${anchors} anchors, ${links} same-site links resolved`
   )
 })
 
@@ -483,19 +493,45 @@ test('every media reference in the built site is servable', async () => {
   ]
   let checked = 0
 
-  /** 一个地址要么是可服务的外链，要么是产物里真实存在的站内文件 */
+  /**
+   * 一个地址要么是能打开的外链，要么是产物里真实存在的站内文件。
+   * 判同源看解析后的 origin：完整 http(s) 地址写成本站域名、或写成协议相对的
+   * `//本站/…`，都是站内地址，必须和 `/…` 一样有产物。
+   */
   const inspect = async (page, tag, value, attribute) => {
     if (typeof value !== 'string' || !value) return
     checked++
-    const kind = classifyMediaUrl(value)
-    assert.ok(
-      kind.kind === 'external' || kind.kind === 'rooted',
-      `${page}: <${tag}> ${attribute} must be servable, got ${JSON.stringify(value)} (${kind.kind})`
+
+    let url
+    try {
+      url = new URL(value, siteBase)
+    } catch {
+      assert.fail(`${page}: <${tag}> ${attribute} 不是合法地址：${value}`)
+    }
+
+    if (url.origin !== siteBase.origin) {
+      assert.match(
+        url.protocol,
+        /^https?:$/,
+        `${page}: <${tag}> ${attribute} 的协议在站上打不开：${value}`
+      )
+      return
+    }
+
+    // 还留相对路径说明媒体层没改写它，站上一定 404
+    const classified = classifyMediaUrl(value)
+    assert.notEqual(
+      classified.kind,
+      'relative',
+      `${page}: <${tag}> ${attribute} 还是相对路径，媒体层没有改写：${value}`
     )
-    if (kind.kind !== 'rooted') return
 
     assert.ok(
-      await artifactExists(value),
+      url.pathname.startsWith(siteBase.pathname),
+      `${page}: <${tag}> ${attribute} 必须落在部署 base 内：${value}`
+    )
+    assert.ok(
+      await artifactExists(url.pathname),
       `${page}: <${tag}> ${attribute} has no artifact: ${value}`
     )
   }

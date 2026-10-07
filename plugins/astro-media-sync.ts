@@ -1,6 +1,7 @@
 import {
   copyFileSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   readdirSync,
   rmSync,
@@ -68,6 +69,33 @@ function isUpToDate(source: string, target: string) {
   )
 }
 
+/**
+ * 清掉目标路径上的符号链接，只删链接本身（unlink 不会动它指向的内容），
+ * 之后由 mkdirSync／copyFileSync 建出真实目录与文件。
+ *
+ * 为什么必须做：`statSync` 与 `copyFileSync` 会跟随链接。镜像目录虽是派生产物，
+ * 但只要里面有一条手工塞进来的链接，复制就会写到镜像根之外的文件上，还会改它的
+ * mtime —— 实测「目标是指向别处的链接」时，外部文件被改名成源媒体内容。
+ * 路径中间是普通文件（不是目录）时同样清掉，否则 mkdirSync 会失败。
+ */
+function ensureRealPath(target: string, root: string) {
+  const segments = path.relative(root, target).split(path.sep)
+  let current = root
+
+  for (const [index, segment] of segments.entries()) {
+    current = path.join(current, segment)
+    let stats
+    try {
+      stats = lstatSync(current)
+    } catch {
+      return // 还没建出来，交给 mkdirSync／copyFileSync
+    }
+    const isLast = index === segments.length - 1
+    if (stats.isSymbolicLink() || (!isLast && !stats.isDirectory()))
+      rmSync(current, { force: true })
+  }
+}
+
 /** 删除没有内容的目录，但保留镜像根目录本身 */
 function pruneEmptyDirs(dir: string, root: string) {
   if (!existsSync(dir)) return
@@ -93,6 +121,7 @@ export function syncMedia(roots: MediaRoots = MEDIA_ROOTS) {
   let copied = 0
   for (const [target, source] of mirror) {
     if (isUpToDate(source, target)) continue
+    ensureRealPath(target, roots.publicDir)
     mkdirSync(path.dirname(target), { recursive: true })
     copyFileSync(source, target)
     // 对齐 mtime，下一个构建才能用相等比较判断是否要重写

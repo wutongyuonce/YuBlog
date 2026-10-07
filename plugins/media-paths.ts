@@ -144,15 +144,45 @@ export function mediaSuffix(value: string): string {
 }
 
 /**
- * 文件名里带 `#` 或 `?` 时本站取不到，必须在渲染期拒绝。
+ * 相对路径是否指向根之内。`..` 只有作为**路径段**才算越界：
+ * 不能用 `startsWith('..')`，它会把根目录下名叫 `..clip.mp4` 的真实文件判成越界。
+ * 这正是三个映射函数与枚举步调不一致的原因：同一个文件相对源根是
+ * `content/blogs/..clip.mp4`（放行），相对所在目录却是 `..clip.mp4`（拒绝），
+ * 于是渲染通过、镜像没做、站上 404。
+ */
+function isInsideRelative(relative: string): boolean {
+  return (
+    relative !== '' &&
+    relative !== '..' &&
+    !relative.startsWith(`..${path.sep}`) &&
+    !path.isAbsolute(relative)
+  )
+}
+
+/**
+ * 相对 `root` 的路径里哪一段含 `#` 或 `?`（没有任何一段则返回 null）。
  *
  * 这两个字符在 `src` 里属于 URL 语法，引用只能写成 `%23`／`%3F`；服务器拿到请求后
- * 把它们解码回文件的字面名字，却已经先按 `#`／`?` 截断过路径，于是 404。实测 dev 与
- * preview 都一样（`a%23b.mp4` → 404），而构建不会报错。同目录下 `%`（写 `%25`）、
+ * 虽然会把它们解码回字面名字，但已经先按 `#`／`?` 截断过路径，于是 404。
+ * 新建的 dev 与 preview 上都实测过（`a%23b.mp4` 404、`plain.mp4` 200），
+ * 叶子名与父目录名一样取不到，所以目录段也要查。同目录下 `%`（写 `%25`）、
  * 空格（写 `%20`）、中文都能正常取到，所以只拦这两个字符。
+ *
+ * 只在**相对源根**的路径上判断：项目目录名里带 `?` 不该误伤。
+ *
+ * 复测时注意别把夹具做坏：同一目录里若同时存在字面叫 `a%23b.mp4` 的文件，
+ * 请求 `a%23b.mp4` 会命中那个字面名而返回 200，看起来像「`#` 其实能服务」。
  */
-export const hasUnservableName = (file: string): boolean =>
-  /[?#]/.test(path.basename(file))
+export function findUnservableSegment(
+  file: string,
+  root: string = MEDIA_SOURCE_ROOT
+): string | null {
+  const relative = path.relative(root, file)
+  if (!isInsideRelative(relative)) return null
+  return (
+    relative.split(path.sep).find((segment) => /[?#]/.test(segment)) ?? null
+  )
+}
 
 /** 把绝对路径换算成 `/_media/` 下的 URL；不在源根下时返回 null */
 export function mediaUrlFor(
@@ -160,8 +190,7 @@ export function mediaUrlFor(
   roots: MediaRoots = MEDIA_ROOTS
 ): string | null {
   const relative = path.relative(roots.sourceRoot, absoluteFile)
-  if (!relative || relative.startsWith('..') || path.isAbsolute(relative))
-    return null
+  if (!isInsideRelative(relative)) return null
   return MEDIA_URL_PREFIX + encodeMediaPath(relative.split(path.sep).join('/'))
 }
 
@@ -171,8 +200,7 @@ export function mediaTargetFor(
   roots: MediaRoots = MEDIA_ROOTS
 ): string | null {
   const relative = path.relative(roots.sourceRoot, absoluteFile)
-  if (!relative || relative.startsWith('..') || path.isAbsolute(relative))
-    return null
+  if (!isInsideRelative(relative)) return null
   return path.join(roots.publicDir, relative)
 }
 
@@ -186,8 +214,7 @@ export function isMirrorableFile(
   root: string = MEDIA_SOURCE_ROOT
 ): boolean {
   const relative = path.relative(root, file)
-  if (!relative || relative.startsWith('..') || path.isAbsolute(relative))
-    return false
+  if (!isInsideRelative(relative)) return false
 
   try {
     if (!lstatSync(file).isFile()) return false
