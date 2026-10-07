@@ -4,7 +4,7 @@ description: 热爱的虚拟世界
 order: 4
 ---
 
-我的 Steam Friend Code：**1554038676**
+我的 **Steam Friend Code**：[1554038676](https://steamcommunity.com/id/wutongyuonce/)
 
 准备玩：
 
