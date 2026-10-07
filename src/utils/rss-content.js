@@ -132,6 +132,8 @@ export function toRssHtml(html, articleUrl) {
     if (node.tagName === 'pre') {
       const lines = []
       visit(node, 'element', (line) => {
+        // Collapsible summaries contain ec-line markup but are controls, not source.
+        if (line.tagName === 'summary') return SKIP
         if (!hasClass(line, 'ec-line')) return
         const code = line.children.find((child) => hasClass(child, 'code'))
         if (!code)

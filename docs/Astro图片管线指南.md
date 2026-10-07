@@ -139,6 +139,7 @@ gallery／figure 不能嵌套或相互嵌套。非法属性、属性值或结构
 | 文章封面 `PostHero` | `<Image width={660} priority>`。660 来自 `ARTICLE_COLUMN_WIDTH`，不要改成 `layout="full-width"`，否则 `sizes` 变成 `100vw`。 |
 | 列表卡片 `ListItem` | `widths={[274, 548, 822]}`，`sizes="(min-width: 768px) 250px, 100vw"`。有图封面列固定 250px，无图占位列 222px，加宽不进入封面。文稿列表第一项有图时用 `priority`（首页近期笔墨为纯文字），标签页图片保持懒加载，其余 `loading="lazy"`。 |
 | 拾趣 `:::card` 封面 | 卡片最多一张独立 Markdown 图片作为封面，使用相对路径引用；右侧介绍不允许额外图片或嵌入媒体，违规由插件报错。插件给封面加 `media-card__cover` 和默认 `width: 240`，不改路径，所以仍进图片管线。显示尺寸由 `prose.css` 固定为 7.25rem × 9.33rem。 |
+| `:::card{layout="portrait"}` 封面 | 必须有标题和一张独立 Markdown 封面；`meta` 为可选小字，不接受评分、角标或介绍。沿用 `media-card__cover`，默认资源宽度 480，显式 `|w` 仍优先。CSS 统一 `2:3` 裁切并填满卡片；大图保留完整原图。连续竖卡横滚，不修改全站版心。 |
 | 分享图 `RenderPost` | `getImage()` 单独生成 1200px JPEG，再拼成绝对 URL。不要把封面原图直接放进 `og:image`。 |
 
 `titleImage` 用 schema 工厂提供的 `image().optional()`；不要从 `astro:content` 导入独立 `image`。文章页独立 h1 在封面之前，封面内的重复标题、描述、作者行只属于页面，不复制到 RSS。

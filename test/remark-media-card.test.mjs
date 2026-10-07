@@ -262,3 +262,95 @@ test('an explicit cover width survives card decoration', async () => {
   )
   assert.doesNotMatch(code, /\|w180/)
 })
+
+test('portrait cards render cover, title and arbitrary metadata in one keyboard-scrollable rail', async () => {
+  const processor = await createMarkdownProcessor({
+    remarkPlugins: [remarkDirective, remarkImageWidth, remarkMediaCard],
+  })
+  const { code } = await processor.render(
+    [
+      ':::card{layout="portrait" title="夏日重现" meta="已看完 · 25 集" href="/interests/anime/"}',
+      '![海报](./summer.jpg)',
+      ':::',
+      '',
+      ':::card{layout="portrait" title="第二本书" meta="<script>作者</script>" href="javascript:alert(1)"}',
+      '![书封面|w360](./book.jpg)',
+      ':::',
+      '',
+      ':::card{layout="portrait" title="没有小字"}',
+      '![封面](./other.jpg)',
+      ':::',
+    ].join('\n')
+  )
+  assert.equal(code.match(/class="media-cards media-cards--rail"/g)?.length, 1)
+  assert.match(code, /tabindex="0" role="region" aria-label="横向卡片栏"/)
+  assert.equal(
+    code.match(/class="media-card media-card--portrait"/g)?.length,
+    3
+  )
+  assert.match(
+    code,
+    /<p class="media-card__meta" tabindex="0">已看完 · 25 集<\/p>/
+  )
+  assert.match(code, /<a[^>]*href="\/interests\/anime\/"[^>]*>夏日重现<\/a>/)
+  assert.match(
+    code,
+    /<img\b(?=[^>]*width="480")(?=[^>]*src="\.\/summer.jpg")[^>]*>/
+  )
+  assert.match(code, /<img\b(?=[^>]*width="360")(?=[^>]*alt="书封面")[^>]*>/)
+  assert.doesNotMatch(
+    code,
+    /javascript:|<script>|media-card__(?:review|score|label)/
+  )
+})
+
+test('layout switches and prose separate rails without changing horizontal cards', async () => {
+  const processor = await createMarkdownProcessor({
+    remarkPlugins: [remarkDirective, remarkMediaCard],
+  })
+  const portrait =
+    ':::card{layout="portrait" title="竖卡"}\n![封面](./cover.jpg)\n:::'
+  const { code } = await processor.render(
+    `${portrait}\n\n:::card{title="旧卡" score="4"}\n旧卡介绍。\n:::\n\n${portrait}\n\n普通正文。\n\n${portrait}`
+  )
+  assert.equal(code.match(/class="media-cards media-cards--rail"/g)?.length, 3)
+  assert.equal(code.match(/class="media-cards"/g)?.length, 1)
+  assert.match(code, /<article class="media-card">/)
+  assert.match(code, /4 分，满分 5 分/)
+  assert.match(code, /<div class="media-card__review">[\s\S]*旧卡介绍/)
+  assert.match(code, /<p>普通正文。<\/p>/)
+})
+
+test('invalid portrait content fails rather than hiding authored information', async (t) => {
+  const processor = await createMarkdownProcessor({
+    remarkPlugins: [remarkDirective, remarkMediaCard],
+  })
+  for (const [attrs, body, error] of [
+    ['layout="sideways"', '![封面](./cover.jpg)', /Card layout/],
+    ['layout="portrait"', '![封面](./cover.jpg)', /requires a title/],
+    ['layout="portrait" title="无封面"', '', /standalone cover/],
+    [
+      'layout="portrait" title="有介绍"',
+      '![封面](./cover.jpg)\n\n不能藏掉这段文字。',
+      /no review/,
+    ],
+    [
+      'layout="portrait" title="评分" score="4"',
+      '![封面](./cover.jpg)',
+      /no review, score or label/,
+    ],
+    [
+      'layout="portrait" title="角标" label="书"',
+      '![封面](./cover.jpg)',
+      /no review, score or label/,
+    ],
+    ['title="横卡" meta="不能忽略"', '正文。', /meta requires/],
+  ]) {
+    await t.test(attrs, async () => {
+      await assert.rejects(
+        processor.render(`:::card{${attrs}}\n${body}\n:::`),
+        error
+      )
+    })
+  }
+})

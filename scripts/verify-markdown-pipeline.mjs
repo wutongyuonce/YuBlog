@@ -193,14 +193,20 @@ test('full RSS covers every built article and uses real, standalone content asse
       }
     }
     assert.equal(elements(body, 'a').at(-1).properties.href, canonical)
-    // Copy payloads omit shell comments; their remaining lines must stay ordered.
-    const originalCode = elements(page, 'button')
-      .filter((n) => typeof n.properties.dataCode === 'string')
-      .map((n) => n.properties.dataCode.replaceAll('\x7f', '\n'))
     const rssCode = elements(body, 'pre').map(textOf)
-    for (const code of originalCode)
+    for (const frame of elements(page, 'figure').filter((node) =>
+      node.properties.className?.includes('frame')
+    )) {
+      const payload = elements(frame, 'button').find(
+        (node) => typeof node.properties.dataCode === 'string'
+      )
+      if (!payload) continue
+      const code = payload.properties.dataCode.replaceAll('\x7f', '\n')
+      // Terminal copy payloads omit authored shell comments; retain that exception.
+      const terminal = frame.properties.className?.includes('is-terminal')
       assert.ok(
         rssCode.some((block) => {
+          if (!terminal) return block === code
           const lines = block.split('\n')
           let cursor = 0
           return code.split('\n').every((line) => {
@@ -209,8 +215,9 @@ test('full RSS covers every built article and uses real, standalone content asse
             return index !== -1
           })
         }),
-        `code lines lost: ${canonical}: ${code.slice(0, 80)}`
+        `RSS code must match the authored copy payload: ${canonical}: ${code.slice(0, 80)}`
       )
+    }
 
     const article = elements(page, 'article').find((node) =>
       node.properties.className?.includes('post-content')
@@ -242,6 +249,16 @@ test('full RSS covers every built article and uses real, standalone content asse
       imageReferences(body),
       imageReferences(expected),
       `${canonical}: RSS must retain every authored image in order`
+    )
+    const linkReferences = (tree) =>
+      elements(tree, 'a').map((link) => ({
+        href: link.properties.href,
+        text: textOf(link),
+      }))
+    assert.deepEqual(
+      linkReferences(body),
+      linkReferences(expected),
+      `${canonical}: RSS must retain authored link destinations and order`
     )
     assert.equal(
       elements(body, 'table').length,
@@ -287,10 +304,15 @@ test('home and interest cards preserve authored content through the shared pipel
           .filter((node) =>
             node.properties.className?.includes('media-card__title')
           )
-          .map(textOf),
+          .map((node) => ({ text: textOf(node), href: node.properties.href })),
         rating: elements(card, 'p')
           .filter((node) =>
             node.properties.className?.includes('media-card__score')
+          )
+          .map(textOf),
+        meta: elements(card, 'p')
+          .filter((node) =>
+            node.properties.className?.includes('media-card__meta')
           )
           .map(textOf),
       }))
@@ -311,10 +333,14 @@ test('home and interest cards preserve authored content through the shared pipel
               `interests/${file.replace(/\.(md|mdx)$/, '')}/index.html`
             )
           )
+    const groups = (tree) =>
+      elements(tree, 'div')
+        .filter((node) => node.properties.className?.includes('media-cards'))
+        .map(cardContent)
     assert.deepEqual(
-      cardContent(page),
-      cardContent(fromHtml(code)),
-      `${file}: card titles and optional ratings match the shared renderer`
+      groups(page),
+      groups(fromHtml(code)),
+      `${file}: heading-separated card groups remain independent in the real page`
     )
     for (const card of elements(page, 'article').filter((node) =>
       node.properties.className?.includes('media-card')
@@ -567,4 +593,27 @@ test('every media reference in the built site is servable', async () => {
   }
 
   console.log(`media contract: ${checked} media references resolved`)
+})
+
+test('the custom-style demo preserves fenced code metadata through raw HTML parsing', async () => {
+  const page = fromHtml(await html('blogs/image-layout-demo/index.html'))
+  const frames = elements(page, 'figure').filter((node) =>
+    node.properties.className?.includes('frame')
+  )
+  const example = frames.find((frame) =>
+    elements(frame, 'figcaption').some((caption) =>
+      textOf(caption).includes('example.js')
+    )
+  )
+  assert.ok(example, 'the authored filename must reach Expressive Code')
+  assert.ok(
+    elements(example, 'summary').length,
+    'the authored collapse range must remain an expandable section'
+  )
+  assert.ok(
+    elements(example, 'div').some((node) =>
+      node.properties.className?.includes('gutter')
+    ),
+    'the authored line-number option must remain visible'
+  )
 })

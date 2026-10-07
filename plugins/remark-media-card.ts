@@ -16,6 +16,8 @@ import { visit } from 'unist-util-visit'
  *
  * 封面必须是卡片里的第一张相对路径图片，这样仍走正文图片管线。
  * 连续的 `:::card` 合成一排；`href` 只接受 http(s)、mailto 和站内路径。
+ * `layout="portrait"` 切换为横滑竖卡：必须有标题和一张封面，`meta` 是可选小字，
+ * 不接受评分、角标或介绍。布局切换和正文会分隔连续卡片组。
  */
 type Directive = Extract<RootContent, { type: 'containerDirective' }>
 
@@ -43,7 +45,7 @@ const element = (
   children,
   data: {
     hName,
-    hProperties: { className: [className], ...properties },
+    hProperties: { className: className.split(' '), ...properties },
   },
 })
 
@@ -101,14 +103,14 @@ const safeHref = (value: string | null | undefined) => {
 const classList = (value: unknown) =>
   Array.isArray(value) ? value.map(String) : value ? [String(value)] : []
 
-const markCover = (image: Image) => {
+const markCover = (image: Image, width = 240) => {
   const properties = (image.data as Element['data'])?.hProperties ?? {}
   image.data = {
     ...image.data,
     hProperties: {
       ...properties,
       className: [...classList(properties.className), 'media-card__cover'],
-      width: properties.width ?? 240,
+      width: properties.width ?? width,
     },
   }
 }
@@ -126,7 +128,14 @@ const htmlMediaTags = new Set([
 ])
 
 const buildCard = (node: Directive): Element | null => {
+  const layout = node.attributes?.layout ?? 'horizontal'
+  if (layout !== 'horizontal' && layout !== 'portrait')
+    throw new Error('Card layout must be horizontal or portrait')
+  const portrait = layout === 'portrait'
   const title = node.attributes?.title?.trim() ?? ''
+  const meta = node.attributes?.meta?.trim() ?? ''
+  if (!portrait && node.attributes?.meta !== undefined)
+    throw new Error('Card meta requires layout="portrait"')
   const href = safeHref(node.attributes?.href)
   const label = node.attributes?.label?.trim() ?? ''
   const score = parseScore(node.attributes?.score)
@@ -177,8 +186,22 @@ const buildCard = (node: Directive): Element | null => {
     })
   }
 
+  if (portrait) {
+    if (!title || !cover)
+      throw new Error(
+        'Portrait card requires a title and one standalone cover image'
+      )
+    if (
+      review.length ||
+      node.attributes?.score !== undefined ||
+      node.attributes?.label !== undefined
+    )
+      throw new Error(
+        'Portrait card accepts only a cover, title and optional meta; no review, score or label'
+      )
+  }
   if (!title && !cover && review.length === 0) return null
-  if (cover) markCover(cover)
+  if (cover) markCover(cover, portrait ? 480 : 240)
 
   const body: (Element | RootContent)[] = []
   if (title) {
@@ -194,6 +217,8 @@ const buildCard = (node: Directive): Element | null => {
         : element('p', 'media-card__title', [text(title)])
     )
   }
+  if (portrait && meta)
+    body.push(element('p', 'media-card__meta', [text(meta)], { tabIndex: 0 }))
   if (score !== null) {
     body.push(
       element('p', 'media-card__score', [
@@ -210,11 +235,15 @@ const buildCard = (node: Directive): Element | null => {
   }
   if (review.length) body.push(element('div', 'media-card__review', review))
 
-  return element('article', 'media-card', [
-    ...(label ? [element('span', 'media-card__label', [text(label)])] : []),
-    ...(cover ? [cover] : []),
-    ...(body.length ? [element('div', 'media-card__body', body)] : []),
-  ])
+  return element(
+    'article',
+    portrait ? 'media-card media-card--portrait' : 'media-card',
+    [
+      ...(label ? [element('span', 'media-card__label', [text(label)])] : []),
+      ...(cover ? [cover] : []),
+      ...(body.length ? [element('div', 'media-card__body', body)] : []),
+    ]
+  )
 }
 
 const isCard = (node: RootContent | Element) =>
@@ -223,17 +252,31 @@ const isCard = (node: RootContent | Element) =>
     'media-card'
   )
 
+const isPortrait = (node: RootContent | Element) =>
+  classList((node.data as Element['data'])?.hProperties?.className).includes(
+    'media-card--portrait'
+  )
+
 const wrapCards = (parent: Parent) => {
   const next: RootContent[] = []
   let group: RootContent[] = []
   const flush = () => {
     if (!group.length) return
-    next.push(element('div', 'media-cards', group) as unknown as RootContent)
+    const portrait = isPortrait(group[0])
+    next.push(
+      element(
+        'div',
+        portrait ? 'media-cards media-cards--rail' : 'media-cards',
+        group,
+        portrait ? { tabIndex: 0, role: 'region', ariaLabel: '横向卡片栏' } : {}
+      ) as unknown as RootContent
+    )
     group = []
   }
 
   for (const child of parent.children) {
     if (isCard(child)) {
+      if (group.length && isPortrait(group[0]) !== isPortrait(child)) flush()
       group.push(child)
       continue
     }
