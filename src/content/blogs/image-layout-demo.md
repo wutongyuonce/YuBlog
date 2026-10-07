@@ -485,10 +485,17 @@ console.log(total([1, 2, 3]))
 
 ## 视频嵌入的写法
 
-视频指令也由现有管线支持。下面保留可复制语法，不自动加载第三方播放器；把实际视频 ID 放到文章里即可渲染。
+视频指令也由现有管线支持。下面用 B 站视频实际展示嵌入效果；把 `id` 换成视频的 BV 号即可。
+
+::video-bilibili{id=BV1r2a86NEPF .no-scale}
+
+[在 B 站打开视频](https://www.bilibili.com/video/BV1r2a86NEPF/)
 
 ```md
-::video-bilibili{id=BV1MC4y1c7Kv .no-scale}
+::video-bilibili{id=BV1r2a86NEPF .no-scale}
+
+[在 B 站打开视频](https://www.bilibili.com/video/BV1r2a86NEPF/)
+
 ::video-youtube{#gxBkghlglTg .no-scale}
 ```
 
