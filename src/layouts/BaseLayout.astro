@@ -12,6 +12,7 @@ import Footer from '~/components/base/Footer.astro'
 import ToTopButton from '~/components/widgets/ToTopButton.astro'
 import Backdrop from '~/components/base/Backdrop.astro'
 import ImageInteractions from '~/components/widgets/ImageInteractions.astro'
+import CardScrollbars from '~/components/widgets/CardScrollbars.astro'
 
 import { SITE, UI, FEATURES } from '~/config'
 import { resolvePath, withBasePath } from '~/utils/path'
@@ -125,6 +126,7 @@ if (hasCustomCursor) style['--external-link-cursor'] = cursorType
     <!-- Panel Backdrop (on mobile) -->
     <Backdrop />
     <ImageInteractions />
+    <CardScrollbars />
 
     <!-- Progress Bar -->
     <script>

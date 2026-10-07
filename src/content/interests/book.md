@@ -4,169 +4,146 @@ description: 翻过的扉页
 order: 5
 ---
 
-:::card{title="三体" score="5" label="书"}
+## 现实与时代
 
-作者：刘慈欣
+:::card{layout="portrait" title="活着" meta="余华"}
+![活着封面](./book/to-live.jpg)
 :::
 
-:::card{title="活着" score="5" label="书"}
-
-作者：余华
+:::card{layout="portrait" title="许三观卖血记" meta="余华"}
+![许三观卖血记封面](./book/blood-merchant.jpg)
 :::
 
-:::card{title="许三观卖血记" score="4" label="书"}
-
-作者：余华
+:::card{layout="portrait" title="兄弟" meta="余华"}
+![兄弟封面](./book/brothers.jpg)
 :::
 
-:::card{title="兄弟" score="4" label="书"}
-
-作者：余华
+:::card{layout="portrait" title="额尔古纳河右岸" meta="迟子建"}
+![额尔古纳河右岸封面](./book/ergun-river.jpg)
 :::
 
-:::card{title="额尔古纳河右岸" score="5" label="书"}
-
-作者：迟子建
+:::card{layout="portrait" title="围城" meta="钱钟书"}
+![围城封面](./book/fortress.jpg)
 :::
 
-:::card{title="当下的力量" score="4" label="书"}
-
-作者：埃尔哈特·托利
+:::card{layout="portrait" title="平凡的世界" meta="路遥"}
+![平凡的世界封面](./book/ordinary-world.jpg)
 :::
 
-:::card{title="白夜行" score="5" label="书"}
-
-作者：东野圭吾
+:::card{layout="portrait" title="草房子" meta="曹文轩"}
+![草房子封面](./book/straw-house.jpg)
 :::
 
-:::card{title="恶意" score="5" label="书"}
-
-作者：东野圭吾
+:::card{layout="portrait" title="尘埃落定" meta="阿来"}
+![尘埃落定封面](./book/red-poppies.jpg)
 :::
 
-:::card{title="嫌疑人X的献身" score="5" label="书"}
-
-作者：东野圭吾
+:::card{layout="portrait" title="丰乳肥臀" meta="莫言"}
+![丰乳肥臀封面](./book/big-breasts.jpg)
 :::
 
-:::card{title="解忧杂货店" score="4" label="书"}
-
-作者：东野圭吾
+:::card{layout="portrait" title="白鹿原" meta="陈忠实"}
+![白鹿原封面](./book/white-deer.jpg)
 :::
 
-:::card{title="撒哈拉的故事" score="4" label="书"}
-
-作者：三毛
+:::card{layout="portrait" title="房思琪的初恋乐园" meta="林奕含"}
+![房思琪的初恋乐园封面](./book/fang-siqi.jpg)
 :::
 
-:::card{title="梦里花落知多少" score="4" label="书"}
+## 悬疑与推理
 
-作者：三毛
+:::card{layout="portrait" title="白夜行" meta="东野圭吾"}
+![白夜行封面](./book/white-night.jpg)
 :::
 
-:::card{title="围城" score="4" label="书"}
-
-作者：钱钟书
+:::card{layout="portrait" title="恶意" meta="东野圭吾"}
+![恶意封面](./book/malice.jpg)
 :::
 
-:::card{title="平凡的世界" score="5" label="书"}
-
-作者：路遥
+:::card{layout="portrait" title="嫌疑人X的献身" meta="东野圭吾"}
+![嫌疑人X的献身封面](./book/devotion-x.jpg)
 :::
 
-:::card{title="草房子" score="5" label="书"}
-
-作者：曹文轩
+:::card{layout="portrait" title="绝叫" meta="叶真中显"}
+![绝叫封面](./book/outcry.jpg)
 :::
 
-:::card{title="霍乱时期的爱情" score="5" label="书"}
-
-作者：马尔克斯
+:::card{layout="portrait" title="无证之罪" meta="紫金陈"}
+![无证之罪封面](./book/burning-ice.jpg)
 :::
 
-:::card{title="百年孤独" score="4" label="书"}
-
-作者：马尔克斯
+:::card{layout="portrait" title="坏小孩" meta="紫金陈"}
+![坏小孩封面](./book/bad-kids.jpg)
 :::
 
-:::card{title="摆渡人" score="3" label="书"}
-
-作者：克莱尔·麦克福尔
+:::card{layout="portrait" title="长夜难明" meta="紫金陈"}
+![长夜难明封面](./book/long-night.jpg)
 :::
 
-:::card{title="尘埃落定" score="5" label="书"}
+## 世界文学与成长
 
-作者：阿来
+:::card{layout="portrait" title="霍乱时期的爱情" meta="马尔克斯"}
+![霍乱时期的爱情封面](./book/cholera-love.jpg)
 :::
 
-:::card{title="金阁寺" score="4" label="书"}
-
-作者：三岛由纪夫
+:::card{layout="portrait" title="百年孤独" meta="马尔克斯"}
+![百年孤独封面](./book/solitude.jpg)
 :::
 
-:::card{title="追风筝的人" score="5" label="书"}
-
-作者：卡勒德·胡赛尼
+:::card{layout="portrait" title="金阁寺" meta="三岛由纪夫"}
+![金阁寺封面](./book/golden-pavilion.jpg)
 :::
 
-:::card{title="灿烂千阳" score="4" label="书"}
-
-作者：卡勒德·胡赛尼
+:::card{layout="portrait" title="追风筝的人" meta="卡勒德·胡赛尼"}
+![追风筝的人封面](./book/kite-runner.jpg)
 :::
 
-:::card{title="孤独六讲" score="5" label="书"}
-
-作者：蒋勋
+:::card{layout="portrait" title="灿烂千阳" meta="卡勒德·胡赛尼"}
+![灿烂千阳封面](./book/thousand-suns.jpg)
 :::
 
-:::card{title="挪威的森林" score="5" label="书"}
-
-作者：村上春树
+:::card{layout="portrait" title="挪威的森林" meta="村上春树"}
+![挪威的森林封面](./book/norwegian-wood.jpg)
 :::
 
-:::card{title="丰乳肥臀" score="4" label="书"}
-
-作者：莫言
+:::card{layout="portrait" title="杀死一只知更鸟" meta="哈珀·李"}
+![杀死一只知更鸟封面](./book/mockingbird.jpg)
 :::
 
-:::card{title="白鹿原" score="4" label="书"}
+## 科幻与奇幻
 
-作者：陈忠实
+:::card{layout="portrait" title="三体" meta="刘慈欣"}
+![三体封面](./book/three-body.jpg)
 :::
 
-:::card{title="房思琪的初恋乐园" score="5" label="书"}
-
-作者：林奕含
+:::card{layout="portrait" title="解忧杂货店" meta="东野圭吾"}
+![解忧杂货店封面](./book/miracles-store.jpg)
 :::
 
-:::card{title="我与地坛" score="5" label="书"}
-
-作者：史铁生
+:::card{layout="portrait" title="摆渡人" meta="克莱尔·麦克福尔"}
+![摆渡人封面](./book/ferryman.jpg)
 :::
 
-:::card{title="杀死一只知更鸟" score="4" label="书"}
+## 散文与自我探索
 
-作者：哈珀·李
+:::card{layout="portrait" title="当下的力量" meta="埃尔哈特·托利"}
+![当下的力量封面](./book/power-of-now.jpg)
 :::
 
-:::card{title="绝叫" score="4" label="书"}
-
-作者：叶真中显
+:::card{layout="portrait" title="撒哈拉的故事" meta="三毛"}
+![撒哈拉的故事封面](./book/sahara.jpg)
 :::
 
-:::card{title="无证之罪" label="书"}
-
-作者：紫金陈
+:::card{layout="portrait" title="梦里花落知多少" meta="三毛"}
+![梦里花落知多少封面](./book/dream-flowers.jpg)
 :::
 
-:::card{title="坏小孩" label="书"}
-
-作者：紫金陈
+:::card{layout="portrait" title="孤独六讲" meta="蒋勋"}
+![孤独六讲封面](./book/loneliness.jpg)
 :::
 
-:::card{title="长夜难明" label="书"}
-
-作者：紫金陈
+:::card{layout="portrait" title="我与地坛" meta="史铁生"}
+![我与地坛封面](./book/earth-temple.jpg)
 :::
 
 ...

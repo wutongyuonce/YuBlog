@@ -1,19 +1,105 @@
 ---
-title: Markdown 图片排版：网格、相册与图文绕排
-description: 展示 Markdown 图片的等宽网格、比例列宽、固定列宽、横向相册、左右绕排和大图查看，每种样式配有完整代码。
+title: Markdown 自定义样式：卡片、图片、提示框与代码
+description: 汇本站 Markdown 自定义样式于一页：双列书影游卡片、竖版横滑栏、图片布局、提示框、徽章链接、公式与代码，每种样式配有可复制语法。
 pubDate: 2026-10-07
 category: 技术
-tags: [Markdown, 图片排版]
+tags: [Markdown, 自定义样式]
 draft: false
 ---
 
-博客里的图片不一定要一张接一张地铺开。需要对照时可以并排，需要连续浏览时可以放进横向相册，一张图配几段说明时则适合图文绕排。
+这篇把本站支持的 Markdown 自定义样式集中放在一页。先看书影游的双列卡片与竖版横滑栏，再看图片网格、相册与图文绕排，最后是提示框、徽章、链接、数学公式和代码块。
 
-这篇文章用两张横图和三张竖图，展示本站 Markdown 支持的常见图片布局，以及等宽、按比例和固定宽度的控制方式。每种布局都保留图片原比例，不强制裁切或拉伸。
+相册、网格和绕排保留图片原比例；竖版卡片统一使用 `2:3` 封面，超出的边缘会裁切，点击仍可查看完整原图。
 
 每种样式后都有对应的完整 Markdown 代码块。普通图悬浮时在原边框内轻微放大，点击查看大图；大图再点一次即可收回，也可用 Esc、遮罩或关闭按钮退出。浅色模式大图是灰白背景，深色模式保留暗色背景。
 
 **宽度怎么选：** `columns` 管等宽列数，`widths` 管每列分配，`|w` 管图片本身的显示上限及 Astro 图片资源。网格最多二／三列；`widths` 只接受两个或三个正数 `px` / `fr` 值，不支持 `%`、`auto`、`calc()` 或任意 CSS。相册 `layout="scroll"` 不接受列数或列宽参数。600px 及以下，网格和绕排恢复上下排列。
+
+## 书影游卡片：一行两张
+
+这是原来的横向卡片：封面在左，标题、可选评分和介绍在右，类别在右上角。连续卡片自动排成双列网格，窄屏改为一列；长介绍在卡片内滚动，纵向滑块仅在滚动时短暂显示，不需要拆成多个卡片。评分可省略，只填写作者自己的分数。
+
+:::card{title="凡人修仙传" href="https://zh.wikipedia.org/wiki/凡人修仙传" score="5" label="国漫"}
+![凡人修仙传海报](../interests/anime/fanren.jpg)
+
+陪韩立修仙。
+:::
+
+:::card{title="牧神记" href="https://zh.moegirl.org.cn/牧神记" score="4.5" label="国漫"}
+![牧神记海报](../interests/anime/mushen.jpg)
+
+陪秦牧斗神。
+:::
+
+```md
+:::card{title="凡人修仙传" href="https://zh.wikipedia.org/wiki/凡人修仙传" score="5" label="国漫"}
+![凡人修仙传海报](../interests/anime/fanren.jpg)
+
+陪韩立修仙。
+:::
+
+:::card{title="牧神记" href="https://zh.moegirl.org.cn/牧神记" score="4.5" label="国漫"}
+![牧神记海报](../interests/anime/mushen.jpg)
+
+陪秦牧斗神。
+:::
+```
+
+## 竖版卡片栏
+
+封面在上，标题和灰色小字在下。连续的 `layout="portrait"` 卡片自动组成一条横滑栏，桌面版心可显示四张，窄屏保留后续卡片的露出。可以用触控板横滚、拖动底部滚动条，或聚焦卡片栏后按左右方向键查看后面的条目；点击封面查看大图，点击标题前往对应作品的 Wiki，而非本站拾趣分类。
+
+`meta` 是自由填写的小字，可写作者、制作方、分类、年份或状态，也可省略。标题自然换行；小字最多显示两行高度，超出后在自己的区域上下滚动，也可聚焦小字用方向键滚动。小字区纵向滑块默认隐藏，实际滚动时短暂显示，停止后自动隐藏，不影响底部横向滚动条。横向栏没有底框，直接嵌入页面背景，底部保留滚动条。中间插入标题、段落或普通横卡就会另起一组。竖卡必须有标题和一张独立 Markdown 封面；这里只展示三部分，不接受 `score`、`label` 或介绍正文，误写会报错而不会隐藏内容。
+
+:::card{layout="portrait" title="夏日重现" meta="日漫" href="https://zh.wikipedia.org/wiki/夏日重現"}
+![夏日重现海报](../interests/anime/summer-time.jpg)
+:::
+
+:::card{layout="portrait" title="葬送的芙莉莲" meta="准备看" href="https://zh.wikipedia.org/wiki/葬送的芙莉莲"}
+![葬送的芙莉莲海报](../interests/anime/frieren.jpg)
+:::
+
+:::card{layout="portrait" title="冰菓" meta="日漫" href="https://zh.wikipedia.org/wiki/冰菓"}
+![冰菓海报](../interests/anime/hyouka.jpg)
+:::
+
+:::card{layout="portrait" title="紫罗兰永恒花园" meta="日漫" href="https://zh.wikipedia.org/wiki/紫罗兰永恒花园"}
+![紫罗兰永恒花园海报](../interests/anime/violet.jpg)
+:::
+
+:::card{layout="portrait" title="你的名字" meta="动画电影" href="https://zh.wikipedia.org/wiki/你的名字。"}
+![你的名字海报](../interests/anime/your-name.jpg)
+:::
+
+:::card{layout="portrait" title="进击的巨人" meta="准备看。小字也能放介绍、备注和状态；超过两行高度后，可以在这块区域上下滚动读完，卡片栏的高度不会被长文字撑开。" href="https://zh.wikipedia.org/wiki/進擊的巨人"}
+![进击的巨人海报](../interests/anime/aot.jpg)
+:::
+
+```md
+:::card{layout="portrait" title="夏日重现" meta="日漫" href="https://zh.wikipedia.org/wiki/夏日重現"}
+![夏日重现海报](../interests/anime/summer-time.jpg)
+:::
+
+:::card{layout="portrait" title="葬送的芙莉莲" meta="准备看" href="https://zh.wikipedia.org/wiki/葬送的芙莉莲"}
+![葬送的芙莉莲海报](../interests/anime/frieren.jpg)
+:::
+
+:::card{layout="portrait" title="冰菓" meta="日漫" href="https://zh.wikipedia.org/wiki/冰菓"}
+![冰菓海报](../interests/anime/hyouka.jpg)
+:::
+
+:::card{layout="portrait" title="紫罗兰永恒花园" meta="日漫" href="https://zh.wikipedia.org/wiki/紫罗兰永恒花园"}
+![紫罗兰永恒花园海报](../interests/anime/violet.jpg)
+:::
+
+:::card{layout="portrait" title="你的名字" meta="动画电影" href="https://zh.wikipedia.org/wiki/你的名字。"}
+![你的名字海报](../interests/anime/your-name.jpg)
+:::
+
+:::card{layout="portrait" title="进击的巨人" meta="准备看。小字也能放介绍、备注和状态；超过两行高度后，可以在这块区域上下滚动读完，卡片栏的高度不会被长文字撑开。" href="https://zh.wikipedia.org/wiki/進擊的巨人"}
+![进击的巨人海报](../interests/anime/aot.jpg)
+:::
+```
 
 ## 横向滑动相册
 
@@ -265,3 +351,150 @@ draft: false
 ![室内竖图|w330](./image-layout-demo-img/indoor-portrait.jpg)
 ```
 
+
+## 提示框
+
+适合补充说明、建议和注意事项。框的颜色、图标和标题由类型决定。
+
+> [!NOTE]
+> 普通说明：所有卡片和图片布局都能在 Markdown 中直接编写。
+
+> [!TIP]
+> 使用建议：图片与文章放在一起，用相对路径引用。
+
+> [!IMPORTANT]
+> 重要信息：评分只填写作者给出的数值。
+
+> [!WARNING]
+> 注意事项：竖卡封面统一裁切，完整图片仍可通过大图查看。
+
+> [!CAUTION]
+> 边界提醒：不要把第二张图片或嵌入媒体塞进卡片介绍。
+
+```md
+> [!NOTE]
+> 普通说明。
+
+> [!TIP]
+> 使用建议。
+
+> [!IMPORTANT]
+> 重要信息。
+
+> [!WARNING]
+> 注意事项。
+
+> [!CAUTION]
+> 边界提醒。
+```
+
+## 徽章与链接
+
+预设徽章：:badge-n :badge-a :badge-v。自由文字：:badge[可选信息]。
+
+仓库链接：:link[YuBlog]{id=wutongyuonce/YuBlog}。普通链接：[本站拾趣](/interests/)，外部链接：[Astro](https://astro.build/)。外链会按全站配置显示跳转提示，徽章和链接都可以放在普通段落里。
+
+```md
+:badge-n :badge-a :badge-v :badge[可选信息]
+
+:link[YuBlog]{id=wutongyuonce/YuBlog}
+[本站拾趣](/interests/)
+[Astro](https://astro.build/)
+```
+
+## 图片说明与图片链接
+
+`:::image-figure` 可给单张图片加说明文字；普通 Markdown 图片链接则点击跳转，独立的大图入口只在键盘焦点时出现。
+
+:::image-figure[街边横图，保留原始比例]
+![街边横图|w330](./image-layout-demo-img/street-landscape.jpg)
+:::
+
+[![餐桌横图|w330](./image-layout-demo-img/table-landscape.jpg)](/interests/)
+
+```md
+:::image-figure[街边横图，保留原始比例]
+![街边横图|w330](./image-layout-demo-img/street-landscape.jpg)
+:::
+
+[![餐桌横图|w330](./image-layout-demo-img/table-landscape.jpg)](/interests/)
+```
+
+## 数学公式
+
+行内公式 $a^2+b^2=c^2$ 跟随段落，独立公式另起一行：
+
+$$
+\sum_{k=1}^{n} k = \frac{n(n+1)}{2}
+$$
+
+```md
+行内公式 $a^2+b^2=c^2$。
+
+$$
+\sum_{k=1}^{n} k = \frac{n(n+1)}{2}
+$$
+```
+
+## 代码块：行号、高亮与折叠
+
+代码围栏使用 Expressive Code，支持文件名、复制、行号、高亮和折叠。下面第 2–4 行默认折叠，点击即可展开，第 6 行高亮。
+
+```js title="example.js" showLineNumbers collapse={2-4} {6}
+function total(values) {
+  return values.reduce((sum, value) => {
+    return sum + value
+  }, 0)
+}
+console.log(total([1, 2, 3]))
+```
+
+````md
+```js title="example.js" showLineNumbers collapse={2-4} {6}
+function total(values) {
+  return values.reduce((sum, value) => {
+    return sum + value
+  }, 0)
+}
+console.log(total([1, 2, 3]))
+```
+````
+
+## 折叠内容与横滚表格
+
+正文支持原生 HTML。`details` 用于可展开的补充内容，表格宽于版心时会在自己的容器内横滚。
+
+<details>
+<summary>展开查看写作说明</summary>
+<p>普通正文、卡片、图片和提示框共用同一条渲染管线；展开与收起不会改变原文内容。</p>
+</details>
+
+| 样式 | 使用语法 | 适合放的内容 | 窄屏表现 |
+| --- | --- | --- | --- |
+| 横向卡片 | `:::card{title="…"}` | 封面、评分和短评 | 自动单列 |
+| 竖版卡片栏 | `:::card{layout="portrait" title="…" meta="…"}` | 封面、标题和自由小字 | 保留单行横滚 |
+| 图片网格 | `:::gallery{columns="2"}` | 并排对照的图片 | 自动单列 |
+| 横向相册 | `:::gallery{layout="scroll"}` | 连续浏览多张图片 | 主图与后续露出 |
+
+```html
+<details>
+<summary>展开查看写作说明</summary>
+<p>这里写补充内容。</p>
+</details>
+```
+
+## 视频嵌入的写法
+
+视频指令也由现有管线支持。下面保留可复制语法，不自动加载第三方播放器；把实际视频 ID 放到文章里即可渲染。
+
+```md
+::video-bilibili{id=BV1MC4y1c7Kv .no-scale}
+::video-youtube{#gxBkghlglTg .no-scale}
+```
+
+本地视频和音频使用原生 `<video>`／`<audio>`，资源与 Markdown 放在一起；不同于图片，它们通过媒体镜像层获得站内地址。完整资源规则见项目图片管线指南。
+
+```html
+<video controls src="./demo.mp4"></video>
+<audio controls src="./demo.mp3"></audio>
+```
