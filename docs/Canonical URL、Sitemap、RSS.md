@@ -146,7 +146,7 @@ Head 里挂上总目录：
 
 新增或修改文章的分类无需修改 RSS：`/rss.xml` 继续订阅全部已发布博客，不按文稿页的片段或 query 筛选；不输出分类元数据，也不提供独立分类订阅源。原值分类入口及基于原始名称稳定 hash 的徽标配色不会修改文章永久 URL、GUID、发布日期或正文。新分类中的已发布文章会随重新构建进入同一个源。
 
-`src/utils/rss-feed.js` 负责官方包的字段装配、稳定 GUID、语言和 Atom self 链接。文章配置 redirect 时，条目 link 可以指向外站，但 GUID 和正文地址基准仍是本站文章 URL。任意文章转换失败会使生成失败，不会静默降回摘要。
+`src/pages/rss.xml.js` 确定每篇文章的本站永久 URL，用作 GUID 和正文地址基准；文章配置 redirect 时，条目 link 可以指向外站。`src/utils/rss-feed.js` 将已确定的字段交给官方包序列化，并输出语言和 Atom self 链接，不重新推导文章身份。任意文章渲染或转换失败都会使生成失败，不会静默降回摘要；入口在清洗前拒绝空渲染 HTML，但有效媒体被清洗后只剩原文入口是允许的。构建末尾另检查全站每个正文容器，包括不进入 RSS 的关于和拾趣。
 
 首页「订阅 RSS」和 Head 都指向 `/rss.xml`：
 
@@ -159,7 +159,7 @@ Head 里挂上总目录：
 />
 ```
 
-自己检查：开发服务器打开 `http://127.0.0.1:4321/rss.xml`，应是 XML 而不是 HTML，且不含草稿；开发网页列表／正文可预览草稿不意味着 RSS 包含草稿。
+自己检查：在开发服务日志的实际 Local 地址后打开 `rss.xml`（保留部署 base；根路径部署常见地址为 `http://127.0.0.1:4321/rss.xml`），应是 XML 而不是 HTML，且不含草稿；开发网页列表／正文可预览草稿不意味着 RSS 包含草稿。
 
 ### 官方包负责什么
 
@@ -175,7 +175,7 @@ Head 里挂上总目录：
 | 相对 | `/blogs/foo/` | 站内 `<a>`、`withBasePath` |
 | 内容图片 | `./图片目录/文件.png`（源文件）→ `/_astro/<hash>.webp`（产物） | Markdown / frontmatter 写相对路径，产物地址由 Astro 图片管线生成，不可手写 |
 
-`withBasePath` 在 `src/utils/path.ts`，负责接上 `SITE.base`（若部署在子目录）。站内跳转走它；站外协议走 `SITE.website` 或 `Astro.site`。文章页的 `og:image` 是运行时由图片管线生成后再拼成绝对 URL 的（见 `RenderPost.astro`）。
+`withBasePath` 在 `src/utils/path.ts`，负责接上 `SITE.base`（若部署在子目录）。站内跳转走它；站外协议走 `SITE.website` 或 `Astro.site`。文章页的 `og:image` 在构建时由图片管线生成，再拼成绝对 URL（见 `RenderPost.astro`）。
 
 ## 6. Head 里其它和「被搜到」有关的
 

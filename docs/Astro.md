@@ -775,11 +775,11 @@ const result = <div class:active={condition}>内容</div>
 
 ## 对照 YuBlog 的开发流程
 
-上面是 Astro 通用语法。这个仓库里对应关系如下。
+上面是 Astro 通用语法，组件名与编译输出用于解释概念。本仓库使用 Astro 7，当前入口与开发流程如下。
 
 1. **内容结构**
 
-   首页 `/`、标签 `/tags/`、归档 `/archives/`、项目 `/projects/`、关于 `/about/`、友链 `/friends/`、文章 `/blogs/[slug]/`。
+   首页 `/`、文稿 `/blogs/`、标签 `/tags/`、归档 `/archives/`、项目 `/projects/`、关于 `/about/`、友链 `/friends/`、拾趣 `/interests/`、拾趣详情 `/interests/<id>/`、文章 `/blogs/<slug>/`。
 
 2. **布局**
 
@@ -801,6 +801,8 @@ const result = <div class:active={condition}>内容</div>
    这里是内容...
    ```
 
+   正文加工集中注册在 `plugins/index.ts`；图片布局与代码围栏参数见 [图片管线指南](./Astro图片管线指南.md)，HTML 媒体与卡片写法见 [正文 HTML 与媒体 SPEC](./正文%20HTML%20与媒体%20SPEC.md)。
+
 4. **动态路由**
 
    `src/pages/blogs/[...slug].astro` 读 `blogs` 集合并渲染。
@@ -808,7 +810,7 @@ const result = <div class:active={condition}>内容</div>
 5. **构建**
 
    ```bash
-   pnpm build    # 输出到 dist/，随后 Pagefind 建搜索索引
+   pnpm build    # 输出到 dist/，随后 Pagefind 建索引、整理产物并检查所有正文容器
    ```
 
    `dist/` 是构建产物，不进 git。

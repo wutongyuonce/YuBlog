@@ -4,6 +4,8 @@ description: 汇本站 Markdown 自定义样式于一页：双列书影游卡片
 pubDate: 2026-10-07
 category: 技术
 tags: [Markdown, 自定义样式]
+titleImage: ./_title-images/image-layout-demo-cover.jpg
+titleImageAlt: 夜间街头戴墨镜的人像
 draft: false
 ---
 
