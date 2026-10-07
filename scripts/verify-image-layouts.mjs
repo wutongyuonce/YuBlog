@@ -17,6 +17,15 @@ const url = new URL(
   base
 ).href
 
+// Real pointer and keyboard input needs the target on screen; focus() does not
+// scroll, so bring elements into view explicitly instead of relying on luck.
+const scrollTo = (selector) =>
+  page.evaluate(
+    (target) =>
+      document.querySelector(target).scrollIntoView({ block: 'center' }),
+    selector
+  )
+
 try {
   await mkdir(path.join(directory, 'images'))
   await writeFile(
@@ -385,11 +394,7 @@ ${longGallery}
 
   // The long-gallery fixture repeats these controls, so target the first
   // gallery explicitly; scrolling to it first keeps the click deterministic.
-  await page.evaluate(() =>
-    document
-      .querySelector('.image-gallery--scroll')
-      .scrollIntoView({ block: 'center' })
-  )
+  await scrollTo('.image-gallery--scroll')
   await page.click('.image-gallery__arrow[aria-label="下一张图片"] >> nth=0')
   await page.waitForFunction(
     () =>
@@ -462,7 +467,13 @@ ${longGallery}
         )
         .getAttribute('aria-current') === 'true'
   )
+  await scrollTo('.image-view:has(> img[alt="缩略图"])')
   await page.focus('img[alt="缩略图"]')
+  assert.equal(
+    await page.evaluate(() => document.activeElement?.getAttribute('alt')),
+    '缩略图',
+    'keyboard activation needs the image itself to hold focus'
+  )
   await page.keyboard.press('Enter')
   await page.waitForSelector('dialog[open]')
   assert.equal(
