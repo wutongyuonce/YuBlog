@@ -1,6 +1,6 @@
 ---
-title: Markdown 图片排版：网格、相册与图文绕排
-description: 展示 Markdown 图片的等宽网格、比例列宽、固定列宽、横向相册、左右绕排和大图查看，每种样式配有完整代码。
+title: Markdown 图片排版：竖版卡片、网格、相册与图文绕排
+description: 展示 Markdown 竖版卡片栏、等宽网格、比例列宽、固定列宽、横向相册、左右绕排和大图查看，每种样式配有完整代码。
 pubDate: 2026-10-07
 category: 技术
 tags: [Markdown, 图片排版]
@@ -9,11 +9,67 @@ draft: false
 
 博客里的图片不一定要一张接一张地铺开。需要对照时可以并排，需要连续浏览时可以放进横向相册，一张图配几段说明时则适合图文绕排。
 
-这篇文章用两张横图和三张竖图，展示本站 Markdown 支持的常见图片布局，以及等宽、按比例和固定宽度的控制方式。每种布局都保留图片原比例，不强制裁切或拉伸。
+这篇文章用两张横图和三张竖图，展示本站 Markdown 支持的常见图片布局，以及等宽、按比例和固定宽度的控制方式。相册、网格和绕排保留图片原比例；竖版卡片统一使用 `2:3` 封面，超出的边缘会裁切，点击仍可查看完整原图。
 
 每种样式后都有对应的完整 Markdown 代码块。普通图悬浮时在原边框内轻微放大，点击查看大图；大图再点一次即可收回，也可用 Esc、遮罩或关闭按钮退出。浅色模式大图是灰白背景，深色模式保留暗色背景。
 
 **宽度怎么选：** `columns` 管等宽列数，`widths` 管每列分配，`|w` 管图片本身的显示上限及 Astro 图片资源。网格最多二／三列；`widths` 只接受两个或三个正数 `px` / `fr` 值，不支持 `%`、`auto`、`calc()` 或任意 CSS。相册 `layout="scroll"` 不接受列数或列宽参数。600px 及以下，网格和绕排恢复上下排列。
+
+## 竖版卡片栏
+
+封面在上，标题和灰色小字在下。连续的 `layout="portrait"` 卡片自动组成一条横滑栏，桌面版心可显示四张，窄屏保留后续卡片的露出。可以用触控板横滚、拖动底部滚动条，或聚焦卡片栏后按左右方向键查看后面的条目；点击封面查看大图，点击标题跳转。
+
+`meta` 是自由填写的小字，可写作者、制作方、分类、年份或状态，也可省略。标题与小字会自然换行。中间插入标题、段落或普通横卡就会另起一组。竖卡必须有标题和一张独立 Markdown 封面；这里只展示三部分，不接受 `score`、`label` 或介绍正文，误写会报错而不会隐藏内容。
+
+:::card{layout="portrait" title="夏日重现" meta="日漫" href="/interests/anime/"}
+![夏日重现海报](../interests/anime/summer-time.jpg)
+:::
+
+:::card{layout="portrait" title="葬送的芙莉莲" meta="准备看" href="/interests/anime/"}
+![葬送的芙莉莲海报](../interests/anime/frieren.jpg)
+:::
+
+:::card{layout="portrait" title="冰菓" meta="日漫" href="/interests/anime/"}
+![冰菓海报](../interests/anime/hyouka.jpg)
+:::
+
+:::card{layout="portrait" title="紫罗兰永恒花园" meta="日漫" href="/interests/anime/"}
+![紫罗兰永恒花园海报](../interests/anime/violet.jpg)
+:::
+
+:::card{layout="portrait" title="你的名字" meta="动画电影" href="/interests/anime/"}
+![你的名字海报](../interests/anime/your-name.jpg)
+:::
+
+:::card{layout="portrait" title="进击的巨人" meta="准备看" href="/interests/anime/"}
+![进击的巨人海报](../interests/anime/aot.jpg)
+:::
+
+```md
+:::card{layout="portrait" title="夏日重现" meta="日漫" href="/interests/anime/"}
+![夏日重现海报](../interests/anime/summer-time.jpg)
+:::
+
+:::card{layout="portrait" title="葬送的芙莉莲" meta="准备看" href="/interests/anime/"}
+![葬送的芙莉莲海报](../interests/anime/frieren.jpg)
+:::
+
+:::card{layout="portrait" title="冰菓" meta="日漫" href="/interests/anime/"}
+![冰菓海报](../interests/anime/hyouka.jpg)
+:::
+
+:::card{layout="portrait" title="紫罗兰永恒花园" meta="日漫" href="/interests/anime/"}
+![紫罗兰永恒花园海报](../interests/anime/violet.jpg)
+:::
+
+:::card{layout="portrait" title="你的名字" meta="动画电影" href="/interests/anime/"}
+![你的名字海报](../interests/anime/your-name.jpg)
+:::
+
+:::card{layout="portrait" title="进击的巨人" meta="准备看" href="/interests/anime/"}
+![进击的巨人海报](../interests/anime/aot.jpg)
+:::
+```
 
 ## 横向滑动相册
 

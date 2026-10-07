@@ -787,6 +787,79 @@ main:has(.post-content) > footer.prose :is(a, span) {
   margin: 0;
   border-radius: 0.28rem;
 }
+
+/* 竖卡栏沿用 card 结构，滚动由浏览器原生处理，无需轮播状态。 */
+.prose .media-cards--rail {
+  grid-auto-flow: column;
+  grid-template-columns: none;
+  grid-auto-columns: clamp(8.5rem, calc((100% - 3.75rem) / 4), 11rem);
+  align-items: start;
+  gap: 1.25rem;
+  max-width: 100%;
+  padding: 1rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-scrollbar) transparent;
+  border-radius: 1.25rem;
+  background: color-mix(in srgb, var(--c-text) 4%, var(--c-bg));
+}
+.prose .media-cards--rail:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.prose .media-card--portrait,
+:root.dark .prose .media-card--portrait {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.9rem;
+  padding: 0;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  scroll-snap-align: start;
+  scroll-margin-inline: 1rem;
+}
+.prose .media-card--portrait > .image-view {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 16px rgb(0 0 0 / 12%);
+}
+.prose .media-card--portrait .media-card__cover {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  margin: 0;
+  border-radius: 0.75rem;
+  object-fit: cover;
+}
+.prose .media-card--portrait:has(.media-card__cover) .media-card__body {
+  min-height: 0;
+  max-height: none;
+  padding: 0;
+  gap: 0.35rem;
+}
+.prose .media-card--portrait :is(a, p).media-card__title,
+:root.dark .prose .media-card--portrait :is(a, p).media-card__title {
+  padding: 0;
+  color: var(--fg-deep);
+  font-size: 1rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.prose .media-card--portrait a.media-card__title:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.prose .media-card__meta {
+  margin: 0;
+  color: color-mix(in srgb, var(--c-text) 58%, var(--c-bg));
+  font-size: 0.875rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
 .image-lightbox {
   position: fixed;
   inset: 0;
