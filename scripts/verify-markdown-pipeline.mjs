@@ -293,6 +293,11 @@ test('home and interest cards preserve authored content through the shared pipel
             node.properties.className?.includes('media-card__score')
           )
           .map(textOf),
+        meta: elements(card, 'p')
+          .filter((node) =>
+            node.properties.className?.includes('media-card__meta')
+          )
+          .map(textOf),
       }))
   const files = (
     await readdir(new URL('../src/content/interests/', import.meta.url))
@@ -314,7 +319,7 @@ test('home and interest cards preserve authored content through the shared pipel
     assert.deepEqual(
       cardContent(page),
       cardContent(fromHtml(code)),
-      `${file}: card titles and optional ratings match the shared renderer`
+      `${file}: card titles, metadata and optional ratings match the shared renderer`
     )
     for (const card of elements(page, 'article').filter((node) =>
       node.properties.className?.includes('media-card')
@@ -567,4 +572,27 @@ test('every media reference in the built site is servable', async () => {
   }
 
   console.log(`media contract: ${checked} media references resolved`)
+})
+
+test('the custom-style demo preserves fenced code metadata through raw HTML parsing', async () => {
+  const page = fromHtml(await html('blogs/image-layout-demo/index.html'))
+  const frames = elements(page, 'figure').filter((node) =>
+    node.properties.className?.includes('frame')
+  )
+  const example = frames.find((frame) =>
+    elements(frame, 'figcaption').some((caption) =>
+      textOf(caption).includes('example.js')
+    )
+  )
+  assert.ok(example, 'the authored filename must reach Expressive Code')
+  assert.ok(
+    elements(example, 'summary').length,
+    'the authored collapse range must remain an expandable section'
+  )
+  assert.ok(
+    elements(example, 'div').some((node) =>
+      node.properties.className?.includes('gutter')
+    ),
+    'the authored line-number option must remain visible'
+  )
 })

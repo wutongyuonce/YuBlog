@@ -265,7 +265,10 @@ test('portrait cards render cover, title and arbitrary metadata in one keyboard-
     code.match(/class="media-card media-card--portrait"/g)?.length,
     3
   )
-  assert.match(code, /<p class="media-card__meta">已看完 · 25 集<\/p>/)
+  assert.match(
+    code,
+    /<p class="media-card__meta" tabindex="0">已看完 · 25 集<\/p>/
+  )
   assert.match(code, /<a[^>]*href="\/interests\/anime\/"[^>]*>夏日重现<\/a>/)
   assert.match(
     code,

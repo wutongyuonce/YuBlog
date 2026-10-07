@@ -211,7 +211,7 @@ const buildCard = (node: Directive): Element | null => {
     )
   }
   if (portrait && meta)
-    body.push(element('p', 'media-card__meta', [text(meta)]))
+    body.push(element('p', 'media-card__meta', [text(meta)], { tabIndex: 0 }))
   if (score !== null) {
     body.push(
       element('p', 'media-card__score', [
