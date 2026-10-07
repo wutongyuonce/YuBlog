@@ -8,8 +8,8 @@
  * 页面空白、内容悄悄丢失。部署只跑 `pnpm build`，不跑测试，所以这道校验必须
  * 留在构建链里。
  *
- * 判据是「容器里没有任何元素子节点、也没有非空白文本」：渲染失败时容器是真正
- * 空的，而只有一张图或一段视频的正文会留下元素子节点，不会被误判。
+ * 判据是「除目录控件外，没有元素子节点、也没有非空白文本」；
+ * 图片或视频本身就是正文，目录等页面控件不能掩盖正文缺失。
  */
 import { readdir, readFile } from 'node:fs/promises'
 import { join, relative } from 'node:path'
@@ -28,9 +28,9 @@ async function listPages(dir) {
     .map((entry) => join(entry.parentPath ?? dir, entry.name))
 }
 
-/** 有意义的子节点：元素，或非空白文本。注释与空白不算。 */
+/** 元素或非空白文本才算正文；站点目录属于页面控件。 */
 const isMeaningful = (child) =>
-  child.type === 'element' ||
+  (child.type === 'element' && child.tagName !== 'table-of-contents') ||
   (child.type === 'text' && child.value.trim() !== '')
 
 /**

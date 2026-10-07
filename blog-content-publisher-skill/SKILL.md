@@ -45,9 +45,9 @@ description: >
 5. `description` 短、事实。极短文才 `toc: false`。不进搜索才 `search: false`。
 6. 正文图：放到 `src/content/blogs/<短名>-img/`（与文章同级；分组文章放同组目录下，例如 `src/content/blogs/算法笔记/algo-img/`）。Markdown 用**相对路径**：`![说明](./<短名>-img/文件.png)`。
 
-   - 图片必须位于该文章所在目录或其子目录内。正文图片**不能用 `../` 向上越级**，否则构建直接报 `ImageNotFound`。
+   - 推荐图片与文章同目录或放在子目录，写 `./`；上层共享图可写 `../`，同样进管线。先确认相对路径对应的文件存在。
    - 图片一律走 Astro 图片管线：自动转 WebP、生成 `srcset`、注入宽高、懒加载。**不要手工压缩源图**，也不要再放进 `public/`。
-   - 必要时用 alt 后缀声明显示宽度：`![说明|w480](./<短名>-img/文件.png)`。只支持像素，不支持百分比；桌面正文列宽 660px，所以「半宽」可写 `|w330`（窄屏仍受实际列宽限制）。**不要把 `|w480` 写进图片 URL**，构建可能不报错但输出不可见的占位图。不写标记就是原图宽度（超过列宽时按列宽显示）。
+   - 必要时用 alt 后缀声明显示宽度：`![说明|w480](./<短名>-img/文件.png)`。只支持像素，不支持百分比；桌面正文列宽 660px，所以「半宽」可写 `|w330`（窄屏仍受实际列宽限制）。**不要把 `|w480` 写进图片 URL**，它会被当作文件名；缺失文件构建失败，未解析的占位图由产物检查拒绝。不写标记就是原图宽度（超过列宽时按列宽显示）。
    - **不要用原始 `<img>` 标签**：本地相对路径会在构建期直接报错并提示改用 Markdown 语法，不会静默 404。代码块里的示例除外。
    - 外链图片（别的站上的图）Markdown 与原始 `<img>` 两种写法等价，都不进管线。`data:` 内联图片（从 Notion／Word／部分网页粘贴时会带出来）构建期报错，先把图存成文件。
 
@@ -96,10 +96,10 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 - `<style>` 块、`style="…"`、`class` 都生效；`<style>` 是**整页全局**的，会影响顶栏和目录，用带前缀的类名或 UnoCSS 工具类。`<div>`、`<span>`、`<br>`、`<details>` 原样透传。
 - 图片尺寸写 alt 的 `|w` 标记，例如 `![说明|w330](./x.png)`；不要用 `style="zoom:50%"`（Typora 拖拽缩放、LeetCode 粘贴会自带）。外链图 Markdown 与 `<img>` 两种写法等价。
-- 视频：外链平台用 `<iframe>`；本地文件用 `<video src="./demo.mp4">`，文件放文章旁边或子目录，构建自动镜像到 `public/_media/`，Typora 与站点两边都能播，不需要手工复制。
+- 视频：外链平台用 `<iframe>`；本地文件用 `<video src="./demo.mp4">`，文件放文章旁边或子目录，构建与 dev 启动时镜像到 `public/_media/`，Typora 与站点两边都能播；dev 中增删或替换媒体文件后重启服务器。
 - 视频旁建议补一行文字链接（否则订阅者在 RSS 里只看到空白），指向同一个文件即可：`[本视频](./demo.mp4)`。指向本地媒体文件的链接会和 `src` 一起被改写。
 - 下面这些会**构建期报错**（带文件路径与行号），不会静默 404：原生 `<img>` 写相对路径（改用 Markdown 语法；处于 `.mdx` 页面或同一路径也被 Markdown 图片语法引用时例外，见 SPEC）、`<video poster="…">` 写相对路径（poster 是图片，不进管线也不被镜像，请把图片放进 `public/`、不要放 `public/_media/`，再用 `/…` 引用）、`data:` 内联内容（先存成文件）、`file:` 等浏览器打不开的协议、相对路径逃出 `src/` 目录、媒体文件不存在或指向的是目录／符号链接、扩展名不在支持列表、相对路径里含 `#` 或 `?`（文件名与目录名都算，本站取不到，改名即可）。报错给出的是**源文件**行号与作者写的原始路径，可以直接照着改。
-- RSS 会删掉 `<video>`／`<iframe>`／`<style>`／`class`，公式降级为 TeX 源码。嵌入视频时旁边补一行纯文字链接，否则订阅者看到的是空白。
+- RSS 会删掉 `<video>`／`<iframe>`／`<style>`／`class`，公式降级为 TeX 源码；视频旁的文字链接会保留。
 
 ---
 
@@ -153,7 +153,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 ### 正文与配图
 
-图片放在对应子目录，例如 `src/content/interests/device/`，Markdown 用 `![说明](./device/file.png)`，需要限宽时写 alt 的 `|w300`。图片仍需位于 Markdown 所在目录或子目录内。拾趣内容和图片统一维护在 `src/content/interests/`。
+图片放在对应子目录，例如 `src/content/interests/device/`，Markdown 用 `![说明](./device/file.png)`，需要限宽时写 alt 的 `|w300`。共享图也可用 `../`；引用按 Markdown 文件所在位置解析。拾趣内容和图片统一维护在 `src/content/interests/`。
 
 入口页列表下方的说明只改 `intro.md`。首页近期书影游只改 `recent.md`。这两个文件不进分类集合，不要给它们写 `order`，也不要加进顶部菜单。
 

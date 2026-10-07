@@ -13,12 +13,14 @@ const validator = fileURLToPath(
   )
 )
 const dependencies = fileURLToPath(new URL('../node_modules', import.meta.url))
+const config = fileURLToPath(new URL('../src/config.ts', import.meta.url))
 const fixture = async (t, source) => {
   const root = await mkdtemp(join(tmpdir(), 'yublog-publisher-'))
   t.after(() => rm(root, { recursive: true, force: true }))
   await mkdir(join(root, 'src/content/blogs'), { recursive: true })
   await writeFile(join(root, 'package.json'), '{}')
   await symlink(dependencies, join(root, 'node_modules'), 'dir')
+  await symlink(config, join(root, 'src/config.ts'), 'file')
   const path = join(root, 'src/content/blogs/post.md')
   await writeFile(path, source)
   return { root, path }
@@ -134,6 +136,20 @@ test('publisher finds real links through the Markdown parser, not by regex', asy
     `> ${fence}\n> [示例](./quoted.md)\n> ${fence}`,
     '[文档](HTTPS://github.com/x/y/blob/main/README.md)',
     '[文档](//cdn.example.com/README.md)',
+    // 分号属于浏览器 pathname，attachment 之后不再是 .md 后缀。
+    '[下载](./download.md;attachment)',
+    // HTTP(S) URL 将反斜杠视为分隔符：两个反斜杠开头会访问外站。
+    String.raw`<a href="\\cdn.example.com\README.md">文档</a>`,
+    String.raw`<a href="\downloads\README.md">下载</a>`,
+    '<a href="https:/downloads/README.md">下载</a>',
+    '[文档](https://www.wutongyu.site/README.md)',
+    '[文档](http:missing.md)',
+    '<a href="mailto:missing.md">邮箱</a>',
+    // pathname 只解码一次，%252E 不等价于扩展名里的点。
+    '[下载](./missing%252Emd)',
+    '[下载](./100%.txt)',
+    '<a href="&#x1f; //cdn.example.com/README.md&#x1f;">文档</a>',
+    '<a href="https:\t//cdn.example.com/README.md">文档</a>',
   ]
   for (const body of ignored) {
     await writeFile(path, `${front}\n${body}\n`)
@@ -154,6 +170,14 @@ test('publisher finds real links through the Markdown parser, not by regex', asy
     // URL 语义下与 .md 等价，路径不解码就漏
     '[旧文](./missing%2Emd)',
     '<a href="./missing.%6Dd">旧文</a>',
+    '<a href="./missing%ZZ.md">旧文</a>',
+    // 同本站协议、没有 slash 的 scheme 写法会相对于页面目录解析。
+    '[旧文](https:missing.md)',
+    '<a href="HTTPS:../missing.mdx?raw=1#intro">旧文</a>',
+    String.raw`<a href=".\missing.md">旧文</a>`,
+    '[旧文](./download;attachment.md)',
+    '<a href="&#x1f;./missing.md&#x1f;">旧文</a>',
+    '<a href="./mis\tsing.\r\nmd">旧文</a>',
   ]
   for (const body of flagged) {
     await writeFile(path, `${front}\n${body}\n`)
@@ -191,4 +215,13 @@ test('publisher finds real links through the Markdown parser, not by regex', asy
     `${front}\n<a data-href="./missing.md" href="/blogs/ok/">旧文</a>\n`
   )
   assert.equal(validate(root).status, 0, 'data-href 不是 href')
+
+  await writeFile(
+    path,
+    `${front}\n<a href="https://[invalid]/README.md">坏链接</a>\n`
+  )
+  const invalid = validate(root)
+  assert.equal(invalid.status, 1, invalid.stderr)
+  assert.match(invalid.stderr, /链接解析失败/)
+  assert.doesNotMatch(invalid.stderr, /YAML parsing failed/)
 })

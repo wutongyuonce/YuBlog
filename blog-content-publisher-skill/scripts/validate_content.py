@@ -10,22 +10,12 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from urllib.parse import unquote, urlparse
+from urllib.parse import urlparse
 
 
 def fail(message: str) -> None:
     print(f"ERROR: {message}", file=sys.stderr)
     raise SystemExit(1)
-
-
-# 浏览器解析 URL 前会去掉首尾的 C0 控制符与空格，并删掉值里所有的制表符与换行。
-# 不照做就会把 ` //cdn.example.com/README.md` 当成站内（其实会去外站），
-# 也会让 `./missing.md ` 漏过 `.md` 判断（浏览器照样请求 missing.md）。
-_STRIP = "".join(chr(code) for code in range(0x21))
-
-
-def normalize_url_value(value: str) -> str:
-    return re.sub(r"[\t\n\r]", "", value.strip(_STRIP))
 
 
 def is_http_url(value: object) -> bool:
@@ -45,44 +35,66 @@ def is_http_url(value: object) -> bool:
 # 内容按文件路径传入而不是 stdin：`node -e` 要先完成 import 才会读 stdin，
 # 而 `readFileSync(0)` 读管道时超过管道缓冲区就全 EAGAIN（实测 ~20KB），
 # 那样真实文章永远失败。
-ARTICLE_PARSER = """
+ARTICLE_PARSER = r"""
 import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { createMarkdownProcessor, parseFrontmatter } from '@astrojs/markdown-remark';
 import { fromHtml } from 'hast-util-from-html';
 import { visit } from 'unist-util-visit';
+let stage = 'YAML parsing';
 try {
   const text = readFileSync(process.argv[1], 'utf8');
   const { frontmatter, content } = parseFrontmatter(text);
+  stage = 'Markdown parsing';
   const { code } = await (await createMarkdownProcessor()).render(content ?? '');
-  const hrefs = [];
+  stage = 'site configuration';
+  const { SITE } = await import(pathToFileURL(resolve('src/config.ts')).href);
+  const siteBase = new URL(SITE.base.endsWith('/') ? SITE.base : `${SITE.base}/`, SITE.website);
+  const pageBase = new URL('__preflight__/entry/', siteBase);
+  stage = 'link parsing';
+  const invalidLinks = [];
   visit(fromHtml(code, { fragment: true }), 'element', (node) => {
     if (node.tagName !== 'a') return;
     const href = node.properties?.href;
-    if (typeof href === 'string') hrefs.push(href);
+    if (typeof href !== 'string') return;
+    // 与浏览器一致：去首尾 C0/空格，并删除所有 tab、CR、LF。
+    const value = href.replace(/^[\x00-\x20]+|[\x00-\x20]+$/g, '').replace(/[\t\r\n]/g, '');
+    try {
+      const url = new URL(value, pageBase);
+      // URL 决定归属；正则只排除根路径（含反斜杠）及显式 authority 等形式。
+      // 同协议的 https:missing.md 仍相对于页面目录，必须继续检查。
+      if (url.origin !== pageBase.origin || /^(?:[a-z][a-z0-9+.-]*:)?[\\/]/i.test(value)) return;
+      let pathname = url.pathname;
+      try { pathname = decodeURIComponent(pathname); } catch { /* URL 允许未转义的百分号；不把它误报为解析失败。 */ }
+      if (/\.mdx?$/.test(pathname)) invalidLinks.push(value);
+    } catch (error) {
+      throw new Error(`链接解析失败：${JSON.stringify(href)} (${error.message})`);
+    }
   });
-  console.log(JSON.stringify({ frontmatter, hrefs }));
+  console.log(JSON.stringify({ frontmatter, invalidLinks }));
 } catch (error) {
-  console.error(error.message);
+  console.error(`${stage} failed: ${error.message}`);
   process.exitCode = 1;
 }
 """
 
 
 def article(path: Path, root: Path) -> tuple[dict[str, object], list[str]]:
-    """返回 (frontmatter, 正文里真实链接的 href 列表)。"""
+    """返回 (frontmatter, Node 已判定指向 Markdown 源文件的相对链接列表)。"""
     text = path.read_text(encoding="utf-8")
     if not re.match(r"^---\s*\n(.*?)\n---\s*(?:\n|$)", text, re.DOTALL):
         fail(f"{path}: expected YAML frontmatter fenced by ---")
 
     try:
         result = subprocess.run(
-            ["node", "--input-type=module", "-e", ARTICLE_PARSER, str(path)],
+            ["node", "--experimental-strip-types", "--input-type=module", "-e", ARTICLE_PARSER, str(path)],
             text=True, capture_output=True, cwd=root,
         )
     except OSError as exc:
         fail(f"{path}: Node.js is required for Astro parsing ({exc})")
     if result.returncode:
-        fail(f"{path}: YAML parsing failed (run pnpm install first): {result.stderr.strip()}")
+        fail(f"{path}: {result.stderr.strip()}")
 
     try:
         payload = json.loads(result.stdout)
@@ -95,34 +107,16 @@ def article(path: Path, root: Path) -> tuple[dict[str, object], list[str]]:
     if not isinstance(values, dict):
         fail(f"{path}: YAML frontmatter must be a mapping")
 
-    hrefs = payload.get("hrefs") or []
-    return values, [href for href in hrefs if isinstance(href, str)]
+    invalid_links = payload.get("invalidLinks") or []
+    return values, [href for href in invalid_links if isinstance(href, str)]
 
 
-def check_body_links(relative_path: str, hrefs: list[str]) -> None:
-    """正文里的链接必须是浏览器能直接打开的地址。
+def check_body_links(relative_path: str, invalid_links: list[str]) -> None:
+    """只呈现 Node 按本站配置和浏览器 URL 语义判定的错误链接。
 
-    只拦一种写法：指向 `.md`／`.mdx` 文件的相对链接。站点不提供源文件，
-    这种链接会被浏览器按当前页面 URL 解析成 `<页面目录>/xxx.md`，点下去是 404，
-    而 `pnpm build` 不会报错。跨文章要写站内 URL。
-
-    协议用 urlparse 判断，所以 `HTTPS://…/README.md` 这类外链不受影响，
-    `./旧文.md?raw=1` 这种带查询串的写法一样会被拦下。路径先按 URL 语义解码一次：
-    `./missing%2Emd` 与 `./missing.md` 指向同一个文件，不解码就漏了。
-    目标文章到底在不在站点上，以 `pnpm test:built-markdown` 为准 ——
-    那需要知道 slug 生成规则，不在这个预检里重复实现。
+    目标文章是否存在由产物测试判定；这里不重复实现 slug 或 URL 解析。
     """
-    for raw_href in hrefs:
-        href = normalize_url_value(raw_href)
-        # 只看相对链接：外链不抓取；站内绝对路径（`/downloads/README.md`）指向
-        # public/ 里的真实文件，能不能取到由产物测试判定，不在这里重复实现路径解析。
-        if href.startswith(("//", "/")):
-            continue
-        parsed = urlparse(href)
-        if parsed.scheme:
-            continue
-        if not unquote(parsed.path).endswith((".md", ".mdx")):
-            continue
+    for href in invalid_links:
         fail(
             f"{relative_path}: 链接指向 Markdown 源文件：]({href})。"
             "站点不提供 .md 文件，这种链接点下去是 404，且构建不会报错。"
@@ -139,7 +133,7 @@ def validate_blog(root: Path, relative_path: str) -> None:
     if path.suffix not in {".md", ".mdx"}:
         fail(f"{relative_path}: expected a .md or .mdx file")
 
-    data, hrefs = article(path, root)
+    data, invalid_links = article(path, root)
     title = data.get("title")
     if not isinstance(title, str) or not title:
         fail(f"{relative_path}: title is required")
@@ -158,7 +152,7 @@ def validate_blog(root: Path, relative_path: str) -> None:
     if not isinstance(category, str) or not category.strip():
         fail(f"{relative_path}: category is required")
 
-    check_body_links(relative_path, hrefs)
+    check_body_links(relative_path, invalid_links)
 
     for key in ("redirect",):
         value = data.get(key)

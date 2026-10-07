@@ -5,10 +5,8 @@ import { visit } from 'unist-util-visit'
 
 import {
   classifyMediaRef,
-  decodeRefPath,
   findUnservableSegment,
   isMirrorableFile,
-  mediaSuffix,
   MEDIA_EXTENSIONS,
   MEDIA_ROOTS,
   MEDIA_SRC_ELEMENTS,
@@ -55,22 +53,18 @@ interface AstroOwnedImages {
 /**
  * 正文行号 → 源文件行号。
  *
- * Astro 先去掉 frontmatter、再裁掉前导空行，然后才把正文交给插件，所以
- * `node.position` 是**正文**行号：源文件第 9 行的 `<video>` 会报成第 3 行，
- * 而那行是 `category:`。报错必须指向作者真正要改的那一行，所以这里按需读源文件，
- * 数出正文首行在源文件里的下标（frontmatter 之后第一个非空行）。
- * 读不到文件时退化为正文行号，报错仍然给出能定位的内容。
+ * 集合正文可能已裁掉 frontmatter 与前导空行，直接 Markdown 页面则可能保留
+ * 全文位置。只有 vfile 内容确实是源文件后缀时，才加上被裁前缀的换行数；
+ * 全文、读不到源文件或内容不匹配时偏移为 0。统一 CRLF，忽略末尾空白。
  */
-function sourceLineOffset(filePath: string): number {
+function sourceLineOffset(file: VFile): number {
   try {
-    const lines = readFileSync(filePath, 'utf8').split(/\r?\n/)
-    let index = 0
-    if (lines[0]?.trim() === '---') {
-      const end = lines.findIndex((line, at) => at > 0 && /^---\s*$/.test(line))
-      index = end === -1 ? 0 : end + 1
-    }
-    while (index < lines.length && lines[index].trim() === '') index += 1
-    return index
+    const source = readFileSync(file.path, 'utf8')
+      .replace(/\r\n/g, '\n')
+      .trimEnd()
+    const body = file.toString().replace(/\r\n/g, '\n').trimEnd()
+    if (!body || !source.endsWith(body)) return 0
+    return source.slice(0, source.length - body.length).split('\n').length - 1
   } catch {
     return 0
   }
@@ -84,7 +78,7 @@ const describe = (file: VFile, node: Element) => {
     : filePath
   const line = node.position?.start.line
   if (!line) return relative
-  const offset = path.isAbsolute(filePath) ? sourceLineOffset(filePath) : 0
+  const offset = path.isAbsolute(filePath) ? sourceLineOffset(file) : 0
   return `${relative}:${line + offset}`
 }
 
@@ -120,7 +114,6 @@ const rewriteLocal = (
   attribute: string,
   ref: { file: string; url: string },
   value: string,
-  suffix: string,
   roots: MediaRoots
 ) => {
   const unservable = findUnservableSegment(ref.file, roots.sourceRoot)
@@ -154,7 +147,7 @@ const rewriteLocal = (
         `（文件缺失，或是目录、符号链接，或路径中间有符号链接）。`
     )
 
-  node.properties[attribute] = ref.url + suffix
+  node.properties[attribute] = ref.url
 }
 
 /** `video/audio/source/track` 的 src 与 `img` 的 src 策略不同，在这里分派 */
@@ -166,14 +159,27 @@ const checkSrc = (
   owned: Set<string>,
   roots: MediaRoots
 ) => {
-  // 由 Markdown 图片语法产出的图片：所有权属于 Astro 图片管线
-  if (node.tagName === 'img' && owned.has(decodeRefPath(value))) return
+  // 所有权必须与 Astro remarkCollectImages / rehypeImages 的 decodeURI 一致，
+  // 保留字符编码不能按媒体文件名的 decodeURIComponent 规则还原。
+  if (node.tagName === 'img') {
+    try {
+      if (owned.has(decodeURI(value))) return
+    } catch {
+      // 无效转义不可能被 Astro 认领；仍由下面的媒体检查给出文件与行号。
+    }
+  }
 
   const ref = classifyMediaRef(value, markdownPath, roots)
   switch (ref.kind) {
     case 'external':
     case 'rooted':
       return
+    case 'invalid':
+      return fail(
+        file,
+        node,
+        `的 src 是 ${echo(value)}，不是带有效主机名的 http(s):// 或 //host 地址。`
+      )
     case 'inline':
       return rejectInline(file, node, 'src', value)
     case 'unsupported':
@@ -197,15 +203,7 @@ const checkSrc = (
           `的 src 是本地相对路径。图片请改用 Markdown 语法 ![](${value})，` +
             `这样才能走 Astro 图片管线拿到压缩和 srcset。`
         )
-      return rewriteLocal(
-        file,
-        node,
-        'src',
-        ref,
-        value,
-        mediaSuffix(value),
-        roots
-      )
+      return rewriteLocal(file, node, 'src', ref, value, roots)
   }
 }
 
@@ -227,7 +225,7 @@ const checkHref = (
   const ref = classifyMediaRef(href, markdownPath, roots)
   if (ref.kind === 'local') {
     if (MEDIA_EXTENSIONS.has(path.extname(ref.file).toLowerCase()))
-      rewriteLocal(file, node, 'href', ref, href, mediaSuffix(href), roots)
+      rewriteLocal(file, node, 'href', ref, href, roots)
     return
   }
 
@@ -254,6 +252,12 @@ const checkPoster = (
 
   const ref = classifyMediaRef(poster, markdownPath, roots)
   if (ref.kind === 'external' || ref.kind === 'rooted') return
+  if (ref.kind === 'invalid')
+    return fail(
+      file,
+      node,
+      `的 poster 是 ${echo(poster)}，不是带有效主机名的 http(s):// 或 //host 地址。`
+    )
   if (ref.kind === 'inline') return rejectInline(file, node, 'poster', poster)
   if (ref.kind === 'unsupported')
     return fail(

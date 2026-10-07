@@ -20,6 +20,11 @@ export async function GET() {
     try {
       const { Content } = await render(post)
       const html = await container.renderToString(Content)
+      // glob-loader 会吞掉渲染异常并返回空 Content；消费边界必须拒绝丢失正文。
+      if (!html.trim())
+        throw new Error(
+          'Rendered article content is empty — see the [glob-loader] error above'
+        )
       items.push({
         title: post.data.title,
         description: post.data.description,

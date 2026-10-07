@@ -4,15 +4,19 @@ import { register } from 'node:module'
 
 import { encodePathSegments, escapeXml } from '../src/utils/rss-feed.js'
 
-test('RSS excludes drafts even when page previews include them in development', async () => {
-  const endpoint = new URL('../src/pages/rss.xml.js', import.meta.url).href
+let fixtureId = 0
+
+async function mockEndpoint(content = '<p>Published content</p>') {
+  const endpoint = new URL('../src/pages/rss.xml.js', import.meta.url)
+  endpoint.searchParams.set('fixture', String(fixtureId++))
+  const endpointUrl = endpoint.href
   const modules = {
     'astro/container': `export const experimental_AstroContainer = {
       create: async () => ({ renderToString: async (content) => content })
     }`,
     'astro:content': `export async function render(post) {
       if (post.data.draft) throw new Error('RSS must not render drafts')
-      return { Content: '<p>Published content</p>' }
+      return { Content: ${JSON.stringify(content)} }
     }`,
     '~/config': `export const SITE = {
       website: 'https://example.com/', title: 'Blog', description: 'Feed', lang: 'zh-CN'
@@ -30,7 +34,7 @@ test('RSS excludes drafts even when page previews include them in development', 
   const loader = `
     const modules = ${JSON.stringify(modules)};
     export function resolve(specifier, context, nextResolve) {
-      if (context.parentURL === ${JSON.stringify(endpoint)}) {
+      if (context.parentURL === ${JSON.stringify(endpointUrl)}) {
         if (Object.hasOwn(modules, specifier))
           return { url: 'data:text/javascript,' + encodeURIComponent(modules[specifier]), shortCircuit: true };
         if (specifier.startsWith('~/utils/'))
@@ -43,7 +47,11 @@ test('RSS excludes drafts even when page previews include them in development', 
     `data:text/javascript,${encodeURIComponent(loader)}`,
     import.meta.url
   )
-  const { GET } = await import(endpoint)
+  return import(endpointUrl)
+}
+
+test('RSS excludes drafts even when page previews include them in development', async () => {
+  const { GET } = await mockEndpoint()
   const response = await GET()
   const { XMLParser } = await import('fast-xml-parser')
   const channel = new XMLParser().parse(await response.text()).rss.channel
@@ -51,6 +59,26 @@ test('RSS excludes drafts even when page previews include them in development', 
     [].concat(channel.item || []).map((item) => item.title),
     ['Published'],
     'RSS publishes non-drafts without exposing preview content'
+  )
+})
+
+test('RSS rejects empty rendering before returning a successful feed but accepts media-only HTML', async () => {
+  const broken = await mockEndpoint('')
+  await assert.rejects(broken.GET, (error) => {
+    assert.match(error.message, /RSS: failed to render article "published"/)
+    assert.match(error.cause.message, /empty.*glob-loader/)
+    return true
+  })
+
+  const media = await mockEndpoint('<video src="/demo.mp4" controls></video>')
+  const response = await media.GET()
+  assert.equal(response.status, 200)
+  const { XMLParser } = await import('fast-xml-parser')
+  const item = new XMLParser().parse(await response.text()).rss.channel.item
+  assert.equal(
+    item['content:encoded'],
+    '<p><a href="https://example.com/blogs/published/">阅读原文</a></p>',
+    'a valid rendered embed may be stripped by the RSS sanitizer'
   )
 })
 

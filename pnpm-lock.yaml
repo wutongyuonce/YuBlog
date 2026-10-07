@@ -220,6 +220,9 @@ importers:
       astro-expressive-code:
         specifier: ^0.44.0
         version: 0.44.2(astro@7.3.5(@astrojs/markdown-remark@7.3.1)(@types/node@24.19.1)(jiti@2.6.1)(yaml@2.9.0))
+      css-tree:
+        specifier: ^3.2.1
+        version: 3.2.1
       eslint:
         specifier: ^10.11.0
         version: 10.12.0(jiti@2.6.1)

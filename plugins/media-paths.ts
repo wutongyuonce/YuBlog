@@ -20,8 +20,8 @@ import { SITE } from '../src/config.ts'
  *
  * 为什么只覆盖视频/音频：图片有 Markdown 语法 `![](./x.png)`，由 Astro 图片管线
  * 处理（优化 + srcset），源文件在 `dist/_astro/` 里已有一份。镜像整棵 `src/`
- * （当前 144MB 图片）到 `public/_media/` 只会让产物翻倍。视频/音频没有 Markdown
- * 语法，只能走 HTML，所以全部由本站服务，不存在重复。
+ * 的图片到 `public/_media/` 会重复产物。镜像只覆盖视频/音频文件，供 HTML 元素、
+ * 媒体链接与媒体卡片引用；图片继续交给 Astro 图片管线。
  */
 
 /** 需要镜像到 `public/_media/` 的扩展名。图片不在其中，见模块注释。 */
@@ -83,6 +83,8 @@ type MediaUrlKind =
   | { kind: 'rooted' }
   /** `data:`：内容被内联成字符串，没有文件可服务 */
   | { kind: 'inline' }
+  /** HTTP(S) 或协议相对地址缺少有效 authority，不能作为外链 */
+  | { kind: 'invalid' }
   /** 其它协议（`file:`、`blob:` 等）：浏览器在站上打不开 */
   | { kind: 'unsupported'; scheme: string }
   /** 其余一律按相对于 Markdown 文件的路径处理 */
@@ -91,23 +93,36 @@ type MediaUrlKind =
 /** 一条媒体引用的判定结果：站点级地址分类，或相对路径的两种去向 */
 type MediaRef =
   | Exclude<MediaUrlKind, { kind: 'relative' }>
-  /** 相对路径且落在源根下：可镜像，给出源文件和目标 URL */
+  /** 相对路径且落在源根下：可镜像，给出源文件和含 query/fragment 的目标 URL */
   | { kind: 'local'; file: string; url: string }
   /** 相对路径但逃出了源根：镜像不到，无法服务 */
   | { kind: 'outside'; file: string }
 
+/** 与浏览器 URL 预处理一致：去首尾 C0/空格，再删除所有 tab、CR、LF。 */
+function normalizeMediaUrl(value: string): string {
+  // URL 标准要求明确匹配 C0 控制字符。
+  // eslint-disable-next-line no-control-regex
+  const trimmed = value.replace(/^[\x00-\x20]+|[\x00-\x20]+$/g, '')
+  return trimmed.replace(/[\t\r\n]/g, '')
+}
+
 /** 只按协议分类，不涉及文件系统。渲染期与产物校验都调用它。 */
 export function classifyMediaUrl(rawSrc: string): MediaUrlKind {
-  const src = rawSrc.trim()
+  const src = normalizeMediaUrl(rawSrc)
 
   if (/^data:/i.test(src)) return { kind: 'inline' }
-  if (src.startsWith('//')) return { kind: 'external' }
-
   const scheme = SCHEME.exec(src)?.[1]
-  if (scheme)
-    return HTTP_SCHEME.test(scheme)
-      ? { kind: 'external' }
-      : { kind: 'unsupported', scheme: scheme.toLowerCase() }
+  if (src.startsWith('//') || (scheme && HTTP_SCHEME.test(scheme))) {
+    // URL 会容忍 https:clip.mp4 等缺少 authority 的写法；这里不能把它们当外链。
+    if (!/^(?:https?:)?\/\/[^/\\?#]+/i.test(src)) return { kind: 'invalid' }
+    try {
+      const url = new URL(src.startsWith('//') ? `https:${src}` : src)
+      return url.hostname ? { kind: 'external' } : { kind: 'invalid' }
+    } catch {
+      return { kind: 'invalid' }
+    }
+  }
+  if (scheme) return { kind: 'unsupported', scheme: scheme.toLowerCase() }
 
   if (src.startsWith('/')) return { kind: 'rooted' }
   return { kind: 'relative' }
@@ -174,12 +189,6 @@ function encodeMediaPath(value: string): string {
         .join('')
     )
     .join('/')
-}
-
-/** 取出 `?query`／`#fragment`。它们不属于文件名，改写时要原样拼回（如 `#t=10`）。 */
-export function mediaSuffix(value: string): string {
-  const index = value.search(/[?#]/)
-  return index === -1 ? '' : value.slice(index)
 }
 
 /**
@@ -260,7 +269,7 @@ export function mediaTargetFor(
 /**
  * 能否被镜像：`root` 下的真实普通文件，且**从 `root` 到它的每一段路径都不是符号链接**。
  * 枚举不会进入链接（避免镜像成环），校验若只看叶子就会放行一个没有产物的 URL，
- * 所以两侧必须共用这一条判据；镜像侧传入镜像根，不要用源根去相对化。
+ * 所以镜像枚举与渲染校验都用这一条判据，并传入同一个源根。
  */
 export function isMirrorableFile(
   file: string,
@@ -270,7 +279,8 @@ export function isMirrorableFile(
   if (!isInsideRelative(relative)) return false
 
   try {
-    if (!lstatSync(file).isFile()) return false
+    if (!lstatSync(root).isDirectory() || !lstatSync(file).isFile())
+      return false
     // 路径里出现链接时，真实路径与字面路径不一致
     return realpathSync(file) === path.join(realpathSync(root), relative)
   } catch {
@@ -284,15 +294,17 @@ export function classifyMediaRef(
   markdownPath: string,
   roots: MediaRoots = MEDIA_ROOTS
 ): MediaRef {
-  const src = rawSrc.trim()
+  const src = normalizeMediaUrl(rawSrc)
   const url = classifyMediaUrl(src)
   if (url.kind !== 'relative') return url
 
   // `?query` 与 `#fragment` 不属于文件名；`#t=10` 是合法的媒体片段
-  const [pathname = ''] = src.split(/[?#]/)
+  const suffixStart = src.search(/[?#]/)
+  const pathname = suffixStart === -1 ? src : src.slice(0, suffixStart)
+  const suffix = src.slice(pathname.length)
   const file = path.resolve(path.dirname(markdownPath), decodeRefPath(pathname))
   const target = mediaUrlFor(file, roots)
   return target
-    ? { kind: 'local', file, url: target }
+    ? { kind: 'local', file, url: target + suffix }
     : { kind: 'outside', file }
 }

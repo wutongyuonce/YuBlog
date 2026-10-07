@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 import { XMLParser, XMLValidator } from 'fast-xml-parser'
 import { fromHtml } from 'hast-util-from-html'
+import { parse as parseCss, ident as cssIdentifier } from 'css-tree'
 import { toHtml } from 'hast-util-to-html'
 import { toRssHtml } from '../src/utils/rss-content.js'
 import { visit } from 'unist-util-visit'
@@ -47,14 +48,20 @@ const distFile = (pathname) => {
   return full
 }
 
-/** 站内地址必须在产物里真的存在，而且是一个文件 */
-const artifactExists = async (pathname) => {
-  const target = distFile(pathname.split(/[?#]/)[0])
-  try {
-    return (await stat(target)).isFile()
-  } catch {
-    return false
+/** URL 指向的文件；文档目标也接受 Astro 的目录 index.html 路由。 */
+const artifactFile = async (pathname, allowIndex = false) => {
+  const direct = distFile(pathname)
+  const candidates = allowIndex
+    ? [direct, resolve(direct, 'index.html')]
+    : [direct]
+  for (const target of candidates) {
+    try {
+      if ((await stat(target)).isFile()) return target
+    } catch {
+      // 当前候选不存在，继续检查目录路由。
+    }
   }
+  return null
 }
 /** 站内图片 URL → 产物里的文件路径。换算只有一处：distFile（含逃逸与解码）。 */
 const localImage = (url) => distFile(url.pathname)
@@ -111,36 +118,26 @@ const fragmentTargets = (tree) => {
   return ids
 }
 
-/** 剥掉 CSS 注释：`/* 粘贴痕迹 *\/zoom:50%` 是合法声明，只看声明边界会漏 */
-import postcss from 'postcss'
-
-/** CSS 标识符里的转义：`\6f ` 与 `o` 同义，浏览器按转义后的名字认属性 */
-const unescapeCssIdentifier = (value) =>
-  value.replace(
-    /\\([0-9a-fA-F]{1,6})[ \t\n\r\f]?|\\(.)/g,
-    (_match, hex, character) =>
-      hex === undefined
-        ? character
-        : String.fromCodePoint(Number.parseInt(hex, 16))
-  )
-
 /**
- * 一段 inline style 实际声明的属性名（小写）。
- *
- * 按声明解析，不按字符匹配：注释把标识符切开时（`z/**\/oom:50%`）声明无效、浏览器不认，
- * 这里也不能把注释删掉拼成 `zoom`；`z\6f om:50%` 反过来是有效声明，必须认出来。
+ * Inline style 是声明列表；单条无效声明不影响其他声明，嵌套规则不算属性。
+ * 使用 CSS 解析器自带的错误恢复和标识符解码，不自行拼接注释或转义。
  */
-const declaredProperties = (style) => {
+const declaredProperties = (style) =>
+  parseCss(style, { context: 'declarationList' })
+    .children.toArray()
+    .filter((node) => node.type === 'Declaration')
+    .map((node) => cssIdentifier.decode(node.property).toLowerCase())
+
+/** 文本片段指令不属于元素 id；空片段和隐式 top 均定位页面顶部。 */
+const fragmentTarget = (hash) => {
+  const raw = hash.replace(/^#/, '').split(':~:')[0]
+  let target = raw
   try {
-    const names = []
-    postcss.parse(style).walkDecls((declaration) => {
-      names.push(unescapeCssIdentifier(declaration.prop).toLowerCase())
-    })
-    return names
+    target = decodeURIComponent(raw)
   } catch {
-    // 同一段里还有无效声明时整段解析失败；浏览器只忽略那一条，这里保守当作没有声明
-    return []
+    // 非法百分号编码保留原值，与同名 id 比较。
   }
+  return target === '' || target.toLowerCase() === 'top' ? null : target
 }
 
 test('full RSS covers every built article and uses real, standalone content assets', async () => {
@@ -236,10 +233,20 @@ test('full RSS covers every built article and uses real, standalone content asse
       textOf(expected).replace(/\s+/g, ''),
       `${canonical}: RSS must retain the complete authored text`
     )
+    const imageReferences = (tree) =>
+      elements(tree, 'img').map((image) => ({
+        src: image.properties.src,
+        alt: image.properties.alt ?? '',
+      }))
+    assert.deepEqual(
+      imageReferences(body),
+      imageReferences(expected),
+      `${canonical}: RSS must retain every authored image in order`
+    )
     assert.equal(
       elements(body, 'table').length,
-      elements(article, 'table').length,
-      `${canonical}: RSS preserves authored tables`
+      elements(expected, 'table').length,
+      `${canonical}: RSS preserves tables within its content boundary`
     )
     const annotations = elements(page, 'annotation').filter(
       (n) => n.properties.encoding === 'application/x-tex'
@@ -369,34 +376,8 @@ test('authored HTML is handled like Markdown and every internal anchor resolves'
   )
   assert.ok(files.length > 0, 'the built site must contain pages')
 
-  const isFile = async (path) => {
-    try {
-      return (await stat(path)).isFile()
-    } catch {
-      return false
-    }
-  }
-
-  // `href="#…"` 的片段是百分号编码的，而 id 不是，比较前必须解码
-  const decodeFragment = (value) => {
-    try {
-      return decodeURIComponent(value)
-    } catch {
-      return value
-    }
-  }
-
-  /** 站内链接解析成产物里的页面文件；目录必须真的有 index.html */
-  const resolvePage = async (url) => {
-    if (url.pathname.endsWith('/')) {
-      const index = distFile(`${url.pathname}index.html`)
-      return (await isFile(index)) ? index : null
-    }
-    const direct = distFile(url.pathname)
-    if (await isFile(direct)) return direct
-    const index = distFile(`${url.pathname}/index.html`)
-    return (await isFile(index)) ? index : null
-  }
+  /** 站内链接使用同一处产物解析；文档地址接受目录 index.html。 */
+  const resolvePage = (url) => artifactFile(url.pathname, true)
 
   /** 页面里的锚点落点，按需读取并缓存，用于跨页锚点校验 */
   const idCache = new Map()
@@ -424,8 +405,10 @@ test('authored HTML is handled like Markdown and every internal anchor resolves'
     visit(page, 'element', (node) => {
       const href = node.properties.href
       // `href="#"` 是合法的“回到顶部”，没有 id 要对
-      if (typeof href === 'string' && href.startsWith('#') && href.length > 1)
-        targets.add(decodeFragment(href.slice(1)))
+      if (typeof href === 'string' && href.startsWith('#')) {
+        const target = fragmentTarget(href)
+        if (target !== null) targets.add(target)
+      }
     })
     for (const target of targets) {
       anchors++
@@ -466,8 +449,8 @@ test('authored HTML is handled like Markdown and every internal anchor resolves'
 
         // 跨页锚点只有 HTML 页面才有落点：`demo.mp4#t=10` 是媒体时间片段，
         // 视频旁推荐的降级链接就是这种写法，不能当 HTML id 对待。
-        const fragment = decodeFragment(target.hash.slice(1))
-        if (!fragment || !resolved.endsWith('.html')) continue
+        const fragment = fragmentTarget(target.hash)
+        if (fragment === null || !resolved.endsWith('.html')) continue
         assert.ok(
           (await idsOf(resolved)).has(fragment),
           `${file}: link target ${href} has no id #${fragment}`
@@ -490,14 +473,16 @@ test('authored HTML is handled like Markdown and every internal anchor resolves'
 
     // 写在正文里的 <table> 必须和 Markdown 表格一样拿到横向滚动容器。
     // 这条同时锁住 rehype-raw 的位置：它一旦排到 rehypeWrapAll 之后就会失败。
-    visit(page, 'element', (node, _index, parent) => {
-      if (node.tagName !== 'table') return
-      assert.equal(
-        parent?.type === 'element' ? parent.tagName : undefined,
-        'div',
-        `${file}: every table needs the scrolling wrapper`
-      )
-    })
+    for (const body of bodiesOf(page)) {
+      visit(body, 'element', (node, _index, parent) => {
+        if (node.tagName !== 'table') return
+        assert.equal(
+          parent?.type === 'element' ? parent.tagName : undefined,
+          'div',
+          `${file}: every authored table needs the scrolling wrapper`
+        )
+      })
+    }
   }
 
   console.log(
@@ -529,53 +514,55 @@ test('every media reference in the built site is servable', async () => {
    * 判同源看解析后的 origin：完整 http(s) 地址写成本站域名、或写成协议相对的
    * `//本站/…`，都是站内地址，必须和 `/…` 一样有产物。
    */
-  const inspect = async (page, tag, value, attribute) => {
+  const inspect = async (page, pageUrl, tag, value, attribute) => {
     if (typeof value !== 'string' || !value) return
     checked++
 
+    const classified = classifyMediaUrl(value)
+    assert.ok(
+      ['external', 'rooted'].includes(classified.kind),
+      `${page}: <${tag}> ${attribute} 不是可服务的绝对地址（${classified.kind}）：${value}`
+    )
+
     let url
     try {
-      url = new URL(value, siteBase)
+      url = new URL(value, pageUrl)
     } catch {
       assert.fail(`${page}: <${tag}> ${attribute} 不是合法地址：${value}`)
     }
 
-    if (url.origin !== siteBase.origin) {
-      assert.match(
-        url.protocol,
-        /^https?:$/,
-        `${page}: <${tag}> ${attribute} 的协议在站上打不开：${value}`
-      )
-      return
-    }
-
-    // 还留相对路径说明媒体层没改写它，站上一定 404
-    const classified = classifyMediaUrl(value)
-    assert.notEqual(
-      classified.kind,
-      'relative',
-      `${page}: <${tag}> ${attribute} 还是相对路径，媒体层没有改写：${value}`
-    )
+    if (url.origin !== siteBase.origin) return
 
     assert.ok(
       url.pathname.startsWith(siteBase.pathname),
       `${page}: <${tag}> ${attribute} 必须落在部署 base 内：${value}`
     )
     assert.ok(
-      await artifactExists(url.pathname),
+      await artifactFile(
+        url.pathname,
+        ['iframe', 'embed', 'object'].includes(tag)
+      ),
       `${page}: <${tag}> ${attribute} has no artifact: ${value}`
     )
   }
 
   for (const page of pages) {
     const tree = fromHtml(await html(page))
+    const pageUrl = new URL(page.replace(/(^|\/)index\.html$/, '$1'), siteBase)
     for (const tag of srcTags) {
-      for (const node of elements(tree, tag))
-        await inspect(page, tag, node.properties.src, 'src')
+      for (const node of elements(tree, tag)) {
+        if (tag === 'img')
+          assert.equal(
+            node.properties.__astro_image_,
+            undefined,
+            `${page}: image still has an unresolved Astro placeholder`
+          )
+        await inspect(page, pageUrl, tag, node.properties.src, 'src')
+      }
     }
     for (const [tag, attribute] of otherAttributes) {
       for (const node of elements(tree, tag))
-        await inspect(page, tag, node.properties[attribute], attribute)
+        await inspect(page, pageUrl, tag, node.properties[attribute], attribute)
     }
   }
 

@@ -30,25 +30,24 @@ import type { AstroIntegration } from 'astro'
  * 如果等到渲染文章时才落盘，产物里的文件会缺失。这里没有文件监听，所以 dev
  * 运行期间新加的视频要重启 dev（或重新构建）才会出现。
  *
- * 镜像整棵 `src/` 是安全的：视频/音频没有 Markdown 语法，凡是放在 `src/` 下的
- * 都只可能被 HTML 引用，不存在「已被图片管线处理过、再镜像一份」的重复。
+ * 遍历 `src/` 时只镜像视频/音频，供 HTML、媒体链接与媒体卡片引用；图片继续由
+ * Astro 图片管线处理，避免重复复制。
  *
  * `public/_media/` 是派生产物，已在 .gitignore 中忽略。
  */
 
 /**
- * 递归列出可以镜像的文件。判据与渲染期校验共用 `isMirrorableFile`：
- * 只接受真实普通文件，符号链接（含指向文件的）一律跳过。
+ * 递归列出非目录条目（含符号链接），但不进入链接目录。
+ * 源侧另用 `isMirrorableFile` 拒绝链接，目标侧必须看到链接才能清理它们。
  */
 function listFiles(dir: string): string[] {
-  if (!existsSync(dir)) return []
+  if (!existsSync(dir) || !lstatSync(dir).isDirectory()) return []
 
   const files: string[] = []
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name)
-    // 判据按当前遍历的根来算：镜像侧的路径不在源根下
     if (entry.isDirectory()) files.push(...listFiles(full))
-    else if (isMirrorableFile(full, dir)) files.push(full)
+    else files.push(full)
   }
   return files
 }
@@ -76,7 +75,8 @@ function isUpToDate(source: string, target: string) {
  * 为什么必须做：`statSync` 与 `copyFileSync` 会跟随链接。镜像目录虽是派生产物，
  * 但只要里面有一条手工塞进来的链接，复制就会写到镜像根之外的文件上，还会改它的
  * mtime —— 实测「目标是指向别处的链接」时，外部文件被改名成源媒体内容。
- * 路径中间是普通文件（不是目录）时同样清掉，否则 mkdirSync 会失败。
+ * 路径中间是普通文件时同样清掉；末段是旧目录而当前要写文件时，删除派生目录
+ * 再复制，以便源目录切换成同名文件后自动恢复。
  */
 function ensureRealPath(target: string, root: string) {
   const segments = path.relative(root, target).split(path.sep)
@@ -91,8 +91,12 @@ function ensureRealPath(target: string, root: string) {
       return // 还没建出来，交给 mkdirSync／copyFileSync
     }
     const isLast = index === segments.length - 1
-    if (stats.isSymbolicLink() || (!isLast && !stats.isDirectory()))
-      rmSync(current, { force: true })
+    if (
+      stats.isSymbolicLink() ||
+      (!isLast && !stats.isDirectory()) ||
+      (isLast && stats.isDirectory())
+    )
+      rmSync(current, { recursive: stats.isDirectory(), force: true })
   }
 }
 
@@ -124,8 +128,10 @@ export function syncMedia(roots: MediaRoots = MEDIA_ROOTS) {
   // 必须先做：否则清理步骤会跟着链接删掉外部目录里的文件
   ensureRealRoot(roots.publicDir)
 
-  const sourceFiles = listFiles(roots.sourceRoot).filter((file) =>
-    MEDIA_EXTENSIONS.has(path.extname(file).toLowerCase())
+  const sourceFiles = listFiles(roots.sourceRoot).filter(
+    (file) =>
+      MEDIA_EXTENSIONS.has(path.extname(file).toLowerCase()) &&
+      isMirrorableFile(file, roots.sourceRoot)
   )
 
   const mirror = new Map<string, string>()

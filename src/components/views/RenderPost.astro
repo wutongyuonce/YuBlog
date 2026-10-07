@@ -96,6 +96,7 @@ frontmatter to <code>false</code> or remove it to publish the post.`
         {tags}
         hasSubtitle={!titleImage && !!subtitle}
       />
+      {isDraft && <Warning html={WARNING} />}
     </Fragment>
     {titleImage && (
       <Fragment slot="hero">
@@ -109,7 +110,6 @@ frontmatter to <code>false</code> or remove it to publish the post.`
       </Fragment>
     )}
     <Fragment slot="article">
-      {isDraft && <Warning html={WARNING} />}
       {haveHeadings && (
         <Toc>
           <DesktopAside {headings} />

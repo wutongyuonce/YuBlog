@@ -40,7 +40,7 @@ import rehypeMediaAssets from '../plugins/rehype-media-assets.ts'
  * 3. 无法服务的引用明确失败并报出文件与行号 —— 静默 404 最难排查。
  * 4. Markdown 图片语法产出的图片不归这一层管，仍由 Astro 图片管线接管。
  *
- * 两个用例各自用临时目录当「源根 + 镜像根」，不往仓库里写任何测试文件。
+ * 各用例用临时目录当「源根 + 镜像根」，不往仓库里写任何测试文件。
  */
 
 /** 渲染用例的临时根 */
@@ -77,30 +77,41 @@ const scratch = (name, content = 'fixture') => {
 }
 
 /** 只装媒体插件所需的最小管线：先解析原生 HTML，再交给被测插件 */
-const render = (markdown) => {
+const render = (markdown, filePath = ARTICLE) => {
   const processing = createMarkdownProcessor({
     remarkPlugins: [],
     rehypePlugins: [rehypeRaw, [rehypeMediaAssets, { roots: RENDER_ROOTS }]],
     syntaxHighlight: false,
   }).then((processor) =>
-    processor.render(markdown, { fileURL: pathToFileURL(ARTICLE) })
+    processor.render(markdown, { fileURL: pathToFileURL(filePath) })
   )
   return processing
 }
 
 const renderHtml = async (markdown) => (await render(markdown)).code
 
-test('classifyMediaRef 把引用分成互不重叠的六类', () => {
+test('classifyMediaRef 统一协议分类、authority 校验与浏览器空白规则', () => {
   const classify = (src) => classifyMediaRef(src, ARTICLE, RENDER_ROOTS)
 
-  assert.deepEqual(classify('https://cdn.example.com/a.mp4'), {
-    kind: 'external',
-  })
-  // 协议大小写不该改变分类
-  assert.deepEqual(classify('HTTPS://CDN.EXAMPLE.COM/A.MP4'), {
-    kind: 'external',
-  })
-  assert.deepEqual(classify('//cdn.example.com/a.mp4'), { kind: 'external' })
+  for (const src of [
+    'https://cdn.example.com/a.mp4',
+    'HTTPS://CDN.EXAMPLE.COM/A.MP4',
+    '//cdn.example.com/a.mp4',
+    '\u0000 \thtt\tps://cdn.example.com/a.mp4\r\n\u001f',
+  ])
+    assert.deepEqual(classify(src), { kind: 'external' }, src)
+
+  for (const src of [
+    'https:clip.mp4',
+    'https://',
+    '//',
+    'https:///clip.mp4',
+    'https://?clip.mp4',
+    '//#clip.mp4',
+    'https://[bad]/clip.mp4',
+    'https://host:bad/clip.mp4',
+  ])
+    assert.deepEqual(classify(src), { kind: 'invalid' }, src)
   assert.deepEqual(classify('/videos/a.mp4'), { kind: 'rooted' })
   assert.deepEqual(classify('data:video/mp4;base64,AAAA'), { kind: 'inline' })
   // DATA: 若被当成外链，会一路走到 RSS 才炸
@@ -135,6 +146,15 @@ test('query 与 fragment 不算文件名，源里的百分号编码按浏览器�
   const query = classify('./demo.mp4?raw=1')
   assert.equal(query.kind, 'local')
   assert.equal(query.file, path.join(dir, 'demo.mp4'))
+  assert.equal(query.url, `${MEDIA_URL_PREFIX}content/blogs/demo.mp4?raw=1`)
+
+  // 文件解析、协议分类与后缀必须使用同一种浏览器空白规则。
+  const spaced = classify('\u0000 ./de\tmo.mp4?ra\rw=1#t=10\n \u001f')
+  assert.equal(spaced.file, path.join(dir, 'demo.mp4'))
+  assert.equal(
+    spaced.url,
+    `${MEDIA_URL_PREFIX}content/blogs/demo.mp4?raw=1#t=10`
+  )
 
   const encoded = classify('./a%20b.mp4')
   assert.equal(encoded.kind, 'local')
@@ -198,6 +218,7 @@ test('相对路径的视频/音频与媒体链接被改写，外链与站内绝�
 <video src="/videos/mine.mp4"></video>
 [下载原片](./demo.mp4)
 [看另一篇](./another.md)
+<a href="https:another.md">非媒体链接</a>
 `)
 
   const rewritten = `${MEDIA_URL_PREFIX}content/blogs/demo.mp4`
@@ -211,6 +232,7 @@ test('相对路径的视频/音频与媒体链接被改写，外链与站内绝�
   assert.match(html, /src="\/videos\/mine\.mp4"/)
   // 非媒体的相对链接不归这一层管，保持原样（由产物测试与发布预检负责）
   assert.match(html, /href="\.\/another\.md"/)
+  assert.match(html, /href="https:another\.md"/)
 })
 
 test('媒体片段与查询串在改写后原样保留', async () => {
@@ -222,7 +244,13 @@ test('媒体片段与查询串在改写后原样保留', async () => {
     new RegExp(`src="${MEDIA_URL_PREFIX}content/blogs/demo\\.mp4#t=10"`)
   )
 
-  const query = await renderHtml('[原片](./demo.mp4?raw=1)')
+  const query = await renderHtml(
+    '[原片](./demo.mp4?raw=1)\n\n<a href=" ./de&#9;mo.mp4?ra&#13;w=1 ">原片</a>'
+  )
+  assert.equal(
+    query.split(`${MEDIA_URL_PREFIX}content/blogs/demo.mp4?raw=1`).length - 1,
+    2
+  )
   assert.match(
     query,
     new RegExp(`href="${MEDIA_URL_PREFIX}content/blogs/demo\\.mp4\\?raw=1"`)
@@ -280,6 +308,22 @@ test('Markdown 图片语法产出的图片不归媒体层管，仍交给 Astro �
     '![说明](./pic.png)\n\n<img src="./pic.png" alt="手写">'
   )
   assert.doesNotMatch(mixed.code, /_media/)
+
+  // Astro 的 decodeURI 保留 %26 / %2B / %23；媒体文件名解码器不能代替它。
+  for (const src of ['./a%26b.png', './a%2Bb.png', './a%23b.png']) {
+    const encoded = await render(
+      `![说明](${src})\n\n<img src="${src}" alt="手写">`
+    )
+    const images = []
+    visit(fromHtml(encoded.code, { fragment: true }), 'element', (node) => {
+      if (node.tagName === 'img') images.push(node.properties)
+    })
+    assert.equal(images.length, 2)
+    for (const image of images) {
+      assert.ok(image.__astro_image_, `${src} 必须仍由 Astro 认领`)
+      assert.equal(JSON.parse(image.__astro_image_).src, src)
+    }
+  }
 })
 
 test('无法服务的引用明确失败，并报出文件与行号', async () => {
@@ -301,6 +345,20 @@ test('无法服务的引用明确失败，并报出文件与行号', async () =>
   // 每类报错都要同时给出位置（路径 + 行号）与作者写的那串原文 ——
   // 多处引用时才分得清说的是哪一处
   const cases = [
+    ...['https:clip.mp4', 'https://', '//'].flatMap((raw) => [
+      [
+        '缺少 authority 的 src',
+        `<video src="${raw}"></video>`,
+        /不是带有效主机名/,
+        raw,
+      ],
+      [
+        '缺少 authority 的 poster',
+        `<video src="/a.mp4" poster="${raw}"></video>`,
+        /不是带有效主机名/,
+        raw,
+      ],
+    ]),
     [
       'data: 图片',
       '<img src="data:image/png;base64,AAAA">',
@@ -319,12 +377,12 @@ test('无法服务的引用明确失败，并报出文件与行号', async () =>
       /file: 协议/,
       'file:///tmp/a.mp4',
     ],
-    [
+    ...['./pic.png', './100%.png'].map((raw) => [
       '原生 img 相对路径',
-      '<img src="./pic.png">',
+      `<img src="${raw}">`,
       /Markdown 语法/,
-      './pic.png',
-    ],
+      raw,
+    ]),
     [
       '逃出源根的路径',
       '<video src="../../../outside.mp4"></video>',
@@ -424,13 +482,14 @@ test('镜像幂等、清理陈旧产物，并跳过目录与符号链接', () =>
   const roots = makeRoots()
   const nested = path.join(roots.sourceRoot, 'nested')
   mkdirSync(nested, { recursive: true })
-  const source = path.join(nested, 'clip.mp4')
+  let source = path.join(nested, 'clip.mp4', 'old.mp4')
+  mkdirSync(path.dirname(source), { recursive: true })
   writeFileSync(source, 'video')
   symlinkSync(source, path.join(roots.sourceRoot, 'linked.mp4'))
   const linkedDir = path.join(roots.sourceRoot, 'linked-dir')
   symlinkSync(nested, linkedDir)
 
-  const target = mediaTargetFor(source, roots)
+  let target = mediaTargetFor(source, roots)
   assert.ok(target, '源根下的素材必须能算出镜像目标')
 
   syncMedia(roots)
@@ -439,6 +498,12 @@ test('镜像幂等、清理陈旧产物，并跳过目录与符号链接', () =>
     existsSync(path.join(roots.publicDir, 'linked.mp4')),
     false,
     '符号链接不镜像：渲染期校验也会拒绝它，两侧判据一致'
+  )
+
+  assert.equal(
+    existsSync(path.join(roots.publicDir, 'linked-dir')),
+    false,
+    '不能进入源链接目录'
   )
 
   // 内容和 mtime 都没变时不应重复复制
@@ -453,6 +518,17 @@ test('镜像幂等、清理陈旧产物，并跳过目录与符号链接', () =>
   utimesSync(source, older, older)
   assert.equal(syncMedia(roots).copied, 1, '内容变了就必须重写')
   assert.equal(statSync(target).size, 5)
+
+  // clip.mp4/old.mp4 -> clip.mp4：派生的旧目录必须自动换成普通文件。
+  // 删除旧目录时也不能沿里面的链接触达源树。
+  symlinkSync(roots.sourceRoot, path.join(path.dirname(target), 'source-link'))
+  rmSync(path.dirname(source), { recursive: true })
+  source = path.dirname(source)
+  writeFileSync(source, 'replacement')
+  target = mediaTargetFor(source, roots)
+  assert.equal(syncMedia(roots).copied, 1)
+  assert.equal(lstatSync(target).isFile(), true)
+  assert.equal(readFileSync(target, 'utf8'), 'replacement')
 
   // 源文件删除后，陈旧产物必须被清理，否则会一直躺在产物里
   rmSync(source)
@@ -499,7 +575,7 @@ test('镜像不会经目标端符号链接改写镜像根之外的文件', () =>
   const outside = path.join(home, 'outside.txt')
   const outsideDir = path.join(home, 'outside-dir')
   mkdirSync(outsideDir, { recursive: true })
-  writeFileSync(outside, 'DO NOT OVERWRITE')
+  writeFileSync(outside, 'VIDEO') // 与源同大小、同 mtime 也不能保留目标链接
   writeFileSync(path.join(outsideDir, 'keep.txt'), 'KEEP')
 
   const leafSource = path.join(roots.sourceRoot, 'clip.mp4')
@@ -513,10 +589,28 @@ test('镜像不会经目标端符号链接改写镜像根之外的文件', () =>
   const leafTarget = path.join(roots.publicDir, 'clip.mp4')
   symlinkSync(outside, leafTarget)
   symlinkSync(outsideDir, path.join(roots.publicDir, 'content'))
+  const { atime, mtime } = statSync(leafSource)
+  utimesSync(outside, atime, mtime)
+  const outsideMtime = statSync(outside).mtimeMs
 
-  syncMedia(roots)
+  // 无源对应的文件链接、目录链接与断链都要删除，只删链接本身。
+  const staleLinks = ['orphan.txt', 'orphan-dir', 'dangling.mp4'].map((name) =>
+    path.join(roots.publicDir, name)
+  )
+  symlinkSync(outside, staleLinks[0])
+  symlinkSync(outsideDir, staleLinks[1])
+  symlinkSync(path.join(home, 'missing'), staleLinks[2])
 
-  assert.equal(readFileSync(outside, 'utf8'), 'DO NOT OVERWRITE')
+  assert.equal(syncMedia(roots).removed, 3)
+  for (const link of staleLinks)
+    assert.throws(() => lstatSync(link), { code: 'ENOENT' })
+
+  assert.equal(readFileSync(outside, 'utf8'), 'VIDEO')
+  assert.equal(
+    statSync(outside).mtimeMs,
+    outsideMtime,
+    '链接外的时间戳不能被改写'
+  )
   assert.equal(readFileSync(path.join(outsideDir, 'keep.txt'), 'utf8'), 'KEEP')
   assert.equal(
     existsSync(path.join(outsideDir, 'nested.mp4')),
@@ -581,29 +675,7 @@ test('镜像根自身是链接时不会写到它指向的外部目录', () => {
   )
 })
 
-test('目标端链接的内容与源一样也必须换成真实文件', () => {
-  const roots = makeRoots()
-  const home = path.dirname(path.dirname(roots.publicDir))
-  const outside = path.join(home, 'outside.txt')
-  const source = path.join(roots.sourceRoot, 'clip.mp4')
-  mkdirSync(roots.sourceRoot, { recursive: true })
-  writeFileSync(source, 'video')
-  writeFileSync(outside, 'VIDEO') // 与源同大小，让「是否最新」的判据命中
-
-  mkdirSync(roots.publicDir, { recursive: true })
-  const target = path.join(roots.publicDir, 'clip.mp4')
-  symlinkSync(outside, target)
-  const { atime, mtime } = statSync(source)
-  utimesSync(outside, atime, mtime)
-
-  syncMedia(roots)
-
-  assert.equal(lstatSync(target).isSymbolicLink(), false, '链接不能留在产物里')
-  assert.equal(readFileSync(target, 'utf8'), 'video')
-  assert.equal(readFileSync(outside, 'utf8'), 'VIDEO', '外部文件不能被改写')
-})
-
-test('报错按源文件行号定位，并带上作者写的原始值', async () => {
+test('报错按实际源文件与 vfile 的关系定位，兼容裁剪正文与直接页面', async () => {
   const source = [
     '---',
     'title: 行号探针',
@@ -649,6 +721,24 @@ test('报错按源文件行号定位，并带上作者写的原始值', async ()
         assert.match(error.message, /article\.md:10 /)
         return true
       }
+    )
+    // 直接 .md 页面保留全文位置：第 5 行不能再次加 frontmatter 偏移报成 9。
+    const directPage = path.join(RENDER_ROOTS.sourceRoot, 'pages', 'index.md')
+    const directSource = [
+      '---',
+      'title: 直接页面',
+      '---',
+      '',
+      '<video src="./missing.mp4"></video>',
+    ].join('\n')
+    mkdirSync(path.dirname(directPage), { recursive: true })
+    writeFileSync(directPage, directSource)
+    await assert.rejects(() => render(directSource, directPage), /index\.md:5 /)
+
+    // 内容找不到后缀关系时不能猜 offset，退回 vfile 自身行号。
+    await assert.rejects(
+      () => render('<video src="./another-missing.mp4"></video>', directPage),
+      /index\.md:1 /
     )
   } finally {
     rmSync(ARTICLE, { force: true })
