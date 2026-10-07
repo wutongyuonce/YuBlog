@@ -87,6 +87,25 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 
 不抓取 redirect 目标、不下载远程媒体，不用第二个 Markdown 解析器。开发和生产 RSS 均只读取已发布文章、排除草稿；任一文章渲染或转换失败使本次生成失败，不静默漏文或退回摘要。完整规范见 [RSS 全文支持 SPEC](./RSS%20全文支持%20SPEC.md)。
 
+### S8：并排看图、横滚浏览与图文绕排
+
+作者在正文使用 `:::gallery` 集中展示图片，或用 `:::figure` 让正文围绕一张图阅读。两者使用共享 Markdown 管线，图片仍由 Astro 解析；既有 `|w` 标记含义不变。
+
+| 指令 | 属性与默认值 | 内容契约 |
+| --- | --- | --- |
+| `:::gallery` | 仅允许 `layout`、`columns`、`widths`；`layout` 为 `grid`／`scroll`，默认 `grid`；grid 的 `columns` 为 `2`／`3`，默认 `2`；可选 `widths` 指定二／三个正有限数的 `px`／`fr` 列轨道，省略 columns 时按值数量推导，显式 columns 必须匹配；scroll 不接受 `columns` 或 `widths` | 至少一张独立 Markdown 直接图片；可以同段多图，但段中只能有图片和空白；不接受文字、列表、链接包图、引用式图片、HTML／MDX 图片 |
+| `:::figure` | 仅允许 `side`，为 `left`／`right`，默认 `right` | 第一段恰好一张独立 Markdown 直接图片，后面至少一块正文；图片之前无正文；gallery／figure 不能嵌套或相互嵌套 |
+
+网格在桌面按二／三列展示，默认等宽；`widths="1fr 2fr"` 按份数分配扣除间距后的列宽，`widths="240px 1fr"` 指定第一列目标宽度、第二列占剩余，窄容器可收窄。列轨道不改变图片 `|w` 的限宽／资源语义。横滚相册的全部图片静态存在，通过原生横滚与 scroll snap 浏览；启用 JS 后，白色圆形前后箭头位于图片区域左右边缘，首尾隐藏不可用的箭头；至少两张图时，图片底部叠加一图一点的页码，深色点标识当前图，不显示底部工具条或滚动条；只有一张图时没有可翻页内容，不生成箭头和页码，只显示完整图片；点数量超过分页容器可见宽度时，容器自行滚动到当前点，不滚动文章。实际滚动同步当前位置与边界状态，当前图片完整显示，混合横竖图时不为非当前图片留出多余底部空白，无自动播放。figure 在桌面左／右绕排，600px 及以下改为图片在前、正文在后；grid 同时改为单列。所有布局保持 660px 版心内，不 breakout，静止时不裁切图片。无 JS 仍能读完全部图文并横滚，不显示不可工作的交互控件。
+
+### S9：查看普通正文图的大图，再继续阅读
+
+普通 Markdown 正文图（包括 gallery／figure 中的图）不显示角落放大标识。可悬浮的精细指针下，图片在原显示边框内轻微放大，移开复原，不改变周围布局；光标为 `zoom-in`。减少动态效果偏好下不缩放。点图或键盘聚焦后按 Enter／空格，通过原生 `dialog` 查看原尺寸图；大图光标为 `zoom-out`，直接点击可收回，Esc、遮罩和关闭按钮也可退出，恢复焦点及打开前的滚动锁状态。浅色模式遮罩为灰白，深色模式保留暗色，文字和关闭控件随主题可读。作者用链接包裹的图片仍点击跳转，链接外的大图入口仅在键盘焦点时显示，不用放大行为劫持链接。此处排除的是 `titleImage` 的文章头图／文稿列表缩略图和站点头像；`:::card` 配图仍属于正文，支持放大。
+
+大图同样通过 Astro 解析，不沿用缩略图的 `|w` 宽度，不手写资源 URL，也不因放大功能在打开前预加载。Astro 处理的大图副本只产出单个原尺寸版本，不生成无法使用的响应式变体。RSS 保留全部可见图片和文字的源顺序，不重复输出大图副本、不复刻网格、横滚或绕排；实现与资源清理方式见架构文档 §4.9。
+
+作者使用内容 skill 写完或改完含这些布局或卡片的博客时，默认启动或复用同一 worktree 的 `pnpm dev`（纯文字或只有普通正文图时不预览）：复用先确认 cwd，核实日志中的真实 Local 地址并请求文章成功后才交付预览链接；不绑定 4321、不杀别人占端口的服务。用户禁止启动或环境受限则报告未预览；失败不能称已验证，dev 预览不替代 build。草稿 dev 可读，RSS 仍排除。
+
 ## 3. 视觉不变量
 
 | 对象 | 规则与属主 |
@@ -127,6 +146,9 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 | 更多菜单条目 | `config.ts` `MORE_LINKS` | `NavDropdown` 呈现，UnoCSS 提取图标；友链路由归属由 `nav-path.js` 维护 | 导航路径与构建产物检查 |
 | 拾趣分类／标题／顺序／说明 | `content/interests/*.{md,mdx}`；集合范围由 `content.config.ts` 维护 | 入口、子页和导航；`intro.md` 与首页 `recent.md` 排除出集合。可选图标唯一映射 `config.ts` 的 `INTEREST_ICONS`，UnoCSS 自动加入 safelist | 构建页面与可选图标检查 |
 | 封面卡片（单封面／文字介绍边界、属性、链接安全、评分及分组） | `plugins/remark-media-card.ts` | 博客、拾趣、关于的 Markdown；样式只在 `prose.css` | `remark-media-card.test.mjs` |
+| gallery／figure 属性、内容结构、嵌套拒绝与带位置失败，普通正文图的 image-view／template 包装 | `plugins/remark-image-layouts.ts` | `plugins/index.ts` 在 `remarkMediaCard` 后接入；图片节点继续交给 Astro，不在组件或 RSS 重新推断布局 | `test/remark-image-layouts.test.mjs`、真实 Astro 产物检查 |
+| 相册箭头／圆点、dialog 大图与页面资源清理（持有滚动锁 release） | `src/utils/image-interactions.ts` | `components/widgets/ImageInteractions.astro` 在 `BaseLayout` 只注册与接线；使用插件生成的 DOM 和 Astro 资源 | `scripts/verify-image-layouts.mjs` |
+| 页面滚动锁、滚动条补偿及先前样式恢复 | `src/utils/misc.ts` | `lockScroll()` 返回对应 body 的 release；backdrop 和图片交互仅获取／释放，不自行改 overflow | `test/scroll-lock.test.mjs`、浏览器关闭与换页检查 |
 | 社交身份 | `config.ts` `AUTHOR_LINKS` | 首页读取配置，关于正文独立维护联系方式 | 构建产物检查核对身份 |
 | 访问统计 | `Head.astro` 的 Umami 脚本 | 全站经 `BaseLayout` 加载；不在页脚或正文渲染 | 构建产物头部含该脚本 |
 | RSS HTML／XML与失败 | `rss-content.js`／`rss-feed.js`；endpoint编排 | `render(Content)` → 转换 → 序列化 | RSS owner-level 与产物检查 |
@@ -138,6 +160,8 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 
 - `:::card` 最多一张独立 Markdown 图片作为封面，可无封面；介绍只允许文字及其排版和链接，不接受额外图片或嵌入媒体，包括嵌套 Markdown 图片和 HTML／静态 MDX 媒体。违规由 Markdown 插件明确报错并使构建失败，不静默删图；卡片外的正文配图不受此限制。
 - `:::card` 的评分可省略；提供时必须是 0–5 的半星步进，非法评分和嵌套卡片构建失败，不改写分数。评分为真实文本，读屏与 RSS 不依赖星星 CSS；危险标题链接降级为纯文本。
+- gallery／figure 的未知属性、非法属性值、widths 的单位／数量／列数不匹配、scroll 带 columns／widths、非法结构、空 gallery、缺图片／正文的 figure 及嵌套布局，由 `remark-image-layouts.ts` 报错并携带源位置，使构建失败；不静默删图、不猜布局、不降级为成功。
+- 图片交互组件 disconnect 时用 AbortController 清理监听，并释放 dialog 和页面资源、恢复滚动锁；关闭时焦点只恢复到仍连接的触发位置，不聚焦旧页面节点。全部相册图静态存在，原尺寸图可在构建时生成但浏览器打开前不加载，不新增后台抓取、轮播计时器或持久状态。
 - 静态内容在构建时验证。缺少作者介绍或无效 schema 明确报错；无文章／无匹配结果展示空状态。未知博客分类保留，非法友链类别由 schema 拒绝，不静默丢条目。写作热力遇到非法日期在构建时抛错；没有已发布文章时不渲染，不补第一篇文章之前的空年。正文容器为空的页面让构建失败（见[正文 HTML 与媒体 SPEC](./正文%20HTML%20与媒体%20SPEC.md)）。
 - 导航 pending 状态由对应 AbortSignal 拥有；后发目标替代先发目标，过期取消不能回退最新预览；只有 pathname 追上 pending 目标才完成预览，已排队的旧交换不能冒充另一个新目标完成。页面加载后的实际路径最终决定选中父级。
 - 分类入口数随已发布分类数增长，菜单受视口高度约束并可滚动；改分类名会改变名称 hash 与自动颜色，不提供独立的分类改名迁移服务。
@@ -150,6 +174,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 
 - 文章 slug、域名和 base 决定永久地址；没有独立的文章改名或换域名 ID 服务。
 - RSS 使用基础 HTML 和公式源码，不保证与网站或不同阅读器的像素样式一致。
+- 图片布局不新增依赖、轮播库、第二个 Markdown 解析器、预览后台或 preview manager 脚本；不提供自动播放、虚拟化图片、全屏轮播或封面／头像放大，不新加测试框架。普通代码块里的布局示例不是实际布局，skill 读正文判断是否需要预览，不用正则检测脚本。
 - 新增顶栏项或拾趣分类需验证导航宽度、换行和响应式布局；下拉菜单受视口高度约束并可滚动，自动收录不意味着任意数量或长度都保证布局可用。
 - 开发网页列表和正文可预览草稿；生产不可含草稿。首页摘要、写作热力、顶部分类菜单和开发／生产 RSS 只使用已发布集合；草稿不参与菜单入口、计数或最近文章，不保留仅含草稿的分类或空已发布集合的分类入口。
 - `search: false` 与 RSS 范围独立，禁用搜索不等于不发布。博客文章是否下线由删除或草稿状态决定；拾趣没有草稿开关，移除分类文件后重新构建才移除对应子页、入口和菜单项。
@@ -163,5 +188,16 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 2. 构建后 `pnpm test:built-restructure`、`pnpm test:built-pagination`、`pnpm test:built-markdown`：集合范围、页面结构、拾趣自动分类与可选图标、友链分组、目录、封面语义、图片／RSS资源。
 3. 在现有 Ego TaskSpace 中运行 `sed 's/__TASK_SPACE_ID__/<id>/g' scripts/verify-nav-dropdown.mjs | ego-browser nodejs` 、`verify-home-content.mjs` 和同样的 `verify-toc-navigation.mjs`；脚本不创建或结束 TaskSpace。
 4. 深浅主题、1440／390／320px检查：首页作者中心、进度顺序、页头一致、归档日期对齐、卡片、点状背景、目录在右侧留白中线基础上向外移且上移、无横向溢出。目录另检查1200px阈值和不同视口高度。
+
+图片布局的验收映射（作为验证要求，不代表检查已通过）：
+
+| 义务 | 验收接口与证据 |
+| --- | --- |
+| 合法语法及默认值，直接图片与同段多图、至少一图，widths 的 px／fr 单位、数量与列数推导／匹配，figure 首段一图及后续正文，属性／结构／嵌套失败带位置 | `test/remark-image-layouts.test.mjs`：在 remark 属主接口断言结果与错误；代码块示例保持文本 |
+| 660px 版心内完整显示，600px 及以下 grid 单列与 figure 上下，无 JS 阅读及横滚 | `scripts/verify-image-layouts.mjs`：真实浏览器按用户行为与可用边界验证，不绑定视觉像素 |
+| 比例／固定＋弹性列宽与 600px 回退；横滚、图片边缘箭头、底部圆点、长分页露出当前点（不滚动文章）及边界同步，无自动播放；原边框内悬浮缩放／复原、减少动态偏好、键盘与点图、作者链接跳转、主题遮罩、点大图／Esc／遮罩／按钮关闭、焦点／滚动锁恢复与换页清理 | 同一浏览器脚本验证最终 DOM 行为，不以纯函数或 CSS 文本断言代替 |
+| template 中原尺寸资源由 Astro 解析、不是缩略图替代或手写 URL，打开前无大图请求；RSS 全部图片和文字源顺序保留且无 template／样式 | `verify-image-layouts.mjs` 的 Astro 大图资源检查；`verify-markdown-pipeline.mjs` 的真实构建／RSS 产物检查：无未解析占位符，本地资源存在 |
+
+最终执行 `pnpm format`、`pnpm lint`、`pnpm check`、`pnpm test`、`pnpm build` 与既有 built 检查，并运行上述布局检查；预览成功不能替代这些门禁。内容 skill 交付预览另需同 worktree 的 cwd、日志 Local 地址和文章 HTTP 成功证据。
 
 验收记录注明实际环境与检查范围；本地结果不替代对应提交的 GitHub CI，浏览器测试不替代真实阅读器兼容性检查。

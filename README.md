@@ -36,7 +36,9 @@
 
 全站内容以 660px 版心居中，顶栏引用同一版心宽度并同步响应式收窄。首页作者／名言／社交居中；写作热力标题与近期笔墨左对齐，年份在标题右侧。目录在版心右侧留白中线基础上向右移 16px，最大宽 208px、高度最多半屏，中心比视口中线高 32px。标签、拾趣、项目、关于共用宋体页头，文稿列表文章标题使用宋体加粗，归档文章标题使用常规字重宋体，正文与 Markdown 内部标题使用普通字体。首页、标签、归档、文稿、拾趣及其子页使用点阵背景，项目使用 rose，关于关闭背景。
 
-封面用 `titleImage`／`titleImageAlt`，源图位于 `src/content/blogs/_title-images/`；正文图位于文章所在目录或子目录，以相对路径引用，不能向上越级。拾趣图片位于 `src/content/interests/<id>/`。入口说明只维护 `intro.md`，首页近期书影游只维护 `recent.md`；二者不生成拾趣子页或菜单项。`:::card` 与标题都使用共享 Markdown 管线和 `prose.css`：连续卡片按容器宽度自动分列，当前版心最多两列，标题将卡片分组。正文标题共用 `.markdown-content`。评分由作者按需填写，与观看／游玩状态无关；未填写时不生成评分。关于内容只维护 `src/content/about/about.md`。
+封面用 `titleImage`／`titleImageAlt`，源图位于 `src/content/blogs/_title-images/`；正文图位于文章所在目录或子目录，以相对路径引用；上层共享图也可以用 `../` 引用。拾趣图片位于 `src/content/interests/<id>/`。入口说明只维护 `intro.md`，首页近期书影游只维护 `recent.md`；二者不生成拾趣子页或菜单项。`:::card` 与标题都使用共享 Markdown 管线和 `prose.css`：连续卡片按容器宽度自动分列，当前版心最多两列，标题将卡片分组。正文标题共用 `.markdown-content`。评分由作者按需填写，与观看／游玩状态无关；未填写时不生成评分。关于内容只维护 `src/content/about/about.md`。
+
+正文图片支持 `:::gallery`（默认两列网格，可选三列、`widths="1fr 2fr"` 比例列宽、`widths="240px 1fr"` 固定列＋剩余列，或 `layout="scroll"` 横滚；横滚配图片边缘箭头与底部深色当前位置小点，单图相册不生成控件）和 `:::figure`（默认右侧绕排，可选左侧）。普通 Markdown 正文图可直接点击放大，悬浮时在原边框内轻微缩放；大图可点击收回，遮罩跟随深浅主题。作者图片链接仍保留跳转，另有仅键盘焦点时显示的大图入口；图片继续走 Astro 和原有 `|w` 标记。布局不超出 660px 版心、不裁切；600px 及以下网格单列、绕排上下，无 JS 仍可阅读和横滚，RSS 按源顺序保留图片与文字。
 
 作者操作见 [内容发布 skill](blog-content-publisher-skill/SKILL.md)，图片写法见 [图片管线指南](docs/Astro图片管线指南.md)。页面行为契约见 [站点行为 SPEC](docs/站点行为%20SPEC.md)，模块权威与边界见 [项目解析](docs/项目解析.md)，全文订阅见 [RSS SPEC](docs/RSS%20全文支持%20SPEC.md)。
 
@@ -59,8 +61,10 @@
 
 ```bash
 pnpm install
-pnpm dev
+pnpm dev --open            # 启动开发服务器并打开浏览器
 ```
+
+以日志里的真实 `Local` 地址为准，端口占用时不假定是 4321，也不终止别人的服务。含图片排版或卡片的博客写完或改完后，内容 skill 默认启动或复用**同一 worktree** 的 `pnpm dev`（复用前确认进程 cwd），文章 HTTP 请求成功后再给预览链接；纯文字或只有普通正文图时不必预览。用户禁止启动或环境受限时注明未预览。草稿在 dev 可读、RSS 排除；dev 预览不替代生产构建。
 
 ```bash
 pnpm check                 # Astro 类型与内容检查
@@ -75,6 +79,7 @@ pnpm test:blog-tags        # 标签 AND 筛选
 pnpm test:blog-stats       # 字数统计与格式
 node --test test/blog-heatmap.test.mjs # 上海日历与年度汇总
 node --test test/remark-media-card.test.mjs # Markdown 卡片
+node --test test/remark-image-layouts.test.mjs # 图片布局语法、结构与带位置失败
 pnpm test:recent-post-date # 近期文章日期
 pnpm test:progress-stats   # 年积日与进度
 pnpm test:cjk-emphasis     # CJK 旁强调语法
@@ -118,6 +123,6 @@ README、SPEC 和操作指南描述当前实现。网页结构、交互和代码
 - 放到 Agent 的 skills 目录
 - 直接说要改哪一页即可，例如：发博客、改设备、新增拾趣分类、给分类补图标、加友链、改顶栏 GitHub、改关于页社交。Agent 应先对表再动文件。
 - 它会改 Markdown / JSON / `src/config.ts` 里的站点信息；新博客文章在用户没说发布时保持 `draft: true`（不适用于拾趣）；没有明确授权就不要 commit、push 或部署。
-- 改结构、CSS、分页算法时不要走这个 skill，用 `docs/项目解析.md`。
+- 会替作者把稿子落地：本地图片复制进文章配图目录并改写引用（外链保持外链）、按内容自动排版（grid／横滚／绕排）、把书影视条目生成卡片（可联网补链接与封面），含排版或卡片时默认给同 worktree 的 dev 预览；改布局实现、CSS、分页算法时不要走这个 skill，用 `docs/项目解析.md`。
 
 [MIT](LICENSE)

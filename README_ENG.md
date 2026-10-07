@@ -34,7 +34,9 @@ The “梧桐雨の博客” brand returns home; navigation text uses the local 
 
 Content targets 660px. Navigation uses the same width variable and responsive constraints. Home author details are centered. The writing-heatmap title aligns left with recent posts, and the year switch sits on that title's right. The TOC sits 16px outward from the center of the space between the reading column and viewport gutter, at most 208px wide and half a viewport high, with its center 32px above the viewport midpoint and internal scrolling. Tags, interests, projects and about share a serif heading; article titles use bold serif in lists and regular serif in archives; body text and internal Markdown headings use sans-serif. Interests and subpages use the dot background. About has no background; projects use rose.
 
-Covers use `titleImage`/`titleImageAlt` under `src/content/blogs/_title-images/`. Body images belong inside the article directory or a child directory; reference them relatively without traversing upward. Interest images live under `src/content/interests/<id>/`. The interests index note lives in `intro.md`; home media lives in `recent.md`. Neither creates a subpage or menu item. Both use the shared Markdown pipeline and `prose.css`. Consecutive `:::card` entries form responsive grids (up to two columns at the current shell width); headings separate groups and share `.markdown-content` typography. Author scores are optional regardless of watching/playing status; omitted scores are not invented. About content is maintained only in `src/content/about/about.md`.
+Covers use `titleImage`/`titleImageAlt` under `src/content/blogs/_title-images/`. Body images belong inside the article directory or a child directory, referenced relatively; shared images one level up may use `../`. Interest images live under `src/content/interests/<id>/`. The interests index note lives in `intro.md`; home media lives in `recent.md`. Neither creates a subpage or menu item. Both use the shared Markdown pipeline and `prose.css`. Consecutive `:::card` entries form responsive grids (up to two columns at the current shell width); headings separate groups and share `.markdown-content` typography. Author scores are optional regardless of watching/playing status; omitted scores are not invented. About content is maintained only in `src/content/about/about.md`.
+
+Body images support `:::gallery` (a two-column grid by default, three columns, proportional tracks with `widths="1fr 2fr"`, fixed-plus-flexible tracks with `widths="240px 1fr"`, or `layout="scroll"` with edge arrows and bottom pagination dots, omitted for a single-image gallery) and `:::figure` (right-side text wrapping by default, optionally left). Ordinary Markdown body images subtly scale inside their frame on hover with a zoom-in cursor, without corner badges. Click or keyboard activation opens a theme-aware viewer; clicking the large image closes it with a zoom-out cursor. Authored image links still navigate, with a separate zoom action visible only on keyboard focus. Images retain Astro processing and the existing `|w` marker. Layouts stay inside the 660px reading column without cropping; at 600px or below, grids become single-column and figures stack. Reading and horizontal scrolling work without JavaScript; RSS retains images and text in source order.
 
 See the [content skill](blog-content-publisher-skill/SKILL.md), [image pipeline](docs/Astro图片管线指南.md), [site behavior SPEC](docs/站点行为%20SPEC.md), [architecture](docs/项目解析.md) and [full-content RSS SPEC](docs/RSS%20全文支持%20SPEC.md).
 
@@ -57,8 +59,10 @@ Node.js `22.12+` (we recommend `24`, as used in CI), and `pnpm@12.9.1`.
 
 ```bash
 pnpm install
-pnpm dev
+pnpm dev --open            # start the dev server and open the browser
 ```
+
+Use the actual `Local` URL reported in the log, not a fixed port such as 4321; never stop someone else's service to free a port. After writing or editing a blog containing image layouts or cards, the content skill starts or reuses `pnpm dev` in the **same worktree** by default, verifies the process cwd before reuse, and confirms a successful article HTTP response before sharing the preview link; plain-text posts and posts with only ordinary body images do not need a preview. If startup is prohibited or unavailable, report that no preview was performed. Drafts are readable in dev but excluded from RSS; dev preview does not replace a production build.
 
 ```bash
 pnpm check                 # Astro type and content checks
@@ -73,6 +77,7 @@ pnpm test:blog-tags        # tag AND filtering
 pnpm test:blog-stats       # readable word counts and formatting
 node --test test/blog-heatmap.test.mjs # Shanghai calendar and yearly totals
 node --test test/remark-media-card.test.mjs # Markdown cards
+node --test test/remark-image-layouts.test.mjs # image layout syntax, structure and positioned errors
 pnpm test:recent-post-date # recent-post dates
 pnpm test:progress-stats   # day-of-year and progress
 pnpm test:cjk-emphasis     # emphasis next to CJK punctuation
@@ -116,6 +121,6 @@ The skill lives at `blog-content-publisher-skill/SKILL.md`.
 - Put it in your agent’s skills directory.
 - Say which page to change, e.g. new post, edit equipment, add an interest category, add a category icon, add a friend link, change the navbar GitHub link, or edit About socials. The agent should match the page table first, then edit files.
 - It edits Markdown / JSON / site configuration in `src/config.ts`. New blog posts keep `draft: true` unless you asked to publish; this does not apply to interests. Do not commit, push or deploy without explicit authorization.
-- Do not use this skill for structure, CSS, or pagination logic — use `docs/项目解析.md`.
+- Lands the author's draft: local images are copied into the article image directory and their references rewritten (external links stay external), body images are arranged automatically (grid / scroll / wrap), book, film and TV entries become cards (links and covers may be filled in from the web), and a same-worktree dev preview is delivered when the post has layouts or cards. For layout implementation, CSS, or pagination logic, use `docs/项目解析.md`.
 
 [MIT](LICENSE)
