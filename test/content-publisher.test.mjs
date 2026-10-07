@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdtemp, mkdir, rm, symlink, writeFile } from 'node:fs/promises'
+import {
+  mkdtemp,
+  mkdir,
+  readdir,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -224,4 +232,27 @@ test('publisher finds real links through the Markdown parser, not by regex', asy
   assert.equal(invalid.status, 1, invalid.stderr)
   assert.match(invalid.stderr, /链接解析失败/)
   assert.doesNotMatch(invalid.stderr, /YAML parsing failed/)
+})
+
+test('the skill package stands alone instead of pointing at repository docs', async () => {
+  const directory = fileURLToPath(
+    new URL('../blog-content-publisher-skill', import.meta.url)
+  )
+  const documents = (
+    await readdir(directory, { recursive: true, withFileTypes: true })
+  ).filter((entry) => entry.isFile() && /\.(md|ya?ml)$/.test(entry.name))
+  assert.ok(documents.length > 0, 'the package ships its own documents')
+  for (const entry of documents) {
+    const source = await readFile(join(entry.parentPath, entry.name), 'utf8')
+    assert.doesNotMatch(
+      source,
+      /docs\//,
+      `${entry.name} must describe the rules itself instead of naming repository docs`
+    )
+    for (const [, target] of source.matchAll(/\]\(([^)\s]+)\)/g))
+      assert.ok(
+        !target.startsWith('../') && !/\.mdx?($|#)/.test(target),
+        `${entry.name} must not link a document outside the skill: ${target}`
+      )
+  }
 })
