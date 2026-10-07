@@ -249,7 +249,12 @@ test('the skill package stands alone instead of pointing at repository docs', as
       /docs\//,
       `${entry.name} must describe the rules itself instead of naming repository docs`
     )
-    for (const [, target] of source.matchAll(/\]\(([^)\s]+)\)/g))
+    // Inline links and reference definitions are both ways to point outside.
+    const targets = [
+      ...source.matchAll(/\]\(([^)\s]+)\)/g),
+      ...source.matchAll(/^\s{0,3}\[[^\]]*\]:\s*(\S+)/gm),
+    ].map((match) => match[1])
+    for (const target of targets)
       assert.ok(
         !target.startsWith('../') && !/\.mdx?($|#)/.test(target),
         `${entry.name} must not link a document outside the skill: ${target}`
