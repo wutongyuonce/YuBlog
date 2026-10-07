@@ -9,6 +9,8 @@ const task = await taskSpace(Number('__TASK_SPACE_ID__'))
 const page = task.page('p1')
 const base = '__BASE_URL__'
 const root = '__REPO_ROOT__'
+// Fixture writes can reload the previous dev document through Vite HMR.
+await page.goto('about:blank')
 const directory = await mkdtemp(
   path.join(root, 'src/content/blogs/image-layout-check-')
 )
@@ -17,8 +19,8 @@ const url = new URL(
   base
 ).href
 
-// Real pointer and keyboard input needs the target on screen; focus() does not
-// scroll, so bring elements into view explicitly instead of relying on luck.
+// Prepare distant pointer targets explicitly; keyboard focus does not need
+// the element on screen and is checked directly below.
 const scrollTo = (selector) =>
   page.evaluate(
     (target) =>
@@ -467,7 +469,6 @@ ${longGallery}
         )
         .getAttribute('aria-current') === 'true'
   )
-  await scrollTo('.image-view:has(> img[alt="缩略图"])')
   await page.focus('img[alt="缩略图"]')
   assert.equal(
     await page.evaluate(() => document.activeElement?.getAttribute('alt')),
@@ -530,6 +531,7 @@ ${longGallery}
     'clicking the large image shrinks it back'
   )
   assert.equal(await page.evaluate(() => document.body.style.overflow), '')
+  await scrollTo('.image-view:has(> img[alt="缩略图"])')
   await page.click('img[alt="缩略图"]')
   await page.evaluate(() => document.querySelector('dialog').click())
   assert.equal(
