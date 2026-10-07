@@ -41,7 +41,11 @@ export const MEDIA_EXTENSIONS = new Set([
 
 /**
  * `src` 必须可服务的元素。渲染期改写与产物校验都从这里取，
- * 避免两边各自维护一份列表而漏掉某个标签（例如 `track`）。
+ * 避免两边各自维护一份列表而漏掉某个标签。
+ *
+ * 注意 `track` 也在列表里，但字幕文件（`.vtt`）不能被镜像 —— 它的扩展名不在
+ * `MEDIA_EXTENSIONS` 里，所以相对路径的字幕会报错，要放进 `public/` 用站内绝对路径
+ * 引用。放在这里是为了让 `file:` 这类地址至少会被拦下。
  */
 export const MEDIA_SRC_ELEMENTS = ['video', 'audio', 'source', 'track']
 
@@ -138,6 +142,17 @@ export function mediaSuffix(value: string): string {
   const index = value.search(/[?#]/)
   return index === -1 ? '' : value.slice(index)
 }
+
+/**
+ * 文件名里带 `#` 或 `?` 时本站取不到，必须在渲染期拒绝。
+ *
+ * 这两个字符在 `src` 里属于 URL 语法，引用只能写成 `%23`／`%3F`；服务器拿到请求后
+ * 把它们解码回文件的字面名字，却已经先按 `#`／`?` 截断过路径，于是 404。实测 dev 与
+ * preview 都一样（`a%23b.mp4` → 404），而构建不会报错。同目录下 `%`（写 `%25`）、
+ * 空格（写 `%20`）、中文都能正常取到，所以只拦这两个字符。
+ */
+export const hasUnservableName = (file: string): boolean =>
+  /[?#]/.test(path.basename(file))
 
 /** 把绝对路径换算成 `/_media/` 下的 URL；不在源根下时返回 null */
 export function mediaUrlFor(

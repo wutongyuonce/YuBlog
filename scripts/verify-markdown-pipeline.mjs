@@ -12,7 +12,11 @@ import { createMarkdownProcessor } from '@astrojs/markdown-remark'
 import remarkDirective from 'remark-directive'
 import remarkMediaCard from '../plugins/remark-media-card.ts'
 import { SITE } from '../src/config.ts'
-import { classifyMediaUrl, MEDIA_SRC_ELEMENTS } from '../plugins/media-paths.ts'
+import {
+  classifyMediaUrl,
+  decodeMediaPath,
+  MEDIA_SRC_ELEMENTS,
+} from '../plugins/media-paths.ts'
 
 const siteBase = new URL(
   SITE.base.endsWith('/') ? SITE.base : `${SITE.base}/`,
@@ -24,7 +28,8 @@ const DIST_DIR = resolve(fileURLToPath(built('')))
 
 /**
  * URL 路径名 → 产物里的绝对路径。产物不含 base（`public/` 与页面都直接写在
- * `dist/` 根下），所以先剥掉站点 base，再按浏览器方式逐段解码。
+ * `dist/` 根下），所以先剥掉站点 base，再按浏览器方式解码（用规则模块的
+ * `decodeMediaPath`，不在这里重写一遍分段解码规则）。
  * 返回文件系统路径而不是 URL：解码后的 `#`／`?` 若再进 URL 解析会被当成分隔符，
  * 检查的就不是同一个文件了。
  */
@@ -34,17 +39,7 @@ const distFile = (pathname) => {
     base !== '/' && pathname.startsWith(base)
       ? pathname.slice(base.length - 1)
       : pathname
-  const decoded = stripped
-    .split('/')
-    .map((segment) => {
-      try {
-        return decodeURIComponent(segment)
-      } catch {
-        return segment
-      }
-    })
-    .join('/')
-  const full = resolve(DIST_DIR, decoded.replace(/^\/+/, ''))
+  const full = resolve(DIST_DIR, decodeMediaPath(stripped).replace(/^\/+/, ''))
   assert.ok(
     full === DIST_DIR || full.startsWith(DIST_DIR + sep),
     `URL escapes dist: ${pathname}`
@@ -477,8 +472,15 @@ test('every media reference in the built site is servable', async () => {
   )
   assert.ok(pages.length > 0, 'the built site must contain pages')
 
-  // 标签集合从规则模块取，避免这里漏掉某个标签（例如 track）
-  const tags = ['img', ...MEDIA_SRC_ELEMENTS]
+  // 标签集合从规则模块取，避免这里漏掉某个标签（例如 track）。
+  // `iframe`／`embed`／`object` 不在媒体插件的管理范围内（它只管视频/音频），
+  // 但同样只能在站上取到绝对地址，所以一并扫。
+  const srcTags = ['img', 'iframe', 'embed', ...MEDIA_SRC_ELEMENTS]
+  // `poster` 与 `data` 不是 `src` 属性，单独列出来
+  const otherAttributes = [
+    ['video', 'poster'],
+    ['object', 'data'],
+  ]
   let checked = 0
 
   /** 一个地址要么是可服务的外链，要么是产物里真实存在的站内文件 */
@@ -500,13 +502,13 @@ test('every media reference in the built site is servable', async () => {
 
   for (const page of pages) {
     const tree = fromHtml(await html(page))
-    for (const tag of tags) {
-      for (const node of elements(tree, tag)) {
+    for (const tag of srcTags) {
+      for (const node of elements(tree, tag))
         await inspect(page, tag, node.properties.src, 'src')
-        // `<video poster>` 也是站上要打开的图片；`.mdx` 里它同样绕过渲染期检查
-        if (tag === 'video')
-          await inspect(page, tag, node.properties.poster, 'poster')
-      }
+    }
+    for (const [tag, attribute] of otherAttributes) {
+      for (const node of elements(tree, tag))
+        await inspect(page, tag, node.properties[attribute], attribute)
     }
   }
 

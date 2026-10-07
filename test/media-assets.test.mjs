@@ -17,12 +17,12 @@ import { pathToFileURL } from 'node:url'
 import { createMarkdownProcessor } from '@astrojs/markdown-remark'
 import rehypeRaw from 'rehype-raw'
 
-import { SITE } from '../src/config.ts'
 import {
   classifyMediaRef,
   mediaTargetFor,
   mediaUrlFor,
   MEDIA_ROOTS,
+  MEDIA_URL_PREFIX,
 } from '../plugins/media-paths.ts'
 import { syncMedia } from '../plugins/astro-media-sync.ts'
 import rehypeMediaAssets from '../plugins/rehype-media-assets.ts'
@@ -38,8 +38,6 @@ import rehypeMediaAssets from '../plugins/rehype-media-assets.ts'
  *
  * 两个用例各自用临时目录当「源根 + 镜像根」，不往仓库里写任何测试文件。
  */
-
-const URL_PREFIX = `${SITE.base.replace(/\/+$/, '')}/_media/`
 
 /** 渲染用例的临时根 */
 const HOMES = []
@@ -115,7 +113,7 @@ test('classifyMediaRef 把引用分成互不重叠的六类', () => {
   const local = classify('./demo.mp4')
   assert.equal(local.kind, 'local')
   assert.equal(local.file, path.join(path.dirname(ARTICLE), 'demo.mp4'))
-  assert.equal(local.url, `${URL_PREFIX}content/blogs/demo.mp4`)
+  assert.equal(local.url, `${MEDIA_URL_PREFIX}content/blogs/demo.mp4`)
 
   // 逃出源根的相对路径镜像不到，必须与「可镜像」区分开
   assert.equal(classify('../../../../outside.mp4').kind, 'outside')
@@ -144,12 +142,12 @@ test('query 与 fragment 不算文件名，源里的百分号编码按浏览器�
   const literal = classify('./a%2520b.mp4')
   assert.equal(literal.kind, 'local')
   assert.equal(literal.file, path.join(dir, 'a%20b.mp4'))
-  assert.equal(literal.url, `${URL_PREFIX}content/blogs/a%2520b.mp4`)
+  assert.equal(literal.url, `${MEDIA_URL_PREFIX}content/blogs/a%2520b.mp4`)
 })
 
 test('mediaUrlFor / mediaTargetFor 只认源根以内的文件，且能注入别的根', () => {
   const inside = path.join(MEDIA_ROOTS.sourceRoot, 'content', 'demo.mp4')
-  assert.equal(mediaUrlFor(inside), `${URL_PREFIX}content/demo.mp4`)
+  assert.equal(mediaUrlFor(inside), `${MEDIA_URL_PREFIX}content/demo.mp4`)
   assert.equal(
     mediaTargetFor(inside),
     path.join(MEDIA_ROOTS.publicDir, 'content', 'demo.mp4')
@@ -164,7 +162,7 @@ test('mediaUrlFor / mediaTargetFor 只认源根以内的文件，且能注入别
   }
   assert.equal(
     mediaUrlFor('/tmp/src-fixture/a.mp4', roots),
-    `${URL_PREFIX}a.mp4`
+    `${MEDIA_URL_PREFIX}a.mp4`
   )
   assert.equal(
     mediaTargetFor('/tmp/src-fixture/a.mp4', roots),
@@ -176,11 +174,11 @@ test('mediaUrlFor / mediaTargetFor 只认源根以内的文件，且能注入别
   const sourceRoot = MEDIA_ROOTS.sourceRoot
   assert.equal(
     mediaUrlFor(path.join(sourceRoot, 'content', 'a b.mp4')),
-    `${URL_PREFIX}content/a%20b.mp4`
+    `${MEDIA_URL_PREFIX}content/a%20b.mp4`
   )
   assert.equal(
     mediaUrlFor(path.join(sourceRoot, 'content', 'a%20b.mp4')),
-    `${URL_PREFIX}content/a%2520b.mp4`
+    `${MEDIA_URL_PREFIX}content/a%2520b.mp4`
   )
 })
 
@@ -198,12 +196,12 @@ test('相对路径的视频/音频与媒体链接被改写，外链与站内绝�
 [看另一篇](./another.md)
 `)
 
-  const rewritten = `${URL_PREFIX}content/blogs/demo.mp4`
+  const rewritten = `${MEDIA_URL_PREFIX}content/blogs/demo.mp4`
   // video 与 source 两处都要改写
   assert.equal(html.split(rewritten).length - 1, 3)
   assert.match(
     html,
-    new RegExp(`<audio src="${URL_PREFIX}content/blogs/sound\\.mp3"`)
+    new RegExp(`<audio src="${MEDIA_URL_PREFIX}content/blogs/sound\\.mp3"`)
   )
   assert.match(html, /src="https:\/\/cdn\.example\.com\/remote\.mp4"/)
   assert.match(html, /src="\/videos\/mine\.mp4"/)
@@ -217,27 +215,37 @@ test('媒体片段与查询串在改写后原样保留', async () => {
   const html = await renderHtml('<video src="./demo.mp4#t=10"></video>')
   assert.match(
     html,
-    new RegExp(`src="${URL_PREFIX}content/blogs/demo\\.mp4#t=10"`)
+    new RegExp(`src="${MEDIA_URL_PREFIX}content/blogs/demo\\.mp4#t=10"`)
   )
 
   const query = await renderHtml('[原片](./demo.mp4?raw=1)')
   assert.match(
     query,
-    new RegExp(`href="${URL_PREFIX}content/blogs/demo\\.mp4\\?raw=1"`)
+    new RegExp(`href="${MEDIA_URL_PREFIX}content/blogs/demo\\.mp4\\?raw=1"`)
   )
 })
 
 test('Markdown 图片语法产出的图片不归媒体层管，仍交给 Astro 图片管线', async () => {
-  const { code, metadata } = await render('![说明](./pic.png)')
-
-  // 「谁拥有这张图」的判据：路径必须被 Astro 图片管线登记
-  assert.deepEqual(metadata.localImagePaths, ['./pic.png'])
+  const { code } = await render('![说明](./pic.png)')
   assert.doesNotMatch(code, /_media/)
+
+  // 归属判据（`localImagePaths`）的边界：同一路径也被 Markdown 图片语法引用时，
+  // 手写 <img> 一并算图片管线的，按图片处理而不是报错。SPEC §7 把它写成已知行为，
+  // 所以这里锁定行为本身，不去断言 Astro 内部那串元数据的形状。
+  // 手写 <img> 会被图片管线一起认领（两个 src 都换成管线占位），所以既不报错、
+  // 也不进媒体层；这条一旦坏了就会变成构建报错。
+  const mixed = await render(
+    '![说明](./pic.png)\n\n<img src="./pic.png" alt="手写">'
+  )
+  assert.doesNotMatch(mixed.code, /_media/)
 })
 
 test('无法服务的引用明确失败，并报出文件与行号', async () => {
   const dir = path.dirname(ARTICLE)
   mkdirSync(path.join(dir, 'dir.mp4'), { recursive: true })
+  scratch('clip.mkv')
+  scratch('a#b.mp4')
+  scratch('a?b.mp4')
   symlinkSync(scratch('real.mp4'), path.join(dir, 'linked.mp4'))
   // 路径中间有链接：叶子 lstat 会放行，但枚举不会进入这个链接
   mkdirSync(path.join(dir, 'nested'), { recursive: true })
@@ -271,6 +279,19 @@ test('无法服务的引用明确失败，并报出文件与行号', async () =>
       '<video src="./linked-dir/inner.mp4"></video>',
       /不是一个可镜像的文件/,
     ],
+    [
+      '文件不存在',
+      '<video src="./missing.mp4"></video>',
+      /不是一个可镜像的文件/,
+    ],
+    // 文件名带 # 或 ? 时本站取不到（实测 dev 与 preview 都 404），必须构建期拦住
+    ['文件名带井号', '<video src="./a%23b.mp4"></video>', /文件名带/],
+    ['文件名带问号', '<video src="./a%3Fb.mp4"></video>', /文件名带/],
+    [
+      '扩展名不在列表',
+      '<video src="./clip.mkv"></video>',
+      /不在可镜像的媒体列表里/,
+    ],
   ]
 
   for (const [name, markdown, expected] of cases) {
@@ -287,19 +308,6 @@ test('无法服务的引用明确失败，并报出文件与行号', async () =>
       name
     )
   }
-})
-
-test('相对路径指向不存在、或不可镜像的文件时失败', async () => {
-  await assert.rejects(
-    () => renderHtml('<video src="./missing.mp4"></video>'),
-    /不是一个可镜像的文件/
-  )
-
-  scratch('clip.mkv')
-  await assert.rejects(
-    () => renderHtml('<video src="./clip.mkv"></video>'),
-    /不会被镜像到站点/
-  )
 })
 
 test('镜像幂等、清理陈旧产物，并跳过目录与符号链接', () => {
