@@ -53,7 +53,8 @@ tags: [Astro, YAML]
 import json, runpy, sys
 from pathlib import Path
 module = runpy.run_path(sys.argv[1])
-print(json.dumps(module["frontmatter"](Path(sys.argv[2]), Path(sys.argv[3]))))
+data, _links = module["article"](Path(sys.argv[2]), Path(sys.argv[3]))
+print(json.dumps(data))
 `,
       validator,
       path,

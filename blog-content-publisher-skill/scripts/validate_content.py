@@ -89,11 +89,6 @@ def article(path: Path, root: Path) -> tuple[dict[str, object], list[str]]:
     return values, [href for href in hrefs if isinstance(href, str)]
 
 
-def frontmatter(path: Path, root: Path) -> dict[str, object]:
-    """只取 frontmatter。保留这个入口给只关心元数据的调用方与测试。"""
-    return article(path, root)[0]
-
-
 def check_body_links(relative_path: str, hrefs: list[str]) -> None:
     """正文里的链接必须是浏览器能直接打开的地址。
 

@@ -78,7 +78,7 @@ const HTTP_SCHEME = /^https?$/i
 const SCHEME = /^([a-z][a-z0-9+.-]*):/i
 
 /** 站上能直接打开的地址类型。渲染期与产物校验共用这一套判断。 */
-export type MediaUrlKind =
+type MediaUrlKind =
   /** `http(s)://` 或 `//host/…`：外链 */
   | { kind: 'external' }
   /** `/…`：作者自己放进 `public/` */
@@ -91,7 +91,7 @@ export type MediaUrlKind =
   | { kind: 'relative' }
 
 /** 一条媒体引用的判定结果：站点级地址分类，或相对路径的两种去向 */
-export type MediaRef =
+type MediaRef =
   | Exclude<MediaUrlKind, { kind: 'relative' }>
   /** 相对路径且落在源根下：可镜像，给出源文件和目标 URL */
   | { kind: 'local'; file: string; url: string }
