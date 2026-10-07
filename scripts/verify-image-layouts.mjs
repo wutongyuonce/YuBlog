@@ -85,6 +85,12 @@ ${'这是可以绕图的正文，图片之外的段落应恢复完整宽度。'.
 
 容器外正文。
 
+## 单图相册
+
+:::gallery{layout="scroll"}
+${image}
+:::
+
 ## 长相册
 
 :::gallery{layout="scroll"}
@@ -601,6 +607,33 @@ ${longGallery}
     'revealing the dot must not scroll the article'
   )
 
+  // A gallery with nothing to page through keeps its image and stays plain.
+  const single = await page.evaluate(() => {
+    const gallery = [
+      ...document.querySelectorAll('.image-gallery--scroll'),
+    ].find((item) => item.children.length === 1)
+    return {
+      images: gallery.querySelectorAll('img').length,
+      width: gallery.firstElementChild.getBoundingClientRect().width,
+      // Unwrapped: the enhanced viewport is what carries arrows and dots.
+      wrapped: gallery.parentElement.classList.contains(
+        'image-gallery__viewport'
+      ),
+      controls: gallery.querySelectorAll(
+        '.image-gallery__arrow, .image-gallery__dot'
+      ).length,
+    }
+  })
+  assert.equal(single.images, 1)
+  assert.ok(single.width > 0, 'the single image still renders')
+  assert.equal(single.wrapped, false)
+  assert.equal(single.controls, 0)
+  assert.equal(
+    single.controls,
+    0,
+    'a single-image gallery has nothing to page through'
+  )
+
   await page.cdp('Emulation.setScriptExecutionDisabled', { value: true })
   try {
     await page.goto(url)
@@ -613,7 +646,7 @@ ${longGallery}
         document.querySelector('.image-gallery--scroll').scrollWidth >
         document.querySelector('.image-gallery--scroll').clientWidth,
     }))
-    assert.equal(state.images, 26, 'all authored images survive without JS')
+    assert.equal(state.images, 27, 'all authored images survive without JS')
     assert.equal(state.controls, 0)
     assert.equal(state.scrollable, true)
   } finally {

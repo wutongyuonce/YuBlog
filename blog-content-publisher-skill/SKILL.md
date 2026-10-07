@@ -142,7 +142,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 - gallery 仅允许 `layout`／`columns`／`widths`。layout 只可 grid／scroll，默认 grid；grid 默认两列，columns 只可 `2`／`3`。不等宽用 `widths="1fr 2fr"`（1:2）或 `widths="240px 1fr"`（第一列目标 240px，第二列占剩余）；widths 为二／三个正有限数的 px／fr 值，可小数，不支持 %／auto／calc()；省略 columns 时按值数量推导，显式 columns 必须匹配。scroll 不接受 columns／widths。至少一张独立 Markdown 直接图片，可同段多图但段中只能有图片和空白。文字、列表、引用式图片、链接包图、HTML／MDX 图都不作为相册项，说明写在相册外。
 - figure 仅允许 side，left／right，默认 right。第一段恰好一张直接图片，后面至少一块正文。gallery／figure 不能嵌套或相互嵌套；非法属性、属性值和结构会 build fail 并带源位置，不删图规避报错。
-- 图片仍用相对源路径并走 Astro，原有 `|w` 含义不变；显式像素宽度用标记，容器响应式尺寸由既有 CSS 管理。660px 版心内不 breakout，静止时不裁切；600px 及以下 grid 单列、figure 上下。scroll 全部图片静态存在，横滚 snap 加图片边缘白色圆形箭头／底部小点，深色点表示当前图，首尾隐藏不可用箭头，无底部工具条或可见滚动条，圆点过多时只在分页容器内滚动到当前点；区域高度跟随当前图片，不自动播放，无 JS 仍可阅读和横滚。
+- 图片仍用相对源路径并走 Astro，原有 `|w` 含义不变；显式像素宽度用标记，容器响应式尺寸由既有 CSS 管理。660px 版心内不 breakout，静止时不裁切；600px 及以下 grid 单列、figure 上下。scroll 全部图片静态存在，横滚 snap 在两张及以上时加图片边缘白色圆形箭头／底部小点（单图不生成控件），深色点表示当前图，首尾隐藏不可用箭头，无底部工具条或可见滚动条，圆点过多时只在分页容器内滚动到当前点；区域高度跟随当前图片，不自动播放，无 JS 仍可阅读和横滚。
 - 普通 Markdown 正文图直接点图或键盘 Enter／空格在原生 dialog 放大，不写额外放大标记，也不显示角落标识；悬浮时原边框内微缩放并显示 `zoom-in`，减少动态偏好下不缩放。大图显示 `zoom-out`，点图／Esc／遮罩／关闭按钮退出，恢复焦点与滚动锁；浅色遮罩灰白、深色暗色。作者图片链接仍跳转，链接外大图入口只在键盘焦点时显示；`titleImage` 头图／文稿列表缩略图和头像不属于此范围，`:::card` 配图仍可放大。原尺寸图在 inert template 内仍由 Astro 解析，打开前不加载，不手写资源 URL。RSS 沿用 sanitizer 去 template／样式／控件，剩余全部图文按源顺序降级。
 - 不为内容排版引入依赖、轮播库、第二解析器、预览后台、preview manager 脚本或测试框架；不修改交互 authority，组件与资源职责见 `docs/项目解析.md` §4.9。
 
