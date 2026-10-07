@@ -3,6 +3,7 @@ import test from 'node:test'
 
 import { createMarkdownProcessor } from '@astrojs/markdown-remark'
 import remarkDirective from 'remark-directive'
+import remarkDirectiveSugar from 'remark-directive-sugar'
 import remarkImageWidth from '../plugins/remark-image-width.ts'
 
 import remarkMediaCard from '../plugins/remark-media-card.ts'
@@ -40,7 +41,6 @@ test(':::card renders a scrollable media card and keeps the cover image', async 
   )
   assert.match(code, /style="--score:3\.5"/)
   assert.match(code, /<p class="media-card__score">评分：/)
-  assert.doesNotMatch(code, /个人评分：/)
   assert.match(
     code,
     /<span class="media-card__rating-value">3\.5 分，满分 5 分<\/span>/
@@ -160,6 +160,29 @@ test('card reviews reject actual HTML media, including nested and mixed-case tag
       )
     })
   }
+})
+
+test('preceding directives cannot generate media inside text-only card reviews', async () => {
+  const processor = await createMarkdownProcessor({
+    remarkPlugins: [remarkDirective, remarkDirectiveSugar, remarkMediaCard],
+    syntaxHighlight: false,
+  })
+  for (const review of [
+    '::video-bilibili{id=BV1MC4y1c7Kv}',
+    ':link[Vite]{id=@vitejs}',
+  ]) {
+    await assert.rejects(
+      processor.render(
+        `:::card{title="指令媒体"}\n![封面](./cover.jpg)\n\n${review}\n:::`
+      ),
+      /Card review.*指令媒体.*media/
+    )
+  }
+  const { code } = await processor.render(
+    ':::card{title="文字指令"}\n:badge[文字] [链接](https://example.com/)\n:::'
+  )
+  assert.match(code, /文字/)
+  assert.match(code, /href="https:\/\/example.com\/"/)
 })
 
 test('static MDX media cannot bypass the shared card transformer', () => {

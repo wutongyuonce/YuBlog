@@ -1,23 +1,26 @@
 /* global taskSpace */
-// sed 's/__TASK_SPACE_ID__/<id>/' scripts/verify-toc-navigation.mjs | ego-browser nodejs
+// sed -e 's/__TASK_SPACE_ID__/<id>/g' -e 's|__BASE_URL__|<Local URL>|g' scripts/verify-toc-navigation.mjs | ego-browser nodejs
 import assert from 'node:assert/strict'
 
 const task = await taskSpace(Number('__TASK_SPACE_ID__'))
 const page = task.page('p1')
-const origin = 'http://127.0.0.1:4322'
-await page.goto(`${origin}/blogs/`)
-const candidates = await page.evaluate(() => [
-  ...new Set(
-    [...document.querySelectorAll('[data-blog-item] a[href]')]
-      .map((link) => link.href)
-      .filter((href) => {
-        const url = new URL(href)
-        return (
-          url.origin === location.origin && url.pathname.startsWith('/blogs/')
-        )
-      })
-  ),
-])
+const blogsUrl = new URL('blogs/', '__BASE_URL__')
+await page.goto(blogsUrl.href)
+const candidates = await page.evaluate(
+  (prefix) => [
+    ...new Set(
+      [...document.querySelectorAll('[data-blog-item] a[href]')]
+        .map((link) => link.href)
+        .filter((href) => {
+          const url = new URL(href)
+          return (
+            url.origin === location.origin && url.pathname.startsWith(prefix)
+          )
+        })
+    ),
+  ],
+  blogsUrl.pathname
+)
 let base, firstHash
 for (const url of candidates) {
   await page.goto(url)

@@ -1,4 +1,5 @@
 import { fromHtml } from 'hast-util-from-html'
+import type { ElementContent } from 'hast'
 import type { Image, Parent, Root, RootContent } from 'mdast'
 import { visit } from 'unist-util-visit'
 
@@ -30,6 +31,7 @@ interface Element {
   data?: {
     hName?: string
     hProperties?: Record<string, unknown>
+    hChildren?: ElementContent[]
   }
 }
 
@@ -162,9 +164,14 @@ const buildCard = (node: Directive): Element | null => {
         htmlMediaTags.has(node.name.toLowerCase())
       )
         containsMedia = true
-      if (node.type === 'html') {
+      const data = node.data as Element['data']
+      if (data?.hName && htmlMediaTags.has(data.hName.toLowerCase()))
+        containsMedia = true
+      if (node.type === 'html' || data?.hChildren) {
         visit(
-          fromHtml(node.value, { fragment: true }),
+          node.type === 'html'
+            ? fromHtml(node.value, { fragment: true })
+            : { type: 'root', children: data?.hChildren ?? [] },
           'element',
           (element) => {
             if (htmlMediaTags.has(element.tagName)) containsMedia = true

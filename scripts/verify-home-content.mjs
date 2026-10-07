@@ -1,10 +1,10 @@
 /* global taskSpace */
-// sed 's/__TASK_SPACE_ID__/<id>/g' scripts/verify-home-content.mjs | ego-browser nodejs
+// sed -e 's/__TASK_SPACE_ID__/<id>/g' -e 's|__BASE_URL__|<Local URL>|g' scripts/verify-home-content.mjs | ego-browser nodejs
 import assert from 'node:assert/strict'
 
 const task = await taskSpace(Number('__TASK_SPACE_ID__'))
 const page = task.page('p1')
-const base = 'http://127.0.0.1:4322/'
+const base = new URL('__BASE_URL__').href
 
 for (const width of [1440, 390, 320]) {
   await page.cdp('Emulation.setDeviceMetricsOverride', {

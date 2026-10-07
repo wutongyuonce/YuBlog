@@ -1,7 +1,16 @@
-import { visit } from 'unist-util-visit'
-import type { Image, ImageReference, Parent, Root, RootContent } from 'mdast'
+import { visit, SKIP } from 'unist-util-visit'
+import type {
+  Image,
+  ImageReference,
+  Nodes,
+  Parent,
+  Root,
+  RootContent,
+} from 'mdast'
+import type { ElementContent } from 'hast'
 import type { VFile } from 'vfile'
-import { toString } from 'mdast-util-to-string'
+import { fromHtml } from 'hast-util-from-html'
+import { toHtml } from 'hast-util-to-html'
 
 type Directive = Extract<RootContent, { type: 'containerDirective' }>
 
@@ -28,6 +37,53 @@ const imagesIn = (node: RootContent): Image[] | null => {
   return children.length && children.every((child) => child.type === 'image')
     ? (children as Image[])
     : null
+}
+
+const nonProseTags = new Set([
+  'img',
+  'picture',
+  'svg',
+  'video',
+  'audio',
+  'iframe',
+  'object',
+  'embed',
+  'canvas',
+  'script',
+  'style',
+  'template',
+])
+
+// Keep raw HTML together so inline opening/closing tags retain their context;
+// escape literal Markdown text/code so "<img>" is still readable prose.
+const proseHtml = (node: Nodes): string => {
+  if (node.type === 'definition' || node.type === 'footnoteDefinition')
+    return ''
+  if (node.type === 'html') return node.value
+  const data = node.data as
+    { hName?: string; hChildren?: ElementContent[] } | undefined
+  const tag =
+    node.type.startsWith('mdxJsx') &&
+    'name' in node &&
+    typeof node.name === 'string'
+      ? node.name
+      : data?.hName
+  if (tag && nonProseTags.has(tag.toLowerCase())) return ''
+  if (data?.hChildren) return toHtml({ type: 'root', children: data.hChildren })
+  if ('value' in node) return toHtml({ type: 'text', value: node.value })
+  return 'children' in node ? node.children.map(proseHtml).join('\n') : ''
+}
+
+const hasProse = (children: RootContent[]): boolean => {
+  let found = false
+  visit(
+    fromHtml(children.map(proseHtml).join('\n'), { fragment: true }),
+    (node) => {
+      if (node.type === 'element' && nonProseTags.has(node.tagName)) return SKIP
+      if (node.type === 'text' && node.value.trim()) found = true
+    }
+  )
+  return found
 }
 
 /** Layout structure is decided here; images remain MDAST images for Astro. */
@@ -122,13 +178,7 @@ export default function remarkImageLayouts() {
         if (side !== 'left' && side !== 'right')
           fail('Figure side must be left or right', node)
         const images = node.children[0] && imagesIn(node.children[0])
-        if (
-          !images ||
-          images.length !== 1 ||
-          !node.children
-            .slice(1)
-            .some((child) => toString(child, { includeImageAlt: false }).trim())
-        )
+        if (!images || images.length !== 1 || !hasProse(node.children.slice(1)))
           return fail(
             'Figure requires one first standalone image followed by prose',
             node

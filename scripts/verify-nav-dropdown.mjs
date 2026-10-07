@@ -1,6 +1,6 @@
 /* global taskSpace */
 // Run inside an existing agent-controlled Ego TaskSpace:
-// sed 's/__TASK_SPACE_ID__/<id>/' scripts/verify-nav-dropdown.mjs | ego-browser nodejs
+// sed -e 's/__TASK_SPACE_ID__/<id>/g' -e 's|__BASE_URL__|<Local URL>|g' scripts/verify-nav-dropdown.mjs | ego-browser nodejs
 import assert from 'node:assert/strict'
 
 const spaceId = Number('__TASK_SPACE_ID__')
@@ -10,13 +10,17 @@ assert.ok(
 )
 const task = await taskSpace(spaceId)
 const page = task.page('p1')
+const base = new URL('__BASE_URL__').href
 await page.cdp('Emulation.setDeviceMetricsOverride', {
   width: 1440,
   height: 900,
   deviceScaleFactor: 1,
   mobile: false,
 })
-await page.goto('http://127.0.0.1:4322/')
+await page.goto(base)
+await page.waitForFunction(
+  () => !!document.querySelector('#nav-menu-blogs')?.closest('[data-bound]')
+)
 await page.mouse.click(100, 120)
 await page.hover('a[aria-label="文稿"]')
 
@@ -37,6 +41,10 @@ assert.equal(
 )
 await page.mouse.move(100, 120)
 await page.hover('a[aria-label="文稿"]')
+await page.waitForFunction(() =>
+  document.querySelector('#nav-menu-blogs').checkVisibility()
+)
+await page.evaluate(() => document.fonts.ready.then(() => true))
 
 const visibleCategory = () =>
   page.evaluate(() =>
@@ -60,7 +68,18 @@ if (rows.length >= 2) {
   assert.ok(second.top > first.bottom, 'Exercise the actual gap between rows')
   const x = first.left + first.width / 2
   const gap = (first.bottom + second.top) / 2
-  await page.hover(selector(second))
+  const hoverCategory = async (row) => {
+    await page.hover(selector(row))
+    await page.waitForFunction(
+      (id) =>
+        [...document.querySelectorAll('.nav-dropdown__preview')].some(
+          (node) =>
+            node.dataset.previewCategory === id && node.checkVisibility()
+        ),
+      row.id
+    )
+  }
+  await hoverCategory(second)
   assert.deepEqual(await visibleCategory(), [second.id])
   await page.mouse.move(x, gap)
   assert.deepEqual(
@@ -68,7 +87,7 @@ if (rows.length >= 2) {
     [second.id],
     'Crossing the gap must not flash the default category'
   )
-  await page.hover(selector(first))
+  await hoverCategory(first)
   assert.deepEqual(await visibleCategory(), [first.id])
   await page.mouse.move(x, gap)
   assert.deepEqual(
@@ -106,7 +125,7 @@ await page.cdp('Emulation.setDeviceMetricsOverride', {
   deviceScaleFactor: 1,
   mobile: false,
 })
-await page.goto('http://127.0.0.1:4322/')
+await page.goto(base)
 await page.hover('a[aria-label="文稿"]')
 const mobile = await page.evaluate(() => {
   const panel = document.querySelector('#nav-menu-blogs')

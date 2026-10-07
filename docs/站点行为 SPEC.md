@@ -96,7 +96,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 | 指令 | 属性与默认值 | 内容契约 |
 | --- | --- | --- |
 | `:::gallery` | 仅允许 `layout`、`columns`、`widths`；`layout` 为 `grid`／`scroll`，默认 `grid`；grid 的 `columns` 为 `2`／`3`，默认 `2`；可选 `widths` 指定二／三个正有限数的 `px`／`fr` 列轨道，省略 columns 时按值数量推导，显式 columns 必须匹配；scroll 不接受 `columns` 或 `widths` | 至少一张独立 Markdown 直接图片；可以同段多图，但段中只能有图片和空白；不接受文字、列表、链接包图、引用式图片、HTML／MDX 图片 |
-| `:::figure` | 仅允许 `side`，为 `left`／`right`，默认 `right` | 第一段恰好一张独立 Markdown 直接图片，后面至少一块正文；图片之前无正文；gallery／figure 不能嵌套或相互嵌套 |
+| `:::figure` | 仅允许 `side`，为 `left`／`right`，默认 `right` | 第一段恰好一张独立 Markdown 直接图片，后面至少一块有可见文字的正文；注释、`<br>`、空 HTML 或只有媒体的内容不算正文；图片之前无正文；gallery／figure 不能嵌套或相互嵌套 |
 
 网格在桌面按二／三列展示，默认等宽；`widths="1fr 2fr"` 按份数分配扣除间距后的列宽，`widths="240px 1fr"` 指定第一列目标宽度、第二列占剩余，窄容器可收窄。列轨道不改变图片 `|w` 的限宽／资源语义。横滚相册的全部图片静态存在，通过原生横滚与 scroll snap 浏览；启用 JS 后，白色圆形前后箭头位于图片区域左右边缘，首尾隐藏不可用的箭头；至少两张图时，图片底部叠加一图一点的页码，深色点标识当前图，不显示底部工具条或滚动条；只有一张图时没有可翻页内容，不生成箭头和页码，只显示完整图片；点数量超过分页容器可见宽度时，容器自行滚动到当前点，不滚动文章。实际滚动同步当前位置与边界状态，当前图片完整显示，混合横竖图时不为非当前图片留出多余底部空白，无自动播放。figure 在桌面左／右绕排，600px 及以下改为图片在前、正文在后；grid 同时改为单列。所有布局保持 660px 版心内，不 breakout，静止时不裁切图片。无 JS 仍能读完全部图文并横滚，不显示不可工作的交互控件。
 
@@ -168,10 +168,10 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 
 ## 5. 失败、并发和资源语义
 
-- 默认横向 `:::card` 最多一张独立 Markdown 图片作为封面，可无封面；介绍只允许文字及其排版和链接，不接受额外图片或嵌入媒体，包括嵌套 Markdown 图片和 HTML／静态 MDX 媒体。违规由 Markdown 插件明确报错并使构建失败，不静默删图；卡片外的正文配图不受此限制。
+- 默认横向 `:::card` 最多一张独立 Markdown 图片作为封面，可无封面；介绍只允许文字及其排版和链接，不接受额外图片或嵌入媒体，包括嵌套 Markdown 图片、HTML／静态 MDX 媒体及指令生成的媒体。违规由 Markdown 插件明确报错并使构建失败，不静默删图；卡片外的正文配图不受此限制。
 - `:::card` 的评分可省略；提供时必须是 0–5 的半星步进，非法评分和嵌套卡片构建失败，不改写分数。评分为真实文本，读屏与 RSS 不依赖星星 CSS；危险标题链接降级为纯文本。
 - gallery／figure 的未知属性、非法属性值、widths 的单位／数量／列数不匹配、scroll 带 columns／widths、非法结构、空 gallery、缺图片／正文的 figure 及嵌套布局，由 `remark-image-layouts.ts` 报错并携带源位置，使构建失败；不静默删图、不猜布局、不降级为成功。
-- 图片交互组件 disconnect 时用 AbortController 清理监听，并释放 dialog 和页面资源、恢复滚动锁；关闭时焦点只恢复到仍连接的触发位置，不聚焦旧页面节点。全部相册图静态存在，原尺寸图可在构建时生成但浏览器打开前不加载，不新增后台抓取、轮播计时器或持久状态。
+- 图片交互组件断开时必须清理监听与观察器，并释放 dialog 和页面资源、恢复滚动锁；关闭时焦点只恢复到仍连接的触发位置，不聚焦旧页面节点。全部相册图静态存在，原尺寸图可在构建时生成但浏览器打开前不加载，不新增后台抓取、轮播计时器或持久状态。
 - 静态内容在构建时验证。缺少作者介绍或无效 schema 明确报错；无文章／无匹配结果展示空状态。未知博客分类保留，非法友链类别由 schema 拒绝，不静默丢条目。写作热力遇到非法日期在构建时抛错；没有已发布文章时不渲染，不补第一篇文章之前的空年。正文容器为空的页面让构建失败（见[正文 HTML 与媒体 SPEC](./正文%20HTML%20与媒体%20SPEC.md)）。
 - 导航 pending 状态由对应 AbortSignal 拥有；后发目标替代先发目标，过期取消不能回退最新预览；只有 pathname 追上 pending 目标才完成预览，已排队的旧交换不能冒充另一个新目标完成。页面加载后的实际路径最终决定选中父级。
 - 分类入口数随已发布分类数增长，菜单受视口高度约束并可滚动；改分类名会改变名称 hash 与自动颜色，不提供独立的分类改名迁移服务。
@@ -196,7 +196,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 
 1. `pnpm test`、`pnpm check`、`pnpm lint`、`pnpm format`、`pnpm build`。发布预检的回归通过 Python 3 调用现有 Astro 解析器，测试环境需提供 `python3` 与已安装的 Node.js 依赖。
 2. 构建后 `pnpm test:built-restructure`、`pnpm test:built-pagination`、`pnpm test:built-markdown`：集合范围、页面结构、拾趣自动分类与可选图标、友链分组、目录、封面语义、图片／RSS资源。
-3. 在现有 Ego TaskSpace 中运行 `sed 's/__TASK_SPACE_ID__/<id>/g' scripts/verify-nav-dropdown.mjs | ego-browser nodejs` 、`verify-home-content.mjs` 和同样的 `verify-toc-navigation.mjs`；脚本不创建或结束 TaskSpace。
+3. 浏览器检查均复用现有 Ego TaskSpace，不创建或结束它：`verify-nav-dropdown.mjs`、`verify-home-content.mjs`、`verify-toc-navigation.mjs`、`verify-theme-refresh.mjs`、`verify-background-layering.mjs` 和 `verify-image-layouts.mjs`。在本次 worktree 执行，先确认服务进程 cwd 与该目录一致（例如 `lsof -a -p <pid> -d cwd`），再用服务日志中真实 Local 地址（含 base、末尾 `/`）替换 `__BASE_URL__`，不假定端口为 4322。例如：`sed -e 's/__TASK_SPACE_ID__/<id>/g' -e 's|__BASE_URL__|<Local 地址>|g' scripts/verify-nav-dropdown.mjs | ego-browser nodejs`。图片布局脚本另将 `__REPO_ROOT__` 替换为同一 worktree 绝对路径。
 4. 深浅主题、1440／390／320px检查：首页作者中心、进度顺序、页头一致、归档日期对齐、卡片、点状背景、目录在右侧留白中线基础上向外移且上移、无横向溢出。目录另检查1200px阈值和不同视口高度。
 
 图片布局的验收映射（作为验证要求，不代表检查已通过）：

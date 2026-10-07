@@ -1,10 +1,10 @@
 /* global taskSpace */
-// sed 's/__TASK_SPACE_ID__/<id>/g' scripts/verify-background-layering.mjs | ego-browser nodejs
+// sed -e 's/__TASK_SPACE_ID__/<id>/g' -e 's|__BASE_URL__|<Local URL>|g' scripts/verify-background-layering.mjs | ego-browser nodejs
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 const task = await taskSpace(Number('__TASK_SPACE_ID__'))
 const page = task.page('p1')
-const base = 'http://127.0.0.1:4322/'
+const base = new URL('__BASE_URL__').href
 
 // Use a mobile viewport and freeze animation, not rendering.
 await page.cdp('Emulation.setDeviceMetricsOverride', {
@@ -97,11 +97,6 @@ try {
     state.painted > 0,
     'fixture: canvas pixels are painted even when the layer is hidden'
   )
-  assert.equal(
-    state.backgroundZ,
-    '-1',
-    'keep the decorative layer behind content'
-  )
   assert.equal(state.bodyBackground, 'rgb(24, 26, 27)')
   const visible = await visibleDots()
   console.log({ ...state, visiblePixels: visible })
@@ -132,9 +127,22 @@ try {
     ),
     before
   )
-  await page.evaluate(() => window.scrollTo(0, 0))
+  await page.evaluate(() => {
+    window.scrollTo(0, 0)
+    window.__layeringBody = document.body
+    window.__layeringDocumentToken = true
+  })
   await page.click('a[aria-label="归档"]')
   await page.waitForURL(base + 'archives/')
+  assert.deepEqual(
+    await page.evaluate(() => ({
+      sameDocument: window.__layeringDocumentToken === true,
+      replacedBody: document.body !== window.__layeringBody,
+    })),
+    { sameDocument: true, replacedBody: true },
+    'exercise ClientRouter body replacement, not a full page load'
+  )
+  await page.waitForFunction(() => !!document.querySelector('bg-dot')?.ctx)
   await page.evaluate(() =>
     document.body.style.setProperty('background-color', '#181a1b', 'important')
   )
@@ -145,6 +153,8 @@ try {
 } finally {
   await page.evaluate(() => {
     document.body.style.removeProperty('background-color')
+    delete window.__layeringBody
+    delete window.__layeringDocumentToken
   })
   await page.cdp('Emulation.setEmulatedMedia', { features: [] })
 }

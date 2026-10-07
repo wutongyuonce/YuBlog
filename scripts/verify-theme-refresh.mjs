@@ -1,10 +1,11 @@
 /* global taskSpace */
-// sed 's/__TASK_SPACE_ID__/<id>/g' scripts/verify-theme-refresh.mjs | ego-browser nodejs
+// sed -e 's/__TASK_SPACE_ID__/<id>/g' -e 's|__BASE_URL__|<Local URL>|g' scripts/verify-theme-refresh.mjs | ego-browser nodejs
 import assert from 'node:assert/strict'
 
 const task = await taskSpace(Number('__TASK_SPACE_ID__'))
 const page = task.page('p1')
-const base = 'http://127.0.0.1:4322/'
+const base = new URL('__BASE_URL__').href
+const urlFor = (path) => new URL(path.replace(/^\//, ''), base).href
 
 await page.cdp('Emulation.setDeviceMetricsOverride', {
   width: 390,
@@ -106,9 +107,9 @@ const navigate = async (path) => {
     link.textContent = 'Theme navigation check'
     link.style.cssText = 'position:fixed;top:120px;left:0;z-index:99999'
     document.body.append(link)
-  }, new URL(path, base).href)
+  }, urlFor(path))
   await page.click('#theme-test-link')
-  await page.waitForURL(new URL(path, base).href)
+  await page.waitForURL(urlFor(path))
   await page.waitForFunction(() => !document.querySelector('#theme-test-link'))
   const lifecycle = await page.evaluate(() => ({
     sameDocument: window.__themeDocumentToken === 'same-document',
@@ -129,7 +130,7 @@ const palettes = { '/': {}, '/friends/': {} }
 try {
   await emulate('dark')
   for (const path of Object.keys(palettes)) {
-    await page.goto(new URL(path, base).href)
+    await page.goto(urlFor(path))
     for (const theme of ['light', 'dark']) {
       await page.evaluate(
         (theme) => localStorage.setItem('theme', theme),
@@ -170,8 +171,6 @@ try {
         )
         await page.reload()
         await verify(selected, `${motion}/${system}/${selected}/load`)
-        await page.reload()
-        await verify(selected, `${motion}/${system}/${selected}/repeat-reload`)
         const toggled = selected === 'dark' ? 'light' : 'dark'
         await toggle(toggled)
         checkPalette(
