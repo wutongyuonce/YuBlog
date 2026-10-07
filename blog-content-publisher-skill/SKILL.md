@@ -230,7 +230,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --frie
 
 ## 校验与交接
 
-改完先跑 `pnpm check`；文章或友链再跑上面的 `validate_content.py`，它只检查基础元数据，**不完整验证 schema、图片或封面**，并拦住正文里指向 `.md` 的链接；站内链接能否打开、锚点是否有落点由 `pnpm test:built-markdown` 判定。最终仍以 Astro 检查／构建为准。新增文章或拾趣分类、修改正文、正文图、本地视频／音频、封面或拾趣图标时必须跑 `pnpm build`：Astro 的 schema 和图片管线才是路径解析及 `titleImageAlt` 的权威校验。媒体**镜像**只在 `astro:config:setup`（dev 启动与每次构建）执行，没有文件监听——新增或改名视频后要重启 dev 才能看到；路径**改写**则随渲染执行。构建会校验每个带正文的页面真的渲染出了内容，空正文会让构建立即失败。含 `|w` 的图片还要人工核对标记写在 alt 而不是 URL 中（构建可能静默产出占位图）。构建失败只修这次内容，或说明是原有问题。
+改完先跑 `pnpm check`；文章或友链再跑上面的 `validate_content.py`，它只检查基础元数据，**不完整验证 schema、图片或封面**，并拦住正文里指向 `.md`／`.mdx` 的相对链接；站内链接能否打开、锚点是否有落点由 `pnpm test:built-markdown` 判定。
 
 发文章涉及订阅时，构建后运行 `pnpm test:built-markdown` 核对全文与资源。列表／内容结构或拾趣分类／图标修改运行 `pnpm test:built-restructure`；拾趣正文修改运行 `pnpm test:built-markdown`；分页修改运行 `pnpm test:built-pagination`。构建测试跟随当前配置和内容，不要求保留具体文章、友链名单、拾趣分类数量或观看状态。
 
