@@ -71,7 +71,7 @@ URL 前缀跟随 `SITE.base`，子路径部署时不会请求到错误位置。
 | 模块 | 唯一职责 |
 | --- | --- |
 | `plugins/index.ts` | 管线装配（顺序即规则）。`rehypeCodeMeta` 先保存代码属性；`rehypeRaw` 必须早于加工 HTML 的插件，`rehypeMediaAssets` 位于解析之后 |
-| `plugins/rehype-code-meta.ts` | 在 raw 重建元素前，将代码围栏 `data.meta` 转为 Expressive Code 支持的 `metastring`，保留文件名、行号、高亮和折叠；随后由原 `rehype-raw` 解析 HTML |
+| `plugins/rehype-code-meta.ts` | 在原 `rehype-raw` 重建元素前，将代码围栏 `data.meta` 转为 Expressive Code 支持的 `metastring`，保留文件名、行号、高亮和折叠；随后由原 `rehype-raw` 解析 HTML |
 | `plugins/media-paths.ts` | 媒体引用规则：扩展名、`src/` → `public/_media/` 映射、把引用分成 external／rooted／inline／invalid／unsupported／local／outside，判定「在 `src/` 之内」「哪一段含取不到的字符」，并给出 URL 段 ↔ 文件名的两个方向（`decodeRefPath` 是作者想要的文件名，`decodeServedPath` 是静态层实际会去找的名字）。除 `isMirrorableFile` 要 lstat／realpath 外都是纯函数，不写文件 |
 | `plugins/rehype-media-assets.ts` | 按元素分派改写与报错策略；不做路径推导 |
 | `plugins/astro-media-sync.ts` | 把 `src/` 视频／音频落盘到 `public/_media/`；不做 URL 推导 |

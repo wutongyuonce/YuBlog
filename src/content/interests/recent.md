@@ -2,7 +2,7 @@
 ![凡人修仙传海报](./anime/fanren.jpg)
 :::
 
-:::card{layout="portrait" title="牧神记" href="https://www.bilibili.com/bangumi/play/ss45969" meta="陪秦牧斗神"}
+:::card{layout="portrait" title="牧神记" href="https://zh.moegirl.org.cn/牧神记" meta="陪秦牧斗神"}
 ![牧神记海报](./anime/mushen.jpg)
 :::
 

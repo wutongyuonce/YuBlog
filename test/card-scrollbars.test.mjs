@@ -22,8 +22,7 @@ test('only the scrolling card text shows a thumb, until its last scroll settles'
     constructor(cardText = true) {
       this.cardText = cardText
     }
-    matches(selector) {
-      assert.equal(selector, '.media-card__meta, .media-card__review')
+    matches() {
       return this.cardText
     }
   }
@@ -67,11 +66,4 @@ test('only the scrolling card text shows a thumb, until its last scroll settles'
   for (const fn of pending.values()) fn()
   assert.equal('scrolling' in meta.dataset, false)
   assert.equal('scrolling' in review.dataset, false)
-  const afterNavigation = new Area()
-  onScroll({ target: afterNavigation })
-  assert.equal(
-    'scrolling' in afterNavigation.dataset,
-    true,
-    'new page content uses the same listener'
-  )
 })

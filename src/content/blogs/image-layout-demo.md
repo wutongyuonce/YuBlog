@@ -17,28 +17,28 @@ draft: false
 
 ## 书影游卡片：一行两张
 
-这是原来的横向卡片：封面在左，标题、可选评分和介绍在右，类别在右上角。连续卡片自动排成双列网格，窄屏改为一列；长介绍在卡片内滚动，不需要拆成多个卡片。评分可省略，只填写作者自己的分数。
+这是原来的横向卡片：封面在左，标题、可选评分和介绍在右，类别在右上角。连续卡片自动排成双列网格，窄屏改为一列；长介绍在卡片内滚动，纵向滑块仅在滚动时短暂显示，不需要拆成多个卡片。评分可省略，只填写作者自己的分数。
 
-:::card{title="凡人修仙传" href="/interests/anime/" score="5" label="国漫"}
+:::card{title="凡人修仙传" href="https://zh.wikipedia.org/wiki/凡人修仙传" score="5" label="国漫"}
 ![凡人修仙传海报](../interests/anime/fanren.jpg)
 
 陪韩立修仙。
 :::
 
-:::card{title="牧神记" href="/interests/anime/" score="4.5" label="国漫"}
+:::card{title="牧神记" href="https://zh.moegirl.org.cn/牧神记" score="4.5" label="国漫"}
 ![牧神记海报](../interests/anime/mushen.jpg)
 
 陪秦牧斗神。
 :::
 
 ```md
-:::card{title="凡人修仙传" href="/interests/anime/" score="5" label="国漫"}
+:::card{title="凡人修仙传" href="https://zh.wikipedia.org/wiki/凡人修仙传" score="5" label="国漫"}
 ![凡人修仙传海报](../interests/anime/fanren.jpg)
 
 陪韩立修仙。
 :::
 
-:::card{title="牧神记" href="/interests/anime/" score="4.5" label="国漫"}
+:::card{title="牧神记" href="https://zh.moegirl.org.cn/牧神记" score="4.5" label="国漫"}
 ![牧神记海报](../interests/anime/mushen.jpg)
 
 陪秦牧斗神。
@@ -47,56 +47,56 @@ draft: false
 
 ## 竖版卡片栏
 
-封面在上，标题和灰色小字在下。连续的 `layout="portrait"` 卡片自动组成一条横滑栏，桌面版心可显示四张，窄屏保留后续卡片的露出。可以用触控板横滚、拖动底部滚动条，或聚焦卡片栏后按左右方向键查看后面的条目；点击封面查看大图，点击标题跳转。
+封面在上，标题和灰色小字在下。连续的 `layout="portrait"` 卡片自动组成一条横滑栏，桌面版心可显示四张，窄屏保留后续卡片的露出。可以用触控板横滚、拖动底部滚动条，或聚焦卡片栏后按左右方向键查看后面的条目；点击封面查看大图，点击标题前往对应作品的 Wiki，而非本站拾趣分类。
 
-`meta` 是自由填写的小字，可写作者、制作方、分类、年份或状态，也可省略。标题自然换行；小字最多显示两行高度，超出后在自己的区域上下滚动，也可聚焦小字用方向键滚动。横向栏没有底框，直接嵌入页面背景，底部保留滚动条。中间插入标题、段落或普通横卡就会另起一组。竖卡必须有标题和一张独立 Markdown 封面；这里只展示三部分，不接受 `score`、`label` 或介绍正文，误写会报错而不会隐藏内容。
+`meta` 是自由填写的小字，可写作者、制作方、分类、年份或状态，也可省略。标题自然换行；小字最多显示两行高度，超出后在自己的区域上下滚动，也可聚焦小字用方向键滚动。小字区纵向滑块默认隐藏，实际滚动时短暂显示，停止后自动隐藏，不影响底部横向滚动条。横向栏没有底框，直接嵌入页面背景，底部保留滚动条。中间插入标题、段落或普通横卡就会另起一组。竖卡必须有标题和一张独立 Markdown 封面；这里只展示三部分，不接受 `score`、`label` 或介绍正文，误写会报错而不会隐藏内容。
 
-:::card{layout="portrait" title="夏日重现" meta="日漫" href="/interests/anime/"}
+:::card{layout="portrait" title="夏日重现" meta="日漫" href="https://zh.wikipedia.org/wiki/夏日重現"}
 ![夏日重现海报](../interests/anime/summer-time.jpg)
 :::
 
-:::card{layout="portrait" title="葬送的芙莉莲" meta="准备看" href="/interests/anime/"}
+:::card{layout="portrait" title="葬送的芙莉莲" meta="准备看" href="https://zh.wikipedia.org/wiki/葬送的芙莉莲"}
 ![葬送的芙莉莲海报](../interests/anime/frieren.jpg)
 :::
 
-:::card{layout="portrait" title="冰菓" meta="日漫" href="/interests/anime/"}
+:::card{layout="portrait" title="冰菓" meta="日漫" href="https://zh.wikipedia.org/wiki/冰菓"}
 ![冰菓海报](../interests/anime/hyouka.jpg)
 :::
 
-:::card{layout="portrait" title="紫罗兰永恒花园" meta="日漫" href="/interests/anime/"}
+:::card{layout="portrait" title="紫罗兰永恒花园" meta="日漫" href="https://zh.wikipedia.org/wiki/紫罗兰永恒花园"}
 ![紫罗兰永恒花园海报](../interests/anime/violet.jpg)
 :::
 
-:::card{layout="portrait" title="你的名字" meta="动画电影" href="/interests/anime/"}
+:::card{layout="portrait" title="你的名字" meta="动画电影" href="https://zh.wikipedia.org/wiki/你的名字。"}
 ![你的名字海报](../interests/anime/your-name.jpg)
 :::
 
-:::card{layout="portrait" title="进击的巨人" meta="准备看。小字也能放介绍、备注和状态；超过两行高度后，可以在这块区域上下滚动读完，卡片栏的高度不会被长文字撑开。" href="/interests/anime/"}
+:::card{layout="portrait" title="进击的巨人" meta="准备看。小字也能放介绍、备注和状态；超过两行高度后，可以在这块区域上下滚动读完，卡片栏的高度不会被长文字撑开。" href="https://zh.wikipedia.org/wiki/進擊的巨人"}
 ![进击的巨人海报](../interests/anime/aot.jpg)
 :::
 
 ```md
-:::card{layout="portrait" title="夏日重现" meta="日漫" href="/interests/anime/"}
+:::card{layout="portrait" title="夏日重现" meta="日漫" href="https://zh.wikipedia.org/wiki/夏日重現"}
 ![夏日重现海报](../interests/anime/summer-time.jpg)
 :::
 
-:::card{layout="portrait" title="葬送的芙莉莲" meta="准备看" href="/interests/anime/"}
+:::card{layout="portrait" title="葬送的芙莉莲" meta="准备看" href="https://zh.wikipedia.org/wiki/葬送的芙莉莲"}
 ![葬送的芙莉莲海报](../interests/anime/frieren.jpg)
 :::
 
-:::card{layout="portrait" title="冰菓" meta="日漫" href="/interests/anime/"}
+:::card{layout="portrait" title="冰菓" meta="日漫" href="https://zh.wikipedia.org/wiki/冰菓"}
 ![冰菓海报](../interests/anime/hyouka.jpg)
 :::
 
-:::card{layout="portrait" title="紫罗兰永恒花园" meta="日漫" href="/interests/anime/"}
+:::card{layout="portrait" title="紫罗兰永恒花园" meta="日漫" href="https://zh.wikipedia.org/wiki/紫罗兰永恒花园"}
 ![紫罗兰永恒花园海报](../interests/anime/violet.jpg)
 :::
 
-:::card{layout="portrait" title="你的名字" meta="动画电影" href="/interests/anime/"}
+:::card{layout="portrait" title="你的名字" meta="动画电影" href="https://zh.wikipedia.org/wiki/你的名字。"}
 ![你的名字海报](../interests/anime/your-name.jpg)
 :::
 
-:::card{layout="portrait" title="进击的巨人" meta="准备看。小字也能放介绍、备注和状态；超过两行高度后，可以在这块区域上下滚动读完，卡片栏的高度不会被长文字撑开。" href="/interests/anime/"}
+:::card{layout="portrait" title="进击的巨人" meta="准备看。小字也能放介绍、备注和状态；超过两行高度后，可以在这块区域上下滚动读完，卡片栏的高度不会被长文字撑开。" href="https://zh.wikipedia.org/wiki/進擊的巨人"}
 ![进击的巨人海报](../interests/anime/aot.jpg)
 :::
 ```

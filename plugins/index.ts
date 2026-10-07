@@ -169,7 +169,7 @@ export const remarkPlugins: RemarkPlugins = [
 // ==================== 导出 Rehype 插件配置 ====================
 export const rehypePlugins: RehypePlugins = [
   rehypeCodeMeta, // 只传递 code 的 meta；HTML 解析仍由下一步 raw 负责。
-  // 0. 必须先跑：在这之前，正文里写的 <h2> / <table> / <a> 在 AST 里只是一串
+  // 0. 必须早于消费 HTML 元素的插件：正文里写的 <h2> / <table> / <a> 仍是一串
   //    文本节点，下面所有插件 visit 的都是 element，看不见它们。
   //    Astro 内部管线末尾还会再跑一次 rehype-raw，此时已无 raw 节点，是空操作。
   rehypeRaw,

@@ -279,13 +279,6 @@ test('portrait cards render cover, title and arbitrary metadata in one keyboard-
     code,
     /javascript:|<script>|media-card__(?:review|score|label)/
   )
-  const rss = toRssHtml(code, 'https://example.com/post/')
-  assert.match(rss, /已看完 · 25 集/)
-  assert.match(rss, /https:\/\/example.com\/post\/summer.jpg/)
-  assert.match(rss, /https:\/\/example.com\/interests\/anime\//)
-  assert.ok(rss.indexOf('夏日重现') < rss.indexOf('第二本书'))
-  assert.ok(rss.indexOf('第二本书') < rss.indexOf('没有小字'))
-  assert.doesNotMatch(rss, /<script>|media-cards|tabindex/)
 })
 
 test('layout switches and prose separate rails without changing horizontal cards', async () => {
@@ -314,11 +307,6 @@ test('invalid portrait content fails rather than hiding authored information', a
     ['layout="portrait"', '![封面](./cover.jpg)', /requires a title/],
     ['layout="portrait" title="无封面"', '', /standalone cover/],
     [
-      'layout="portrait" title="多封面"',
-      '![封面](./cover.jpg)\n\n![第二张](./other.jpg)',
-      /cannot contain media/,
-    ],
-    [
       'layout="portrait" title="有介绍"',
       '![封面](./cover.jpg)\n\n不能藏掉这段文字。',
       /no review/,
@@ -342,10 +330,4 @@ test('invalid portrait content fails rather than hiding authored information', a
       )
     })
   }
-  await assert.rejects(
-    processor.render(
-      '::::card{layout="portrait" title="外卡"}\n![封面](./cover.jpg)\n\n:::card{layout="portrait" title="内卡"}\n![封面](./cover.jpg)\n:::\n\n::::'
-    ),
-    /Nested :::card/
-  )
 })

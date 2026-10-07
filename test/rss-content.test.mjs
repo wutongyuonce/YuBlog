@@ -23,7 +23,7 @@ test('reader HTML preserves complete prose, structure and code lines without sit
 <table><tr><th colspan="2">表头</th></tr><tr><td>单元格</td></tr></table>
 <details><summary>展开标题</summary><p>隐藏正文</p></details>
 <ul><li><input type="checkbox" checked>任务</li></ul>
-<figure class="frame"><figcaption>demo.py</figcaption><pre data-language="python"><code><div class="ec-line"><div class="gutter">1</div><div class="code"><span>if x &lt; 2:</span></div></div><div class="ec-line"><div class="code"><span>    print(&quot;&amp;&quot;)</span></div></div><div class="ec-line"><div class="code">\n</div></div><div class="ec-line"><div class="code">done()</div></div></code></pre><button>Copy</button></figure>
+<figure class="frame"><figcaption>demo.py</figcaption><pre data-language="python"><code><div class="ec-line"><div class="gutter">1</div><div class="code"><span>if x &lt; 2:</span></div></div><div class="ec-section"><details><summary><div class="ec-line"><div class="code">1 collapsed line</div></div></summary></details><div class="content-lines"><div class="ec-line"><div class="code"><span>    print(&quot;&amp;&quot;)</span></div></div></div></div><div class="ec-line"><div class="code">\n</div></div><div class="ec-line"><div class="code">done()</div></div></code></pre><button>Copy</button></figure>
 <pre><code>plain\n  indented\n\nend</code></pre><p>结尾</p>`,
     articleUrl
   )
