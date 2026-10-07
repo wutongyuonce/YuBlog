@@ -4,6 +4,8 @@ description: 热爱的虚拟世界
 order: 4
 ---
 
+我的 Steam Friend Code：**1554038676**
+
 准备玩：
 
 :::card{title="影之刃零" href="https://zh.wikipedia.org/wiki/影之刃零" label="游戏"}

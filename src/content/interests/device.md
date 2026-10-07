@@ -8,7 +8,8 @@ order: 0
 
 ![device|w450](./device/device.jpg)
 
-- **💻 PC 电脑：** Macbook Pro M5 24+512、天选4 r9 4070 16+1T、Samsung T7 固态 1T
+- **💻 PC 电脑：** Macbook Pro M5 24+512、天选4 r9 4070 16+1T（AX210 网卡）、Samsung T7 固态 1T
+- **🖥 显示器：** SANC 盛色 S65 24.5 英寸 2K320Hz FastIPS
 - **📱 Phone 手机：** Honor Magic7 24+512、小米金沙江磁吸充电宝
 - **🎧 Headphones 耳机 / Audio 音响：** Airpods Pro 2、ARPTICAL 拉斐尔 + EPZ TP35 Pro、Sony SRS-XB100
 - **🖱️ Mouse 鼠标：** Razer V3pro、Logi M650
@@ -29,11 +30,11 @@ order: 0
 
 [![Tokens Stats](https://tokens.ci/api/embed/wutongyuonce/svg?theme=light&template=graph&tokens=compact&cost=compact)](https://tokens.ci/u/wutongyuonce)
 
-* GPT Plus * 3：GPT-6 Astra/Sol/luna
+* GPT Plus * 3：GPT-6-Astra、GPT-6.1-Sol、GPT-6-luna
 
-* Supergrok：Grok 4.7
+* Supergrok：Grok-4.7
 
-* deepseek API
+* Deepseek API：Deepseek V4.1 Flash
 
 ### 会员订阅
 
@@ -45,16 +46,18 @@ order: 0
 
 ### 我的 Mac 软件
 
-- **笔记、日程管理：** Typora、Obsidian、飞书、语雀、滴答清单、Pomodoro
+- **笔记、日程管理：** Typora、飞书、语雀、滴答清单、Pomodoro
+  - Obsidian: Excalidraw 画图插件、
 - **浏览器：** Safari、ego lite、Chrome
 - **播放器：** QQ 音乐、网易云音乐、Apple Music、Sleeve
-- **AI工具：** ChatGPT、Ghostty + pi + herdr、Paseo、Memoh、CodexBar、Trajex、cockpit tools
-- **代码工具：** Zed、VS Code、Navicat、Medis、Bruno、Apifox、Postman、Docker、WhatThePort、Excalidraw（画图）
+- **AI工具：** ChatGPT、Ghostty + pi + herdr、Paseo、Memoh、Magpie（模型路由）、Nowdex（token 额度统计）、Trajex、cockpit tools
+- **代码工具：** Zed、VS Code、Navicat、DBX、Bruno、Apifox、Postman、Docker、WhatThePort（端口查看器）
 - **社交：** Telegram、Discord
 - **工作：** 钉钉、腾讯会议
 - **邮箱：** 网易邮箱大师
-- **媒体、信息：** Folo/NetNewsWire（RSS 订阅器）、Readest（阅读器）、OBS、剪映专业版（剪辑）、ArcTime Pro（字幕）、IINA（视频播放器）、Downie4（视频下载器）、小宇宙（播客）
+- **媒体、信息：** Folo/NetNewsWire（RSS 订阅器）、Readest（阅读器）、OBS、剪映专业版（剪辑）、ArcTime Pro（字幕）、IINA（视频播放器）、Downie4（视频下载器）、小宇宙（播客）、Cap（录屏剪辑）
 - **其他工具：** RunCatNeo（Mac 监控）、Deck（最好用的 Mac 剪切板历史）、PixPin（截图）、Pearcleaner / App Cleaner（清理）、Slidepad（右侧浏览器）、TopNotch（遮挡刘海）、FineTune（音频控制）、超级右键、CleanMyKeyboard、Mos（鼠标）、Bob（翻译）
+- **游戏：** Steam、CrossOver
 
 ### 我的手机软件
 
