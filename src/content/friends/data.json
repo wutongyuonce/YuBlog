@@ -203,5 +203,14 @@
     "desc": "どんな結末がお望みだい？",
     "category": "双向",
     "order": 25
+  },
+  {
+    "id": "candlest",
+    "name": "Candlest",
+    "link": "https://blog.candlest.cc",
+    "avatar": "https://avatars.githubusercontent.com/u/125652899?v=4",
+    "desc": "Fun and Meaningful Jobs.",
+    "category": "推荐",
+    "order": 26
   }
 ]
