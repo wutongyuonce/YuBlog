@@ -210,7 +210,16 @@
     "link": "https://blog.candlest.cc",
     "avatar": "https://avatars.githubusercontent.com/u/125652899?v=4",
     "desc": "Fun and Meaningful Jobs.",
-    "category": "推荐",
+    "category": "双向",
     "order": 26
+  },
+  {
+    "id": "kisechan",
+    "name": "Kisechan 的博客！",
+    "link": "https://blog.kisechan.space/",
+    "avatar": "https://blog.kisechan.space/favicon.ico",
+    "desc": "Non est ad astra mollis e terris via.",
+    "category": "双向",
+    "order": 27
   }
 ]

@@ -265,7 +265,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 - `id` 稳定、宜小写 slug；已有的不要改。
 - `link` 必须 http/https。没可靠头像就 `avatar: ""`。
-- `category` 只允许 `推荐`（单向收藏）或 `双向`（已交换友链），不能把尚未确认的站点标成双向。用户未明确时放推荐；`order` 取全文件最大 order + 1，除非用户指定。
+- `category` 只允许 `推荐`（单向收藏）或 `双向`（已交换友链）。新增友链时，用户未指定分类则默认放入双向；用户明确指定时按其要求填写。`order` 取全文件最大 order + 1，除非用户指定。
 - `desc` 短、具体。不要为美观重排数组；展示顺序是 `order` 再按中文名。
 
 ```json
@@ -275,7 +275,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
   "link": "https://example.com/",
   "avatar": "",
   "desc": "一句话介绍。",
-  "category": "推荐",
+  "category": "双向",
   "siteLabel": "",
   "order": 15
 }
