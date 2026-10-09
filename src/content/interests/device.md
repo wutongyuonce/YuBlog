@@ -20,11 +20,16 @@ order: 0
 ### 我的生活设备
 
 - **💺 Chair 椅子：** 京东京造Z9Elite2代
-- **👛 Purse 钱包：** Bellroy Hide & Seek
+
+- **👛 Purse 钱包：** Bellroy Hide & Seek 深咖色、Bellroy Card Slip 海军蓝
+
+  ![purse|w300](./device/purse.jpg)
+
 - **🫙 香水：** LELABO ANOTHER 13
+
 - **🐘 玩偶：** JELLYCAT 史玛吉大象 Medium
 
-![elephant|w300](./device/elephant.jpg)
+  ![elephant|w300](./device/elephant.jpg)
 
 ### 我的 AI 服务
 
