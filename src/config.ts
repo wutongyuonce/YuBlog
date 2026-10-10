@@ -56,6 +56,13 @@ export const MORE_LINKS = [
     icon: 'i-ri-image-line',
     external: true,
   },
+  {
+    title: '访问统计',
+    description: '访客与浏览趋势',
+    href: 'https://cloud.umami.is/share/Xna7YqwEWNnoAv2x',
+    icon: 'i-ri-bar-chart-line',
+    external: true,
+  },
 ]
 
 export const UI: Ui = {
