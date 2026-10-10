@@ -1,7 +1,5 @@
 /** 全站点缀色的唯一配置；首项也是无脚本和非法保存值的默认配色。 */
 export const ACCENT_PALETTES = [
-  { id: 'violet', name: '灰紫', color: '#665477', dark: '#d0adf2' },
-  { id: 'purple', name: '深紫', color: '#3a1b74', dark: '#a987e8' },
   {
     id: 'rose',
     name: '原粉色',
@@ -10,6 +8,8 @@ export const ACCENT_PALETTES = [
     dark: '#e7a1b5',
     darkSoft: 'color-mix(in srgb, #d58ba3 82%, #fff 18%)',
   },
+  { id: 'violet', name: '灰紫', color: '#665477', dark: '#d0adf2' },
+  { id: 'purple', name: '深紫', color: '#3a1b74', dark: '#a987e8' },
   { id: 'blue', name: '雾蓝', color: '#476d89', dark: '#7fafd2' },
   { id: 'green', name: '鼠尾草绿', color: '#52735c', dark: '#7fd298' },
 ]

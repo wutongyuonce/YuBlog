@@ -586,6 +586,9 @@ accent-switch[hidden],
   border-radius: 50%;
   overflow: hidden;
 }
+.blog-profile__identity:is(:hover, :focus-visible) .blog-profile__avatar {
+  box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 35%, transparent);
+}
 .blog-profile__avatar img {
   width: 100%;
   height: 100%;
@@ -650,6 +653,9 @@ accent-switch[hidden],
   background: color-mix(in srgb, var(--accent) 7%, transparent);
 }
 @media (prefers-reduced-motion: no-preference) {
+  .blog-profile__avatar {
+    transition: box-shadow 180ms ease;
+  }
   .blog-profile__rss {
     transition:
       color 180ms ease,

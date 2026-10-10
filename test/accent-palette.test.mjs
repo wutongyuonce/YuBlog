@@ -30,7 +30,12 @@ test('every preset emits its light accent and a separate dark-mode accent', () =
     assert.match(css, new RegExp(`--accent:${palette.color}`))
     assert.match(css, new RegExp(`--accent-swatch:${palette.color}`))
   }
-  assert.match(css, /:root\.dark\{--accent:#d0adf2/)
+  assert.match(css, /^:root\{--accent:#ad526c/)
+  assert.match(css, /:root\.dark\{--accent:#e7a1b5/)
+  assert.match(
+    css,
+    /:root\.dark\[data-accent-palette="violet"\]\{--accent:#d0adf2/
+  )
   assert.match(
     css,
     /:root\.dark\[data-accent-palette="purple"\]\{--accent:#a987e8/
@@ -45,9 +50,11 @@ test('every preset emits its light accent and a separate dark-mode accent', () =
   )
 })
 
-test('first visit and invalid saved IDs use grey violet rather than arbitrary CSS', () => {
+test('first visit and invalid saved IDs use the original pink palette', () => {
   const { values, root, preference } = fixture()
-  assert.equal(preference.restore().color, '#665477')
+  assert.equal(preference.restore().id, 'rose')
+  assert.equal(root.dataset.accentPalette, 'rose')
+  assert.equal(preference.restore().color, '#ad526c')
   for (const invalid of ['invalid', '__proto__', 'dark', '#ff0000']) {
     values.set('accent-palette', invalid)
     assert.equal(preference.restore().id, ACCENT_PALETTES[0].id)

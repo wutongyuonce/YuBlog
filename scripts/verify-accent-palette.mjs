@@ -125,7 +125,7 @@ try {
     localStorage.setItem('theme', 'light')
   })
   await page.reload()
-  assert.deepEqual((await state()).accent, [102, 84, 119])
+  assert.deepEqual((await state()).accent, [173, 82, 108])
   const options = await page.evaluate(() =>
     [...document.querySelectorAll('#accent-menu [data-palette]')].map(
       (button) => ({
@@ -136,7 +136,7 @@ try {
   )
   assert.deepEqual(
     options.map(({ name }) => name),
-    ['灰紫', '深紫', '原粉色', '雾蓝', '鼠尾草绿']
+    ['原粉色', '灰紫', '深紫', '雾蓝', '鼠尾草绿']
   )
 
   // Keyboard opens at the selected item, moves without applying, confirms and closes.
@@ -504,7 +504,7 @@ try {
     await page.reload()
     const actual = await state()
     assert.equal(actual.visible, false)
-    assert.deepEqual(actual.accent, [102, 84, 119])
+    assert.deepEqual(actual.accent, [173, 82, 108])
   } finally {
     await page.cdp('Emulation.setScriptExecutionDisabled', { value: false })
     await page.reload()
