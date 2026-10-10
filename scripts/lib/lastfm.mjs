@@ -45,6 +45,20 @@ const coverOf = (images) => {
   }
   return null
 }
+const albumImages = (details) => {
+  const album = details?.album
+  if (
+    !details ||
+    typeof details !== 'object' ||
+    Array.isArray(details) ||
+    !album ||
+    typeof album !== 'object' ||
+    Array.isArray(album) ||
+    !Array.isArray(album.image)
+  )
+    throw new Error('Last.fm: invalid album.getInfo response')
+  return album.image
+}
 
 // Last.fm's ar0 variant preserves the original artwork dimensions.
 export const lastfmOriginalCover = (cover) =>
@@ -172,7 +186,8 @@ export async function fetchLastfmSnapshot({
         { artist: track.artist, album },
         true
       )
-      track.cover = coverOf(details?.album?.image)
+      if (!details) continue
+      track.cover = coverOf(albumImages(details))
       if (track.cover) break
     }
   }

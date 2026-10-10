@@ -199,11 +199,29 @@ test('a failed refresh leaves the successful on-disk snapshot intact', async () 
   const destination = join(directory, 'lastfm.json')
   try {
     await writeFile(destination, 'previous snapshot\n')
-    await assert.rejects(
-      syncLastfm({ ...fixture({ total: '-1' }), destination })
-    )
-    assert.equal(await readFile(destination, 'utf8'), 'previous snapshot\n')
-    const successful = await syncLastfm({ ...fixture(), destination })
+    const missing = played()
+    missing.image = []
+    const invalidAlbums = [
+      {},
+      [],
+      { album: {} },
+      { album: { image: 'invalid' } },
+    ]
+    for (const options of [
+      fixture({ total: '-1' }),
+      ...invalidAlbums.map((response) =>
+        fixture({ pages: [[missing]], albumInfo: () => response })
+      ),
+    ]) {
+      await assert.rejects(syncLastfm({ ...options, destination }), /Last.fm:/)
+      assert.equal(await readFile(destination, 'utf8'), 'previous snapshot\n')
+      assert.deepEqual(await readdir(directory), ['lastfm.json'])
+    }
+    const successful = await syncLastfm({
+      ...fixture({ pages: [[missing]] }),
+      destination,
+    })
+    assert.equal(successful.tracks[0].cover, null)
     assert.deepEqual(
       JSON.parse(await readFile(destination, 'utf8')),
       successful
