@@ -1,9 +1,9 @@
 {
   "user": "ztyonce",
   "profileUrl": "https://www.last.fm/user/ztyonce",
-  "updatedAt": "2026-10-10T14:34:48.000Z",
-  "weeklyScrobbles": 183,
-  "totalScrobbles": 183,
+  "updatedAt": "2026-10-10T20:09:21.000Z",
+  "weeklyScrobbles": 198,
+  "totalScrobbles": 198,
   "topArtist": "张惠妹",
   "tracks": [
     {
@@ -21,8 +21,35 @@
       "album": "玻璃",
       "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/c825f5a8dc9f69e7f1f3fa4f044eb2f6.jpg",
       "url": "https://www.last.fm/music/Gareth.T/_/%E7%8E%BB%E7%92%83",
-      "playcount": 16,
+      "playcount": 20,
       "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/c825f5a8dc9f69e7f1f3fa4f044eb2f6.jpg"
+    },
+    {
+      "name": "Like That",
+      "artist": "Future",
+      "album": "WE DON'T TRUST YOU (Explicit)",
+      "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/ed0b0acbc5af9cabb31acbf3ba9e79bb.jpg",
+      "url": "https://www.last.fm/music/Future/_/Like%20That",
+      "playcount": 4,
+      "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/ed0b0acbc5af9cabb31acbf3ba9e79bb.jpg"
+    },
+    {
+      "name": "出现又离开 (Live)",
+      "artist": "梁博",
+      "album": "我是唱作人 第2期",
+      "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/0736ed983406f03056ca78e5ea33dc57.jpg",
+      "url": "https://www.last.fm/music/%E6%A2%81%E5%8D%9A/_/%E5%87%BA%E7%8E%B0%E5%8F%88%E7%A6%BB%E5%BC%80%20(Live)",
+      "playcount": 2,
+      "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/0736ed983406f03056ca78e5ea33dc57.jpg"
+    },
+    {
+      "name": "0.5x(零點五倍速)",
+      "artist": "BikaBreezy",
+      "album": "0.5x (零点五倍速)",
+      "cover": null,
+      "url": "https://www.last.fm/music/BikaBreezy/_/0.5x(%E9%9B%B6%E9%BB%9E%E4%BA%94%E5%80%8D%E9%80%9F)",
+      "playcount": 1,
+      "fullCover": null
     },
     {
       "name": "We Own The Night",
@@ -43,6 +70,15 @@
       "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/491cb9e71e693c9a3d17f29ab56c934f.jpg"
     },
     {
+      "name": "Let You Down",
+      "artist": "Dawid Podsiadło",
+      "album": "Let You Down",
+      "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/c6d3ad9ef4faf979379ef3c34ff9ea67.jpg",
+      "url": "https://www.last.fm/music/Dawid%20Podsiad%C5%82o/_/Let%20You%20Down",
+      "playcount": 1,
+      "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/c6d3ad9ef4faf979379ef3c34ff9ea67.jpg"
+    },
+    {
       "name": "Secondhand (feat. Rema)",
       "artist": "Don Toliver",
       "album": "OCTANE (Explicit)",
@@ -59,42 +95,6 @@
       "url": "https://www.last.fm/music/FLY%20COAST/_/Fallin'%20to%20You",
       "playcount": 1,
       "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/d10c1f8715bc3d3636d452638bede468.jpg"
-    },
-    {
-      "name": "First Class",
-      "artist": "Jack Harlow",
-      "album": "First Class (Explicit)",
-      "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/8ce0e63faf7358f81a428436f356ea42.jpg",
-      "url": "https://www.last.fm/music/Jack%20Harlow/_/First%20Class",
-      "playcount": 1,
-      "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/8ce0e63faf7358f81a428436f356ea42.jpg"
-    },
-    {
-      "name": "my leaving feat. mabanua (feat. mabanua)",
-      "artist": "Kenichiro Nishihara",
-      "album": "Jazzy Folklore",
-      "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/e46dc32feb81d7b0f78da157f133a75d.png",
-      "url": "https://www.last.fm/music/Kenichiro%20Nishihara/_/my%20leaving%20feat.%20mabanua%20(feat.%20mabanua)",
-      "playcount": 1,
-      "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/e46dc32feb81d7b0f78da157f133a75d.png"
-    },
-    {
-      "name": "Say You Love Me (feat. Tamala)",
-      "artist": "Kenichiro Nishihara",
-      "album": "Natural Relax presented by Folklove",
-      "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/b1dcb38d05814acebd25457683bd8513.png",
-      "url": "https://www.last.fm/music/Kenichiro%20Nishihara/_/Say%20You%20Love%20Me%20(feat.%20Tamala)",
-      "playcount": 1,
-      "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/b1dcb38d05814acebd25457683bd8513.png"
-    },
-    {
-      "name": "waves feat. Substantial",
-      "artist": "Kenichiro Nishihara",
-      "album": "Jazzy Folklore",
-      "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/e46dc32feb81d7b0f78da157f133a75d.png",
-      "url": "https://www.last.fm/music/Kenichiro%20Nishihara/_/waves%20feat.%20Substantial",
-      "playcount": 1,
-      "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/e46dc32feb81d7b0f78da157f133a75d.png"
     }
   ]
 }
