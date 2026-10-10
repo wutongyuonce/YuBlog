@@ -32,17 +32,6 @@ export function getCategoryPreviews(posts) {
   )
 }
 
-/** Stable theme colors; content order and other categories do not affect the hue.
- * @param {string} category
- */
-export function getBlogCategoryColors(category) {
-  let hash = 0
-  for (const char of category)
-    hash = (Math.imul(hash, 31) + (char.codePointAt(0) ?? 0)) >>> 0
-  const hue = hash % 360
-  return { light: `hsl(${hue} 32% 36%)`, dark: `hsl(${hue} 32% 72%)` }
-}
-
 /** @param {string} hash */
 function categoryFromHash(hash) {
   if (!hash.startsWith('#')) return ''

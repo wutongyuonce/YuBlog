@@ -1,0 +1,25 @@
+{
+  "palette": {
+    "blue": 239,
+    "warm-red": 8,
+    "cyan": 197,
+    "green": 135,
+    "purple": 275,
+    "orange": 30,
+    "teal": 175,
+    "rose": 335,
+    "indigo": 220,
+    "olive": 75,
+    "amber": 45,
+    "blue-grey": 205,
+    "grape": 305,
+    "brown": 20,
+    "coral": 355,
+    "moss": 105
+  },
+  "assignments": {
+    "技术": "blue",
+    "思考": "warm-red",
+    "日记": "cyan"
+  }
+}

@@ -481,7 +481,8 @@ header.nav-bar .nav-bar__group--right #search-switch {
 }
 
 /* Editorial profile: the same open layout in both site themes. */
-.blog-profile {
+.blog-profile,
+.progress-stats {
   --profile-muted: color-mix(in srgb, var(--c-text) 56%, var(--c-bg));
 }
 .blog-profile__top {
@@ -493,6 +494,7 @@ header.nav-bar .nav-bar__group--right #search-switch {
 }
 .blog-profile__identity {
   grid-column: 2;
+  justify-self: center;
   display: grid;
   grid-template-columns: 56px minmax(0, 1fr);
   align-items: center;
@@ -517,8 +519,9 @@ header.nav-bar .nav-bar__group--right #search-switch {
   grid-column: 2;
   grid-row: 1;
   display: flex;
-  align-items: baseline;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
 }
 .blog-profile h2 {
   margin: 0;
@@ -528,15 +531,20 @@ header.nav-bar .nav-bar__group--right #search-switch {
   line-height: 1.3;
 }
 .blog-profile__mbti {
-  font-size: 0.6875rem;
+  margin-inline-start: 3px;
+  font-size: 0.8125rem;
   color: var(--profile-muted);
 }
 .blog-profile__details {
+  display: grid;
+  gap: 16px;
   padding-top: 22px;
-  text-align: center;
 }
 .blog-profile__motto {
+  min-width: 0;
   margin: 0;
+  text-align: center;
+  overflow-wrap: anywhere;
   color: var(--profile-muted);
   font-family: var(--font-heading);
   font-size: 1.0625rem;
@@ -593,10 +601,11 @@ header.nav-bar .nav-bar__group--right #search-switch {
 .blog-profile__social {
   display: flex;
   justify-content: center;
-  gap: 20px;
-  margin-top: 16px;
+  min-width: 0;
+  gap: 15px;
 }
 .blog-profile__social a {
+  flex: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -605,13 +614,13 @@ header.nav-bar .nav-bar__group--right #search-switch {
   text-decoration: none;
 }
 .blog-profile__social-icon {
-  font-size: 1.25rem;
+  font-size: 0.9375rem;
 }
 .progress-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
-  margin: 0;
+  margin: 2rem 0 0;
 }
 .progress-stat {
   display: grid;
@@ -669,11 +678,8 @@ header.nav-bar .nav-bar__group--right #search-switch {
   .blog-profile h2 {
     font-size: 1.375rem;
   }
-  .blog-profile__heading {
-    gap: 6px;
-  }
   .blog-profile__social {
-    gap: 12px;
+    gap: 9px;
   }
   .progress-stats {
     gap: 16px;

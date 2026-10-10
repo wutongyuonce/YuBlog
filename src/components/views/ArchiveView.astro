@@ -1,9 +1,15 @@
 ---
 import { getGroupedPostsByYear } from '~/utils/data'
 import { withBasePath } from '~/utils/path'
-import { getBlogCategoryColors } from '~/utils/blog-browser.js'
+import {
+  getBlogCategoryColors,
+  syncCategoryColors,
+} from '~/utils/blog-category-colors.js'
 
 const groups = await getGroupedPostsByYear('blogs')
+const categoryColors = syncCategoryColors(
+  groups.flatMap(({ items }) => items.map(({ data }) => data.category))
+)
 ---
 
 <div class="archive-timeline">
@@ -19,7 +25,7 @@ const groups = await getGroupedPostsByYear('blogs')
           const href = item.data.redirect || withBasePath(`/blogs/${item.id}/`)
           const dateTime = item.data.pubDate.toISOString()
           const category = item.data.category
-          const colors = getBlogCategoryColors(category)
+          const colors = getBlogCategoryColors(category, categoryColors)
 
           return (
             <li

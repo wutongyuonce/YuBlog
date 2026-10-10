@@ -1,11 +1,9 @@
 ---
-import ProgressStats from '~/components/widgets/ProgressStats.astro'
 import { withBasePath } from '~/utils/path'
 import { AUTHOR_LINKS } from '~/config'
 ---
 
 <section class="blog-profile" aria-labelledby="blog-profile-name">
-  <ProgressStats />
   <div class="blog-profile__top">
     <a class="blog-profile__identity" href={withBasePath('/about/')}>
       <div class="blog-profile__heading">
@@ -25,7 +23,6 @@ import { AUTHOR_LINKS } from '~/config'
     </a>
   </div>
   <div class="blog-profile__details">
-    <p class="blog-profile__motto">「我与我周旋久，宁做我」</p>
     <nav class="blog-profile__social" aria-label="联系与社交媒体">
       {AUTHOR_LINKS.map(({ label, href, icon }) => (
         <a
@@ -41,5 +38,6 @@ import { AUTHOR_LINKS } from '~/config'
         </a>
       ))}
     </nav>
+    <p class="blog-profile__motto">「我与我周旋久，宁做我」</p>
   </div>
 </section>

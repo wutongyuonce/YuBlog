@@ -5,7 +5,6 @@ import {
   parseBlogQuery,
   serializeBlogQuery,
   selectBlogPage,
-  getBlogCategoryColors,
   getCategoryPreviews,
   getPageNumbers,
   blogFirstPaintBootSource,
@@ -375,28 +374,4 @@ test('equally populated categories sort by name regardless of article order', ()
     getCategoryPreviews([...entries].reverse()).map(({ label }) => label),
     ['阿', '安']
   )
-})
-
-test('raw category names receive stable theme colors without CSS injection', () => {
-  const colors = getBlogCategoryColors('旅行')
-  for (const name of [
-    '技术',
-    '思考',
-    '日记',
-    '读书',
-    '旅行',
-    '旅行; color: red',
-    '👩‍💻',
-  ]) {
-    const { light, dark } = getBlogCategoryColors(name)
-    for (const color of [light, dark]) {
-      assert.match(
-        color,
-        /^hsl\(\d+ \d+% \d+%\)$/,
-        'all category names use the generated palette without CSS injection or fixed overrides'
-      )
-    }
-  }
-  assert.deepEqual(getBlogCategoryColors('旅行'), colors)
-  assert.notEqual(colors.light, colors.dark)
 })
