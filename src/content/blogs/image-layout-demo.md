@@ -9,9 +9,9 @@ titleImageAlt: 夜间街头戴墨镜的人像
 draft: false
 ---
 
-这篇把本站支持的 Markdown 自定义样式集中放在一页。先看书影游的双列卡片与竖版横滑栏，再看图片网格、相册与图文绕排，最后是提示框、徽章、链接、数学公式和代码块。
+这篇把本站支持的 Markdown 自定义样式集中放在一页。先看书影游的双列卡片、竖版横滑栏和方形陈列架，再看图片网格、相册与图文绕排，最后是提示框、徽章、链接、数学公式和代码块。
 
-相册、网格和绕排保留图片原比例；竖版卡片统一使用 `2:3` 封面，超出的边缘会裁切，点击仍可查看完整原图。
+相册、网格和绕排保留图片原比例。竖版卡片统一使用 `2:3` 封面，方形卡片统一使用 `1:1` 封面；超出的边缘会裁切，点击仍可查看完整原图。
 
 每种样式后都有对应的完整 Markdown 代码块。普通图悬浮时在原边框内轻微放大，点击查看大图；大图再点一次即可收回，也可用 Esc、遮罩或关闭按钮退出。浅色模式大图是灰白背景，深色模式保留暗色背景。
 
@@ -49,7 +49,7 @@ draft: false
 
 ## 竖版卡片栏
 
-封面在上，标题和灰色小字在下。连续的 `layout="portrait"` 卡片自动组成一条横滑栏，桌面版心可显示四张，窄屏保留后续卡片的露出。可以用触控板横滚、拖动底部滚动条，或聚焦卡片栏后按左右方向键查看后面的条目；点击封面查看大图，点击标题前往对应作品的 Wiki，而非本站拾趣分类。
+封面在上，标题和灰色小字在下。连续的 `layout="portrait"` 卡片自动组成一条横滑栏，桌面版心大约显示四张半，窄屏保留后续卡片的露出。可以用触控板横滚、拖动底部滚动条，或聚焦卡片栏后按左右方向键查看后面的条目；点击封面查看大图，点击标题前往对应作品的 Wiki，而非本站拾趣分类。
 
 `meta` 是自由填写的小字，可写作者、制作方、分类、年份或状态，也可省略。标题自然换行；小字最多显示两行高度，超出后在自己的区域上下滚动，也可聚焦小字用方向键滚动。小字区纵向滑块默认隐藏，实际滚动时短暂显示，停止后自动隐藏，不影响底部横向滚动条。横向栏没有底框，直接嵌入页面背景，底部保留滚动条。中间插入标题、段落或普通横卡就会另起一组。竖卡必须有标题和一张独立 Markdown 封面；这里只展示三部分，不接受 `score`、`label` 或介绍正文，误写会报错而不会隐藏内容。
 
@@ -99,6 +99,60 @@ draft: false
 :::
 
 :::card{layout="portrait" title="进击的巨人" meta="准备看。小字也能放介绍、备注和状态；超过两行高度后，可以在这块区域上下滚动读完，卡片栏的高度不会被长文字撑开。" href="https://zh.wikipedia.org/wiki/進擊的巨人"}
+![进击的巨人海报](../interests/anime/aot.jpg)
+:::
+```
+
+## 方形卡片栏
+
+专辑封面通常是正方形，所以方卡按 `1:1` 裁切，不要求源图本身恰好是正方形。桌面版心大约显示五张半。需要自动滚动时，这一排每张都写 `scroll="auto"`；条目要比容器更宽才会动，桌面下竖卡通常多于四张、方卡多于五张。滚动头尾相接，左右淡出。按下或键盘聚焦时暂停，方便点封面和标题；鼠标只是停在上面时继续滚动。减少动态效果或没有脚本时，它退回普通横滑，不淡出边缘。
+
+:::card{layout="square" scroll="auto" title="夏日重现" meta="日漫" href="https://zh.wikipedia.org/wiki/夏日重現"}
+![夏日重现海报](../interests/anime/summer-time.jpg)
+:::
+
+:::card{layout="square" scroll="auto" title="葬送的芙莉莲" meta="准备看" href="https://zh.wikipedia.org/wiki/葬送的芙莉莲"}
+![葬送的芙莉莲海报](../interests/anime/frieren.jpg)
+:::
+
+:::card{layout="square" scroll="auto" title="冰菓" meta="日漫" href="https://zh.wikipedia.org/wiki/冰菓"}
+![冰菓海报](../interests/anime/hyouka.jpg)
+:::
+
+:::card{layout="square" scroll="auto" title="紫罗兰永恒花园" meta="日漫" href="https://zh.wikipedia.org/wiki/紫罗兰永恒花园"}
+![紫罗兰永恒花园海报](../interests/anime/violet.jpg)
+:::
+
+:::card{layout="square" scroll="auto" title="你的名字" meta="动画电影" href="https://zh.wikipedia.org/wiki/你的名字。"}
+![你的名字海报](../interests/anime/your-name.jpg)
+:::
+
+:::card{layout="square" scroll="auto" title="进击的巨人" meta="日漫" href="https://zh.wikipedia.org/wiki/進擊的巨人"}
+![进击的巨人海报](../interests/anime/aot.jpg)
+:::
+
+```md
+:::card{layout="square" scroll="auto" title="夏日重现" meta="日漫" href="https://zh.wikipedia.org/wiki/夏日重現"}
+![夏日重现海报](../interests/anime/summer-time.jpg)
+:::
+
+:::card{layout="square" scroll="auto" title="葬送的芙莉莲" meta="准备看" href="https://zh.wikipedia.org/wiki/葬送的芙莉莲"}
+![葬送的芙莉莲海报](../interests/anime/frieren.jpg)
+:::
+
+:::card{layout="square" scroll="auto" title="冰菓" meta="日漫" href="https://zh.wikipedia.org/wiki/冰菓"}
+![冰菓海报](../interests/anime/hyouka.jpg)
+:::
+
+:::card{layout="square" scroll="auto" title="紫罗兰永恒花园" meta="日漫" href="https://zh.wikipedia.org/wiki/紫罗兰永恒花园"}
+![紫罗兰永恒花园海报](../interests/anime/violet.jpg)
+:::
+
+:::card{layout="square" scroll="auto" title="你的名字" meta="动画电影" href="https://zh.wikipedia.org/wiki/你的名字。"}
+![你的名字海报](../interests/anime/your-name.jpg)
+:::
+
+:::card{layout="square" scroll="auto" title="进击的巨人" meta="日漫" href="https://zh.wikipedia.org/wiki/進擊的巨人"}
 ![进击的巨人海报](../interests/anime/aot.jpg)
 :::
 ```
@@ -475,6 +529,7 @@ console.log(total([1, 2, 3]))
 | --- | --- | --- | --- |
 | 横向卡片 | `:::card{title="…"}` | 封面、评分和短评 | 自动单列 |
 | 竖版卡片栏 | `:::card{layout="portrait" title="…" meta="…"}` | 封面、标题和自由小字 | 保留单行横滚 |
+| 方形卡片栏 | `:::card{layout="square" scroll="auto" title="…" meta="…"}` | 1:1 封面；条目超出一屏才循环 | 不够宽时退回横滑 |
 | 图片网格 | `:::gallery{columns="2"}` | 并排对照的图片 | 自动单列 |
 | 横向相册 | `:::gallery{layout="scroll"}` | 连续浏览多张图片 | 主图与后续露出 |
 

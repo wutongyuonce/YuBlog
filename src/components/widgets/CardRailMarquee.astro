@@ -1,0 +1,35 @@
+<script>
+  import { createMarqueeController } from '~/utils/card-rail-marquee'
+  import { createReducedMotionGate } from '~/utils/reduced-motion'
+
+  const motion = window.matchMedia('(prefers-reduced-motion: reduce)')
+  const watched = new Set<Element>()
+  const resize = new ResizeObserver(() => controller.sync())
+  const controller = createMarqueeController({
+    query: () => document.querySelectorAll('.media-cards--auto'),
+    reducedMotion: () => motion.matches,
+  })
+
+  const watch = () => {
+    for (const rail of document.querySelectorAll('.media-cards--auto')) {
+      if (watched.has(rail)) continue
+      watched.add(rail)
+      resize.observe(rail)
+    }
+    controller.sync()
+  }
+  const teardown = () => {
+    for (const rail of watched) resize.unobserve(rail)
+    watched.clear()
+    controller.stopAll()
+  }
+
+  createReducedMotionGate({
+    onStatic: () => controller.stopAll(),
+    onAnimate: watch,
+    query: motion,
+  }).start()
+  document.addEventListener('astro:before-swap', teardown)
+  document.addEventListener('astro:page-load', watch)
+  watch()
+</script>

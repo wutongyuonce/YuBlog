@@ -44,9 +44,64 @@ export class ImageInteractions extends HTMLElement {
       { signal }
     )
 
+    const openFrom = (trigger: HTMLElement) => {
+      if (dialog.open) return
+      const view = trigger.closest<HTMLElement>('.image-view')
+      const image = view?.querySelector('img')
+      if (!view || !image) return
+      this.trigger = trigger
+      const source =
+        view
+          .querySelector<HTMLTemplateElement>('template')
+          ?.content.querySelector('img') ?? image
+      const target = dialog.querySelector('img')!
+      target.src = source.src
+      target.alt = image.alt
+      dialog.querySelector('p')!.textContent = image.alt
+      this.releaseScroll = lockScroll()
+      dialog.showModal()
+    }
+    // Delegation covers marquee clones. Those nodes copy markup, not listeners.
+    document.addEventListener(
+      'click',
+      (event) => {
+        const target = event.target
+        if (!(target instanceof Element)) return
+        const zoom = target.closest<HTMLElement>('.image-view__linked-zoom')
+        if (zoom) {
+          event.preventDefault()
+          event.stopPropagation()
+          openFrom(zoom)
+          return
+        }
+        const image = target.closest<HTMLElement>(
+          '.markdown-content .image-view img'
+        )
+        if (!image || image.closest('a')) return
+        event.preventDefault()
+        event.stopPropagation()
+        openFrom(image)
+      },
+      { signal }
+    )
+    document.addEventListener(
+      'keydown',
+      (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return
+        const image = event.target
+        if (!(image instanceof HTMLImageElement)) return
+        if (!image.matches('.markdown-content .image-view img')) return
+        if (image.closest('a')) return
+        event.preventDefault()
+        openFrom(image)
+      },
+      { signal }
+    )
+
     for (const view of document.querySelectorAll<HTMLElement>(
       '.markdown-content .image-view'
     )) {
+      if (view.closest('[data-marquee-clone]')) continue
       const image = view.querySelector<HTMLImageElement>('img')
       if (!image) continue
       const link = image.closest('a')
@@ -66,40 +121,6 @@ export class ImageInteractions extends HTMLElement {
       }
       trigger.setAttribute('aria-label', `查看大图：${image.alt || '图片'}`)
       trigger.setAttribute('aria-haspopup', 'dialog')
-      const open = () => {
-        if (dialog.open) return
-        this.trigger = trigger
-        const source =
-          view
-            .querySelector<HTMLTemplateElement>('template')
-            ?.content.querySelector('img') ?? image
-        const target = dialog.querySelector('img')!
-        target.src = source.src
-        target.alt = image.alt
-        dialog.querySelector('p')!.textContent = image.alt
-        this.releaseScroll = lockScroll()
-        dialog.showModal()
-      }
-      trigger.addEventListener(
-        'click',
-        (event) => {
-          event.preventDefault()
-          event.stopPropagation()
-          open()
-        },
-        { signal }
-      )
-      if (!link) {
-        image.addEventListener(
-          'keydown',
-          (event) => {
-            if (!['Enter', ' '].includes(event.key)) return
-            event.preventDefault()
-            open()
-          },
-          { signal }
-        )
-      }
     }
 
     for (const gallery of document.querySelectorAll<HTMLElement>(

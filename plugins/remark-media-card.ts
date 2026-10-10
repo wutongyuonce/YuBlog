@@ -16,8 +16,9 @@ import { visit } from 'unist-util-visit'
  *
  * 封面必须是卡片里的第一张相对路径图片，这样仍走正文图片管线。
  * 连续的 `:::card` 合成一排；`href` 只接受 http(s)、mailto 和站内路径。
- * `layout="portrait"` 切换为横滑竖卡：必须有标题和一张封面，`meta` 是可选小字，
- * 不接受评分、角标或介绍。布局切换和正文会分隔连续卡片组。
+ * `layout="portrait"` 是 2:3 竖卡，`layout="square"` 是 1:1 方卡（专辑封面的常见比例）。
+ * 两种陈列架都必须有标题和一张封面，`meta` 是可选小字，不接受评分、角标或介绍。
+ * `scroll="auto"` 只是请求循环；每张都要写。布局、滚动模式或正文变化会分隔连续卡片组。
  */
 type Directive = Extract<RootContent, { type: 'containerDirective' }>
 
@@ -28,6 +29,7 @@ interface Element {
   url?: string
   title?: string | null
   alt?: string
+  scrollMode?: 'auto' | 'manual'
   data?: {
     hName?: string
     hProperties?: Record<string, unknown>
@@ -129,13 +131,18 @@ const htmlMediaTags = new Set([
 
 const buildCard = (node: Directive): Element | null => {
   const layout = node.attributes?.layout ?? 'horizontal'
-  if (layout !== 'horizontal' && layout !== 'portrait')
-    throw new Error('Card layout must be horizontal or portrait')
-  const portrait = layout === 'portrait'
+  if (layout !== 'horizontal' && layout !== 'portrait' && layout !== 'square')
+    throw new Error('Card layout must be horizontal, portrait or square')
+  const rail = layout === 'portrait' || layout === 'square'
+  const rawScroll = node.attributes?.scroll
+  if (rawScroll !== undefined && rawScroll !== 'auto' && rawScroll !== 'manual')
+    throw new Error('Card scroll must be auto or manual')
+  if (!rail && rawScroll !== undefined)
+    throw new Error('Card scroll requires layout="portrait" or layout="square"')
   const title = node.attributes?.title?.trim() ?? ''
   const meta = node.attributes?.meta?.trim() ?? ''
-  if (!portrait && node.attributes?.meta !== undefined)
-    throw new Error('Card meta requires layout="portrait"')
+  if (!rail && node.attributes?.meta !== undefined)
+    throw new Error('Card meta requires layout="portrait" or layout="square"')
   const href = safeHref(node.attributes?.href)
   const label = node.attributes?.label?.trim() ?? ''
   const score = parseScore(node.attributes?.score)
@@ -186,10 +193,10 @@ const buildCard = (node: Directive): Element | null => {
     })
   }
 
-  if (portrait) {
+  if (rail) {
     if (!title || !cover)
       throw new Error(
-        'Portrait card requires a title and one standalone cover image'
+        'Rail card requires a title and one standalone cover image'
       )
     if (
       review.length ||
@@ -197,11 +204,11 @@ const buildCard = (node: Directive): Element | null => {
       node.attributes?.label !== undefined
     )
       throw new Error(
-        'Portrait card accepts only a cover, title and optional meta; no review, score or label'
+        'Rail card accepts only a cover, title and optional meta; no review, score or label'
       )
   }
   if (!title && !cover && review.length === 0) return null
-  if (cover) markCover(cover, portrait ? 480 : 240)
+  if (cover) markCover(cover, rail ? 480 : 240)
 
   const body: (Element | RootContent)[] = []
   if (title) {
@@ -217,7 +224,7 @@ const buildCard = (node: Directive): Element | null => {
         : element('p', 'media-card__title', [text(title)])
     )
   }
-  if (portrait && meta)
+  if (rail && meta)
     body.push(element('p', 'media-card__meta', [text(meta)], { tabIndex: 0 }))
   if (score !== null) {
     body.push(
@@ -235,15 +242,17 @@ const buildCard = (node: Directive): Element | null => {
   }
   if (review.length) body.push(element('div', 'media-card__review', review))
 
-  return element(
+  const card = element(
     'article',
-    portrait ? 'media-card media-card--portrait' : 'media-card',
+    rail ? `media-card media-card--${layout}` : 'media-card',
     [
       ...(label ? [element('span', 'media-card__label', [text(label)])] : []),
       ...(cover ? [cover] : []),
       ...(body.length ? [element('div', 'media-card__body', body)] : []),
     ]
   )
+  card.scrollMode = rawScroll === 'auto' ? 'auto' : 'manual'
+  return card
 }
 
 const isCard = (node: RootContent | Element) =>
@@ -252,23 +261,41 @@ const isCard = (node: RootContent | Element) =>
     'media-card'
   )
 
-const isPortrait = (node: RootContent | Element) =>
-  classList((node.data as Element['data'])?.hProperties?.className).includes(
-    'media-card--portrait'
+const railLayout = (node: RootContent | Element) => {
+  const classes = classList(
+    (node.data as Element['data'])?.hProperties?.className
   )
+  if (classes.includes('media-card--square')) return 'square'
+  if (classes.includes('media-card--portrait')) return 'portrait'
+  return 'horizontal'
+}
+
+const groupKey = (node: RootContent | Element) =>
+  `${railLayout(node)}:${(node as Element).scrollMode === 'auto' ? 'auto' : 'manual'}`
 
 const wrapCards = (parent: Parent) => {
   const next: RootContent[] = []
   let group: RootContent[] = []
   const flush = () => {
     if (!group.length) return
-    const portrait = isPortrait(group[0])
+    const rail = railLayout(group[0]) !== 'horizontal'
+    const auto = (group[0] as Element).scrollMode === 'auto'
+    // 轨道在插件里就固定下来。脚本只负责复制，不能再把卡片挪出竖卡选择器。
+    const children = rail
+      ? [element('div', 'media-cards__track', group)]
+      : group
     next.push(
       element(
         'div',
-        portrait ? 'media-cards media-cards--rail' : 'media-cards',
-        group,
-        portrait ? { tabIndex: 0, role: 'region', ariaLabel: '横向卡片栏' } : {}
+        [
+          'media-cards',
+          rail ? 'media-cards--rail' : '',
+          auto ? 'media-cards--auto' : '',
+        ]
+          .filter(Boolean)
+          .join(' '),
+        children,
+        rail ? { tabIndex: 0, role: 'region', ariaLabel: '横向卡片栏' } : {}
       ) as unknown as RootContent
     )
     group = []
@@ -276,7 +303,7 @@ const wrapCards = (parent: Parent) => {
 
   for (const child of parent.children) {
     if (isCard(child)) {
-      if (group.length && isPortrait(group[0]) !== isPortrait(child)) flush()
+      if (group.length && groupKey(group[0]) !== groupKey(child)) flush()
       group.push(child)
       continue
     }

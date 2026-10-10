@@ -283,6 +283,7 @@ test('portrait cards render cover, title and arbitrary metadata in one keyboard-
     ].join('\n')
   )
   assert.equal(code.match(/class="media-cards media-cards--rail"/g)?.length, 1)
+  assert.equal(code.match(/class="media-cards__track"/g)?.length, 1)
   assert.match(code, /tabindex="0" role="region" aria-label="横向卡片栏"/)
   assert.equal(
     code.match(/class="media-card media-card--portrait"/g)?.length,
@@ -304,6 +305,48 @@ test('portrait cards render cover, title and arbitrary metadata in one keyboard-
   )
 })
 
+test('square rails keep the same text contract and group only with the same scroll mode', async () => {
+  const processor = await createMarkdownProcessor({
+    remarkPlugins: [remarkDirective, remarkImageWidth, remarkMediaCard],
+  })
+  const { code } = await processor.render(
+    [
+      ':::card{layout="square" scroll="auto" title="I NEVER DIE" meta="i-dle" href="https://example.com/album"}',
+      '![封面|w300](./album.jpg)',
+      ':::',
+      '',
+      ':::card{layout="square" scroll="auto" title="NOMAN"}',
+      '![封面](./noman.jpg)',
+      ':::',
+      '',
+      ':::card{layout="square" title="手动"}',
+      '![封面](./manual.jpg)',
+      ':::',
+      '',
+      ':::card{layout="portrait" scroll="auto" title="竖卡"}',
+      '![封面](./poster.jpg)',
+      ':::',
+    ].join('\n')
+  )
+  assert.equal(
+    code.match(/class="media-cards media-cards--rail media-cards--auto"/g)
+      ?.length,
+    2
+  )
+  assert.equal(code.match(/class="media-cards media-cards--rail"/g)?.length, 1)
+  assert.equal(code.match(/class="media-card media-card--square"/g)?.length, 3)
+  assert.match(code, /<img\b(?=[^>]*width="300")(?=[^>]*alt="封面")[^>]*>/)
+  assert.match(
+    code,
+    /<img\b(?=[^>]*width="480")(?=[^>]*src="\.\/noman.jpg")[^>]*>/
+  )
+  assert.match(code, /href="https:\/\/example.com\/album"/)
+  assert.doesNotMatch(
+    code,
+    /data-marquee-clone|media-card__(?:review|score|label)/
+  )
+})
+
 test('layout switches and prose separate rails without changing horizontal cards', async () => {
   const processor = await createMarkdownProcessor({
     remarkPlugins: [remarkDirective, remarkMediaCard],
@@ -314,6 +357,7 @@ test('layout switches and prose separate rails without changing horizontal cards
     `${portrait}\n\n:::card{title="旧卡" score="4"}\n旧卡介绍。\n:::\n\n${portrait}\n\n普通正文。\n\n${portrait}`
   )
   assert.equal(code.match(/class="media-cards media-cards--rail"/g)?.length, 3)
+  assert.equal(code.match(/class="media-cards__track"/g)?.length, 3)
   assert.equal(code.match(/class="media-cards"/g)?.length, 1)
   assert.match(code, /<article class="media-card">/)
   assert.match(code, /4 分，满分 5 分/)
@@ -345,6 +389,14 @@ test('invalid portrait content fails rather than hiding authored information', a
       /no review, score or label/,
     ],
     ['title="横卡" meta="不能忽略"', '正文。', /meta requires/],
+    ['layout="square" title="无封面"', '', /standalone cover/],
+    [
+      'layout="square" title="评分" score="4"',
+      '![封面](./cover.jpg)',
+      /no review, score or label/,
+    ],
+    ['scroll="loop" title="横卡"', '正文。', /scroll must be/],
+    ['scroll="auto" title="横卡"', '正文。', /scroll requires/],
   ]) {
     await t.test(attrs, async () => {
       await assert.rejects(
