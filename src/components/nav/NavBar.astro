@@ -1,6 +1,7 @@
 ---
 import SearchSwitch from '~/components/widgets/SearchSwitch.astro'
 import ThemeSwitch from '~/components/widgets/ThemeSwitch.astro'
+import AccentSwitch from '~/components/widgets/AccentSwitch.astro'
 import NavItem from './NavItem.astro'
 import NavDropdown from './NavDropdown.astro'
 import Divider from '~/components/base/Divider.astro'
@@ -47,6 +48,8 @@ const home = withBasePath('/')
             </div>
           ) : key === 'searchButton' ? (
             <SearchSwitch />
+          ) : key === 'accentButton' ? (
+            <AccentSwitch />
           ) : key === 'themeButton' ? (
             <ThemeSwitch />
           ) : (
@@ -205,8 +208,9 @@ const home = withBasePath('/')
     const nav = header()
     if (!nav) return
     const pinned = Boolean(
-      nav.querySelector(':focus-visible, [data-nav-dropdown][data-open]') ||
-      document.querySelector('#search-panel:not(.hidden)')
+      nav.querySelector(
+        ':focus-visible, [data-nav-dropdown][data-open], [data-accent-switch][data-open]'
+      ) || document.querySelector('#search-panel:not(.hidden)')
     )
     nav.toggleAttribute(
       'data-scroll-hidden',

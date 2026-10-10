@@ -5,9 +5,6 @@
   --c-scrollbar-hover: #bbb;
   --c-text: #000;
   --font-heading: 'SourceHanSerifCN-Regular', serif;
-  /* Same dusty rose as the profile day-count and timeline. */
-  --accent: #ad526c;
-  --accent-soft: #c98299;
   --site-nav-width: var(--blog-shell-width);
   --site-gutter: 28px;
   /* Shared content target; images use the matching ARTICLE_COLUMN_WIDTH. */
@@ -37,8 +34,6 @@
   --c-scrollbar: #222;
   --c-scrollbar-hover: #444;
   --c-text: #fff;
-  --accent: #e7a1b5;
-  --accent-soft: color-mix(in srgb, #d58ba3 82%, var(--c-text) 18%);
 }
 
 html {

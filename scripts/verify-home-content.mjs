@@ -22,7 +22,14 @@ for (const width of [1440, 390, 320]) {
     const layout = await page.evaluate(() => {
       const body = document.querySelector('.recent-media__body')
       const ctx = document.createElement('canvas').getContext('2d')
+      const surface = getComputedStyle(
+        document.documentElement
+      ).getPropertyValue('--c-bg')
       const luminance = (color) => {
+        // Portrait cards are transparent: composite over the real page surface,
+        // not the previous foreground pixel left in the canvas.
+        ctx.fillStyle = surface
+        ctx.fillRect(0, 0, 1, 1)
         ctx.fillStyle = color
         ctx.fillRect(0, 0, 1, 1)
         const [r, g, b] = [...ctx.getImageData(0, 0, 1, 1).data].map((byte) => {

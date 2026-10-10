@@ -3,6 +3,13 @@ import { ClientRouter } from 'astro:transitions'
 
 import { withBasePath } from '~/utils/path'
 import { SITE } from '~/config'
+import {
+  ACCENT_PALETTES,
+  accentPaletteStyles,
+  createAccentPreference,
+} from '~/utils/accent-palette.js'
+
+const accentInit = `(${createAccentPreference.toString()})(${JSON.stringify(ACCENT_PALETTES)}).restore()`
 
 interface Props {
   title?: string
@@ -92,6 +99,10 @@ const webPageData = {
 <meta name="twitter:url" content={canonicalURL} />
 <meta name="twitter:image" content={socialImageURL} />
 <meta name="twitter:image:alt" content={resolvedSocialImageAlt} />
+
+<!-- Accent variables and preference are ready before the first paint. -->
+<style is:inline set:html={accentPaletteStyles()}></style>
+<script is:inline data-astro-rerun set:html={accentInit}></script>
 
 <!-- Color -->
 <meta name="color-scheme" content="" />

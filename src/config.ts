@@ -120,7 +120,7 @@ export const UI: Ui = {
   ],
   navBarLayout: {
     left: ['internalNavs'],
-    right: ['socialLinks', 'searchButton', 'themeButton'],
+    right: ['socialLinks', 'searchButton', 'accentButton', 'themeButton'],
   },
   postView: {
     postMetaStyle: 'minimal',
