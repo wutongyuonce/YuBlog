@@ -110,7 +110,7 @@ const groups = [
   :global(.dark) .friends-page {
     --friends-shell-bg: transparent;
     --friends-panel-bg: transparent;
-    --friends-card-bg: color-mix(in srgb, var(--c-bg) 94%, var(--c-text) 6%);
+    --friends-card-bg: #000;
     --friends-border: color-mix(in srgb, var(--c-text) 14%, transparent);
     --friends-border-strong: color-mix(in srgb, var(--c-text) 24%, transparent);
     --friends-muted: color-mix(in srgb, var(--c-text) 68%, transparent);
@@ -189,7 +189,7 @@ const groups = [
   .friend-card:focus-visible {
     border-color: color-mix(in srgb, var(--accent) 55%, var(--c-bg));
     background: var(--friends-card-bg);
-    box-shadow: 0 3px 12px color-mix(in srgb, var(--c-text) 5%, transparent);
+    box-shadow: 0 0 1rem color-mix(in srgb, var(--accent) 35%, transparent);
   }
 
   .friend-card:hover .friend-card__topline h3,
@@ -206,6 +206,14 @@ const groups = [
     background: color-mix(in srgb, var(--c-bg) 88%, var(--c-text) 12%);
     box-shadow: 0 0 0 0.28rem var(--friends-avatar-ring);
     overflow: hidden;
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .friend-card:is(:hover, :focus-visible) .friend-card__avatar-wrap {
+    transform: scale(1.1);
+    box-shadow: 0 0 1rem color-mix(in srgb, var(--accent) 35%, transparent);
   }
 
   .friend-card__avatar {
@@ -255,6 +263,7 @@ const groups = [
 
   @media (prefers-reduced-motion: reduce) {
     .friend-card,
+    .friend-card__avatar-wrap,
     .friend-card__topline h3 {
       transition: none;
     }
