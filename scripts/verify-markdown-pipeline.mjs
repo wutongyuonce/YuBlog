@@ -342,6 +342,16 @@ test('home and interest cards preserve authored content through the shared pipel
       groups(fromHtml(code)),
       `${file}: heading-separated card groups remain independent in the real page`
     )
+    for (const rail of elements(page, 'div').filter((node) =>
+      node.properties.className?.includes('media-cards--rail')
+    )) {
+      const children = rail.children.filter((node) => node.type === 'element')
+      assert.equal(children.length, 1, `${file}: a rail has one track`)
+      assert.ok(
+        children[0].properties.className?.includes('media-cards__track'),
+        `${file}: every rail preserves its track through Astro rendering`
+      )
+    }
     for (const card of elements(page, 'article').filter((node) =>
       node.properties.className?.includes('media-card')
     )) {

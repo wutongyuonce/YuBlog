@@ -14,7 +14,7 @@
 
 | Route | Purpose | Source |
 | :--- | :--- | :--- |
-| `/` | Author, RSS, socials, writing heatmap, five recent posts and recent media; no pager or personal sidebar | `BlogProfile`, `WritingHeatmap`, `RecentWriting`, `recent.md` |
+| `/` | Author, RSS, socials, writing heatmap, five recent posts, recent media and Last.fm listening; no pager or personal sidebar | `BlogProfile`, `WritingHeatmap`, `RecentWriting`, `recent.md`, `lastfm.json` |
 | `/blogs/` | Full list, category/tag filtering, seven posts per page | `src/content/blogs/**/*.{md,mdx}` |
 | `/blogs/#tech`, `#thought`, `#diary` | Built-in groups and discovered categories such as `#旅行`; legacy query URLs still work | `utils/blog-browser.js` |
 | `/tags/` | Sortable tag directory, multi-select AND, results after selection | Post tags |
@@ -41,6 +41,8 @@ Body images support `:::gallery` (a two-column grid by default, three columns, p
 See the [content skill](blog-content-publisher-skill/SKILL.md), [image pipeline](docs/Astro图片管线指南.md), [site behavior SPEC](docs/站点行为%20SPEC.md), [architecture](docs/项目解析.md) and [full-content RSS SPEC](docs/RSS%20全文支持%20SPEC.md).
 
 Site accents default to the original pink (light `#ad526c`, dark `#e7a1b5`). The navbar palette button offers the original pink, grey violet, deep purple, mist blue and sage green. Every preset uses its main color in light mode and a lighter same-hue accent in dark mode, including mist blue and sage green, so night accents stay identifiable rather than washing out; the menu swatch always shows the light color. Selection updates the heatmap, body accents, search highlights and friend-card glow immediately without reloading. Accent preferences are independent of light/dark mode, saved locally and restored before the first paint and client navigation. Without JavaScript, the default palette remains readable. Black-and-white surfaces, content images, category badges, syntax highlighting and semantic colors retain their existing rules. Presets have one source in `src/utils/accent-palette.js`.
+
+Home listening shows the past seven days’ Top 10 songs with album covers, artist and album names, plus weekly scrobbles, lifetime scrobbles and the top weekly artist. The square rail loops automatically and pauses while pressed or keyboard-focused; without JavaScript or with reduced motion it scrolls manually. Metadata uses `artist - album`, and covers open original artwork in the shared image viewer. Builds read `src/data/lastfm.json` without calling Last.fm. The `Sync Last.fm` workflow refreshes and commits the snapshot to main hourly at minute 17, using the existing Vercel Git deployment; failed refreshes preserve the previous data. Set the repository Actions Secret `LASTFM_API_KEY`; locally, set it in the ignored `.env` and run `pnpm sync:lastfm`. Scheduled runs begin once the workflow reaches the default branch. See [Last.fm SPEC and design](docs/首页%20Last.fm%20SPEC%20与设计.md).
 
 ## Stack
 

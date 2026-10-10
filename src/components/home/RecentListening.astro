@@ -1,0 +1,148 @@
+---
+/* eslint-disable astro/jsx-a11y/no-noninteractive-tabindex -- Scroll areas need focus for native keyboard scrolling. */
+import listening from '~/data/lastfm.json'
+
+const number = new Intl.NumberFormat('zh-CN')
+const updatedAt = new Intl.DateTimeFormat('zh-CN', {
+  timeZone: 'Asia/Shanghai',
+  month: 'numeric',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+}).format(new Date(listening.updatedAt))
+---
+
+<section class="recent-listening" aria-labelledby="recent-listening-title">
+  <header class="home-section-header">
+    <h2 id="recent-listening-title">最近在听 Top10</h2>
+    <a href={listening.profileUrl} target="_blank" rel="noopener noreferrer">
+      Last.fm ↗
+    </a>
+  </header>
+  <div class="recent-listening__stats" aria-label="听歌统计">
+    <span>
+      过去 7 天 <strong>{number.format(listening.weeklyScrobbles)}</strong> 次
+    </span>
+    <span>
+      累计 <strong>{number.format(listening.totalScrobbles)}</strong> 次
+    </span>
+    <span>
+      常听歌手 <strong>{listening.topArtist || '暂无'}</strong>
+    </span>
+  </div>
+  {listening.tracks.length ? (
+    <div class="prose markdown-content recent-listening__body">
+      <div
+        class="media-cards media-cards--rail media-cards--auto"
+        tabindex="0"
+        role="region"
+        aria-label="过去 7 天常听歌曲 Top 10，可左右滚动"
+      >
+        <div class="media-cards__track" role="list">
+          {listening.tracks.map((track) => (
+            <article class="media-card media-card--square" role="listitem">
+              <div class="image-view" title={track.album || '专辑信息暂缺'}>
+                {track.cover ? (
+                  <img
+                    class="media-card__cover"
+                    src={track.cover}
+                    width="300"
+                    height="300"
+                    loading="lazy"
+                    decoding="async"
+                    alt={`${track.artist} - ${track.album || track.name} 专辑封面`}
+                  />
+                ) : (
+                  <span
+                    class="recent-listening__placeholder"
+                    aria-hidden="true"
+                  >
+                    ♪
+                  </span>
+                )}
+                {track.fullCover && (
+                  <template class="image-view__source">
+                    <img
+                      src={track.fullCover}
+                      alt={`${track.artist} - ${track.album || track.name} 专辑封面`}
+                    />
+                  </template>
+                )}
+              </div>
+              <div class="media-card__body">
+                <a
+                  class="media-card__title"
+                  title={track.name}
+                  href={track.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {track.name}
+                </a>
+                <p class="media-card__meta" tabindex="0">
+                  {track.artist} - {track.album || '专辑信息暂缺'}
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </div>
+  ) : (
+    <p class="recent-listening__empty">过去 7 天还没有听歌记录。</p>
+  )}
+  <p class="recent-listening__updated">
+    更新于 <time datetime={listening.updatedAt}>{updatedAt}</time>（北京时间）
+  </p>
+</section>
+
+<style>
+  .recent-listening {
+    margin-top: 3rem;
+  }
+  .recent-listening__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    margin-top: 1rem;
+    font-size: 0.75rem;
+    line-height: 1.7;
+    color: color-mix(in srgb, var(--c-text) 65%, var(--c-bg));
+  }
+  .recent-listening__stats strong {
+    color: var(--c-text);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+  .recent-listening__body {
+    margin-top: 0.75rem;
+  }
+  .recent-listening__body .media-cards {
+    margin: 0;
+  }
+  .recent-listening__body .media-card__title {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    min-height: 3em;
+    overflow: hidden;
+  }
+  .recent-listening__placeholder {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    background: color-mix(in srgb, var(--c-text) 5%, var(--c-bg));
+    color: color-mix(in srgb, var(--c-text) 45%, var(--c-bg));
+    font-family: var(--font-heading);
+    font-size: 2rem;
+  }
+  .recent-listening__updated,
+  .recent-listening__empty {
+    margin: 0.75rem 0 0;
+    font-size: 0.75rem;
+    color: color-mix(in srgb, var(--c-text) 65%, var(--c-bg));
+  }
+</style>

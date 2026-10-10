@@ -1,0 +1,48 @@
+name: Sync Last.fm
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lastfm-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Fetch listening snapshot
+        env:
+          LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
+        run: node scripts/sync-lastfm.mjs
+
+      - name: Publish snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
+        run: |
+          if git diff --quiet -- src/data/lastfm.json; then
+            exit 0
+          fi
+          git config user.name "$REPOSITORY_OWNER"
+          git config user.email "$(gh api "users/$REPOSITORY_OWNER" --jq '"\(.id)+\(.login)@users.noreply.github.com"')"
+          git add src/data/lastfm.json
+          git commit -m "chore: refresh Last.fm listening snapshot"
+          git pull --rebase origin main
+          git push origin HEAD:main
