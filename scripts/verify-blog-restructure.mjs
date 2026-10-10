@@ -10,10 +10,8 @@ import {
   MORE_LINKS,
   SITE,
 } from '../src/config.ts'
-import {
-  getBlogCategoryColors,
-  parseBlogQuery,
-} from '../src/utils/blog-browser.js'
+import { parseBlogQuery } from '../src/utils/blog-browser.js'
+import { getBlogCategoryColors } from '../src/utils/blog-category-colors.js'
 
 const siteBase = new URL(
   SITE.base.endsWith('/') ? SITE.base : `${SITE.base}/`,

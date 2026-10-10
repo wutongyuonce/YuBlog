@@ -52,7 +52,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site)
 
 `Astro.site` 来自配置里的 `site`。用的是 `pathname`，所以查询串和 URL 片段都不会进 canonical。
 
-分类链接里的 `#tech`／`#旅行` 是 URL 片段，不是新页面，也不是哈希计算结果。浏览器只向服务器请求 `/blogs/`；页面脚本读取 `#` 后的值，从 HTML 已有的全部文章中筛选，再分页。站内分类入口按 `category` 原值生成名称编码片段链接，不合并别名；旧 `#tech`、`#thought`、`#diary` 仅作 URL 兼容别名，分别精确定位“技术”“思考”“日记”。英文原值 `tech` 等使用 `#category=tech` 形式逃逸。旧 `?category=` 始终按原值精确筛选，并在启用脚本后转成等价片段，保留标签和页码。动态入口、颜色、URL 和精确筛选统一由 `src/utils/blog-browser.js` 负责。拾趣的 `/interests/movie/` 则有独立内容和静态 HTML，因此使用路径路由。
+分类链接里的 `#tech`／`#旅行` 是 URL 片段，不是新页面，也不是哈希计算结果。浏览器只向服务器请求 `/blogs/`；页面脚本读取 `#` 后的值，从 HTML 已有的全部文章中筛选，再分页。站内分类入口按 `category` 原值生成名称编码片段链接，不合并别名；旧 `#tech`、`#thought`、`#diary` 仅作 URL 兼容别名，分别精确定位“技术”“思考”“日记”。英文原值 `tech` 等使用 `#category=tech` 形式逃逸。旧 `?category=` 始终按原值精确筛选，并在启用脚本后转成等价片段，保留标签和页码。动态入口、URL 和精确筛选统一由 `src/utils/blog-browser.js` 负责；归档分类配色由 `src/utils/blog-category-colors.js` 从预设池分配并持久记录。拾趣的 `/interests/movie/` 则有独立内容和静态 HTML，因此使用路径路由。
 
 这些分类筛选状态不新增 sitemap 条目；文章 `/blogs/<slug>/` 和拾趣 `/interests/<id>/` 等独立页面由构建路由进入 sitemap。在 `src/content/interests/` 顶层新增满足 schema 的 `.md` / `.mdx` 分类文件后，重新构建会自动生成分类页及其菜单入口、canonical 和 sitemap 条目，无需手写路由或 sitemap；`intro.md`、`recent.md` 不生成分类页。图标可选，不影响路由或收录；拾趣不进入只订阅博客集合的 RSS。
 
@@ -144,7 +144,7 @@ Head 里挂上总目录：
 
 正文通过 Astro 的 `render(post)` 和 Container 渲染，复用现有 Markdown 插件与图片管线；`src/utils/rss-content.js` 将结果转换成阅读器可用的 HTML：图片和链接改成绝对地址，代码保留缩进、换行和折叠区全部源码，去掉折叠摘要控件文案；正文卡片保留封面、标题链接及完整小字顺序；公式以 LaTeX 源码显示，去掉脚本、样式和交互控件。文末保留「阅读原文」。全文不截断、不限制篇数，也不额外复制封面。页面布局、文稿分类、拾趣、友链独立于 feed 范围：只有博客集合进入 RSS，开发和生产环境均排除草稿；`search: false` 不等于不发布，未标为草稿的文章仍进入源。页面封面卡片、作者头像行、目录和主题不会进入正文 HTML。
 
-新增或修改文章的分类无需修改 RSS：`/rss.xml` 继续订阅全部已发布博客，不按文稿页的片段或 query 筛选；不输出分类元数据，也不提供独立分类订阅源。原值分类入口及基于原始名称稳定 hash 的徽标配色不会修改文章永久 URL、GUID、发布日期或正文。新分类中的已发布文章会随重新构建进入同一个源。
+新增或修改文章的分类无需修改 RSS：`/rss.xml` 继续订阅全部已发布博客，不按文稿页的片段或 query 筛选；不输出分类元数据，也不提供独立分类订阅源。原值分类入口及持久记录的预设徽标配色不会修改文章永久 URL、GUID、发布日期或正文。新分类中的已发布文章会随重新构建进入同一个源。
 
 `src/pages/rss.xml.js` 确定每篇文章的本站永久 URL，用作 GUID 和正文地址基准；文章配置 redirect 时，条目 link 可以指向外站。`src/utils/rss-feed.js` 将已确定的字段交给官方包序列化，并输出语言和 Atom self 链接，不重新推导文章身份。任意文章渲染或转换失败都会使生成失败，不会静默降回摘要；入口在清洗前拒绝空渲染 HTML，但有效媒体被清洗后只剩原文入口是允许的。构建末尾另检查全站每个正文容器，包括不进入 RSS 的关于和拾趣。
 
