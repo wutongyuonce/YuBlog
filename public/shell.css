@@ -381,6 +381,7 @@ header.nav-bar .nav-bar__pages [data-nav-link][data-nav-current]:hover {
 }
 
 header.nav-bar .nav-bar__social a,
+header.nav-bar .nav-bar__group--right #accent-switch,
 header.nav-bar .nav-bar__group--right #theme-switch,
 header.nav-bar .nav-bar__group--right #search-switch {
   min-width: 36px;
@@ -389,6 +390,81 @@ header.nav-bar .nav-bar__group--right #search-switch {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+accent-switch {
+  position: relative;
+  display: inline-flex;
+}
+accent-switch[hidden],
+#accent-menu[hidden] {
+  display: none;
+}
+#accent-switch {
+  position: relative;
+  color: color-mix(in srgb, var(--c-text) 65%, var(--c-bg));
+}
+#accent-switch:hover,
+#accent-switch[aria-expanded='true'] {
+  color: var(--c-text);
+  background: color-mix(in srgb, var(--c-text) 8%, var(--c-bg));
+}
+.accent-switch__current {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-swatch);
+  box-shadow: 0 0 0 1px var(--c-bg);
+}
+#accent-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 1;
+  display: grid;
+  width: 160px;
+  max-width: calc(100vw - var(--site-gutter) * 2);
+  max-height: calc(100dvh - 80px);
+  overflow-y: auto;
+  padding: 5px;
+  border: 1px solid color-mix(in srgb, var(--c-text) 16%, var(--c-bg));
+  border-radius: 4px;
+  background: var(--c-bg);
+  color: var(--c-text);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--c-text) 10%, transparent);
+}
+#accent-menu button {
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 6px 9px;
+  border-radius: 2px;
+  text-align: left;
+  font-size: 0.875rem;
+}
+#accent-menu button:hover {
+  background: color-mix(in srgb, var(--c-text) 6%, var(--c-bg));
+}
+#accent-menu button[aria-checked='true'] {
+  color: var(--c-text);
+  background: color-mix(in srgb, var(--accent) 10%, var(--c-bg));
+}
+.accent-switch__swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+.accent-switch__check {
+  visibility: hidden;
+}
+#accent-menu button[aria-checked='true'] .accent-switch__check {
+  color: var(--accent);
+  visibility: visible;
 }
 
 @media (max-width: 799px) {

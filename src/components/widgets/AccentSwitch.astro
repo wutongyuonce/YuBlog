@@ -1,0 +1,195 @@
+---
+import { ACCENT_PALETTES } from '~/utils/accent-palette.js'
+---
+
+<accent-switch data-accent-switch hidden>
+  <button
+    id="accent-switch"
+    type="button"
+    aria-label="选择配色"
+    title="选择配色"
+    aria-haspopup="menu"
+    aria-expanded="false"
+    aria-controls="accent-menu"
+  >
+    <span u-i-ri-palette-line aria-hidden="true"></span>
+    <span class="accent-switch__current" aria-hidden="true"></span>
+  </button>
+  <div id="accent-menu" role="menu" aria-label="点缀配色" hidden>
+    {ACCENT_PALETTES.map((palette) => (
+      <button
+        type="button"
+        role="menuitemradio"
+        aria-checked="false"
+        tabindex="-1"
+        data-palette={palette.id}
+      >
+        <span
+          class="accent-switch__swatch"
+          style={{ background: palette.color }}
+          aria-hidden="true"
+        />
+        <span>{palette.name}</span>
+        <span class="accent-switch__check" aria-hidden="true">
+          ✓
+        </span>
+      </button>
+    ))}
+  </div>
+</accent-switch>
+
+<script>
+  import {
+    ACCENT_PALETTES,
+    createAccentPreference,
+  } from '~/utils/accent-palette.js'
+
+  const preference = createAccentPreference(ACCENT_PALETTES)
+
+  class AccentSwitch extends HTMLElement {
+    private controller: AbortController | null = null
+
+    connectedCallback() {
+      this.controller?.abort()
+      this.controller = new AbortController()
+      const { signal } = this.controller
+      const trigger = this.querySelector<HTMLButtonElement>('#accent-switch')
+      const menu = this.querySelector<HTMLElement>('#accent-menu')
+      const options = Array.from(
+        this.querySelectorAll<HTMLButtonElement>('[data-palette]')
+      )
+      if (!trigger || !menu || !options.length) return
+
+      const sync = () => {
+        const current = preference.resolve(
+          document.documentElement.dataset.accentPalette
+        )
+        trigger.title = `配色：${current.name}`
+        trigger.setAttribute('aria-label', `选择配色，当前${current.name}`)
+        options.forEach((option) => {
+          option.setAttribute(
+            'aria-checked',
+            String(option.dataset.palette === current.id)
+          )
+        })
+      }
+
+      const close = (restoreFocus = false) => {
+        menu.hidden = true
+        this.removeAttribute('data-open')
+        trigger.setAttribute('aria-expanded', 'false')
+        if (restoreFocus) trigger.focus({ preventScroll: true })
+      }
+
+      const open = () => {
+        sync()
+        menu.hidden = false
+        this.setAttribute('data-open', '')
+        trigger.setAttribute('aria-expanded', 'true')
+        options
+          .find((option) => option.getAttribute('aria-checked') === 'true')
+          ?.focus({ preventScroll: true })
+      }
+
+      trigger.addEventListener(
+        'click',
+        () => (menu.hidden ? open() : close()),
+        { signal }
+      )
+      trigger.addEventListener(
+        'keydown',
+        (event) => {
+          if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return
+          event.preventDefault()
+          open()
+        },
+        { signal }
+      )
+      options.forEach((option) => {
+        option.addEventListener(
+          'click',
+          () => {
+            preference.select(option.dataset.palette)
+            sync()
+            close(true)
+          },
+          { signal }
+        )
+      })
+      menu.addEventListener(
+        'keydown',
+        (event) => {
+          const index = options.indexOf(
+            document.activeElement as HTMLButtonElement
+          )
+          let next: number
+          switch (event.key) {
+            case 'ArrowDown':
+              next = (index + 1) % options.length
+              break
+            case 'ArrowUp':
+              next = (index - 1 + options.length) % options.length
+              break
+            case 'Home':
+              next = 0
+              break
+            case 'End':
+              next = options.length - 1
+              break
+            default:
+              return
+          }
+          event.preventDefault()
+          options[next].focus({ preventScroll: true })
+        },
+        { signal }
+      )
+      document.addEventListener(
+        'keydown',
+        (event) => {
+          if (event.key === 'Escape' && !menu.hidden) {
+            event.preventDefault()
+            close(true)
+          }
+        },
+        { signal }
+      )
+      document.addEventListener(
+        'pointerdown',
+        (event) => {
+          if (event.target instanceof Node && !this.contains(event.target))
+            close()
+        },
+        { signal }
+      )
+      this.addEventListener(
+        'focusout',
+        (event) => {
+          if (
+            !(event.relatedTarget instanceof Node) ||
+            !this.contains(event.relatedTarget)
+          )
+            close()
+        },
+        { signal }
+      )
+      sync()
+      this.hidden = false
+    }
+
+    disconnectedCallback() {
+      this.controller?.abort()
+      this.controller = null
+    }
+  }
+
+  // Restore the incoming root before ClientRouter paints it. Head uses the same
+  // preference factory for hard navigation, including storage-denied fallback.
+  document.addEventListener('astro:before-swap', (event) => {
+    preference.restore(event.newDocument.documentElement)
+  })
+
+  if (!customElements.get('accent-switch')) {
+    customElements.define('accent-switch', AccentSwitch)
+  }
+</script>

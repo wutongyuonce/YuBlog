@@ -332,11 +332,16 @@ export interface ResponsiveSocialItem extends BaseSocialItem {
 export type SocialLink = TextSocialItem | IconSocialItem | ResponsiveSocialItem
 
 type NavBarComponentType =
-  'internalNavs' | 'socialLinks' | 'searchButton' | 'themeButton' | 'hr'
+  | 'internalNavs'
+  | 'socialLinks'
+  | 'searchButton'
+  | 'accentButton'
+  | 'themeButton'
+  | 'hr'
 
 export interface NavBarLayout {
   /**
-   * Defines which components ('internalNavs', 'socialLinks', 'searchButton', themeButton',
+   * Defines which components ('internalNavs', 'socialLinks', 'searchButton', 'accentButton', 'themeButton',
    * 'hr') are positioned on the left side of the navigation bar. Note:
    *
    * - Leave empty to place all components on the right.
@@ -347,7 +352,7 @@ export interface NavBarLayout {
   left: NavBarComponentType[]
 
   /**
-   * Defines which components ('internalNavs', 'socialLinks', 'searchButton', 'themeButton',
+   * Defines which components ('internalNavs', 'socialLinks', 'searchButton', 'accentButton', 'themeButton',
    * 'hr') are positioned on the right side of the navigation bar. Note:
    *
    * - Leave empty to place all components on the right.
