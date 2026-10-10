@@ -14,12 +14,6 @@ order: 1
 正在看。
 :::
 
-:::card{title="凡人修仙传" href="https://zh.wikipedia.org/wiki/凡人修仙传" score="5" label="国漫"}
-![凡人修仙传海报](./anime/fanren.jpg)
-
-正在看。
-:::
-
 :::card{title="牧神记" href="https://www.bilibili.com/bangumi/play/ss45969" score="4.5" label="国漫"}
 ![牧神记海报](./anime/mushen.jpg)
 
@@ -283,6 +277,12 @@ order: 1
 :::
 
 国漫：
+
+:::card{title="凡人修仙传" href="https://zh.wikipedia.org/wiki/凡人修仙传" score="5" label="国漫"}
+![凡人修仙传海报](./anime/fanren.jpg)
+
+这一路破空，苦难有千种，谁人懂～
+:::
 
 :::card{title="灵笼" href="https://zh.wikipedia.org/wiki/灵笼" score="5" label="国漫"}
 ![灵笼海报](./anime/lingcage.jpg)

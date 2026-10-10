@@ -51,23 +51,29 @@ order: 0
 
 ### 我的 Mac 软件
 
-- **笔记、日程管理：** Typora、飞书、语雀、滴答清单、Pomodoro
-  - Obsidian: Excalidraw 画图插件、
-- **浏览器：** Safari、ego lite、Chrome
-- **播放器：** QQ 音乐、网易云音乐、Apple Music、Sleeve
-- **AI工具：** ChatGPT、Ghostty + pi + herdr、Paseo、Memoh、Magpie（模型路由）、Nowdex（token 额度统计）、Trajex、cockpit tools
-- **代码工具：** Zed、VS Code、Navicat、DBX、Bruno、Apifox、Postman、Docker、WhatThePort（端口查看器）
-- **社交：** Telegram、Discord
-- **工作：** 钉钉、腾讯会议
-- **邮箱：** 网易邮箱大师
-- **媒体、信息：** Folo/NetNewsWire（RSS 订阅器）、Readest（阅读器）、OBS、剪映专业版（剪辑）、ArcTime Pro（字幕）、IINA（视频播放器）、Downie4（视频下载器）、小宇宙（播客）、Cap（录屏剪辑）
-- **其他工具：** RunCatNeo（Mac 监控）、Deck（最好用的 Mac 剪切板历史）、PixPin（截图）、Pearcleaner / App Cleaner（清理）、Slidepad（右侧浏览器）、TopNotch（遮挡刘海）、FineTune（音频控制）、超级右键、CleanMyKeyboard、Mos（鼠标）、Bob（翻译）
-- **游戏：** Steam、CrossOver
+- **AI&Agent：** [ChatGPT](https://chatgpt.com/)、
+  - [Paseo](https://paseo.sh/)、[Memoh](https://memoh.ai/)
+  - [Ghostty](https://ghostty.org/) + [herdr](https://github.com/herdrdev/herdr)（插件：[herdr-sidebar](https://github.com/alexarthurs/herdr-sidebar)） + [pi](https://github.com/earendil-works/pi)（插件：[我的 pi-extensions](https://github.com/wutongyuonce/pi-extensions)）
+    ![pi|w600](./device/pi.png)
+  - [Magpie](https://usemagpie.ai/)（模型路由）、[Nowdex](https://nowdex.app/)（token 额度统计）、[Trajex](https://github.com/wutongyuonce/Trajex)、[cockpit tools](https://github.com/jlcodes99/cockpit-tools)
+- **代码：** 
+  - 编辑器：[Zed](https://zed.dev/)、[VS Code](https://code.visualstudio.com/)
+  - 数据库：[Navicat](https://www.navicat.com/)、[DBX](https://dbxio.com/cn)
+  - [Bruno](https://www.usebruno.com/)、[Apifox](https://apifox.com/)、[Postman](https://www.postman.com/)、[Docker](https://www.docker.com/)、[WhatThePort](https://whattheport.dev/)（端口查看器）
+- **笔记、日程管理：** [Typora](https://typora.io/)、[飞书](https://www.feishu.cn/)、[语雀](https://www.yuque.com/)、[滴答清单](https://dida365.com/)、[iPromise](https://apps.apple.com/us/app/ipromise-your-ai-focus-buddy/id6756086425)（AI 番茄钟，尝试使用中）
+  - [Obsidian](https://obsidian.md/)（插件：Git、Excalidraw、Advanced Tables、Adjustable Media）
+- **浏览器：** [Safari](https://www.apple.com/safari/)、[ego lite](https://lite.ego.app/)、[Chrome](https://www.google.com/chrome/)
+- **播放器：** [QQ 音乐](https://y.qq.com/)、[网易云音乐](https://music.163.com/)、[Apple Music](https://www.apple.com/apple-music/) + [Sleeve](https://replay.software/sleeve)、[Lyrimuse](https://yudaotor.github.io/lyrimuse/zh/)
+- **社交工作：** [Telegram](https://telegram.org/)、[Discord](https://discord.com/)、 [钉钉](https://www.dingtalk.com/)、[腾讯会议](https://meeting.tencent.com/)
+- **邮箱：** [网易邮箱大师](https://dashi.163.com/)
+- **媒体、信息：** [Folo](https://folo.is/) + [NetNewsWire](https://netnewswire.com/)（RSS 订阅器）、[Readest](https://readest.com/)（阅读器）、[OBS](https://obsproject.com/)、[剪映专业版](https://www.capcut.cn/)（剪辑）、[ArcTime Pro](https://arctime.cn/arctime-pro.html)（字幕）、[IINA](https://iina.io/)（视频播放器）、[Downie4](https://software.charliemonroe.net/downie/)（视频下载器）、[小宇宙](https://www.xiaoyuzhoufm.com/)（播客）、[Cap](https://cap.so/)（录屏剪辑）
+- **其他工具：** [RunCatNeo](https://github.com/runcat-dev/RunCatNeo)（Mac 监控）、[Deck](https://deckclip.app/)（最好用的 Mac 剪切板历史）、[PixPin](https://pixpin.com/)（截图）、[Pearcleaner](https://github.com/alienator88/Pearcleaner) / [App Cleaner](https://freemacsoft.net/appcleaner/)（清理）、[Slidepad](https://slidepad.app/)（右侧浏览器）、[TopNotch](https://topnotch.app/)（遮挡刘海）、[FineTune](https://github.com/ronitsingh10/FineTune)（音频控制）、[超级右键](https://www.irightmouse.com/)、[CleanMyKeyboard](https://apps.apple.com/us/app/cleanmykeyboard/id6468120888)、[Mos](https://mos.caldis.me/)（鼠标）、[Bob](https://bobtranslate.com/)（翻译）
+- **游戏：** [Steam](https://store.steampowered.com/)、[CrossOver](https://www.codeweavers.com/crossover)
 
 ### 我的手机软件
 
 * 微信、豆包输入法
-* 社交媒体：vx、qq、zfb、wb、X、ins、Github、telegram、discord、twitch、Proton Authenticator（密钥）
+* 社交媒体：vx、qq、zfb、wb、X、ins、Substack、Github、telegram、discord、Twitch、Proton Authenticator（密钥）
 * 视频影视播客小说：b站、youtube、dy、豆瓣、小宇宙、起点、番茄、LOFTER、POSTYPE、bilibili漫画、知乎、腾讯体育、咪咕、腾讯视频
 * 音乐：qq音乐、wyy、apple music、spotify
 * 邮箱：qq邮箱、gmail、网易邮箱
@@ -81,4 +87,4 @@ order: 0
 * 旅行：携程、去哪儿、航旅纵横、爱彼迎、马蜂窝、Booking、华住会
 * 学习工作：多邻国、沉浸式翻译、腾讯会议、leetcode、指南者留学、百度网盘、飞书、语雀、不背单词、欧陆词典、学信网、扫描全能王
 * 就业：boss、offershow、牛牛、领英、智联招聘、脉脉、实习僧
-* 搜索AI：grok、chatgpt、kimi、deepseek、google
+* AI：grok、grok bot、chatgpt、kimi、deepseek、google
