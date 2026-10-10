@@ -16,7 +16,7 @@
 
 | 路由 | 说明 | 内容源 |
 | :--- | :--- | :--- |
-| `/` | 作者、RSS、社交、写作热力、最近五篇文稿与近期书影游；无文章分页和个人侧栏 | `BlogProfile`、`WritingHeatmap`、`RecentWriting`、`recent.md` |
+| `/` | 作者、RSS、社交、写作热力、最近五篇文稿、近期书影游与 Last.fm 听歌排行；无文章分页和个人侧栏 | `BlogProfile`、`WritingHeatmap`、`RecentWriting`、`recent.md`、`lastfm.json` |
 | `/blogs/` | 完整文稿，分类／标签筛选，每页七篇 | `src/content/blogs/**/*.{md,mdx}` |
 | `/blogs/#tech`、`#thought`、`#diary` | 技术、思考、日记及自动发现的新分类（如 `#旅行`）；兼容旧 query | `src/utils/blog-browser.js` |
 | `/tags/` | 标签目录和排序，多选 AND；选择后展示列表 | 文章 `tags` |
@@ -44,6 +44,8 @@
 
 全站点缀默认使用原粉色（浅色 `#ad526c`、深色 `#e7a1b5`），顶部调色盘可选择原粉色、灰紫、深紫、雾蓝和鼠尾草绿。每套浅色与深色强调色不同：浅色使用主色，深色使用同色相更亮且仍能辨认的颜色，色点始终显示浅色主色。选择后立即作用于热力图、正文强调、搜索高亮、友链柔光等界面，不刷新页面。配色与亮暗主题独立，浏览器记住选择并在首屏及站内跳转前恢复；无脚本保留默认原粉色。黑白基底、内容图片、分类徽标、代码高亮与独立语义色保持原规则。预设统一维护在 `src/utils/accent-palette.js`。
 
+首页「最近在听 Top10」展示过去七天 Top 10 歌曲、专辑封面、歌手与专辑名，以及七天听歌次数、累计记录与常听歌手。单行方卡自动头尾滚动，按下或键盘聚焦暂停，无 JS／减少动态效果时仍可手动横滑；小字用 `歌手 - 专辑名`，封面可点击查看原尺寸，标题链接到 Last.fm。数据来自 `src/data/lastfm.json`，构建与浏览不调用 Last.fm API。`Sync Last.fm` 工作流每小时第 17 分钟更新快照并提交至 main，沿用 Vercel Git 部署；失败保留旧数据。仓库 Actions Secret 使用 `LASTFM_API_KEY`，本地可在被忽略的 `.env` 中设置同名变量，再运行 `pnpm sync:lastfm`。定时工作流进入默认分支后生效；详细契约、资料缺失与操作见 [Last.fm SPEC 与设计](docs/首页%20Last.fm%20SPEC%20与设计.md)。
+
 ## 技术
 
 - Astro 7 + TypeScript，Markdown / MDX Content Collections（使用 unified 的 Remark / Rehype 插件管线）
@@ -65,6 +67,8 @@
 pnpm install
 pnpm dev --open            # 启动开发服务器并打开浏览器
 ```
+
+修改 Markdown 插件后若 dev 仍出现旧结构，先确认当前服务属于本 worktree，再用 `pnpm dev --force` 刷新内容缓存；普通重载页面不会重编译已缓存的 Markdown。构建已有 `--force`。
 
 以日志里的真实 `Local` 地址为准，端口占用时不假定是 4321，也不终止别人的服务。含图片排版或卡片的博客写完或改完后，内容 skill 默认启动或复用**同一 worktree** 的 `pnpm dev`（复用前确认进程 cwd），文章 HTTP 请求成功后再给预览链接；纯文字或只有普通正文图时不必预览。用户禁止启动或环境受限时注明未预览。草稿在 dev 可读、RSS 排除；dev 预览不替代生产构建。
 

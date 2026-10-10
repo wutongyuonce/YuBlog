@@ -446,3 +446,71 @@ test('article covers do not replace the standalone page heading', () => {
     )
   }
 })
+
+test('home listening renders the saved ranking and statistics without client-side API calls', async () => {
+  const snapshot = JSON.parse(
+    await readFile(new URL('../src/data/lastfm.json', import.meta.url), 'utf8')
+  )
+  const section = elements(home, (node) =>
+    hasClass(node, 'recent-listening')
+  )[0]
+  assert.ok(section, 'Listening belongs on the home page')
+  const profile = elements(
+    section,
+    (node) => node.properties.href === snapshot.profileUrl
+  )[0]
+  assert.equal(textOf(profile).trim(), 'Last.fm ↗')
+  assert.equal(profile.properties.target, '_blank')
+  assert.ok(profile.properties.rel.includes('noopener'))
+  const cards = elements(section, (node) => hasClass(node, 'media-card'))
+  assert.equal(cards.length, snapshot.tracks.length)
+  assert.ok(cards.length <= 10)
+  for (const [index, card] of cards.entries()) {
+    const source = snapshot.tracks[index]
+    const title = elements(card, (node) =>
+      hasClass(node, 'media-card__title')
+    )[0]
+    assert.equal(textOf(title).trim(), source.name)
+    assert.equal(title.properties.href, source.url)
+    const meta = elements(card, (node) => hasClass(node, 'media-card__meta'))[0]
+    assert.equal(
+      textOf(meta).trim(),
+      `${source.artist} - ${source.album || '专辑信息暂缺'}`
+    )
+    const images = elements(card, (node) => node.tagName === 'img')
+    assert.equal(images.length, source.cover ? 1 : 0)
+    if (source.cover) {
+      assert.equal(images[0].properties.src, source.cover)
+      assert.equal(images[0].properties.loading, 'lazy')
+      assert.equal(images[0].properties.width, 300)
+      assert.equal(images[0].properties.height, 300)
+      const template = elements(card, (node) => node.tagName === 'template')[0]
+      assert.ok(template, 'Original artwork stays inert until the viewer opens')
+      assert.equal(
+        template.content.children.find((node) => node.tagName === 'img')
+          .properties.src,
+        source.fullCover
+      )
+    }
+  }
+  const stats = elements(section, (node) =>
+    hasClass(node, 'recent-listening__stats')
+  )[0]
+  const values = elements(stats, (node) => node.tagName === 'strong').map(
+    textOf
+  )
+  const number = new Intl.NumberFormat('zh-CN')
+  assert.deepEqual(values, [
+    number.format(snapshot.weeklyScrobbles),
+    number.format(snapshot.totalScrobbles),
+    snapshot.topArtist || '暂无',
+  ])
+  if (cards.length) {
+    const rail = elements(section, (node) =>
+      hasClass(node, 'media-cards--rail')
+    )[0]
+    assert.equal(rail.properties.tabIndex, 0)
+    assert.ok(hasClass(rail, 'media-cards--auto'))
+  }
+  assert.equal(elements(section, (node) => node.tagName === 'script').length, 0)
+})

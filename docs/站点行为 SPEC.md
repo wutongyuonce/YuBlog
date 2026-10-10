@@ -6,7 +6,7 @@
 
 | 页面 | 路由 | 职责 |
 | --- | --- | --- |
-| 首页 | `/` | 作者、RSS、六个社交入口、名言、写作热力、时间进度、最近五篇文稿和近期书影游 |
+| 首页 | `/` | 作者、RSS、六个社交入口、名言、写作热力、时间进度、最近五篇文稿、近期书影游和 Last.fm 听歌排行 |
 | 文稿 | `/blogs/` | 全量文章列表、分类／标签筛选、每页七篇 |
 | 分类 | `/blogs/#技术`、`#思考`、`#旅行`（名称经 URL 编码） | 同一文稿页的原值精确筛选状态，非独立静态页面；旧 `#tech`、`#thought`、`#diary` 仅作 URL 兼容别名 |
 | 标签 | `/tags/` | 标签目录、排序、多选 AND 筛选；无选择时不显示文章列表 |
@@ -32,6 +32,8 @@
 近期笔墨下方显示近期书影游，内容只来自 `src/content/interests/recent.md`，不生成拾趣子页或菜单项。无外框或专用内容宽度，继承首页版心；标题层级、锚点和卡片均使用共享 Markdown 样式。近期条目用 S10 的竖版横滑栏，封面、标题与顺序沿用原内容，小字使用可适度精简的原介绍／评论；不显示原评分或类别角标。所有条目保持一排，后续可横滚；标题 `href` 指向对应作品 Wiki，而非本站拾趣分类。
 
 首页最近五篇只包含已发布文章；每项有标题、分类与日期，标题在悬停和键盘焦点时出现下划线。全部文稿进入 `/blogs/`。首页带 `?page=`、`?category=`、`?tag=` 的兼容书签在启用脚本时解析为文稿页地址，保留参数和 hash；无脚本时首页仍可阅读。部署必须保留 `/blogs/` 的独立列表页面，不将 `/blogs` 或 `/blogs/` 重定向回首页；分类 hash 随同文稿 URL 保留，Vercel 使用 Astro 构建路由。
+
+近期书影游下方是「最近在听 Top10」：过去七天 Top 10 歌曲保持一排横滑，封面使用专辑图，歌名为大字、小字用 `歌手 - 专辑名`；超出容器时沿用 S10 头尾自动循环及暂停／回退规则，封面可点击或键盘打开现有查看器查看远程原尺寸图。辅助统计展示七天听歌次数、累计记录数、七天最常听歌手，另注明快照更新时间；标题右侧「Last.fm ↗」进入个人主页。数据每小时同步，关键查询失败保留旧快照，构建与访问不调用 Last.fm API；专辑资料缺失使用真实空状态。完整失败、资源和验收契约见 [首页 Last.fm SPEC 与设计](./首页%20Last.fm%20SPEC%20与设计.md)。
 
 ### S2：分类、标签和分页
 
@@ -147,7 +149,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 | 导航 | `shell.css` 管理外框 4px、按钮／滑块 2px 圆角，紧凑一行，窄屏两排；更多右侧保留剩余空白 |
 | 字体 | `--font-heading` 为本地思源宋体 400；页面主标题、文章顶部标题、作者、写作热力、近期笔墨、归档时间、页脚用它；导航文字用宋体；文稿列表文章标题用宋体加粗（700），归档文章标题用宋体常规字重（400）；Markdown 内部标题、正文和标签用 Inter／系统无衬线；代码用 DM Mono |
 | 统一页头 | `PageHeading` 管理标签、拾趣及子页、项目、关于：28px 宋体标题、14px 普通字体说明；项目“我的项目与开源实践。”、关于“关于我，也关于这个博客。” |
-| 首页 | 无卡片底，作者 28px（窄屏 22px），名言 17px 斜体，INTJ 13px，社交图标 15px；进度是辅助信息。写作热力标题 20px 宋体，与近期笔墨左对齐，年份在标题右侧；每年摘要含篇数、字数和天数。三块首页标题共用 `shell.css` 的 `.home-section-header`。格子颜色只由 `--accent` 混入 `--c-bg` |
+| 首页 | 无卡片底，作者 28px（窄屏 22px），名言 17px 斜体，INTJ 13px，社交图标 15px；进度是辅助信息。写作热力标题 20px 宋体，与近期笔墨左对齐，年份在标题右侧；每年摘要含篇数、字数和天数。四块首页标题共用 `shell.css` 的 `.home-section-header`。格子颜色只由 `--accent` 混入 `--c-bg` |
 | 友链页头 | 推荐／双向 24px 宋体，小于主要页面标题；交换说明标题使用普通无衬线字体加粗（700） |
 | 图片与媒体 | 封面／正文图片由 Astro 生成变体，分享图 1200px；`public/` 只放站点资源，不手写内容图片构建 URL；本地视频／音频由 `astro-media-sync` 镜像到 `public/_media/`，正文用相对路径引用 |
 | 页脚 | 宋体显示版权、Astro 和“萌ICP备20269668号”。作者名指向站点首页，Astro 指向 `https://astro.build`，备案指向 `https://icp.gov.moe/?keyword=20269668` 并在新标签页打开，带 `noopener noreferrer`。链接悬停或键盘焦点变为强调色 |
@@ -161,6 +163,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 | 规则／状态 | 唯一权威 | 调用方／接口 | 验证 |
 | --- | --- | --- | --- |
 | 集合、发布过滤、日期顺序与分组 | `utils/data.ts` | 首页、预览、列表、归档、RSS；开发网页列表／正文可预览草稿，公开摘要、顶部分类菜单与开发／生产 RSS 只读已发布集合 | 构建页面结构／RSS检查 |
+| Last.fm 排行、统计、资料缺失、请求上限与错误 | `scripts/lib/lastfm.mjs`；持久化在 `scripts/sync-lastfm.mjs` | 工作流获取静态快照，`RecentListening` 只呈现 | `lastfm.test.mjs`、首页产物与浏览器检查 |
 | 写作热力的日历日、强度、年份范围与年度字数与字数缺失／非法失败 | `utils/blog-heatmap.js` | `WritingHeatmap` 只呈现；文章集合仍从 `getPublishedBlogPosts` 取，字数来自渲染后的 `wordCount` | `blog-heatmap.test.mjs` |
 | 原值分类的动态入口、URL 兼容别名、精确筛选、页码和分页数量 | `utils/blog-browser.js` | `ListView`、导航 | `blog-browser.test.mjs`、构建分页 |
 | 标签归一化与 AND | `utils/blog-tag-filter.js` | 分类工具、标签目录 | `blog-tag-filter.test.mjs` |
@@ -211,7 +214,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 
 - 文章 slug、域名和 base 决定永久地址；没有独立的文章改名或换域名 ID 服务。
 - RSS 使用基础 HTML 和公式源码，不保证与网站或不同阅读器的像素样式一致。
-- 图片布局不新增依赖、轮播库、第二个 Markdown 解析器、预览后台或 preview manager 脚本；相册不自动播放，不虚拟化图片，不做全屏轮播或封面／头像放大，不新加测试框架。陈列架的 `scroll="auto"` 是唯一自动滚动，且只在条目超出容器时循环。普通代码块里的布局示例不是实际布局，skill 读正文判断是否需要预览，不用正则检测脚本。
+- 图片布局不新增依赖、轮播库、第二个 Markdown 解析器、预览后台或 preview manager 脚本；相册不自动播放，不虚拟化图片，不做全屏轮播或文章头图／头像放大，不新加测试框架。陈列架的 `scroll="auto"` 是唯一自动滚动，且只在条目超出容器时循环。普通代码块里的布局示例不是实际布局，skill 读正文判断是否需要预览，不用正则检测脚本。
 - 新增顶栏项或拾趣分类需验证导航宽度、换行和响应式布局；下拉菜单受视口高度约束并可滚动，自动收录不意味着任意数量或长度都保证布局可用。
 - 开发网页列表和正文可预览草稿；生产不可含草稿。首页摘要、写作热力、顶部分类菜单和开发／生产 RSS 只使用已发布集合；草稿不参与菜单入口、计数或最近文章，不保留仅含草稿的分类或空已发布集合的分类入口。
 - `search: false` 与 RSS 范围独立，禁用搜索不等于不发布。博客文章是否下线由删除或草稿状态决定；拾趣没有草稿开关，移除分类文件后重新构建才移除对应子页、入口和菜单项。
@@ -223,7 +226,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 
 1. `pnpm test`、`pnpm check`、`pnpm lint`、`pnpm format`、`pnpm build`。发布预检的回归通过 Python 3 调用现有 Astro 解析器，测试环境需提供 `python3` 与已安装的 Node.js 依赖。
 2. 构建后 `pnpm test:built-restructure`、`pnpm test:built-pagination`、`pnpm test:built-markdown`：集合范围、页面结构、拾趣自动分类与可选图标、友链分组、目录、封面语义、图片／RSS资源。
-3. 浏览器检查均复用现有 Ego TaskSpace，不创建或结束它：`verify-nav-dropdown.mjs`、`verify-home-content.mjs`、`verify-toc-navigation.mjs`、`verify-theme-refresh.mjs`、`verify-accent-palette.mjs`、`verify-background-layering.mjs` 和 `verify-image-layouts.mjs`。在本次 worktree 执行，先确认服务进程 cwd 与该目录一致（例如 `lsof -a -p <pid> -d cwd`），再用服务日志中真实 Local 地址（含 base、末尾 `/`）替换 `__BASE_URL__`，不假定端口为 4322。例如：`sed -e 's/__TASK_SPACE_ID__/<id>/g' -e 's|__BASE_URL__|<Local 地址>|g' scripts/verify-nav-dropdown.mjs | ego-browser nodejs`。图片布局脚本另将 `__REPO_ROOT__` 替换为同一 worktree 绝对路径。
+3. 浏览器检查均复用现有 Ego TaskSpace，不创建或结束它：`verify-nav-dropdown.mjs`、`verify-home-content.mjs`、`verify-toc-navigation.mjs`、`verify-theme-refresh.mjs`、`verify-accent-palette.mjs`、`verify-background-layering.mjs` 、`verify-card-rails.mjs` 和 `verify-image-layouts.mjs`。在本次 worktree 执行，先确认服务进程 cwd 与该目录一致（例如 `lsof -a -p <pid> -d cwd`），再用服务日志中真实 Local 地址（含 base、末尾 `/`）替换 `__BASE_URL__`，不假定端口为 4322。例如：`sed -e 's/__TASK_SPACE_ID__/<id>/g' -e 's|__BASE_URL__|<Local 地址>|g' scripts/verify-nav-dropdown.mjs | ego-browser nodejs`。图片布局脚本另将 `__REPO_ROOT__` 替换为同一 worktree 绝对路径。
 4. 深浅主题、1440／390／320px检查：首页作者居中、社交单行及其下方名言居中、进度顺序、页头一致、归档日期对齐、卡片、点状背景、目录在右侧留白中线基础上向外移且上移、无横向溢出。目录另检查1200px阈值和不同视口高度。
 
 图片布局的验收映射（作为验证要求，不代表检查已通过）：

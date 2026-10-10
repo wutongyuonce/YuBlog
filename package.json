@@ -8,6 +8,7 @@
   "scripts": {
     "astro": "astro",
     "sync": "astro sync",
+    "sync:lastfm": "node --env-file-if-exists=.env scripts/sync-lastfm.mjs",
     "dev": "astro dev",
     "check": "astro check",
     "build": "astro build --force",
