@@ -221,5 +221,14 @@
     "desc": "Non est ad astra mollis e terris via.",
     "category": "双向",
     "order": 27
+  },
+  {
+    "id": "moyuin",
+    "name": "Moyuin",
+    "link": "https://moyuin.top",
+    "avatar": "https://moyuin.top/avatar.webp",
+    "desc": "缥缈，游荡，没有来路与归处。",
+    "category": "双向",
+    "order": 28
   }
 ]
