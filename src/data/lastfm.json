@@ -1,9 +1,9 @@
 {
   "user": "ztyonce",
   "profileUrl": "https://www.last.fm/user/ztyonce",
-  "updatedAt": "2026-10-11T12:55:11.000Z",
-  "weeklyScrobbles": 198,
-  "totalScrobbles": 198,
+  "updatedAt": "2026-10-11T18:06:41.000Z",
+  "weeklyScrobbles": 200,
+  "totalScrobbles": 200,
   "topArtist": "张惠妹",
   "tracks": [
     {
@@ -70,6 +70,15 @@
       "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/491cb9e71e693c9a3d17f29ab56c934f.jpg"
     },
     {
+      "name": "I Really Want to Stay at Your House",
+      "artist": "CyberPunk",
+      "album": "Cyberpunk : Edgerunners Soundtrack Vol.1 (Ep1+2)",
+      "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/b91e0208f0b8e41f555e682dbb37a71c.jpg",
+      "url": "https://www.last.fm/music/CyberPunk/_/I%20Really%20Want%20to%20Stay%20at%20Your%20House",
+      "playcount": 1,
+      "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/b91e0208f0b8e41f555e682dbb37a71c.jpg"
+    },
+    {
       "name": "Let You Down",
       "artist": "Dawid Podsiadło",
       "album": "Let You Down",
@@ -86,15 +95,6 @@
       "url": "https://www.last.fm/music/Don%20Toliver/_/Secondhand%20(feat.%20Rema)",
       "playcount": 1,
       "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/2df46a2bdeeed733e5c7adab9b5e0697.jpg"
-    },
-    {
-      "name": "Fallin' to You",
-      "artist": "FLY COAST",
-      "album": "Flight Number 002",
-      "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/d10c1f8715bc3d3636d452638bede468.jpg",
-      "url": "https://www.last.fm/music/FLY%20COAST/_/Fallin'%20to%20You",
-      "playcount": 1,
-      "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/d10c1f8715bc3d3636d452638bede468.jpg"
     }
   ]
 }
