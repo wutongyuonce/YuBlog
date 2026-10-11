@@ -239,5 +239,14 @@
     "desc": "Like River!",
     "category": "双向",
     "order": 29
+  },
+  {
+    "id": "hyde-blog",
+    "name": "Hyde Blog",
+    "link": "https://seasir.top",
+    "avatar": "https://seasir.top/assets/avatar.avif",
+    "desc": "人心中的成见是一座大山",
+    "category": "双向",
+    "order": 30
   }
 ]
