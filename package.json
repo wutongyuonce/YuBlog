@@ -1,7 +1,7 @@
 {
   "name": "yublog",
   "version": "1.2.0",
-  "packageManager": "pnpm@12.9.1",
+  "packageManager": "pnpm@12.11.2",
   "type": "module",
   "private": true,
   "license": "MIT",
