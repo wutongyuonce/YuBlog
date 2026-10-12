@@ -51,10 +51,10 @@ order: 0
 
 ### 我的 Mac 软件
 
-- **AI&Agent：** [ChatGPT](https://chatgpt.com/)、
-  - [Paseo](https://paseo.sh/)、[Memoh](https://memoh.ai/)
+- **AI&Agent：** [ChatGPT](https://chatgpt.com/)、[Grok Bot](https://x.ai/news/introducing-grok-bot)
   - [Ghostty](https://ghostty.org/) + [herdr](https://github.com/herdrdev/herdr)（插件：[herdr-sidebar](https://github.com/alexarthurs/herdr-sidebar)） + [pi](https://github.com/earendil-works/pi)（插件：[我的 pi-extensions](https://github.com/wutongyuonce/pi-extensions)）
     ![pi|w600](./device/pi.png)
+  - [Paseo](https://paseo.sh/)、[Memoh](https://memoh.ai/)
   - [Magpie](https://usemagpie.ai/)（模型路由）、[Nowdex](https://nowdex.app/)（token 额度统计）、[Trajex](https://github.com/wutongyuonce/Trajex)、[cockpit tools](https://github.com/jlcodes99/cockpit-tools)
 - **代码：** 
   - 编辑器：[Zed](https://zed.dev/)、[VS Code](https://code.visualstudio.com/)
@@ -63,7 +63,7 @@ order: 0
 - **笔记、日程管理：** [Typora](https://typora.io/)、[飞书](https://www.feishu.cn/)、[语雀](https://www.yuque.com/)、[滴答清单](https://dida365.com/)、[iPromise](https://apps.apple.com/us/app/ipromise-your-ai-focus-buddy/id6756086425)（AI 番茄钟，尝试使用中）
   - [Obsidian](https://obsidian.md/)（插件：Git、Excalidraw、Advanced Tables、Adjustable Media）
 - **浏览器：** [Safari](https://www.apple.com/safari/)、[ego lite](https://lite.ego.app/)、[Chrome](https://www.google.com/chrome/)
-- **播放器：** [QQ 音乐](https://y.qq.com/)、[网易云音乐](https://music.163.com/)、[Apple Music](https://www.apple.com/apple-music/) + [Sleeve](https://replay.software/sleeve)、[Lyrimuse](https://yudaotor.github.io/lyrimuse/zh/)
+- **播放器：** [QQ 音乐](https://y.qq.com/)、[网易云音乐](https://music.163.com/)、[Apple Music](https://www.apple.com/apple-music/) + [Sleeve](https://replay.software/sleeve)、[Spotify](https://open.spotify.com)、[Lyrimuse](https://yudaotor.github.io/lyrimuse/zh/)（Mac 桌面歌词）
 - **社交工作：** [Telegram](https://telegram.org/)、[Discord](https://discord.com/)、 [钉钉](https://www.dingtalk.com/)、[腾讯会议](https://meeting.tencent.com/)
 - **邮箱：** [网易邮箱大师](https://dashi.163.com/)
 - **媒体、信息：** [Folo](https://folo.is/) + [NetNewsWire](https://netnewswire.com/)（RSS 订阅器）、[Readest](https://readest.com/)（阅读器）、[OBS](https://obsproject.com/)、[剪映专业版](https://www.capcut.cn/)（剪辑）、[ArcTime Pro](https://arctime.cn/arctime-pro.html)（字幕）、[IINA](https://iina.io/)（视频播放器）、[Downie4](https://software.charliemonroe.net/downie/)（视频下载器）、[小宇宙](https://www.xiaoyuzhoufm.com/)（播客）、[Cap](https://cap.so/)（录屏剪辑）
