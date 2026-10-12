@@ -248,5 +248,14 @@
     "desc": "人心中的成见是一座大山",
     "category": "双向",
     "order": 30
+  },
+  {
+    "id": "lapis-cafe",
+    "name": "时歌的博客",
+    "link": "https://www.lapis.cafe",
+    "avatar": "https://www.lapis.cafe/avatar.webp",
+    "desc": "理解以真实为本，但真实本身并不会自动呈现",
+    "category": "双向",
+    "order": 31
   }
 ]
