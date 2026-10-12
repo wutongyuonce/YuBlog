@@ -1,8 +1,8 @@
 {
   "user": "ztyonce",
   "profileUrl": "https://www.last.fm/user/ztyonce",
-  "updatedAt": "2026-10-12T09:16:51.000Z",
-  "weeklyScrobbles": 201,
+  "updatedAt": "2026-10-12T19:08:56.000Z",
+  "weeklyScrobbles": 121,
   "totalScrobbles": 201,
   "topArtist": "张惠妹",
   "tracks": [
@@ -12,7 +12,7 @@
       "album": "我要快乐 (Deluxe Version)",
       "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/74b44d16e17f4dcd9d91bd580d5985b5.jpg",
       "url": "https://www.last.fm/music/%E5%BC%A0%E6%83%A0%E5%A6%B9/_/%E4%BA%BA%E8%B4%A8",
-      "playcount": 134,
+      "playcount": 87,
       "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/74b44d16e17f4dcd9d91bd580d5985b5.jpg"
     },
     {
@@ -52,24 +52,6 @@
       "fullCover": null
     },
     {
-      "name": "We Own The Night",
-      "artist": "Black Atlass",
-      "album": "Seven (Explicit)",
-      "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/20292f11792b11c7db8d46c1a99e8d5c.jpg",
-      "url": "https://www.last.fm/music/Black%20Atlass/_/We%20Own%20The%20Night",
-      "playcount": 1,
-      "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/20292f11792b11c7db8d46c1a99e8d5c.jpg"
-    },
-    {
-      "name": "Bitter Pill",
-      "artist": "Christian Kuria",
-      "album": "Borderline (Explicit)",
-      "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/491cb9e71e693c9a3d17f29ab56c934f.jpg",
-      "url": "https://www.last.fm/music/Christian%20Kuria/_/Bitter%20Pill",
-      "playcount": 1,
-      "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/491cb9e71e693c9a3d17f29ab56c934f.jpg"
-    },
-    {
       "name": "I Really Want to Stay at Your House",
       "artist": "CyberPunk",
       "album": "Cyberpunk : Edgerunners Soundtrack Vol.1 (Ep1+2)",
@@ -88,13 +70,31 @@
       "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/c6d3ad9ef4faf979379ef3c34ff9ea67.jpg"
     },
     {
-      "name": "Secondhand (feat. Rema)",
-      "artist": "Don Toliver",
-      "album": "OCTANE (Explicit)",
-      "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/2df46a2bdeeed733e5c7adab9b5e0697.jpg",
-      "url": "https://www.last.fm/music/Don%20Toliver/_/Secondhand%20(feat.%20Rema)",
+      "name": "天生牙",
+      "artist": "SASIOVERLXRD",
+      "album": "赫鬼",
+      "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/6ba151f9a1ffe24bacb1f605865aac50.jpg",
+      "url": "https://www.last.fm/music/SASIOVERLXRD/_/%E5%A4%A9%E7%94%9F%E7%89%99",
       "playcount": 1,
-      "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/2df46a2bdeeed733e5c7adab9b5e0697.jpg"
+      "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/6ba151f9a1ffe24bacb1f605865aac50.jpg"
+    },
+    {
+      "name": "Hit & Run",
+      "artist": "tobi lou",
+      "album": "'Decent (Explicit)",
+      "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/610b202768ece7b88d575328143cbd68.jpg",
+      "url": "https://www.last.fm/music/tobi%20lou/_/Hit%20%26%20Run",
+      "playcount": 1,
+      "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/610b202768ece7b88d575328143cbd68.jpg"
+    },
+    {
+      "name": "一半一半",
+      "artist": "Top Barry",
+      "album": "一半一半",
+      "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/7ef3d67fe068d5a605555f73dc1b44fe.jpg",
+      "url": "https://www.last.fm/music/Top%20Barry/_/%E4%B8%80%E5%8D%8A%E4%B8%80%E5%8D%8A",
+      "playcount": 1,
+      "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/7ef3d67fe068d5a605555f73dc1b44fe.jpg"
     }
   ]
 }
