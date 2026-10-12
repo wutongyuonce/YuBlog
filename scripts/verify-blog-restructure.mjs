@@ -363,6 +363,33 @@ test('navigation previews count current categories and only link published artic
   }
 })
 
+test('recent media appears only above the interest index categories', () => {
+  const sections = elements(interests, (node) => hasClass(node, 'recent-media'))
+  assert.equal(sections.length, 1)
+  const section = sections[0]
+  const title = elements(section, (node) => node.tagName === 'h2')[0]
+  assert.equal(textOf(title), '近期书影游')
+  assert.deepEqual(section.properties.ariaLabelledBy, [title.properties.id])
+  assert.equal(
+    elements(
+      section,
+      (node) => node.tagName === 'a' && textOf(node) === '全部拾趣'
+    ).length,
+    0
+  )
+  const order = elements(
+    interests,
+    (node) =>
+      hasClass(node, 'recent-media') || hasClass(node, 'interests-page__index')
+  )
+  assert.equal(order[0], section)
+  assert.ok(hasClass(order[1], 'interests-page__index'))
+  assert.equal(
+    elements(home, (node) => hasClass(node, 'recent-media')).length,
+    0
+  )
+})
+
 test('interest menu and index agree and their links resolve to content pages', async () => {
   const menu = elements(
     home,
@@ -411,6 +438,11 @@ test('interest menu and index agree and their links resolve to content pages', a
     const content = elements(page, (node) => 'dataInterest' in node.properties)
     assert.equal(content.length, 1)
     assert.equal(content[0].properties.dataInterest, id)
+    assert.equal(
+      elements(page, (node) => hasClass(node, 'recent-media')).length,
+      0,
+      `${id}: recent media belongs only on the interest index`
+    )
     const title = elements(page, (node) => node.tagName === 'h1')[0]
     assert.equal(
       textOf(title),

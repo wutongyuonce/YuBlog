@@ -2,6 +2,7 @@
 import { getCollection, render } from 'astro:content'
 import { withBasePath } from '~/utils/path'
 import PageHeading from '~/components/base/PageHeading.astro'
+import RecentMedia from '~/components/interests/RecentMedia.astro'
 import { Content as InterestsIntro } from '../../content/interests/intro.md'
 import type { CollectionEntry } from 'astro:content'
 
@@ -33,6 +34,7 @@ const Content = entry ? (await render(entry)).Content : null
     </article>
   ) : (
     <>
+      <RecentMedia />
       <nav aria-label="拾趣分类" class="interests-page__index">
         {entries.map(({ id, data }) => (
           <a href={withBasePath(`/interests/${id}/`)}>

@@ -1327,6 +1327,3 @@ header.nav-bar .nav-dropdown--more .nav-dropdown__panel {
 .home-section-header > a:is(:hover, :focus-visible) {
   color: var(--accent);
 }
-.recent-media .home-section-header {
-  margin-bottom: 1.25rem;
-}
