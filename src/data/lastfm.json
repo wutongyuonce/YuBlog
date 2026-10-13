@@ -1,20 +1,11 @@
 {
   "user": "ztyonce",
   "profileUrl": "https://www.last.fm/user/ztyonce",
-  "updatedAt": "2026-10-13T09:28:04.000Z",
-  "weeklyScrobbles": 102,
+  "updatedAt": "2026-10-13T17:37:04.000Z",
+  "weeklyScrobbles": 34,
   "totalScrobbles": 201,
-  "topArtist": "张惠妹",
+  "topArtist": "Gareth.T",
   "tracks": [
-    {
-      "name": "人质",
-      "artist": "张惠妹",
-      "album": "我要快乐 (Deluxe Version)",
-      "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/74b44d16e17f4dcd9d91bd580d5985b5.jpg",
-      "url": "https://www.last.fm/music/%E5%BC%A0%E6%83%A0%E5%A6%B9/_/%E4%BA%BA%E8%B4%A8",
-      "playcount": 68,
-      "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/74b44d16e17f4dcd9d91bd580d5985b5.jpg"
-    },
     {
       "name": "玻璃",
       "artist": "Gareth.T",
@@ -95,6 +86,15 @@
       "url": "https://www.last.fm/music/Top%20Barry/_/%E4%B8%80%E5%8D%8A%E4%B8%80%E5%8D%8A",
       "playcount": 1,
       "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/7ef3d67fe068d5a605555f73dc1b44fe.jpg"
+    },
+    {
+      "name": "曹操",
+      "artist": "林俊杰",
+      "album": "曹操",
+      "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/929ca987d3f74a309800f7b6e6676003.jpg",
+      "url": "https://www.last.fm/music/%E6%9E%97%E4%BF%8A%E6%9D%B0/_/%E6%9B%B9%E6%93%8D",
+      "playcount": 1,
+      "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/929ca987d3f74a309800f7b6e6676003.jpg"
     }
   ]
 }
