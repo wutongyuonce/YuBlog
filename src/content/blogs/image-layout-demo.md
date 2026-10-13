@@ -1,6 +1,6 @@
 ---
 title: Markdown 自定义样式：卡片、图片、提示框与代码
-description: 汇本站 Markdown 自定义样式于一页：双列书影游卡片、竖版横滑栏、图片布局、提示框、徽章链接、公式与代码，每种样式配有可复制语法。
+description: 汇本站 Markdown 自定义样式于一页：双列书影游卡片、竖版横滑栏、图片布局、提示框、徽章链接、公式、代码与 HTML 交互动画，每种样式配有可复制语法。
 pubDate: 2026-10-07
 category: 技术
 tags: [Markdown, 自定义样式]
@@ -9,7 +9,7 @@ titleImageAlt: 夜间街头戴墨镜的人像
 draft: false
 ---
 
-这篇把本站支持的 Markdown 自定义样式集中放在一页。先看书影游的双列卡片、竖版横滑栏和方形陈列架，再看图片网格、相册与图文绕排，最后是提示框、徽章、链接、数学公式和代码块。
+这篇把本站支持的 Markdown 自定义样式集中放在一页。先看书影游的双列卡片、竖版横滑栏和方形陈列架，再看图片网格、相册与图文绕排，最后是提示框、徽章、链接、数学公式、代码块和 HTML 交互动画。
 
 相册、网格和绕排保留图片原比例。竖版卡片统一使用 `2:3` 封面，方形卡片统一使用 `1:1` 封面；超出的边缘会裁切，点击仍可查看完整原图。
 
@@ -562,3 +562,52 @@ console.log(total([1, 2, 3]))
 <video controls src="./demo.mp4"></video>
 <audio controls src="./demo.mp3"></audio>
 ```
+
+## HTML 交互动画
+
+普通 `.md` 文章也能通过 `<iframe>` 嵌入独立 HTML，让里面的 CSS、JavaScript 和 Canvas 运行。下面的小球沿正弦曲线移动，可以暂停、继续播放或重置；系统开启“减少动态效果”时默认暂停，仍可手动播放。
+
+<div data-pagefind-ignore>
+<iframe
+  src="/demos/image-layout-demo/wave.html"
+  title="正弦波动画演示"
+  sandbox="allow-scripts"
+  loading="lazy"
+  style="display: block; width: 100%; height: 420px; border: 0;"
+></iframe>
+</div>
+
+[单独打开正弦波演示](/demos/image-layout-demo/wave.html)
+
+对应的 Markdown 写法：
+
+```html
+<div data-pagefind-ignore>
+<iframe
+  src="/demos/image-layout-demo/wave.html"
+  title="正弦波动画演示"
+  sandbox="allow-scripts"
+  loading="lazy"
+  style="display: block; width: 100%; height: 420px; border: 0;"
+></iframe>
+</div>
+
+<a href="/demos/image-layout-demo/wave.html">单独打开正弦波演示</a>
+```
+
+**文件按文章分目录管理，统一放在 `public/demos/` 下：**
+
+```text
+src/content/blogs/image-layout-demo.md
+public/demos/image-layout-demo/
+  wave.html
+  sort.html       # 同一篇的另一个演示，按需添加
+```
+
+`public/` 不写进 URL，所以 `public/demos/image-layout-demo/wave.html` 对应 `/demos/image-layout-demo/wave.html`。文件夹名用稳定的文章短名，多个演示分别命名；跨文章复用的演示可以放在 `public/demos/shared/`。不要把所有文章的 HTML 都平铺在 `demos/` 根目录。
+
+**这条写法需要 HTML 位于 `public/`。** 把 `wave.html` 放在 `src/content/` 的文章旁边，再写 `src="./wave.html"`，站上会找不到文件：HTML 没有视频／音频那样的自动镜像。这里也不需要把文章改为 `.mdx`，当前没有 `<Sketch>` 组件。
+
+iframe 内的文档与正文样式隔离；`sandbox="allow-scripts"` 允许动画脚本运行，同时不授予读取父页面 DOM、cookie 或 localStorage 的同源权限。演示推荐把 CSS、JS 和数据直接写在 HTML 内；需要本地图片等资源时，同样放进 `public/` 并用 `/demos/…` 路径引用。iframe 里面的资源不会经过博客图片或媒体管线。
+
+这里的高度手动指定为 `420px`，没有自动测量内容高度。演示本身应适应容器宽度；亮暗配色需要在演示里定义，本例跟随系统的 `prefers-color-scheme`，不自动同步博客主题按钮。RSS 会移除 iframe，旁边的普通文字链接会保留，订阅者仍能打开演示。

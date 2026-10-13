@@ -44,10 +44,12 @@ Site accents default to the original pink (light `#ad526c`, dark `#e7a1b5`). The
 
 Home listening shows the past seven days’ Top 10 songs with album covers, artist and album names, plus weekly scrobbles, lifetime scrobbles and the top weekly artist. The square rail loops automatically and pauses while pressed or keyboard-focused; without JavaScript or with reduced motion it scrolls manually. Metadata uses `artist - album`, and covers open original artwork in the shared image viewer. Builds read `src/data/lastfm.json` without calling Last.fm. The `Sync Last.fm` workflow refreshes and commits the snapshot to main hourly at minute 17, using the existing Vercel Git deployment; failed refreshes preserve the previous data. Set the repository Actions Secret `LASTFM_API_KEY`; locally, set it in the ignored `.env` and run `pnpm sync:lastfm`. Scheduled runs begin once the workflow reaches the default branch. See [Last.fm SPEC and design](docs/首页%20Last.fm%20SPEC%20与设计.md).
 
+Ordinary `.md` articles can embed HTML animations with `<iframe sandbox="allow-scripts">`. Store demos under `public/demos/<article-key>/` and reference `/demos/<article-key>/<file>.html`, with an explicit height and a plain link for RSS readers. HTML files next to article sources are not mirrored automatically. See the [custom-style demo article](src/content/blogs/image-layout-demo.md) and the [HTML and media specification](docs/正文%20HTML%20与媒体%20SPEC.md#本地-html-交互演示) for examples and resource rules.
+
 ## Stack
 
 - Astro 7 + TypeScript, Markdown / MDX Content Collections (using the unified Remark / Rehype plugin pipeline)
-- Content images go through Astro's image pipeline: relative paths plus a `|w` width marker, automatic WebP, `srcset`, dimensions and lazy loading; `public/` holds site-level assets only
+- Content images go through Astro's image pipeline: relative paths plus a `|w` width marker, automatic WebP, `srcset`, dimensions and lazy loading; `public/` holds site assets and standalone HTML demos; body images stay in the content directories
 - Article title font is subset to the glyphs actually used (the glyph set changes with content)
 - Body font Inter and code font DM Mono are local Latin subsets in `public/fonts/`, not Google Fonts
 - KaTeX CSS and fonts are bundled locally (no CDN) and shipped as woff2 only

@@ -99,6 +99,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 - `<style>` 块、`style="…"`、`class` 都生效；`<style>` 是**整页全局**的，会影响顶栏和目录，用带前缀的类名或 UnoCSS 工具类。`<div>`、`<span>`、`<br>`、`<details>` 原样透传。
 - 图片尺寸写 alt 的 `|w` 标记，例如 `![说明|w330](./x.png)`；不要用 `style="zoom:50%"`（Typora 拖拽缩放、LeetCode 粘贴会自带）。外链图 Markdown 与 `<img>` 两种写法等价。
 - 视频：外链平台用 `<iframe>`；本地文件用 `<video src="./demo.mp4">`，文件放文章旁边或子目录，构建与 dev 启动时镜像到 `public/_media/`，Typora 与站点两边都能播；dev 中增删或替换媒体文件后重启服务器。
+- HTML 动画／交互演示：文件放进 `public/demos/<文章短名>/`，在普通 `.md` 里用 `<iframe src="/demos/<文章短名>/<文件>.html" title="演示说明" sandbox="allow-scripts" loading="lazy" style="width: 100%; height: 420px; border: 0;"></iframe>` 嵌入，按内容手动调整高度，并在旁边补同地址的普通文字链接供 RSS 阅读者打开。HTML 不会从 `src/content/` 自动镜像；子路径部署时 `src` 与链接需带实际 `SITE.base`。保持沙箱不授予 `allow-same-origin`；演示不继承博客样式，内部资源不走内容管线。`public/` 文件不受文章 `draft` 控制，构建后也会公开。
 - 相对媒体引用允许 query／fragment 后缀，如 `./demo.mp4#t=10`、`./demo.mp4?download=1`；改写时保留后缀，它们不属于文件名。
 - 视频旁建议补一行文字链接（否则订阅者在 RSS 里只看到空白），指向同一个文件即可：`[本视频](./demo.mp4)`。指向本地媒体文件的链接会和 `src` 一起被改写。
 - 下面这些会**构建期报错**（带文件路径与行号），不会静默 404：原生 `<img>` 写相对路径（改用 Markdown 语法；处于 `.mdx` 页面或同一路径也被 Markdown 图片语法引用时例外）、`<video poster="…">` 写相对路径（poster 是图片，不进管线也不被镜像，请把图片放进 `public/`、不要放 `public/_media/`，再用 `/…` 引用）、`data:` 内联内容（先存成文件）、`file:` 等浏览器打不开的协议、相对路径逃出 `src/` 目录、媒体文件不存在或指向的是目录／符号链接、扩展名不在支持列表、解码后的文件名或目录名含 `#` 或 `?`（如 `%23`／`%3F`，本站取不到，改名即可）。报错给出的是**源文件**行号与作者写的原始路径，可以直接照着改。

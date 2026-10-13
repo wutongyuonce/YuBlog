@@ -1,6 +1,6 @@
 # Astro 图片管线指南
 
-内容图片放在 `src/content/`，由 Astro 图片管线生成 WebP、`srcset`、宽高和懒加载。`public/` 只放站点级资源。本文规定图片的存放方式、引用语法、页面渲染和 RSS 资源规则。视频／音频没有 Markdown 语法，不走这条管线，见[正文 HTML 与媒体 SPEC](./正文%20HTML%20与媒体%20SPEC.md)。
+内容图片放在 `src/content/`，由 Astro 图片管线生成 WebP、`srcset`、宽高和懒加载。`public/` 放站点级资源，也承载独立 HTML 演示（见[正文 HTML 与媒体 SPEC](./正文%20HTML%20与媒体%20SPEC.md#本地-html-交互演示)）；正文配图仍放内容目录。本文规定图片的存放方式、引用语法、页面渲染和 RSS 资源规则。视频／音频没有 Markdown 语法，不走这条管线，见[正文 HTML 与媒体 SPEC](./正文%20HTML%20与媒体%20SPEC.md)。
 
 **路径开头决定进不进管线**：
 

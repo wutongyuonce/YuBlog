@@ -34,6 +34,40 @@
 
 CSS 三种写法都生效：`style="…"`、`<style>` 块、`class` + UnoCSS 工具类（`unocss.config.ts` 已扫描 `src/content/**/*.md`）。`<style>` 块是**页面全局**的，不做作用域隔离，会影响同页顶栏、目录和侧栏；需要局部样式时用带前缀的类名或工具类。
 
+### 本地 HTML 交互演示
+
+普通 `.md` 可以通过 `<iframe>` 嵌入独立 HTML，运行其中的 CSS、JavaScript 和 Canvas。HTML 演示统一放在 `public/demos/` 下，按稳定的文章短名分目录；跨文章复用的文件放 `public/demos/shared/`。文章仍留在现有内容目录，已有文章不为演示改名或迁移。
+
+```text
+src/content/blogs/image-layout-demo.md
+public/demos/image-layout-demo/wave.html
+```
+
+`public/` 中的文件原样复制到产物，URL 不含 `public`。当前 `SITE.base` 为 `/`，文章写法：
+
+```html
+<div data-pagefind-ignore>
+<iframe
+  src="/demos/image-layout-demo/wave.html"
+  title="正弦波动画演示"
+  sandbox="allow-scripts"
+  loading="lazy"
+  style="display: block; width: 100%; height: 420px; border: 0;"
+></iframe>
+</div>
+
+<a href="/demos/image-layout-demo/wave.html">单独打开正弦波演示</a>
+```
+
+- `.html` 不在视频／音频镜像范围内。仅放在 `src/content/` 的文章旁边并写 `src="./wave.html"` 不会发布成可访问文件；iframe 必须用可服务的站内绝对路径或外部 URL。子路径部署时，手写的 `src` 和链接需要包含实际 `SITE.base`，不会由媒体插件自动补上。
+- `sandbox="allow-scripts"` 允许动画脚本执行，不加 `allow-same-origin`，避免嵌入脚本取得父页面 DOM、cookie 和 localStorage 的同源访问权。沙箱仍允许网络请求，不等于断网环境。
+- 演示推荐使用完整 HTML 文档，内联 CSS、JS 和数据。其内部资源不经过博客内容管线；本地资源放进 `public/` 并用可服务的站内绝对路径引用，外部资源用完整 URL，受浏览器 CORS 等规则约束。
+- iframe 默认不继承博客 CSS 和主题变量；演示自己定义配色、适应容器宽度。当前写法手动指定高度，没有自动高度、主题消息同步或 `<Sketch>` 组件，也不要求 MDX。
+- `data-pagefind-ignore` 排除嵌入区域的搜索索引。说明文字与演示链接放在容器外：RSS 删除 iframe，但保留普通文字链接。
+- `public/` 静态文件随构建发布，不受文章 `draft` 控制；草稿演示放进这里后，文件本身也会公开。
+
+可运行示例与可复制语法见 [`image-layout-demo.md`](../src/content/blogs/image-layout-demo.md) 的「HTML 交互动画」。
+
 ## 3. 本地视频与音频
 
 外链平台用 `<iframe>`（B 站、YouTube），原样透传。

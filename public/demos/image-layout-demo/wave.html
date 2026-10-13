@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>正弦波动画演示</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --background: #faf9f6;
+        --foreground: #292524;
+        --line: #d6d3d1;
+        --accent: #ad526c;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --background: #1c1917;
+          --foreground: #e7e5e4;
+          --line: #57534e;
+          --accent: #e7a1b5;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 20px;
+        background: var(--background);
+        color: var(--foreground);
+        font:
+          14px/1.6 system-ui,
+          sans-serif;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 18px;
+      }
+      p {
+        margin: 8px 0;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 220px;
+        margin: 12px 0;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      button {
+        padding: 6px 16px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+      }
+      button:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>正弦波与移动小球</h1>
+    <p>小球沿着 y = sin(x) 运动。暂停看位置，重置回到起点。</p>
+    <canvas aria-label="正弦曲线及沿曲线移动的小球" role="img">
+      正弦曲线上的小球会随时间移动。
+    </canvas>
+    <div class="controls">
+      <button id="toggle" type="button" disabled>播放</button>
+      <button id="reset" type="button" disabled>重置</button>
+    </div>
+    <noscript><p>启用 JavaScript 后可观看动画。</p></noscript>
+    <script>
+      const canvas = document.querySelector('canvas')
+      const context = canvas.getContext('2d')
+      const toggle = document.getElementById('toggle')
+      const reset = document.getElementById('reset')
+      const motion = matchMedia('(prefers-reduced-motion: reduce)')
+      const theme = matchMedia('(prefers-color-scheme: dark)')
+      let playing = !motion.matches
+      let phase = 0
+      let frame = 0
+      let lastTime = 0
+      let width = 0
+      let height = 0
+
+      function draw() {
+        const styles = getComputedStyle(document.documentElement)
+        const margin = 16
+        const span = Math.max(1, width - margin * 2)
+        const amplitude = height * 0.3
+        const position = (x) =>
+          height / 2 - Math.sin(((x - margin) / span) * Math.PI * 2) * amplitude
+        context.clearRect(0, 0, width, height)
+        context.strokeStyle = styles.getPropertyValue('--line').trim()
+        context.lineWidth = 1
+        context.beginPath()
+        context.moveTo(margin, height / 2)
+        context.lineTo(width - margin, height / 2)
+        context.stroke()
+        context.strokeStyle = styles.getPropertyValue('--accent').trim()
+        context.lineWidth = 2
+        context.beginPath()
+        for (let x = margin; x <= width - margin; x++) {
+          if (x === margin) context.moveTo(x, position(x))
+          else context.lineTo(x, position(x))
+        }
+        context.stroke()
+        const x = margin + (phase / (Math.PI * 2)) * span
+        context.fillStyle = context.strokeStyle
+        context.beginPath()
+        context.arc(x, position(x), 7, 0, Math.PI * 2)
+        context.fill()
+      }
+
+      function animate(time) {
+        if (lastTime) {
+          phase =
+            (phase + Math.min(time - lastTime, 100) / 1000) % (Math.PI * 2)
+        }
+        lastTime = time
+        draw()
+        frame = requestAnimationFrame(animate)
+      }
+
+      function updatePlayback() {
+        cancelAnimationFrame(frame)
+        lastTime = 0
+        toggle.textContent = playing ? '暂停' : '播放'
+        if (playing && !document.hidden) frame = requestAnimationFrame(animate)
+      }
+
+      function resize() {
+        const bounds = canvas.getBoundingClientRect()
+        const ratio = Math.min(devicePixelRatio || 1, 2)
+        width = bounds.width
+        height = bounds.height
+        canvas.width = Math.round(width * ratio)
+        canvas.height = Math.round(height * ratio)
+        context.setTransform(ratio, 0, 0, ratio, 0, 0)
+        draw()
+      }
+
+      toggle.disabled = false
+      reset.disabled = false
+      toggle.addEventListener('click', () => {
+        playing = !playing
+        updatePlayback()
+      })
+      reset.addEventListener('click', () => {
+        playing = false
+        phase = 0
+        updatePlayback()
+        draw()
+      })
+      motion.addEventListener('change', () => {
+        playing = !motion.matches
+        updatePlayback()
+      })
+      theme.addEventListener('change', draw)
+      document.addEventListener('visibilitychange', updatePlayback)
+      new ResizeObserver(resize).observe(canvas)
+      resize()
+      updatePlayback()
+    </script>
+  </body>
+</html>
