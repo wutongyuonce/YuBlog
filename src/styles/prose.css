@@ -1030,3 +1030,222 @@ main:has(.post-content) > footer.prose :is(a, span) {
     margin: 0 0 1rem;
   }
 }
+
+/* :::excalidraw — static preview + pan-zoom toolbar */
+.prose .excalidraw-embed {
+  position: relative;
+  display: block;
+  margin: 1.25em 0;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, var(--c-text) 4%, var(--c-bg));
+  overflow: hidden;
+}
+:root.dark .prose .excalidraw-embed {
+  background: #141414;
+  border-color: color-mix(in srgb, #fff 10%, transparent);
+}
+.prose .excalidraw-embed__viewport {
+  height: var(--excalidraw-height, min(70vh, 520px));
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+}
+.prose .excalidraw-embed__viewport.is-dragging {
+  cursor: grabbing;
+}
+.prose .excalidraw-embed__canvas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  transform-origin: center center;
+  will-change: transform;
+}
+.prose .excalidraw-embed__canvas img,
+.prose .excalidraw-embed__image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  margin: 0;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.prose .excalidraw-embed__toolbar {
+  position: absolute;
+  right: 0.65rem;
+  bottom: 0.65rem;
+  z-index: 2;
+  display: none;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.28rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--c-text) 14%, transparent);
+  background: color-mix(in srgb, var(--c-bg) 82%, transparent);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 18px rgb(0 0 0 / 18%);
+  color: var(--c-text);
+  font-size: 0.78rem;
+  line-height: 1;
+}
+.prose .excalidraw-embed--enhanced .excalidraw-embed__toolbar {
+  display: inline-flex;
+}
+.prose .excalidraw-embed--enhanced .excalidraw-embed__noscript-source {
+  display: none;
+}
+.prose .excalidraw-embed__toolbar button,
+.prose .excalidraw-embed__toolbar a.excalidraw-embed__source {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.7rem;
+  height: 1.7rem;
+  padding: 0 0.35rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+.prose .excalidraw-embed__toolbar button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.prose .excalidraw-embed__toolbar button:is(:hover, :focus-visible):not(:disabled),
+.prose .excalidraw-embed__toolbar a.excalidraw-embed__source:is(:hover, :focus-visible) {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  outline: none;
+}
+.prose .excalidraw-embed__zoom-out::before {
+  content: '−';
+  font-size: 1.05rem;
+}
+.prose .excalidraw-embed__zoom-in::before {
+  content: '+';
+  font-size: 1.05rem;
+}
+.prose .excalidraw-embed__reset::before {
+  content: '↺';
+  font-size: 0.95rem;
+}
+.prose .excalidraw-embed__source::before {
+  content: '↗';
+  font-size: 0.9rem;
+}
+.prose .excalidraw-embed__source {
+  font-size: 0;
+}
+.prose .excalidraw-embed__source::before {
+  font-size: 0.9rem;
+}
+.prose .excalidraw-embed__zoom-label {
+  min-width: 2.6rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+.prose .excalidraw-embed__sep {
+  width: 1px;
+  height: 1rem;
+  margin: 0 0.15rem;
+  background: color-mix(in srgb, var(--c-text) 22%, transparent);
+}
+.prose .excalidraw-embed__noscript-source {
+  margin: 0;
+  padding: 0.55rem 0.75rem 0.7rem;
+  font-size: 0.85rem;
+}
+.prose .excalidraw-embed:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* :::blog-link — bidirectional post card */
+.prose .blog-link-cards {
+  margin: 1.15em 0;
+}
+.prose a.blog-link-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.85rem;
+  align-items: center;
+  min-width: 0;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--c-text) 10%, transparent);
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--c-text) 5%, var(--c-bg));
+  color: inherit;
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+:root.dark .prose a.blog-link-card {
+  background: color-mix(in srgb, #fff 5%, #0a0a0a);
+  border-color: color-mix(in srgb, #fff 10%, transparent);
+}
+.prose a.blog-link-card:is(:hover, :focus-visible) {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow: 0 6px 22px color-mix(in srgb, var(--accent) 18%, transparent);
+  outline: none;
+}
+.prose .blog-link-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.prose .blog-link-card__title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 1.05rem;
+  font-weight: 650;
+  line-height: 1.35;
+  color: var(--c-text);
+}
+.prose .blog-link-card__desc {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  color: color-mix(in srgb, var(--c-text) 62%, transparent);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+.prose .blog-link-card__thumb {
+  flex: none;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 0.55rem;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--c-text) 8%, transparent);
+}
+.prose .blog-link-card__avatar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border-radius: 0.55rem;
+  object-fit: cover;
+}
+@media (max-width: 480px) {
+  .prose .blog-link-card__thumb {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+  .prose a.blog-link-card {
+    padding: 0.75rem 0.8rem;
+    gap: 0.7rem;
+  }
+}

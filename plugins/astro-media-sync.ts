@@ -14,7 +14,7 @@ import path from 'node:path'
 import {
   isMirrorableFile,
   mediaTargetFor,
-  MEDIA_EXTENSIONS,
+  MIRROR_EXTENSIONS,
   MEDIA_ROOTS,
 } from './media-paths.ts'
 
@@ -22,7 +22,7 @@ import type { MediaRoots } from './media-paths.ts'
 import type { AstroIntegration } from 'astro'
 
 /**
- * 把 `src/` 下的视频/音频镜像到 `public/_media/`，让 `rehype-media-assets`
+ * 把 `src/` 下的视频/音频与 Excalidraw 源镜像到 `public/_media/`，让 `rehype-media-assets`
  * 改写出来的 `/_media/…` 地址真的能取到文件。目标路径由 `mediaTargetFor` 推导，
  * 本模块不自己拼映射。
  *
@@ -30,7 +30,7 @@ import type { AstroIntegration } from 'astro'
  * 如果等到渲染文章时才落盘，产物里的文件会缺失。这里没有文件监听，所以 dev
  * 运行期间新加的视频要重启 dev（或重新构建）才会出现。
  *
- * 遍历 `src/` 时只镜像视频/音频，供 HTML、媒体链接与媒体卡片引用；图片继续由
+ * 遍历 `src/` 时镜像视频/音频与 `.excalidraw`／`.excalidrawlib`；图片继续由
  * Astro 图片管线处理，避免重复复制。
  *
  * `public/_media/` 是派生产物，已在 .gitignore 中忽略。
@@ -130,7 +130,7 @@ export function syncMedia(roots: MediaRoots = MEDIA_ROOTS) {
 
   const sourceFiles = listFiles(roots.sourceRoot).filter(
     (file) =>
-      MEDIA_EXTENSIONS.has(path.extname(file).toLowerCase()) &&
+      MIRROR_EXTENSIONS.has(path.extname(file).toLowerCase()) &&
       isMirrorableFile(file, roots.sourceRoot)
   )
 

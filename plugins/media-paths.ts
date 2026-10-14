@@ -18,13 +18,13 @@ import { SITE } from '../src/config.ts'
  * （由 `astro-media-sync.ts` 落盘），相对引用改写成 `/_media/<相对 src/ 的路径>`。
  * 改写、镜像、校验都调用这里的函数，不各自推断映射或协议白名单。
  *
- * 为什么只覆盖视频/音频：图片有 Markdown 语法 `![](./x.png)`，由 Astro 图片管线
+ * 为什么音视频与绘图源走镜像、图片不走：图片有 Markdown 语法 `![](./x.png)`，由 Astro 图片管线
  * 处理（优化 + srcset），源文件在 `dist/_astro/` 里已有一份。镜像整棵 `src/`
- * 的图片到 `public/_media/` 会重复产物。镜像只覆盖视频/音频文件，供 HTML 元素、
- * 媒体链接与媒体卡片引用；图片继续交给 Astro 图片管线。
+ * 的图片到 `public/_media/` 会重复产物。镜像覆盖视频/音频与 `.excalidraw`／`.excalidrawlib`，供 HTML、链接与 Excalidraw
+ * 源文件引用；图片继续交给 Astro 图片管线，预览图不进 `_media`。
  */
 
-/** 需要镜像到 `public/_media/` 的扩展名。图片不在其中，见模块注释。 */
+/** 需要镜像到 `public/_media/` 的音视频扩展名。图片不在其中，见模块注释。 */
 export const MEDIA_EXTENSIONS = new Set([
   '.mp4',
   '.webm',
@@ -37,6 +37,18 @@ export const MEDIA_EXTENSIONS = new Set([
   '.oga',
   '.wav',
   '.flac',
+])
+
+/**
+ * Excalidraw 源文件扩展名。不是图片，不能走 Astro 图片管线；与音视频一样镜像到
+ * `/_media/`，预览 SVG／PNG 仍用相对图片语法。
+ */
+export const DRAWING_EXTENSIONS = new Set(['.excalidraw', '.excalidrawlib'])
+
+/** 实际镜像到 `public/_media/` 的全部扩展名（音视频 + 绘图源）。不含图片。 */
+export const MIRROR_EXTENSIONS = new Set([
+  ...MEDIA_EXTENSIONS,
+  ...DRAWING_EXTENSIONS,
 ])
 
 /**

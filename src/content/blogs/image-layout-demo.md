@@ -1,6 +1,6 @@
 ---
 title: Markdown 自定义样式：卡片、图片、提示框与代码
-description: 汇本站 Markdown 自定义样式于一页：双列书影游卡片、竖版横滑栏、图片布局、提示框、徽章链接、公式、代码与 HTML 交互动画，每种样式配有可复制语法。
+description: 汇本站 Markdown 自定义样式于一页：双列书影游卡片、竖版横滑栏、Excalidraw 图、博文链接卡、图片布局、提示框、徽章链接、公式、代码与 HTML 交互动画，每种样式配有可复制语法。
 pubDate: 2026-10-07
 category: 技术
 tags: [Markdown, 自定义样式]
@@ -9,7 +9,7 @@ titleImageAlt: 夜间街头戴墨镜的人像
 draft: false
 ---
 
-这篇把本站支持的 Markdown 自定义样式集中放在一页。先看书影游的双列卡片、竖版横滑栏和方形陈列架，再看图片网格、相册与图文绕排，最后是提示框、徽章、链接、数学公式、代码块和 HTML 交互动画。
+这篇把本站支持的 Markdown 自定义样式集中放在一页。先看书影游的双列卡片、竖版横滑栏和方形陈列架，再看 Excalidraw 图与博文双向链接卡，然后是图片网格、相册与图文绕排，最后是提示框、徽章、链接、数学公式、代码块和 HTML 交互动画。
 
 相册、网格和绕排保留图片原比例。竖版卡片统一使用 `2:3` 封面，方形卡片统一使用 `1:1` 封面；超出的边缘会裁切，点击仍可查看完整原图。
 
@@ -532,6 +532,8 @@ console.log(total([1, 2, 3]))
 | 方形卡片栏 | `:::card{layout="square" scroll="auto" title="…" meta="…"}` | 1:1 封面；条目超出一屏才循环 | 不够宽时退回横滑 |
 | 图片网格 | `:::gallery{columns="2"}` | 并排对照的图片 | 自动单列 |
 | 横向相册 | `:::gallery{layout="scroll"}` | 连续浏览多张图片 | 主图与后续露出 |
+| Excalidraw | `:::excalidraw{src="…excalidraw" preview="…svg"}` | 预览图 + 源文件静态链 | 工具条缩放／打开源文件 |
+| 博文链接卡 | `:::blog-link{slug="…"}` | 链到本站其他博文 | 对方文再写一张即双向 |
 
 ```html
 <details>
@@ -561,6 +563,44 @@ console.log(total([1, 2, 3]))
 ```html
 <video controls src="./demo.mp4"></video>
 <audio controls src="./demo.mp3"></audio>
+```
+
+
+## Excalidraw 图
+
+把 `.excalidraw` 源文件和导出的预览图（优先 SVG）放在文章旁的 `*-img/` 目录。预览走图片管线；源文件镜像到 `/_media/…`，工具条外链是**永久静态地址**，不是浏览器里的 `blob:`。
+
+有 JS 时右下角可缩放、复位并打开源文件；无 JS 时仍显示预览图，并保留源文件文字链接。
+
+:::excalidraw{src="./image-layout-demo-img/verify.excalidraw" preview="./image-layout-demo-img/verify.svg" alt="Verify 页：离线 UI 目录示意"}
+:::
+
+```md
+:::excalidraw{src="./image-layout-demo-img/verify.excalidraw" preview="./image-layout-demo-img/verify.svg" alt="Verify 页：离线 UI 目录示意"}
+:::
+```
+
+省略 `preview` 时，会在同目录寻找与源文件同主名的 `.svg`／`.png`／`.webp`。
+
+## 博文链接卡片（双向）
+
+横向卡片：左侧大标题与小字描述，右侧作者方头像（站点 `avatar.webp`，本卡用圆角方形，不全站改成圆）。用 `slug` 指向本站博文 id（与 `/blogs/<id>/` 一致），构建期填入标题和描述。
+
+「双向」是作者约定：两篇文章各自写一张卡指向对方，**不会**自动反链。
+
+:::blog-link{slug="astro"}
+:::
+
+```md
+:::blog-link{slug="astro"}
+:::
+```
+
+也可用显式属性（不读集合时）：
+
+```md
+:::blog-link{href="/blogs/astro/" title="Astro Notes" description="Astro Grammer & Blog Development"}
+:::
 ```
 
 ## HTML 交互动画

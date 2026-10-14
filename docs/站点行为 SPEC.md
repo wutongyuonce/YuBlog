@@ -122,6 +122,13 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 
 竖卡和方卡必须有标题和一张独立 Markdown 封面，`meta`／`href` 可省略；介绍正文、`score`／`label`、非法布局、非法 `scroll` 或嵌套报错，不静默隐藏作者内容。连续且布局与滚动模式都相同的卡片按源顺序成组，插入普通正文或切换布局／滚动模式会分组。默认横卡仍支持原来的介绍、评分和角标。相册与图片布局仍不自动播放。
 
+### Excalidraw 与博文链接卡
+
+作者写 `:::excalidraw{src="…excalidraw" preview="…svg"}`：预览图走 Astro 图片管线，源文件镜像到 `/_media/`；工具条提供缩放、复位与打开源文件（静态 URL，不用 `blob:`）。无 JS 仍显示预览与源链接。嵌入图不进入普通正文大图 dialog。
+
+作者写 `:::blog-link{slug}`：构建期解析目标博文标题与描述，渲染横向链接卡，右侧为站点头像的圆角方图。双向互链由两篇文章各自放置卡片完成，不自动插入对端链接。
+
+
 ### S11：全站点缀配色选择
 
 首次访问默认原粉色，浅色主强调色为 `#ad526c`，深色主强调色为 `#e7a1b5`。顶栏配色入口位于主题按钮左侧，桌面和手机均保留，工具顺序为 GitHub、搜索、配色、亮暗主题。按钮显示调色盘与当前色点，点击展开五行选择面板：原粉色、灰紫、深紫、雾蓝、鼠尾草绿。名称和选中标记共同表达状态，不仅依靠色点。选择立即更新当前整页、关闭面板并恢复按钮焦点；重复选择当前配色安全且不改变阅读状态。
@@ -180,6 +187,8 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 | 更多菜单条目 | `config.ts` `MORE_LINKS` | `NavDropdown` 呈现，UnoCSS 提取图标；友链路由归属由 `nav-path.js` 维护 | 导航路径与构建产物检查 |
 | 拾趣分类／标题／顺序／说明 | `content/interests/*.{md,mdx}`；集合范围由 `content.config.ts` 维护 | 入口、子页和导航；`intro.md` 与首页 `recent.md` 排除出集合。可选图标唯一映射 `config.ts` 的 `INTEREST_ICONS`，UnoCSS 自动加入 safelist | 构建页面与可选图标检查 |
 | 封面卡片（单封面／文字介绍边界、属性、链接安全、评分及分组） | `plugins/remark-media-card.ts` | 博客、拾趣、关于的 Markdown；样式只在 `prose.css` | `remark-media-card.test.mjs` |
+| Excalidraw 嵌入 | `plugins/remark-excalidraw.ts`；`excalidraw-viewer.ts` | 同上；样式 `prose.css` | `remark-excalidraw.test.mjs` |
+| 博文链接卡 | `plugins/remark-blog-link.ts` | 同上；样式 `prose.css` | `remark-blog-link.test.mjs` |
 | 陈列架是否循环与视觉副本 | `src/utils/card-rail-marquee.js` | `CardRailMarquee.astro` 只接线；减少动态效果沿用 `reduced-motion.js`；位移、淡出和按下暂停在 `prose.css`，只在 `data-marquee="on"` 时生效 | `card-rail-marquee.test.mjs` |
 | gallery／figure 属性、内容结构、嵌套拒绝与带位置失败，普通正文图的 image-view／template 包装 | `plugins/remark-image-layouts.ts` | `plugins/index.ts` 在 `remarkMediaCard` 后接入；图片节点继续交给 Astro，不在组件或 RSS 重新推断布局 | `test/remark-image-layouts.test.mjs`、真实 Astro 产物检查 |
 | 相册箭头／圆点、dialog 大图与页面资源清理（持有滚动锁 release） | `src/utils/image-interactions.ts` | `components/widgets/ImageInteractions.astro` 在 `BaseLayout` 只注册与接线；使用插件生成的 DOM 和 Astro 资源 | `scripts/verify-image-layouts.mjs` |

@@ -7,7 +7,7 @@ import {
   classifyMediaRef,
   findUnservableSegment,
   isMirrorableFile,
-  MEDIA_EXTENSIONS,
+  MIRROR_EXTENSIONS,
   MEDIA_ROOTS,
   MEDIA_SRC_ELEMENTS,
 } from './media-paths.ts'
@@ -128,13 +128,13 @@ const rewriteLocal = (
     )
 
   const extension = path.extname(ref.file).toLowerCase()
-  if (!MEDIA_EXTENSIONS.has(extension))
+  if (!MIRROR_EXTENSIONS.has(extension))
     fail(
       file,
       node,
       `的 ${attribute} 是 ${echo(value)}，扩展名 ${
         extension === '' ? '（没有扩展名）' : extension
-      } 不在可镜像的媒体列表里（可镜像：${[...MEDIA_EXTENSIONS].join(' ')}）。` +
+      } 不在可镜像列表里（可镜像：${[...MIRROR_EXTENSIONS].join(' ')}）。` +
         `图片请改用 Markdown 语法 ![](./name.png) 走 Astro 图片管线；字幕等其它类型` +
         `请放进 public/ 并用站内绝对路径引用，例如 <track src="/subs.vtt">。`
     )
@@ -224,14 +224,14 @@ const checkHref = (
 
   const ref = classifyMediaRef(href, markdownPath, roots)
   if (ref.kind === 'local') {
-    if (MEDIA_EXTENSIONS.has(path.extname(ref.file).toLowerCase()))
+    if (MIRROR_EXTENSIONS.has(path.extname(ref.file).toLowerCase()))
       rewriteLocal(file, node, 'href', ref, href, roots)
     return
   }
 
   if (
     ref.kind === 'outside' &&
-    MEDIA_EXTENSIONS.has(path.extname(ref.file).toLowerCase())
+    MIRROR_EXTENSIONS.has(path.extname(ref.file).toLowerCase())
   )
     fail(
       file,

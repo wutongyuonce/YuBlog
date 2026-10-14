@@ -82,7 +82,7 @@ src/<rel>  →  public/_media/<rel>  →  站点 URL /_media/<rel>
 
 `public/_media/` 由 `plugins/astro-media-sync.ts` 在 `astro:config:setup` 从 `src/` 镜像得到，早于 Astro 拷贝 `public/`，让构建产物包含本次镜像。镜像按 mtime + 大小跳过未变文件，并清理源文件已删除的陈旧产物；该目录是派生产物，已加入 `.gitignore`。dev 运行期间不会监听媒体文件变化，增删或替换文件后需要重启 dev。
 
-**镜像范围只有视频／音频扩展名**（`MEDIA_EXTENSIONS`）。这是安全的：视频／音频没有图片那样的 Markdown 语法，凡放在 `src/` 下的只可能被 HTML 标签或 Markdown 链接引用，不存在「已被图片管线处理过、再镜像一份」的重复。图片不镜像——源图已在 `dist/_astro/` 里有一份，再镜像整棵 `src/` 会让产物翻倍。
+**镜像范围是视频／音频（`MEDIA_EXTENSIONS`）与 Excalidraw 源（`DRAWING_EXTENSIONS`：`.excalidraw`／`.excalidrawlib`），合称 `MIRROR_EXTENSIONS`。** 音视频与绘图源没有图片那样的 Markdown 优化管线；预览 SVG／PNG 仍用 `![](…)`／指令内图片节点走 Astro，**不**进 `_media`。把预览图再镜像会与 `_astro` 重复。
 
 字幕（`.vtt`）等其它类型不在镜像范围：相对路径的 `<track src="./sub.vtt">` 会被拒绝，把文件放进 `public/` 再用站内绝对路径引用（`src="/sub.vtt"`）。
 

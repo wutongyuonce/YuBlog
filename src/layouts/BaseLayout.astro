@@ -14,6 +14,7 @@ import Backdrop from '~/components/base/Backdrop.astro'
 import ImageInteractions from '~/components/widgets/ImageInteractions.astro'
 import CardScrollbars from '~/components/widgets/CardScrollbars.astro'
 import CardRailMarquee from '~/components/widgets/CardRailMarquee.astro'
+import ExcalidrawViewer from '~/components/widgets/ExcalidrawViewer.astro'
 
 import { SITE, UI, FEATURES } from '~/config'
 import { resolvePath, withBasePath } from '~/utils/path'
@@ -129,6 +130,7 @@ if (hasCustomCursor) style['--external-link-cursor'] = cursorType
     <ImageInteractions />
     <CardScrollbars />
     <CardRailMarquee />
+    <ExcalidrawViewer />
 
     <!-- Progress Bar -->
     <script>
