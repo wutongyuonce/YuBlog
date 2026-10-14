@@ -4,6 +4,7 @@ import sitemap from '@astrojs/sitemap' // 自动生成 sitemap.xml（网站地�
 import unocss from 'unocss/astro' // UnoCSS 原子化 CSS 引擎（按需生成 CSS 工具类）
 import astroExpressiveCode from 'astro-expressive-code' // 代码块美化插件（语法高亮、主题等）
 import mdx from '@astrojs/mdx' // MDX 支持（在 Markdown 中使用 JSX 组件）
+import react from '@astrojs/react' // React islands（Excalidraw 只读画布）
 
 import { remarkPlugins, rehypePlugins } from './plugins' // 自定义 Markdown 处理插件
 import { katexWoff2Only } from './plugins/postcss-katex-woff2-only' // 只保留 KaTeX 的 woff2 字体
@@ -41,6 +42,7 @@ export default defineConfig({
     }),
     astroExpressiveCode(), // 代码块美化（支持主题、行号、标题等）
     mdx(), // 启用 MDX 支持
+    react(), // Excalidraw 查看器（仅 client island）
     subsetTitleFontsIntegration(), // 任何构建都产出标题字体子集，并校验引用
     mediaSyncIntegration(), // 先于 Astro 拷贝 public/，把视频/音频准备好
   ],

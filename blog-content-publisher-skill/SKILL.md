@@ -153,17 +153,17 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 作者发来架构图／手绘流程图时用 `:::excalidraw`，**不要**把完整 JSON 塞进 ` ```excalidraw ` 围栏，也不要写 `blob:` 链接。
 
-1. 把源文件和预览图放进该文的 `*-img/`，文件名短 ASCII，例如 `verify.excalidraw`、`verify.svg`。
-2. **首选工作流**：作者提供 `.excalidraw`，并尽量附带从 Excalidraw 导出的 SVG／PNG 预览 → 你复制进 `*-img/` → 正文写相对路径指令。构建时源文件会镜像到 `/_media/…`，预览走 Astro 图片管线。
-3. 若只有 `.excalidraw`：向作者要导出的 SVG（优先）或 PNG；也可自行生成一张**合理**的同主名 SVG 预览，但不要假装成官方导出。没有预览图构建会失败（也可省略 `preview`，只要同目录存在同主名 `.svg`／`.png`／`.webp`）。
-4. 属性：`src` 必填（相对路径的 `.excalidraw`／`.excalidrawlib`）；`preview` 可选；`alt` 可选；`height` 可选（CSS 高度，默认 `min(70vh, 520px)`）。指令体必须为空。
+1. 把 `.excalidraw` 源文件放进该文的 `*-img/`，文件名短 ASCII，例如 `verify.excalidraw`。
+2. **首选工作流**：只要有 `.excalidraw` 即可 → 复制进 `*-img/` → 正文写相对路径指令。构建时源文件镜像到 `/_media/…`；页面用只读 Excalidraw 画布渲染场景，下载按钮指向静态 `/_media` URL。
+3. `preview`（同主名或显式路径的 SVG／PNG）**可选**，仅作无 JS／画布加载失败时的回退；没有预览也能构建与发布。
+4. 属性：`src` 必填（相对路径的 `.excalidraw`／`.excalidrawlib`）；`preview`／`alt`／`height` 可选（`height` 默认 `min(70vh, 520px)`）。指令体必须为空。
 
 ```md
-:::excalidraw{src="./image-layout-demo-img/verify.excalidraw" preview="./image-layout-demo-img/verify.svg" alt="Verify 页：离线 UI 目录示意"}
+:::excalidraw{src="./image-layout-demo-img/verify.excalidraw" alt="Verify 页：离线 UI 目录示意"}
 :::
 ```
 
-外链打开的是站点上的静态 `/_media/…/*.excalidraw`，不是临时 `blob:`。完整演示见 `src/content/blogs/image-layout-demo.md`。
+下载打开的是站点上的静态 `/_media/…/*.excalidraw`，不是临时 `blob:`。完整演示见 `src/content/blogs/image-layout-demo.md`。
 
 ### 博文链接卡片（双向）
 

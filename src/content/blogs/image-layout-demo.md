@@ -532,7 +532,7 @@ console.log(total([1, 2, 3]))
 | 方形卡片栏 | `:::card{layout="square" scroll="auto" title="…" meta="…"}` | 1:1 封面；条目超出一屏才循环 | 不够宽时退回横滑 |
 | 图片网格 | `:::gallery{columns="2"}` | 并排对照的图片 | 自动单列 |
 | 横向相册 | `:::gallery{layout="scroll"}` | 连续浏览多张图片 | 主图与后续露出 |
-| Excalidraw | `:::excalidraw{src="…excalidraw" preview="…svg"}` | 预览图 + 源文件静态链 | 工具条缩放／打开源文件 |
+| Excalidraw | `:::excalidraw{src="…excalidraw"}` | 真实画布（可 pinch） | 展开锁定单指平移；下载静态源 |
 | 博文链接卡 | `:::blog-link{slug="…"}` | 链到本站其他博文 | 对方文再写一张即双向 |
 
 ```html
@@ -568,19 +568,19 @@ console.log(total([1, 2, 3]))
 
 ## Excalidraw 图
 
-把 `.excalidraw` 源文件和导出的预览图（优先 SVG）放在文章旁的 `*-img/` 目录。预览走图片管线；源文件镜像到 `/_media/…`，工具条外链是**永久静态地址**，不是浏览器里的 `blob:`。
+把 `.excalidraw` 源文件放在文章旁的 `*-img/` 目录即可。客户端用只读 Excalidraw 画布渲染场景 JSON；源文件镜像到 `/_media/…`，下载按钮指向**永久静态地址**，不是浏览器里的 `blob:`。
 
-有 JS 时右下角可缩放、复位并打开源文件；无 JS 时仍显示预览图，并保留源文件文字链接。
+文内嵌：单指平移、双指 pinch 缩放，并尽量自动适配内容。展开视图：固定比例框内**单指不平移**，双指 pinch 仍可缩放，底部有「缩得越小条越长」的缩放指示条。可选 `preview`（SVG／PNG）仅作无 JS／加载失败时的回退，不是主展示。
 
-:::excalidraw{src="./image-layout-demo-img/verify.excalidraw" preview="./image-layout-demo-img/verify.svg" alt="Verify 页：离线 UI 目录示意"}
+:::excalidraw{src="./image-layout-demo-img/verify.excalidraw" alt="Verify 页：离线 UI 目录示意"}
 :::
 
 ```md
-:::excalidraw{src="./image-layout-demo-img/verify.excalidraw" preview="./image-layout-demo-img/verify.svg" alt="Verify 页：离线 UI 目录示意"}
+:::excalidraw{src="./image-layout-demo-img/verify.excalidraw" alt="Verify 页：离线 UI 目录示意"}
 :::
 ```
 
-省略 `preview` 时，会在同目录寻找与源文件同主名的 `.svg`／`.png`／`.webp`。
+仍可写 `preview="./….svg"`；省略时若同目录有同主名预览图会自动用作回退，没有预览也能构建。
 
 ## 博文链接卡片（双向）
 

@@ -1031,7 +1031,7 @@ main:has(.post-content) > footer.prose :is(a, span) {
   }
 }
 
-/* :::excalidraw — static preview + pan-zoom toolbar */
+/* :::excalidraw — React Excalidraw canvas (viewMode) + expand dialog */
 .prose .excalidraw-embed {
   position: relative;
   display: block;
@@ -1047,33 +1047,59 @@ main:has(.post-content) > footer.prose :is(a, span) {
   border-color: color-mix(in srgb, #fff 10%, transparent);
 }
 .prose .excalidraw-embed__viewport {
+  position: relative;
   height: var(--excalidraw-height, min(70vh, 520px));
   overflow: hidden;
-  cursor: grab;
   touch-action: none;
 }
-.prose .excalidraw-embed__viewport.is-dragging {
-  cursor: grabbing;
-}
-.prose .excalidraw-embed__canvas {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.prose .excalidraw-embed__host,
+.prose .excalidraw-canvas {
   width: 100%;
   height: 100%;
-  transform-origin: center center;
-  will-change: transform;
 }
-.prose .excalidraw-embed__canvas img,
+.prose .excalidraw-canvas--loading,
+.prose .excalidraw-embed__error {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  margin: 0;
+  padding: 1rem;
+  font-size: 0.9rem;
+  opacity: 0.75;
+}
+/* Hide Excalidraw chrome leftovers in view/zen mode */
+.prose .excalidraw-embed .App-menu,
+.prose .excalidraw-embed .layer-ui__wrapper,
+.prose .excalidraw-embed .FixedSideContainer,
+.prose .excalidraw-embed footer.App-toolbar-footer,
+.prose .excalidraw-embed .context-menu,
+.excalidraw-expand .App-menu,
+.excalidraw-expand .layer-ui__wrapper,
+.excalidraw-expand .FixedSideContainer,
+.excalidraw-expand footer.App-toolbar-footer,
+.excalidraw-expand .context-menu {
+  display: none !important;
+}
+.prose .excalidraw-embed .excalidraw,
+.excalidraw-expand .excalidraw {
+  --color-primary: var(--accent);
+}
+.prose .excalidraw-embed__fallback,
 .prose .excalidraw-embed__image {
+  position: absolute;
+  inset: 0;
   max-width: 100%;
   max-height: 100%;
-  width: auto;
-  height: auto;
+  width: 100%;
+  height: 100%;
   margin: 0;
   object-fit: contain;
+  pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
+}
+.prose .excalidraw-embed--canvas-ready .excalidraw-embed__fallback {
+  display: none;
 }
 .prose .excalidraw-embed__toolbar {
   position: absolute;
@@ -1106,60 +1132,32 @@ main:has(.post-content) > footer.prose :is(a, span) {
   justify-content: center;
   min-width: 1.7rem;
   height: 1.7rem;
-  padding: 0 0.35rem;
+  padding: 0 0.45rem;
   border: 0;
   border-radius: 999px;
   background: transparent;
   color: inherit;
   text-decoration: none;
   cursor: pointer;
+  font-size: 0.78rem;
 }
-.prose .excalidraw-embed__toolbar button:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-.prose
-  .excalidraw-embed__toolbar
-  button:is(:hover, :focus-visible):not(:disabled),
+.prose .excalidraw-embed__toolbar button:is(:hover, :focus-visible),
 .prose
   .excalidraw-embed__toolbar
   a.excalidraw-embed__source:is(:hover, :focus-visible) {
   background: color-mix(in srgb, var(--accent) 22%, transparent);
   outline: none;
 }
-.prose .excalidraw-embed__zoom-out::before {
-  content: '−';
-  font-size: 1.05rem;
-}
-.prose .excalidraw-embed__zoom-in::before {
-  content: '+';
-  font-size: 1.05rem;
-}
-.prose .excalidraw-embed__reset::before {
-  content: '↺';
+.prose .excalidraw-embed__expand::before {
+  content: '⛶';
   font-size: 0.95rem;
-}
-.prose .excalidraw-embed__source::before {
-  content: '↗';
-  font-size: 0.9rem;
 }
 .prose .excalidraw-embed__source {
   font-size: 0;
 }
 .prose .excalidraw-embed__source::before {
-  font-size: 0.9rem;
-}
-.prose .excalidraw-embed__zoom-label {
-  min-width: 2.6rem;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-  opacity: 0.85;
-}
-.prose .excalidraw-embed__sep {
-  width: 1px;
-  height: 1rem;
-  margin: 0 0.15rem;
-  background: color-mix(in srgb, var(--c-text) 22%, transparent);
+  content: '↓';
+  font-size: 0.95rem;
 }
 .prose .excalidraw-embed__noscript-source {
   margin: 0;
@@ -1169,6 +1167,84 @@ main:has(.post-content) > footer.prose :is(a, span) {
 .prose .excalidraw-embed:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
+}
+
+/* Expand dialog (fixed aspect box; pan locked; pinch zoom + zoom bar) */
+.excalidraw-expand {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  max-width: min(960px, 96vw);
+  max-height: min(90vh, 720px);
+  width: min(960px, 96vw);
+}
+.excalidraw-expand::backdrop {
+  background: rgb(0 0 0 / 55%);
+  backdrop-filter: blur(2px);
+}
+.excalidraw-expand__frame {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  width: 100%;
+  max-height: min(90vh, 720px);
+  border-radius: 0.65rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, #fff 18%, transparent);
+  background: #121212;
+  color: #f5f5f5;
+}
+.excalidraw-expand__host {
+  width: 100%;
+  height: 100%;
+  touch-action: pinch-zoom;
+}
+.excalidraw-expand__zoom-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 0.85rem;
+  z-index: 3;
+  transform: translateX(-50%);
+  width: min(42%, 220px);
+  height: 4px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 18%);
+  pointer-events: none;
+}
+.excalidraw-expand__zoom-bar-fill {
+  height: 100%;
+  width: calc(100% * var(--zoom-bar-scale, 0.55));
+  margin-inline: auto;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--accent, #e7a1b5) 85%, #fff);
+  transition: width 120ms ease-out;
+}
+.excalidraw-expand__toolbar {
+  position: absolute;
+  right: 0.65rem;
+  top: 0.65rem;
+  z-index: 3;
+  display: inline-flex;
+  gap: 0.35rem;
+}
+.excalidraw-expand__download,
+.excalidraw-expand__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, #fff 22%, transparent);
+  background: rgb(20 20 20 / 78%);
+  color: inherit;
+  text-decoration: none;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.excalidraw-expand__download:is(:hover, :focus-visible),
+.excalidraw-expand__close:is(:hover, :focus-visible) {
+  background: color-mix(in srgb, var(--accent, #e7a1b5) 35%, #141414);
+  outline: none;
 }
 
 /* :::blog-link — bidirectional post card */

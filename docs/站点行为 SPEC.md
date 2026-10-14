@@ -124,7 +124,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 
 ### Excalidraw 与博文链接卡
 
-作者写 `:::excalidraw{src="…excalidraw" preview="…svg"}`：预览图走 Astro 图片管线，源文件镜像到 `/_media/`；工具条提供缩放、复位与打开源文件（静态 URL，不用 `blob:`）。无 JS 仍显示预览与源链接。嵌入图不进入普通正文大图 dialog。
+作者写 `:::excalidraw{src="…excalidraw"}`：客户端以 React island 渲染只读 Excalidraw 画布；源文件镜像到 `/_media/`；工具条提供展开与下载（静态 URL，不用 `blob:`）。文内：单指平移 + 双指 pinch；展开：固定框、单指不平移、pinch 可缩放并显示缩放条。`preview` 可选，作无 JS／失败回退。嵌入图不进入普通正文大图 dialog。
 
 作者写 `:::blog-link{slug}`：构建期解析目标博文标题与描述，渲染横向链接卡，右侧为站点头像的圆角方图。双向互链由两篇文章各自放置卡片完成，不自动插入对端链接。
 
@@ -187,7 +187,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 | 更多菜单条目 | `config.ts` `MORE_LINKS` | `NavDropdown` 呈现，UnoCSS 提取图标；友链路由归属由 `nav-path.js` 维护 | 导航路径与构建产物检查 |
 | 拾趣分类／标题／顺序／说明 | `content/interests/*.{md,mdx}`；集合范围由 `content.config.ts` 维护 | 入口、子页和导航；`intro.md` 与首页 `recent.md` 排除出集合。可选图标唯一映射 `config.ts` 的 `INTEREST_ICONS`，UnoCSS 自动加入 safelist | 构建页面与可选图标检查 |
 | 封面卡片（单封面／文字介绍边界、属性、链接安全、评分及分组） | `plugins/remark-media-card.ts` | 博客、拾趣、关于的 Markdown；样式只在 `prose.css` | `remark-media-card.test.mjs` |
-| Excalidraw 嵌入 | `plugins/remark-excalidraw.ts`；`excalidraw-viewer.ts` | 同上；样式 `prose.css` | `remark-excalidraw.test.mjs` |
+| Excalidraw 嵌入 | `plugins/remark-excalidraw.ts`；`ExcalidrawCanvas.tsx` + `excalidraw-viewer.ts` | 同上；样式 `prose.css` | `remark-excalidraw.test.mjs` |
 | 博文链接卡 | `plugins/remark-blog-link.ts` | 同上；样式 `prose.css` | `remark-blog-link.test.mjs` |
 | 陈列架是否循环与视觉副本 | `src/utils/card-rail-marquee.js` | `CardRailMarquee.astro` 只接线；减少动态效果沿用 `reduced-motion.js`；位移、淡出和按下暂停在 `prose.css`，只在 `data-marquee="on"` 时生效 | `card-rail-marquee.test.mjs` |
 | gallery／figure 属性、内容结构、嵌套拒绝与带位置失败，普通正文图的 image-view／template 包装 | `plugins/remark-image-layouts.ts` | `plugins/index.ts` 在 `remarkMediaCard` 后接入；图片节点继续交给 Astro，不在组件或 RSS 重新推断布局 | `test/remark-image-layouts.test.mjs`、真实 Astro 产物检查 |

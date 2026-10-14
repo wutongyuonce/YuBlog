@@ -15,11 +15,13 @@ import {
  * Excalidraw 嵌入。博客／拾趣／关于共用 Markdown 管线：
  *
  * ```md
- * :::excalidraw{src="./post-img/diagram.excalidraw" preview="./post-img/diagram.svg" alt="说明"}
+ * :::excalidraw{src="./post-img/diagram.excalidraw" alt="说明"}
  * :::
  * ```
  *
- * 预览图走 Astro 图片管线；`.excalidraw` 源镜像到 `/_media/…`，外链是永久静态 URL，不是 blob:。
+ * 客户端用 React island 加载真实 Excalidraw 画布（viewMode）；`.excalidraw`
+ * 源镜像到 `/_media/…`，下载链是永久静态 URL，不是 blob:。
+ * `preview`（SVG／PNG）可选，仅作无 JS／加载失败时的回退。
  */
 
 type Directive = Extract<RootContent, { type: 'containerDirective' }>
@@ -58,11 +60,12 @@ const text = (value: string) => ({ type: 'text' as const, value })
 const isDirective = (node: RootContent): node is Directive =>
   node.type === 'containerDirective'
 
+/** Optional preview: explicit attr, else same-basename image next to source. */
 const resolvePreview = (
   markdownPath: string,
   srcPath: string,
   previewAttr: string | undefined
-): { relative: string; absolute: string } => {
+): { relative: string; absolute: string } | null => {
   const dir = path.dirname(markdownPath)
   if (previewAttr?.trim()) {
     const absolute = path.resolve(dir, previewAttr.trim())
@@ -82,9 +85,7 @@ const resolvePreview = (
       }
     }
   }
-  throw new Error(
-    'Excalidraw preview missing: set preview="…" or place a same-basename .svg/.png/.webp next to the .excalidraw file'
-  )
+  return null
 }
 
 function remarkExcalidraw() {
@@ -136,30 +137,30 @@ function remarkExcalidraw() {
               child
             )
 
-          let preview: { relative: string; absolute: string }
-          try {
-            preview = resolvePreview(
-              markdownPath,
-              ref.file,
-              child.attributes?.preview ?? undefined
-            )
-          } catch (error) {
-            return fail(
-              error instanceof Error ? error.message : String(error),
-              child
-            )
-          }
-          if (!existsSync(preview.absolute))
+          const previewAttr = child.attributes?.preview?.trim()
+          const preview = resolvePreview(markdownPath, ref.file, previewAttr)
+          if (previewAttr && preview && !existsSync(preview.absolute))
             return fail(
               `:::excalidraw preview not found: ${preview.relative}`,
               child
             )
-          const previewExt = path.extname(preview.absolute).toLowerCase()
-          if (
-            !PREVIEW_EXTS.includes(previewExt as (typeof PREVIEW_EXTS)[number])
-          )
+          if (previewAttr && preview) {
+            const previewExt = path.extname(preview.absolute).toLowerCase()
+            if (
+              !PREVIEW_EXTS.includes(
+                previewExt as (typeof PREVIEW_EXTS)[number]
+              )
+            )
+              return fail(
+                `:::excalidraw preview must be an image (${PREVIEW_EXTS.join('/')})`,
+                child
+              )
+          }
+          // Explicit preview= that resolves but file missing already failed;
+          // if attr set but resolve returned null somehow, fail:
+          if (previewAttr && !preview)
             return fail(
-              `:::excalidraw preview must be an image (${PREVIEW_EXTS.join('/')})`,
+              `:::excalidraw preview not found: ${previewAttr}`,
               child
             )
 
@@ -169,54 +170,50 @@ function remarkExcalidraw() {
             'Excalidraw 图'
           const height = child.attributes?.height?.trim() || 'min(70vh, 520px)'
 
-          const image: Image = {
-            type: 'image',
-            url: preview.relative,
-            title: null,
-            alt,
-            data: {
-              hProperties: {
-                className: ['excalidraw-embed__image'],
-              },
-            },
-          }
+          const sourceHref = src // relative; rehype-media-assets → /_media/…
 
-          const sourceHref = src // relative; rehype-media-assets rewrites to /_media/…
+          const viewportChildren: (Element | RootContent)[] = [
+            element('div', 'excalidraw-embed__host', [], {
+              'data-excalidraw-host': '',
+            }),
+          ]
+
+          if (preview && existsSync(preview.absolute)) {
+            const image: Image = {
+              type: 'image',
+              url: preview.relative,
+              title: null,
+              alt,
+              data: {
+                hProperties: {
+                  className: [
+                    'excalidraw-embed__image',
+                    'excalidraw-embed__fallback',
+                  ],
+                },
+              },
+            }
+            viewportChildren.push(image)
+          }
 
           const toolbar = element(
             'div',
             'excalidraw-embed__toolbar',
             [
-              element('button', 'excalidraw-embed__zoom-out', [], {
+              element('button', 'excalidraw-embed__expand', [], {
                 type: 'button',
-                ariaLabel: '缩小',
-              }),
-              element('span', 'excalidraw-embed__zoom-label', [text('100%')], {
-                ariaLive: 'polite',
-              }),
-              element('button', 'excalidraw-embed__zoom-in', [], {
-                type: 'button',
-                ariaLabel: '放大',
-              }),
-              element('span', 'excalidraw-embed__sep', [], {
-                ariaHidden: 'true',
-              }),
-              element('button', 'excalidraw-embed__reset', [], {
-                type: 'button',
-                ariaLabel: '复位到初始大小',
+                ariaLabel: '展开画布',
               }),
               {
                 type: 'link',
                 url: sourceHref,
                 title: null,
-                children: [text('源文件')],
+                children: [text('下载')],
                 data: {
                   hProperties: {
                     className: ['excalidraw-embed__source'],
-                    target: '_blank',
-                    rel: 'noopener noreferrer',
                     download: path.basename(ref.file),
-                    ariaLabel: '打开 Excalidraw 源文件',
+                    ariaLabel: '下载 Excalidraw 源文件',
                   },
                 },
               },
@@ -242,9 +239,7 @@ function remarkExcalidraw() {
             'figure',
             'excalidraw-embed',
             [
-              element('div', 'excalidraw-embed__viewport', [
-                element('div', 'excalidraw-embed__canvas', [image]),
-              ]),
+              element('div', 'excalidraw-embed__viewport', viewportChildren),
               toolbar,
               noscript,
             ],
@@ -254,6 +249,7 @@ function remarkExcalidraw() {
               'ariaLabel': alt,
               'tabIndex': 0,
               'data-excalidraw-viewer': '',
+              'data-excalidraw-src': sourceHref,
             }
           )
 
