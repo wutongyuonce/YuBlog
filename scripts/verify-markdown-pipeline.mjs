@@ -286,12 +286,12 @@ test('full RSS covers every built article and uses real, standalone content asse
   )
 })
 
-test('interest cards preserve authored content through the shared pipeline', async () => {
-  const interests = fromHtml(await html('interests/index.html'))
-  const recent = elements(interests, 'div').find((node) =>
+test('home and interest cards preserve authored content through the shared pipeline', async () => {
+  const home = fromHtml(await html('index.html'))
+  const recent = elements(home, 'div').find((node) =>
     node.properties.className?.includes('recent-media__body')
   )
-  assert.ok(recent, 'interest index renders the standalone recent.md content')
+  assert.ok(recent, 'home renders the standalone recent.md content')
   const processor = await createMarkdownProcessor({
     remarkPlugins: [remarkDirective, remarkMediaCard],
   })
