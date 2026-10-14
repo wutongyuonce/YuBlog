@@ -1,9 +1,9 @@
 {
   "user": "ztyonce",
   "profileUrl": "https://www.last.fm/user/ztyonce",
-  "updatedAt": "2026-10-14T07:41:04.000Z",
-  "weeklyScrobbles": 34,
-  "totalScrobbles": 201,
+  "updatedAt": "2026-10-14T13:46:19.000Z",
+  "weeklyScrobbles": 52,
+  "totalScrobbles": 219,
   "topArtist": "Gareth.T",
   "tracks": [
     {
@@ -21,7 +21,7 @@
       "album": "WE DON'T TRUST YOU (Explicit)",
       "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/ed0b0acbc5af9cabb31acbf3ba9e79bb.jpg",
       "url": "https://www.last.fm/music/Future/_/Like%20That",
-      "playcount": 4,
+      "playcount": 5,
       "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/ed0b0acbc5af9cabb31acbf3ba9e79bb.jpg"
     },
     {
@@ -30,8 +30,17 @@
       "album": "我是唱作人 第2期",
       "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/0736ed983406f03056ca78e5ea33dc57.jpg",
       "url": "https://www.last.fm/music/%E6%A2%81%E5%8D%9A/_/%E5%87%BA%E7%8E%B0%E5%8F%88%E7%A6%BB%E5%BC%80%20(Live)",
-      "playcount": 2,
+      "playcount": 3,
       "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/0736ed983406f03056ca78e5ea33dc57.jpg"
+    },
+    {
+      "name": "Pretty Little Fears (feat. J. Cole)",
+      "artist": "6LACK",
+      "album": "East Atlanta Love Letter (Explicit)",
+      "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/2ea098cac19e90b8a84257721d22fb13.jpg",
+      "url": "https://www.last.fm/music/6LACK/_/Pretty%20Little%20Fears%20(feat.%20J.%20Cole)",
+      "playcount": 2,
+      "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/2ea098cac19e90b8a84257721d22fb13.jpg"
     },
     {
       "name": "0.5x(零點五倍速)",
@@ -39,7 +48,7 @@
       "album": "0.5x (零点五倍速)",
       "cover": null,
       "url": "https://www.last.fm/music/BikaBreezy/_/0.5x(%E9%9B%B6%E9%BB%9E%E4%BA%94%E5%80%8D%E9%80%9F)",
-      "playcount": 1,
+      "playcount": 2,
       "fullCover": null
     },
     {
@@ -48,7 +57,7 @@
       "album": "Cyberpunk : Edgerunners Soundtrack Vol.1 (Ep1+2)",
       "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/b91e0208f0b8e41f555e682dbb37a71c.jpg",
       "url": "https://www.last.fm/music/CyberPunk/_/I%20Really%20Want%20to%20Stay%20at%20Your%20House",
-      "playcount": 1,
+      "playcount": 2,
       "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/b91e0208f0b8e41f555e682dbb37a71c.jpg"
     },
     {
@@ -57,17 +66,8 @@
       "album": "Let You Down",
       "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/c6d3ad9ef4faf979379ef3c34ff9ea67.jpg",
       "url": "https://www.last.fm/music/Dawid%20Podsiad%C5%82o/_/Let%20You%20Down",
-      "playcount": 1,
+      "playcount": 2,
       "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/c6d3ad9ef4faf979379ef3c34ff9ea67.jpg"
-    },
-    {
-      "name": "天生牙",
-      "artist": "SASIOVERLXRD",
-      "album": "赫鬼",
-      "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/6ba151f9a1ffe24bacb1f605865aac50.jpg",
-      "url": "https://www.last.fm/music/SASIOVERLXRD/_/%E5%A4%A9%E7%94%9F%E7%89%99",
-      "playcount": 1,
-      "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/6ba151f9a1ffe24bacb1f605865aac50.jpg"
     },
     {
       "name": "Hit & Run",
@@ -75,7 +75,7 @@
       "album": "'Decent (Explicit)",
       "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/610b202768ece7b88d575328143cbd68.jpg",
       "url": "https://www.last.fm/music/tobi%20lou/_/Hit%20%26%20Run",
-      "playcount": 1,
+      "playcount": 2,
       "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/610b202768ece7b88d575328143cbd68.jpg"
     },
     {
@@ -84,7 +84,7 @@
       "album": "一半一半",
       "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/7ef3d67fe068d5a605555f73dc1b44fe.jpg",
       "url": "https://www.last.fm/music/Top%20Barry/_/%E4%B8%80%E5%8D%8A%E4%B8%80%E5%8D%8A",
-      "playcount": 1,
+      "playcount": 2,
       "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/7ef3d67fe068d5a605555f73dc1b44fe.jpg"
     },
     {
@@ -93,7 +93,7 @@
       "album": "曹操",
       "cover": "https://lastfm-img.freetls.fastly.net/i/u/300x300/929ca987d3f74a309800f7b6e6676003.jpg",
       "url": "https://www.last.fm/music/%E6%9E%97%E4%BF%8A%E6%9D%B0/_/%E6%9B%B9%E6%93%8D",
-      "playcount": 1,
+      "playcount": 2,
       "fullCover": "https://lastfm-img.freetls.fastly.net/i/u/ar0/929ca987d3f74a309800f7b6e6676003.jpg"
     }
   ]
