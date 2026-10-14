@@ -1031,7 +1031,7 @@ main:has(.post-content) > footer.prose :is(a, span) {
   }
 }
 
-/* :::excalidraw — compact 16:10 card + custom bottom-right pill (no native chrome) */
+/* :::excalidraw — compact 16:9 card + custom bottom-right pill (no native chrome) */
 .prose .excalidraw-embed {
   position: relative;
   display: block;
@@ -1047,14 +1047,19 @@ main:has(.post-content) > footer.prose :is(a, span) {
   border-color: color-mix(in srgb, #fff 10%, transparent);
 }
 
-/* ~16:10 footprint; mobile ~25–30vh, desktop capped */
+/* 16:9 footprint (innei desktop ~871×490); mobile shorter */
 .prose .excalidraw-embed__viewport {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
   height: auto;
-  max-height: min(42vh, 420px);
+  max-height: min(36vh, 490px);
   overflow: hidden;
+}
+@media (max-width: 640px) {
+  .prose .excalidraw-embed__viewport {
+    max-height: min(28vh, 240px);
+  }
 }
 .prose
   .excalidraw-embed[style*='--excalidraw-height']
@@ -1157,8 +1162,8 @@ main:has(.post-content) > footer.prose :is(a, span) {
 /* Custom pill — bottom-right, compact, even icons (reference) */
 .excalidraw-pill {
   position: absolute;
-  right: 0.55rem;
-  bottom: 0.55rem;
+  right: 7px;
+  bottom: 7px;
   z-index: 20;
   display: inline-flex;
   align-items: center;
