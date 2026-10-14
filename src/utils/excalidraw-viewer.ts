@@ -1,3 +1,5 @@
+const ZOOM_STEP = 0.1
+
 const resolveSceneUrl = (root: HTMLElement): string | null => {
   // Prefer the download <a> — rehype rewrites it to /_media/….
   const link = root.querySelector<HTMLAnchorElement>(
@@ -35,6 +37,10 @@ const zoomBarScale = (zoom: number) => {
   const raw = min / z
   return Math.min(1, Math.max(0.18, raw * 2.2))
 }
+
+const formatZoom = (zoom: number) => `${Math.round(zoom * 100)}%`
+
+type MountFn = typeof import('~/utils/excalidraw-mount').mountExcalidrawCanvas
 
 /**
  * Mounts real Excalidraw canvases into :::excalidraw figures.
@@ -86,12 +92,9 @@ export class ExcalidrawViewer extends HTMLElement {
   private enhance(
     root: HTMLElement,
     signal: AbortSignal,
-    mountCanvas: typeof import('~/utils/excalidraw-mount').mountExcalidrawCanvas
+    mountCanvas: MountFn
   ) {
     const host = root.querySelector<HTMLElement>('[data-excalidraw-host]')
-    const expandBtn = root.querySelector<HTMLButtonElement>(
-      '.excalidraw-embed__expand'
-    )
     const sceneUrl = resolveSceneUrl(root)
     if (!host || !sceneUrl) return
 
@@ -101,12 +104,32 @@ export class ExcalidrawViewer extends HTMLElement {
     const fallback = root.querySelector<HTMLElement>(
       '.excalidraw-embed__fallback'
     )
-    const unmount = mountCanvas(host, {
+    const zoomLabel = root.querySelector<HTMLElement>(
+      '.excalidraw-embed__zoom-label'
+    )
+    const zoomOut = root.querySelector<HTMLButtonElement>(
+      '.excalidraw-embed__zoom-out'
+    )
+    const zoomIn = root.querySelector<HTMLButtonElement>(
+      '.excalidraw-embed__zoom-in'
+    )
+    const reset = root.querySelector<HTMLButtonElement>(
+      '.excalidraw-embed__reset'
+    )
+    const expandBtn = root.querySelector<HTMLButtonElement>(
+      '.excalidraw-embed__expand'
+    )
+
+    const { unmount, api } = mountCanvas(host, {
       sceneUrl,
       mode: 'embed',
+      onZoomChange: (zoom) => {
+        if (zoomLabel) zoomLabel.textContent = formatZoom(zoom)
+      },
       onReady: () => {
         fallback?.setAttribute('hidden', '')
         root.classList.add('excalidraw-embed--canvas-ready')
+        if (zoomLabel) zoomLabel.textContent = formatZoom(api.getZoom())
       },
       onError: (message) => {
         root.classList.add('excalidraw-embed--error')
@@ -123,16 +146,20 @@ export class ExcalidrawViewer extends HTMLElement {
     this.cleanups.push(unmount)
     signal.addEventListener('abort', unmount, { once: true })
 
-    if (expandBtn) {
-      const onExpand = () => this.openExpand(root, sceneUrl, mountCanvas)
-      expandBtn.addEventListener('click', onExpand, { signal })
-    }
+    zoomOut?.addEventListener('click', () => api.zoomBy(-ZOOM_STEP), { signal })
+    zoomIn?.addEventListener('click', () => api.zoomBy(ZOOM_STEP), { signal })
+    reset?.addEventListener('click', () => api.fit(), { signal })
+    expandBtn?.addEventListener(
+      'click',
+      () => this.openExpand(root, sceneUrl, mountCanvas),
+      { signal }
+    )
   }
 
   private openExpand(
     sourceRoot: HTMLElement,
     sceneUrl: string,
-    mountCanvas: typeof import('~/utils/excalidraw-mount').mountExcalidrawCanvas
+    mountCanvas: MountFn
   ) {
     const existing = document.querySelector('dialog.excalidraw-expand')
     existing?.remove()
@@ -158,13 +185,34 @@ export class ExcalidrawViewer extends HTMLElement {
     const toolbar = document.createElement('div')
     toolbar.className = 'excalidraw-expand__toolbar'
     toolbar.setAttribute('role', 'toolbar')
+    toolbar.setAttribute('aria-label', 'Excalidraw 展开控制')
+
+    const zoomOut = document.createElement('button')
+    zoomOut.type = 'button'
+    zoomOut.className = 'excalidraw-expand__zoom-out'
+    zoomOut.setAttribute('aria-label', '缩小')
+
+    const zoomLabel = document.createElement('span')
+    zoomLabel.className = 'excalidraw-expand__zoom-label'
+    zoomLabel.setAttribute('aria-live', 'polite')
+    zoomLabel.textContent = '100%'
+
+    const zoomIn = document.createElement('button')
+    zoomIn.type = 'button'
+    zoomIn.className = 'excalidraw-expand__zoom-in'
+    zoomIn.setAttribute('aria-label', '放大')
+
+    const reset = document.createElement('button')
+    reset.type = 'button'
+    reset.className = 'excalidraw-expand__reset'
+    reset.setAttribute('aria-label', '复位')
 
     const download = document.createElement('a')
     download.className = 'excalidraw-expand__download'
     download.href = sceneUrl
     download.download = downloadName(sourceRoot, sceneUrl)
     download.rel = 'noopener noreferrer'
-    download.textContent = '下载源文件'
+    download.textContent = '下载'
     download.setAttribute('aria-label', '下载 Excalidraw 源文件')
 
     const close = document.createElement('button')
@@ -173,12 +221,12 @@ export class ExcalidrawViewer extends HTMLElement {
     close.setAttribute('aria-label', '关闭')
     close.textContent = '关闭'
 
-    toolbar.append(download, close)
+    toolbar.append(zoomOut, zoomLabel, zoomIn, reset, download, close)
     frame.append(host, barTrack, toolbar)
     dialog.append(frame)
     document.body.append(dialog)
 
-    const unmount = mountCanvas(host, {
+    const { unmount, api } = mountCanvas(host, {
       sceneUrl,
       mode: 'expand',
       onZoomChange: (zoom) => {
@@ -186,8 +234,13 @@ export class ExcalidrawViewer extends HTMLElement {
           '--zoom-bar-scale',
           String(zoomBarScale(zoom))
         )
+        zoomLabel.textContent = formatZoom(zoom)
       },
     })
+
+    zoomOut.addEventListener('click', () => api.zoomBy(-ZOOM_STEP))
+    zoomIn.addEventListener('click', () => api.zoomBy(ZOOM_STEP))
+    reset.addEventListener('click', () => api.fit())
 
     const cleanup = () => {
       unmount()

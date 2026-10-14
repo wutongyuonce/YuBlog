@@ -8,7 +8,7 @@
 
 ### 新增
 
-- Markdown 支持 `:::excalidraw`：React island 加载只读 Excalidraw 画布（viewMode／zen）；文内可单指平移与 pinch，展开视图锁定单指平移并显示缩放指示条；`.excalidraw` 镜像到 `/_media/`，下载为静态 URL（不用 `blob:`）；`preview` 可选回退。
+- Markdown 支持 `:::excalidraw`：React island 加载只读 Excalidraw 画布（对齐 Shiro：viewMode／zen、`@excalidraw/excalidraw@0.17`）；横向 16:9 卡片（高度封顶约 500px）；文内可单指平移与 pinch；展开锁定单指平移并提供缩放％／复位／下载与缩放条；隐藏官方底栏等 chrome；`.excalidraw` 镜像 `/_media/`；`preview` 可选回退。
 - Markdown 支持 `:::blog-link` 博文链接卡：构建期按 `slug` 填入标题与描述，右侧为站点方头像（圆角方形）；双向互链由两篇文章各自书写，不自动反链。
 
 - 首页「最近在听 Top10」展示 Last.fm 过去七天 Top 10 歌曲，方形专辑封面下歌名最多显示两行，单行歌名不留空行、小字 `歌手 - 专辑名` 紧接各自歌名，卡片单行自动头尾循环，按下或聚焦暂停；封面可点击查看远程原尺寸图，无 JS／减少动态效果时仍能手动横滑；附七天听歌次数、累计记录、常听歌手与更新时间，标题链接到个人 Last.fm 主页。每小时同步静态快照，失败保留旧数据，API Key 仅在环境变量和 Actions Secret 中使用。

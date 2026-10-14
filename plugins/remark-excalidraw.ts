@@ -168,7 +168,7 @@ function remarkExcalidraw() {
             child.attributes?.alt?.trim() ||
             path.parse(ref.file).name ||
             'Excalidraw 图'
-          const height = child.attributes?.height?.trim() || 'min(70vh, 520px)'
+          const height = child.attributes?.height?.trim() || ''
 
           const sourceHref = src // relative; rehype-media-assets → /_media/…
 
@@ -200,6 +200,21 @@ function remarkExcalidraw() {
             'div',
             'excalidraw-embed__toolbar',
             [
+              element('button', 'excalidraw-embed__zoom-out', [], {
+                type: 'button',
+                ariaLabel: '缩小',
+              }),
+              element('span', 'excalidraw-embed__zoom-label', [text('—')], {
+                ariaLive: 'polite',
+              }),
+              element('button', 'excalidraw-embed__zoom-in', [], {
+                type: 'button',
+                ariaLabel: '放大',
+              }),
+              element('button', 'excalidraw-embed__reset', [], {
+                type: 'button',
+                ariaLabel: '复位到适配大小',
+              }),
               element('button', 'excalidraw-embed__expand', [], {
                 type: 'button',
                 ariaLabel: '展开画布',
@@ -244,7 +259,7 @@ function remarkExcalidraw() {
               noscript,
             ],
             {
-              'style': `--excalidraw-height:${height}`,
+              ...(height ? { style: `--excalidraw-height:${height}` } : {}),
               'role': 'region',
               'ariaLabel': alt,
               'tabIndex': 0,

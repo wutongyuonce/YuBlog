@@ -38,3 +38,6 @@ pnpm-debug.log*
 
 # 由 astro-media-sync 从 src/ 镜像出来的视频/音频
 public/_media/
+
+# Excalidraw 0.17 字体／locale（由 media-sync 从 node_modules 同步）
+public/excalidraw-assets/

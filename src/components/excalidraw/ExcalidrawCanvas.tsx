@@ -1,21 +1,33 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+  forwardRef,
+} from 'react'
 import { Excalidraw } from '@excalidraw/excalidraw'
+import type { ExcalidrawElement } from '@excalidraw/excalidraw/types/element/types'
 import type {
   AppState,
   BinaryFiles,
   ExcalidrawImperativeAPI,
-} from '@excalidraw/excalidraw/types'
-import type { ExcalidrawElement } from '@excalidraw/excalidraw/element/types'
-
-import '@excalidraw/excalidraw/index.css'
+} from '@excalidraw/excalidraw/types/types'
 
 export type ExcalidrawViewMode = 'embed' | 'expand'
+
+export interface ExcalidrawCanvasHandle {
+  zoomBy: (delta: number) => void
+  setZoom: (value: number) => void
+  fit: () => void
+  getZoom: () => number
+}
 
 export interface ExcalidrawCanvasProps {
   /** Static `/_media/…/*.excalidraw` URL (never a permanent blob:). */
   sceneUrl: string
   mode: ExcalidrawViewMode
-  /** Optional theme override; defaults to document `html.dark`. */
   theme?: 'light' | 'dark'
   className?: string
   onZoomChange?: (zoom: number) => void
@@ -29,26 +41,38 @@ interface ScenePayload {
   files?: BinaryFiles
 }
 
+const ZOOM_MIN = 0.1
+const ZOOM_MAX = 3
+
 const readTheme = (): 'light' | 'dark' =>
   typeof document !== 'undefined' &&
   document.documentElement.classList.contains('dark')
     ? 'dark'
     : 'light'
 
+const clampZoom = (value: number) =>
+  Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, value))
+
 /**
- * Read-only Excalidraw canvas (view + zen).
- * embed: single-finger pan + pinch zoom, fit-to-content.
- * expand: pan locked for one finger; pinch / wheel zoom still work.
+ * Read-only Excalidraw canvas mirroring Shiro:
+ * viewModeEnabled + zenModeEnabled, fitToContent, no editor chrome.
+ * embed: single-finger pan + pinch; expand: single-finger pan locked.
  */
-export function ExcalidrawCanvas({
-  sceneUrl,
-  mode,
-  theme: themeProp,
-  className,
-  onZoomChange,
-  onReady,
-  onError,
-}: ExcalidrawCanvasProps) {
+export const ExcalidrawCanvas = forwardRef<
+  ExcalidrawCanvasHandle,
+  ExcalidrawCanvasProps
+>(function ExcalidrawCanvas(
+  {
+    sceneUrl,
+    mode,
+    theme: themeProp,
+    className,
+    onZoomChange,
+    onReady,
+    onError,
+  },
+  ref
+) {
   const hostRef = useRef<HTMLDivElement>(null)
   const apiRef = useRef<ExcalidrawImperativeAPI | null>(null)
   const fittedRef = useRef(false)
@@ -105,21 +129,64 @@ export function ExcalidrawCanvas({
     }
   }, [sceneUrl, onError])
 
+  const emitZoom = useCallback(() => {
+    const api = apiRef.current
+    if (!api) return
+    onZoomChange?.(api.getAppState().zoom.value)
+  }, [onZoomChange])
+
   const fitOnce = useCallback(
     (api: ExcalidrawImperativeAPI) => {
       if (fittedRef.current) return
       if (api.getSceneElements().length === 0) return
       api.scrollToContent(undefined, { fitToContent: true })
       fittedRef.current = true
-      onZoomChange?.(api.getAppState().zoom.value)
+      emitZoom()
       onReady?.()
     },
-    [onReady, onZoomChange]
+    [emitZoom, onReady]
+  )
+
+  const applyZoom = useCallback(
+    (next: number) => {
+      const api = apiRef.current
+      if (!api) return
+      const value = clampZoom(next)
+      api.updateScene({
+        appState: {
+          zoom: { value: value as AppState['zoom']['value'] },
+        },
+      })
+      onZoomChange?.(value)
+    },
+    [onZoomChange]
+  )
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      zoomBy: (delta) => {
+        const api = apiRef.current
+        if (!api) return
+        applyZoom(api.getAppState().zoom.value + delta)
+      },
+      setZoom: (value) => applyZoom(value),
+      fit: () => {
+        const api = apiRef.current
+        if (!api) return
+        api.scrollToContent(undefined, { fitToContent: true })
+        emitZoom()
+      },
+      getZoom: () => apiRef.current?.getAppState().zoom.value ?? 1,
+    }),
+    [applyZoom, emitZoom]
   )
 
   const handleApi = useCallback(
     (api: ExcalidrawImperativeAPI) => {
       apiRef.current = api
+      // Shiro: scrollToContent after short delay once scene is ready
+      window.setTimeout(() => fitOnce(api), 300)
       const id = window.setInterval(() => {
         if (!apiRef.current) {
           window.clearInterval(id)
@@ -135,7 +202,7 @@ export function ExcalidrawCanvas({
     [fitOnce]
   )
 
-  // Expand mode: block single-finger / single-pointer pan; allow multi-touch pinch.
+  // Expand: block single-pointer pan; allow multi-touch pinch.
   useEffect(() => {
     if (mode !== 'expand') return
     const el = hostRef.current
@@ -177,6 +244,7 @@ export function ExcalidrawCanvas({
           theme === 'dark'
             ? (scene.appState?.viewBackgroundColor ?? '#121212')
             : (scene.appState?.viewBackgroundColor ?? '#ffffff'),
+        collaborators: new Map(),
       },
       files: scene.files ?? {},
       scrollToContent: true,
@@ -209,6 +277,8 @@ export function ExcalidrawCanvas({
         .join(' ')}
       data-pan-locked={mode === 'expand' ? '1' : undefined}
       style={{ width: '100%', height: '100%' }}
+      onKeyDown={(event) => event.stopPropagation()}
+      onKeyUp={(event) => event.stopPropagation()}
     >
       <Excalidraw
         key={`${sceneUrl}:${theme}:${mode}`}
@@ -229,14 +299,15 @@ export function ExcalidrawCanvas({
             saveAsImage: false,
           },
         }}
-        onScrollChange={(_scrollX, _scrollY, zoom) => {
-          onZoomChange?.(zoom.value)
+        onScrollChange={() => emitZoom()}
+        onChange={(_elements, appState) => {
+          onZoomChange?.(appState.zoom.value)
         }}
         detectScroll={false}
         handleKeyboardGlobally={false}
       />
     </div>
   )
-}
+})
 
 export default ExcalidrawCanvas

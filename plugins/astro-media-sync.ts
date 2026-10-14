@@ -1,5 +1,6 @@
 import {
   copyFileSync,
+  cpSync,
   existsSync,
   lstatSync,
   mkdirSync,
@@ -166,6 +167,26 @@ export function syncMedia(roots: MediaRoots = MEDIA_ROOTS) {
   return { total: mirror.size, copied, removed }
 }
 
+/**
+ * Excalidraw 0.17（与 Shiro 同版）把字体／locale 放在 `excalidraw-assets/`，
+ * 打包后 publicPath 为空字符串，浏览器从站点根路径 `/excalidraw-assets/…` 拉取。
+ * 构建前从 node_modules 同步到 `public/excalidraw-assets/`（已 gitignore）。
+ */
+export function syncExcalidrawAssets(projectRoot = process.cwd()): {
+  copied: boolean
+} {
+  const source = path.join(
+    projectRoot,
+    'node_modules/@excalidraw/excalidraw/dist/excalidraw-assets'
+  )
+  const target = path.join(projectRoot, 'public/excalidraw-assets')
+  if (!existsSync(source)) return { copied: false }
+  mkdirSync(path.dirname(target), { recursive: true })
+  rmSync(target, { recursive: true, force: true })
+  cpSync(source, target, { recursive: true })
+  return { copied: true }
+}
+
 export function mediaSyncIntegration(): AstroIntegration {
   return {
     name: 'yublog:media-sync',
@@ -176,6 +197,8 @@ export function mediaSyncIntegration(): AstroIntegration {
           logger.info(
             `媒体镜像：共 ${total} 个文件，更新 ${copied} 个，清理 ${removed} 个`
           )
+        if (syncExcalidrawAssets().copied)
+          logger.info('已同步 Excalidraw 静态资源到 public/excalidraw-assets/')
       },
     },
   }

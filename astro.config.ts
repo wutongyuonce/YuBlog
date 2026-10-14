@@ -71,12 +71,19 @@ export default defineConfig({
 
   // ==================== Vite 配置（底层构建工具） ====================
   vite: {
+    // Excalidraw 0.17（与 Shiro 同版）需要显式关掉 Preact 构建分支
+    define: {
+      'process.env.IS_PREACT': JSON.stringify('false'),
+    },
     // 在生成产物前裁掉 KaTeX 的 woff / ttf，字体与 CSS 哈希都一致
     css: { postcss: { plugins: [katexWoff2Only()] } },
     build: {
       cssCodeSplit: false, // 全站一份 CSS，避免硬刷新某个页面时丢掉顶栏/侧栏样式
-      chunkSizeWarningLimit: 1200, // 代码块大小警告阈值（KB），超过提示优化
-      // 默认 500KB，这里提升到 1200KB 避免不必要的警告
+      chunkSizeWarningLimit: 2200, // Excalidraw 画布包较大；无嵌入页不加载
+      // 默认 500KB
+    },
+    optimizeDeps: {
+      include: ['@excalidraw/excalidraw'],
     },
   },
 

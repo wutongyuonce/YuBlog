@@ -570,7 +570,7 @@ console.log(total([1, 2, 3]))
 
 把 `.excalidraw` 源文件放在文章旁的 `*-img/` 目录即可。客户端用只读 Excalidraw 画布渲染场景 JSON；源文件镜像到 `/_media/…`，下载按钮指向**永久静态地址**，不是浏览器里的 `blob:`。
 
-文内嵌：单指平移、双指 pinch 缩放，并尽量自动适配内容。展开视图：固定比例框内**单指不平移**，双指 pinch 仍可缩放，底部有「缩得越小条越长」的缩放指示条。可选 `preview`（SVG／PNG）仅作无 JS／加载失败时的回退，不是主展示。
+文内嵌为横向圆角卡片（约 16:9，高度封顶约 500px，对齐 Shiro／innei），只读画布可单指平移与双指 pinch；工具条含缩放／复位／展开／下载。展开视图：固定比例框内**单指不平移**，双指 pinch 仍可缩放，顶部有缩放％／复位／下载，底部有「缩得越小条越长」的缩放条。可选 `preview` 仅作无 JS／失败回退。
 
 :::excalidraw{src="./image-layout-demo-img/verify.excalidraw" alt="Verify 页：离线 UI 目录示意"}
 :::

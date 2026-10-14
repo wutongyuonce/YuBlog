@@ -28,6 +28,8 @@ test(':::excalidraw renders host, toolbar download and static source link', asyn
   assert.match(code, /data-excalidraw-viewer/)
   assert.match(code, /data-excalidraw-host/)
   assert.match(code, /excalidraw-embed__expand/)
+  assert.match(code, /excalidraw-embed__zoom-out/)
+  assert.match(code, /excalidraw-embed__reset/)
   assert.match(code, /href="\.\/image-layout-demo-img\/verify\.excalidraw"/)
   assert.match(code, /download="/)
   assert.doesNotMatch(code, /blob:/)

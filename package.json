@@ -96,7 +96,7 @@
     "node": ">=22.12.0"
   },
   "dependencies": {
-    "@excalidraw/excalidraw": "^0.18.1",
+    "@excalidraw/excalidraw": "0.17.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   }
