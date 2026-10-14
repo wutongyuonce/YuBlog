@@ -124,7 +124,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 
 ### Excalidraw 与博文链接卡
 
-作者写 `:::excalidraw{src="…excalidraw"}`：只读画布约 16:10；隐藏全部官方 Excalidraw chrome；右下角自定义 pill（缩小／％／放大｜复位｜展开｜下载，静态 `/_media`）；展开用 dialog（底部缩放条：适配最长、放大变短；单指平移锁定、pinch 可用）。`preview` 可选回退。嵌入图不进入普通正文大图 dialog。
+作者写 `:::excalidraw{src="…excalidraw"}`：只读画布约 16:10；隐藏全部官方 Excalidraw chrome；右下角自定义 pill（缩小／％／放大｜复位｜展开｜下载，静态 `/_media`）；展开用 dialog（底部缩放条：适配最长、放大变短；单指／鼠标可平移、pinch 缩放（与正文一致））。`preview` 可选回退。嵌入图不进入普通正文大图 dialog。
 
 作者写 `:::blog-link{slug}`：构建期解析目标博文标题与描述，渲染横向链接卡，右侧为站点头像的圆角方图。双向互链由两篇文章各自放置卡片完成，不自动插入对端链接。
 

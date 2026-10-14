@@ -1,7 +1,7 @@
 /**
  * Mount Excalidraw canvases into :::excalidraw figures.
  * Embed: custom pill only (native chrome CSS-hidden).
- * Expand: dialog + L–R zoom bar + download; single-finger pan locked.
+ * Expand: dialog + L–R zoom bar + download; same pan/pinch as embed.
  */
 
 type MountFn = typeof import('~/utils/excalidraw-mount').mountExcalidrawCanvas
@@ -164,7 +164,6 @@ export class ExcalidrawViewer extends HTMLElement {
       mode: 'expand',
       downloadUrl: sceneUrl,
       downloadName: name,
-      panLocked: true,
       className: 'excalidraw-view--in-dialog',
       onReady: (api) => {
         fitZoom = api.getAppState().zoom.value

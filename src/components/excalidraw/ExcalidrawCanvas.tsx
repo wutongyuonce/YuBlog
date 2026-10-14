@@ -1,8 +1,7 @@
 /**
  * Read-only Excalidraw embed for YuBlog.
- * Rendering via @excalidraw/excalidraw (viewMode+zen); ALL native chrome hidden.
- * Custom bottom-right pill: − | % | + | | reset | | expand | download.
- * Types are local shims so astro check does not OOM on package d.ts.
+ * Native chrome hidden; custom bottom-right pill drives zoom/reset/expand/download.
+ * Toolbar zoom keeps the viewport-center scene point fixed (no drift).
  */
 import {
   forwardRef,
@@ -18,8 +17,20 @@ import { Excalidraw as Board } from '@excalidraw/excalidraw'
 interface ExcalidrawApi {
   scrollToContent: (target?: unknown, opts?: { fitToContent?: boolean }) => void
   getSceneElements: () => readonly unknown[]
-  getAppState: () => { zoom: { value: number } }
-  updateScene: (scene: { appState?: { zoom?: { value: number } } }) => void
+  getAppState: () => {
+    zoom: { value: number }
+    scrollX: number
+    scrollY: number
+    width: number
+    height: number
+  }
+  updateScene: (scene: {
+    appState?: {
+      zoom?: { value: number }
+      scrollX?: number
+      scrollY?: number
+    }
+  }) => void
 }
 
 export interface ExcalidrawCanvasHandle {
@@ -31,7 +42,6 @@ export interface ExcalidrawCanvasHandle {
 
 export interface ExcalidrawCanvasProps {
   sceneUrl: string
-  /** Embed shows full pill; expand mode hides expand button. */
   mode?: 'embed' | 'expand'
   downloadUrl?: string
   downloadName?: string
@@ -41,8 +51,6 @@ export interface ExcalidrawCanvasProps {
   onZoomChange?: (zoom: number, fitZoom: number) => void
   onReady?: (api: ExcalidrawApi) => void
   onError?: (message: string) => void
-  /** Expand: block single-finger pan; keep multi-touch pinch. */
-  panLocked?: boolean
 }
 
 interface ScenePayload {
@@ -66,6 +74,31 @@ const clampZoom = (value: number) =>
 
 const formatZoom = (zoom: number) => `${Math.round(zoom * 100)}%`
 
+/**
+ * Change zoom while keeping the scene point under the viewport center fixed.
+ * Plain `updateScene({ zoom })` zooms around origin and makes content "fly away".
+ */
+const setZoomAtViewportCenter = (api: ExcalidrawApi, nextZoom: number) => {
+  const state = api.getAppState()
+  const prev = state.zoom.value
+  const next = clampZoom(nextZoom)
+  if (Math.abs(next - prev) < 1e-6) return next
+
+  const cx = state.width / 2
+  const cy = state.height / 2
+  const sceneX = (cx - state.scrollX) / prev
+  const sceneY = (cy - state.scrollY) / prev
+
+  api.updateScene({
+    appState: {
+      zoom: { value: next },
+      scrollX: cx - sceneX * next,
+      scrollY: cy - sceneY * next,
+    },
+  })
+  return next
+}
+
 export const ExcalidrawCanvas = forwardRef<
   ExcalidrawCanvasHandle,
   ExcalidrawCanvasProps
@@ -81,14 +114,11 @@ export const ExcalidrawCanvas = forwardRef<
     onZoomChange,
     onReady,
     onError,
-    panLocked = false,
   },
   ref
 ) {
-  const hostRef = useRef<HTMLDivElement>(null)
   const apiRef = useRef<ExcalidrawApi | undefined>(undefined)
   const fitZoomRef = useRef(1)
-  const pointers = useRef(new Set<number>())
   const [scene, setScene] = useState<ScenePayload | null>(null)
   const [loading, setLoading] = useState(true)
   const [zoomLabel, setZoomLabel] = useState('—')
@@ -165,8 +195,8 @@ export const ExcalidrawCanvas = forwardRef<
     (delta: number) => {
       const api = apiRef.current
       if (!api) return
-      const next = clampZoom(api.getAppState().zoom.value + delta)
-      api.updateScene({ appState: { zoom: { value: next } } })
+      const prev = api.getAppState().zoom.value
+      const next = setZoomAtViewportCenter(api, prev + delta)
       emitZoom(next)
     },
     [emitZoom]
@@ -182,36 +212,6 @@ export const ExcalidrawCanvas = forwardRef<
     }),
     [fitToContent, zoomBy]
   )
-
-  // Expand: block single-pointer pan; allow multi-touch pinch.
-  useEffect(() => {
-    if (!panLocked) return
-    const el = hostRef.current
-    if (!el) return
-    const onDown = (event: PointerEvent) => {
-      pointers.current.add(event.pointerId)
-    }
-    const onUp = (event: PointerEvent) => {
-      pointers.current.delete(event.pointerId)
-    }
-    const onMove = (event: PointerEvent) => {
-      if (pointers.current.size === 1) {
-        event.stopImmediatePropagation()
-        event.preventDefault()
-      }
-    }
-    el.addEventListener('pointerdown', onDown, true)
-    el.addEventListener('pointerup', onUp, true)
-    el.addEventListener('pointercancel', onUp, true)
-    el.addEventListener('pointermove', onMove, true)
-    return () => {
-      el.removeEventListener('pointerdown', onDown, true)
-      el.removeEventListener('pointerup', onUp, true)
-      el.removeEventListener('pointercancel', onUp, true)
-      el.removeEventListener('pointermove', onMove, true)
-      pointers.current.clear()
-    }
-  }, [panLocked, scene])
 
   const initialData = useMemo(() => {
     if (!scene) return null
@@ -232,9 +232,7 @@ export const ExcalidrawCanvas = forwardRef<
 
   return (
     <div
-      ref={hostRef}
       className={rootClass}
-      data-pan-locked={panLocked ? '1' : undefined}
       onKeyDown={(event) => event.stopPropagation()}
       onKeyUp={(event) => event.stopPropagation()}
     >
@@ -281,7 +279,6 @@ export const ExcalidrawCanvas = forwardRef<
         />
       )}
 
-      {/* Custom pill — only chrome the reader should see */}
       <div
         className="excalidraw-pill"
         role="toolbar"
