@@ -105,7 +105,7 @@ function remarkBlogLink() {
           const descOverride = child.attributes?.description?.trim()
           const avatarOverride = child.attributes?.avatar?.trim()
 
-          let href = ''
+          let href: string
           let title = titleOverride ?? ''
           let description = descOverride ?? ''
 
