@@ -13,7 +13,7 @@ for (const width of [1440, 390, 320]) {
     deviceScaleFactor: 1,
     mobile: false,
   })
-  await page.goto(new URL('interests/', base).href)
+  await page.goto(base)
   await page.waitForFunction(() =>
     [
       ...document.querySelectorAll(
@@ -28,6 +28,9 @@ for (const width of [1440, 390, 320]) {
     )
     const layout = await page.evaluate(() => {
       const body = document.querySelector('.recent-media__body')
+      const section = body.closest('.recent-media')
+      const listening = document.querySelector('.recent-listening')
+      const writing = document.querySelector('.recent-writing')
       const ctx = document.createElement('canvas').getContext('2d')
       const surface = getComputedStyle(
         document.documentElement
@@ -50,22 +53,17 @@ for (const width of [1440, 390, 320]) {
           b = luminance(bg)
         return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
       }
-      const section = body.closest('.recent-media')
-      const title = section.querySelector('h2')
-      const pageTitle = document.querySelector('h1')
-      const index = document.querySelector('.interests-page__index')
-      const titleStyle = getComputedStyle(title)
       return {
-        beforeCategories:
+        aboveListening:
           section.getBoundingClientRect().bottom <=
-          index.getBoundingClientRect().top,
-        smallerSerifHeading:
-          titleStyle.fontFamily === getComputedStyle(pageTitle).fontFamily &&
-          parseFloat(titleStyle.fontSize) <
-            parseFloat(getComputedStyle(pageTitle).fontSize),
-        noIndexLink: ![...section.querySelectorAll('a')].some(
+          listening.getBoundingClientRect().top,
+        belowWriting:
+          writing.getBoundingClientRect().bottom <=
+          section.getBoundingClientRect().top,
+        hasIndexLink: [...section.querySelectorAll('a')].some(
           (link) => link.textContent.trim() === '全部拾趣'
         ),
+        noAutoScroll: !section.querySelector('.media-cards--auto'),
         coversLoaded: [
           ...body.querySelectorAll('.media-card:not([data-marquee-clone]) img'),
         ].every((img) => img.complete && img.naturalWidth > 0),
@@ -94,9 +92,10 @@ for (const width of [1440, 390, 320]) {
       }
     })
     for (const name of [
-      'beforeCategories',
-      'smallerSerifHeading',
-      'noIndexLink',
+      'aboveListening',
+      'belowWriting',
+      'hasIndexLink',
+      'noAutoScroll',
       'coversLoaded',
     ])
       assert.equal(layout[name], true, `${width}/${dark}: ${name}`)
@@ -117,7 +116,7 @@ for (const width of [1440, 390, 320]) {
     assert.equal(
       layout.headings,
       true,
-      'recent media retains ordinary Markdown anchors'
+      'home retains ordinary Markdown anchors'
     )
     assert.equal(
       layout.scoresFit,
@@ -126,13 +125,6 @@ for (const width of [1440, 390, 320]) {
     )
   }
 }
-
-await page.goto(base)
-assert.equal(
-  await page.evaluate(() => !!document.querySelector('.recent-media')),
-  false,
-  'home no longer renders recent media'
-)
 
 // Build a multi-post fixture from any calendar day, even if real days are all single-post.
 // Exercise the real handlers and fire their captured timers deterministically.
@@ -264,5 +256,5 @@ try {
   await page.cdp('Emulation.setScriptExecutionDisabled', { value: false })
 }
 console.log(
-  'Interest recent media layout, home heatmap state/fixture interaction and no-JS years: passed'
+  'Home cards, heatmap state/fixture interaction and no-JS years: passed'
 )

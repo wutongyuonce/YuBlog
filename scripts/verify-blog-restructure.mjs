@@ -363,29 +363,36 @@ test('navigation previews count current categories and only link published artic
   }
 })
 
-test('recent media appears only above the interest index categories', () => {
-  const sections = elements(interests, (node) => hasClass(node, 'recent-media'))
+test('recent media appears on home above listening with the interests link', () => {
+  const sections = elements(home, (node) => hasClass(node, 'recent-media'))
   assert.equal(sections.length, 1)
   const section = sections[0]
   const title = elements(section, (node) => node.tagName === 'h2')[0]
   assert.equal(textOf(title), '近期书影游')
   assert.deepEqual(section.properties.ariaLabelledBy, [title.properties.id])
+  const indexLink = elements(
+    section,
+    (node) => node.tagName === 'a' && textOf(node) === '全部拾趣'
+  )[0]
+  assert.ok(indexLink)
+  assert.equal(indexLink.properties.href, sitePath('interests/'))
   assert.equal(
-    elements(
-      section,
-      (node) => node.tagName === 'a' && textOf(node) === '全部拾趣'
-    ).length,
-    0
+    elements(section, (node) => hasClass(node, 'media-cards--auto')).length,
+    0,
+    'home recent media must not enable auto-scroll'
   )
   const order = elements(
-    interests,
+    home,
     (node) =>
-      hasClass(node, 'recent-media') || hasClass(node, 'interests-page__index')
+      hasClass(node, 'recent-writing') ||
+      hasClass(node, 'recent-media') ||
+      hasClass(node, 'recent-listening')
   )
-  assert.equal(order[0], section)
-  assert.ok(hasClass(order[1], 'interests-page__index'))
+  assert.ok(hasClass(order[0], 'recent-writing'))
+  assert.equal(order[1], section)
+  assert.ok(hasClass(order[2], 'recent-listening'))
   assert.equal(
-    elements(home, (node) => hasClass(node, 'recent-media')).length,
+    elements(interests, (node) => hasClass(node, 'recent-media')).length,
     0
   )
 })
@@ -441,7 +448,7 @@ test('interest menu and index agree and their links resolve to content pages', a
     assert.equal(
       elements(page, (node) => hasClass(node, 'recent-media')).length,
       0,
-      `${id}: recent media belongs only on the interest index`
+      `${id}: recent media belongs on the home page, not interest categories`
     )
     const title = elements(page, (node) => node.tagName === 'h1')[0]
     assert.equal(
