@@ -532,7 +532,7 @@ console.log(total([1, 2, 3]))
 | 方形卡片栏 | `:::card{layout="square" scroll="auto" title="…" meta="…"}` | 1:1 封面；条目超出一屏才循环 | 不够宽时退回横滑 |
 | 图片网格 | `:::gallery{columns="2"}` | 并排对照的图片 | 自动单列 |
 | 横向相册 | `:::gallery{layout="scroll"}` | 连续浏览多张图片 | 主图与后续露出 |
-| Excalidraw | `:::excalidraw{src="…excalidraw"}` | Shiro 同款只读画布 | dialog 展开 + 静态源下载 |
+| Excalidraw | `:::excalidraw{src="…excalidraw"}` | 16:10 画布 + 右下 pill | dialog 展开 + 静态源下载 |
 | 博文链接卡 | `:::blog-link{slug="…"}` | 链到本站其他博文 | 对方文再写一张即双向 |
 
 ```html
@@ -568,7 +568,7 @@ console.log(total([1, 2, 3]))
 
 ## Excalidraw 图
 
-把 `.excalidraw` 源文件放在文章旁的 `*-img/` 目录即可。客户端按 [Shiro](https://github.com/Innei/Shiro) 同款只读画布渲染（`viewMode`／`zenMode`、高度 500px、原生 pinch／底部缩放条）；源文件镜像到 `/_media/…`。与 Shiro 的差异：展开用页面内 dialog（不用移动端 `blob:` 外链），并多一个**静态源下载**按钮。
+把 `.excalidraw` 源文件放在文章旁的 `*-img/` 目录即可。客户端用只读画布渲染场景（约 **16:10** 卡片）；右下角自定义 pill：缩小／％／放大｜复位｜展开｜下载。官方 Excalidraw 底栏／菜单全部隐藏。源文件镜像到 `/_media/…`，下载为静态地址（不用 `blob:`）。展开为 dialog，底部有「适配时最长、放大后变短」的缩放条。
 
 可选 `preview`（SVG／PNG）仅作无 JS／失败回退。
 

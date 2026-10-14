@@ -1,11 +1,8 @@
 /**
- * Shiro-aligned read-only Excalidraw viewer.
- * Source: Innei/Shiro `apps/web/src/components/ui/excalidraw/Excalidraw.tsx`
- * Intentional YuBlog diffs: expand via <dialog> (not mobile blob:), plus
- * static `/_media/…excalidraw` download control.
- *
- * Types are local shims (not imported from @excalidraw/…/types) so
- * `astro check` does not OOM on the package's multi‑MB declarations.
+ * Read-only Excalidraw embed for YuBlog.
+ * Rendering via @excalidraw/excalidraw (viewMode+zen); ALL native chrome hidden.
+ * Custom bottom-right pill: − | % | + | | reset | | expand | download.
+ * Types are local shims so astro check does not OOM on package d.ts.
  */
 import {
   forwardRef,
@@ -33,9 +30,9 @@ export interface ExcalidrawCanvasHandle {
 }
 
 export interface ExcalidrawCanvasProps {
-  /** Static `/_media/…/*.excalidraw` (never a permanent blob: href). */
   sceneUrl: string
-  showExpandButton?: boolean
+  /** Embed shows full pill; expand mode hides expand button. */
+  mode?: 'embed' | 'expand'
   downloadUrl?: string
   downloadName?: string
   onExpand?: () => void
@@ -44,6 +41,8 @@ export interface ExcalidrawCanvasProps {
   onZoomChange?: (zoom: number, fitZoom: number) => void
   onReady?: (api: ExcalidrawApi) => void
   onError?: (message: string) => void
+  /** Expand: block single-finger pan; keep multi-touch pinch. */
+  panLocked?: boolean
 }
 
 interface ScenePayload {
@@ -54,6 +53,7 @@ interface ScenePayload {
 
 const ZOOM_MIN = 0.1
 const ZOOM_MAX = 3
+const ZOOM_STEP = 0.1
 
 const readTheme = (): 'light' | 'dark' =>
   typeof document !== 'undefined' &&
@@ -64,13 +64,15 @@ const readTheme = (): 'light' | 'dark' =>
 const clampZoom = (value: number) =>
   Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, value))
 
+const formatZoom = (zoom: number) => `${Math.round(zoom * 100)}%`
+
 export const ExcalidrawCanvas = forwardRef<
   ExcalidrawCanvasHandle,
   ExcalidrawCanvasProps
 >(function ExcalidrawCanvas(
   {
     sceneUrl,
-    showExpandButton = true,
+    mode = 'embed',
     downloadUrl,
     downloadName,
     onExpand,
@@ -79,13 +81,17 @@ export const ExcalidrawCanvas = forwardRef<
     onZoomChange,
     onReady,
     onError,
+    panLocked = false,
   },
   ref
 ) {
+  const hostRef = useRef<HTMLDivElement>(null)
   const apiRef = useRef<ExcalidrawApi | undefined>(undefined)
   const fitZoomRef = useRef(1)
+  const pointers = useRef(new Set<number>())
   const [scene, setScene] = useState<ScenePayload | null>(null)
   const [loading, setLoading] = useState(true)
+  const [zoomLabel, setZoomLabel] = useState('—')
   const [theme, setTheme] = useState<'light' | 'dark'>(
     () => themeProp ?? readTheme()
   )
@@ -137,36 +143,75 @@ export const ExcalidrawCanvas = forwardRef<
     }
   }, [sceneUrl, onError])
 
-  const emitZoom = useCallback(() => {
-    const api = apiRef.current
-    if (!api) return
-    onZoomChange?.(api.getAppState().zoom.value, fitZoomRef.current)
-  }, [onZoomChange])
+  const emitZoom = useCallback(
+    (value?: number) => {
+      const api = apiRef.current
+      const zoom = value ?? api?.getAppState().zoom.value ?? 1
+      setZoomLabel(formatZoom(zoom))
+      onZoomChange?.(zoom, fitZoomRef.current)
+    },
+    [onZoomChange]
+  )
 
   const fitToContent = useCallback(() => {
     const api = apiRef.current
     if (!api || api.getSceneElements().length === 0) return
     api.scrollToContent(undefined, { fitToContent: true })
     fitZoomRef.current = api.getAppState().zoom.value
-    emitZoom()
+    emitZoom(fitZoomRef.current)
   }, [emitZoom])
+
+  const zoomBy = useCallback(
+    (delta: number) => {
+      const api = apiRef.current
+      if (!api) return
+      const next = clampZoom(api.getAppState().zoom.value + delta)
+      api.updateScene({ appState: { zoom: { value: next } } })
+      emitZoom(next)
+    },
+    [emitZoom]
+  )
 
   useImperativeHandle(
     ref,
     () => ({
-      zoomBy: (delta) => {
-        const api = apiRef.current
-        if (!api) return
-        const next = clampZoom(api.getAppState().zoom.value + delta)
-        api.updateScene({ appState: { zoom: { value: next } } })
-        onZoomChange?.(next, fitZoomRef.current)
-      },
+      zoomBy,
       fit: () => fitToContent(),
       getZoom: () => apiRef.current?.getAppState().zoom.value ?? 1,
       getFitZoom: () => fitZoomRef.current,
     }),
-    [fitToContent, onZoomChange]
+    [fitToContent, zoomBy]
   )
+
+  // Expand: block single-pointer pan; allow multi-touch pinch.
+  useEffect(() => {
+    if (!panLocked) return
+    const el = hostRef.current
+    if (!el) return
+    const onDown = (event: PointerEvent) => {
+      pointers.current.add(event.pointerId)
+    }
+    const onUp = (event: PointerEvent) => {
+      pointers.current.delete(event.pointerId)
+    }
+    const onMove = (event: PointerEvent) => {
+      if (pointers.current.size === 1) {
+        event.stopImmediatePropagation()
+        event.preventDefault()
+      }
+    }
+    el.addEventListener('pointerdown', onDown, true)
+    el.addEventListener('pointerup', onUp, true)
+    el.addEventListener('pointercancel', onUp, true)
+    el.addEventListener('pointermove', onMove, true)
+    return () => {
+      el.removeEventListener('pointerdown', onDown, true)
+      el.removeEventListener('pointerup', onUp, true)
+      el.removeEventListener('pointercancel', onUp, true)
+      el.removeEventListener('pointermove', onMove, true)
+      pointers.current.clear()
+    }
+  }, [panLocked, scene])
 
   const initialData = useMemo(() => {
     if (!scene) return null
@@ -180,23 +225,28 @@ export const ExcalidrawCanvas = forwardRef<
     }
   }, [scene])
 
-  const rootClass = ['excalidraw-shiro', className].filter(Boolean).join(' ')
+  const showExpand = mode === 'embed' && Boolean(onExpand)
+  const rootClass = ['excalidraw-view', `excalidraw-view--${mode}`, className]
+    .filter(Boolean)
+    .join(' ')
 
   return (
     <div
+      ref={hostRef}
       className={rootClass}
+      data-pan-locked={panLocked ? '1' : undefined}
       onKeyDown={(event) => event.stopPropagation()}
       onKeyUp={(event) => event.stopPropagation()}
     >
       {loading && (
-        <div className="excalidraw-shiro__loading" role="status">
+        <div className="excalidraw-view__loading" role="status">
           加载画布…
         </div>
       )}
 
       {initialData && (
         <Board
-          key={`${sceneUrl}:${theme}`}
+          key={`${sceneUrl}:${theme}:${mode}`}
           theme={theme}
           initialData={initialData as never}
           detectScroll={false}
@@ -218,7 +268,7 @@ export const ExcalidrawCanvas = forwardRef<
             _elements: unknown,
             appState: { zoom: { value: number } }
           ) => {
-            onZoomChange?.(appState.zoom.value, fitZoomRef.current)
+            emitZoom(appState.zoom.value)
           }}
           excalidrawAPI={(api) => {
             const handle = api as unknown as ExcalidrawApi
@@ -231,43 +281,73 @@ export const ExcalidrawCanvas = forwardRef<
         />
       )}
 
-      {(showExpandButton || downloadUrl) && (
-        <div className="excalidraw-shiro__actions">
-          {downloadUrl && (
-            <a
-              className="excalidraw-shiro__action"
-              href={downloadUrl}
-              download={downloadName || true}
-              rel="noopener noreferrer"
-              aria-label="下载 Excalidraw 源文件"
-              title="下载源文件"
-            >
-              <span
-                className="excalidraw-shiro__action-icon"
-                aria-hidden="true"
-              >
-                ↓
-              </span>
-            </a>
-          )}
-          {showExpandButton && (
+      {/* Custom pill — only chrome the reader should see */}
+      <div
+        className="excalidraw-pill"
+        role="toolbar"
+        aria-label="Excalidraw 图控制"
+      >
+        <button
+          type="button"
+          className="excalidraw-pill__btn"
+          aria-label="缩小"
+          title="缩小"
+          onClick={() => zoomBy(-ZOOM_STEP)}
+        >
+          <span className="excalidraw-pill__icon excalidraw-pill__icon--zoom-out" />
+        </button>
+        <span className="excalidraw-pill__pct" aria-live="polite">
+          {zoomLabel}
+        </span>
+        <button
+          type="button"
+          className="excalidraw-pill__btn"
+          aria-label="放大"
+          title="放大"
+          onClick={() => zoomBy(ZOOM_STEP)}
+        >
+          <span className="excalidraw-pill__icon excalidraw-pill__icon--zoom-in" />
+        </button>
+        <span className="excalidraw-pill__sep" aria-hidden="true" />
+        <button
+          type="button"
+          className="excalidraw-pill__btn"
+          aria-label="复位"
+          title="复位"
+          onClick={() => fitToContent()}
+        >
+          <span className="excalidraw-pill__icon excalidraw-pill__icon--reset" />
+        </button>
+        {showExpand && (
+          <>
+            <span className="excalidraw-pill__sep" aria-hidden="true" />
             <button
               type="button"
-              className="excalidraw-shiro__action"
-              aria-label="展开画布"
+              className="excalidraw-pill__btn"
+              aria-label="展开"
               title="展开"
               onClick={() => onExpand?.()}
             >
-              <span
-                className="excalidraw-shiro__action-icon"
-                aria-hidden="true"
-              >
-                ↗
-              </span>
+              <span className="excalidraw-pill__icon excalidraw-pill__icon--expand" />
             </button>
-          )}
-        </div>
-      )}
+          </>
+        )}
+        {downloadUrl && (
+          <>
+            <span className="excalidraw-pill__sep" aria-hidden="true" />
+            <a
+              className="excalidraw-pill__btn"
+              href={downloadUrl}
+              download={downloadName || true}
+              rel="noopener noreferrer"
+              aria-label="下载源文件"
+              title="下载"
+            >
+              <span className="excalidraw-pill__icon excalidraw-pill__icon--download" />
+            </a>
+          </>
+        )}
+      </div>
     </div>
   )
 })

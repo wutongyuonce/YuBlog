@@ -1,6 +1,7 @@
 /**
- * Mount Shiro-like Excalidraw canvases into :::excalidraw figures.
- * Expand uses <dialog> (YuBlog) instead of Shiro mobile blob: preview.
+ * Mount Excalidraw canvases into :::excalidraw figures.
+ * Embed: custom pill only (native chrome CSS-hidden).
+ * Expand: dialog + L–R zoom bar + download; single-finger pan locked.
  */
 
 type MountFn = typeof import('~/utils/excalidraw-mount').mountExcalidrawCanvas
@@ -31,10 +32,7 @@ const downloadName = (root: HTMLElement, sceneUrl: string) => {
   }
 }
 
-/**
- * Zoom bar: longest when zoomed out (fit / initial), shortest at max zoom.
- * Spans full track width at fitZoom.
- */
+/** Longest at fit, shortest at max zoom; full track at fit. */
 const zoomBarScale = (zoom: number, fitZoom: number) => {
   const minZ = Math.max(0.05, Math.min(fitZoom || 1, zoom || 1))
   const maxZ = 3
@@ -104,9 +102,9 @@ export class ExcalidrawViewer extends HTMLElement {
 
     const { unmount } = mountCanvas(host, {
       sceneUrl,
+      mode: 'embed',
       downloadUrl: sceneUrl,
       downloadName: name,
-      showExpandButton: true,
       onExpand: () => this.openExpand(sceneUrl, name, mountCanvas),
       onReady: () => {
         fallback?.setAttribute('hidden', '')
@@ -147,7 +145,6 @@ export class ExcalidrawViewer extends HTMLElement {
     barTrack.setAttribute('aria-hidden', 'true')
     const barFill = document.createElement('div')
     barFill.className = 'excalidraw-expand__zoom-bar-fill'
-    // Initial: longest (full track)
     barFill.style.setProperty('--zoom-bar-scale', '1')
     barTrack.append(barFill)
 
@@ -164,11 +161,11 @@ export class ExcalidrawViewer extends HTMLElement {
     let fitZoom = 1
     const { unmount } = mountCanvas(host, {
       sceneUrl,
+      mode: 'expand',
       downloadUrl: sceneUrl,
       downloadName: name,
-      // Shiro modal: no nested expand button
-      showExpandButton: false,
-      className: 'excalidraw-shiro--expand',
+      panLocked: true,
+      className: 'excalidraw-view--in-dialog',
       onReady: (api) => {
         fitZoom = api.getAppState().zoom.value
         barFill.style.setProperty(
