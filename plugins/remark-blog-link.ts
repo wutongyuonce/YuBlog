@@ -79,7 +79,10 @@ function remarkBlogLink() {
       parent.children = parent.children.flatMap((child) => {
         if (isDirective(child) && child.name === 'blog-link') {
           if (inside)
-            return fail('Nested :::blog-link directives are not supported', child)
+            return fail(
+              'Nested :::blog-link directives are not supported',
+              child
+            )
           if (
             child.children.some(
               (c) =>
@@ -91,7 +94,10 @@ function remarkBlogLink() {
                 )
             )
           )
-            return fail(':::blog-link must be empty; use attributes only', child)
+            return fail(
+              ':::blog-link must be empty; use attributes only',
+              child
+            )
 
           const slug = child.attributes?.slug?.trim()
           const hrefAttr = child.attributes?.href
@@ -108,10 +114,7 @@ function remarkBlogLink() {
             if (!entry)
               return fail(`:::blog-link slug not found: ${slug}`, child)
             if (entry.draft)
-              return fail(
-                `:::blog-link points to draft post: ${slug}`,
-                child
-              )
+              return fail(`:::blog-link points to draft post: ${slug}`, child)
             href = entry.href
             if (!title) title = entry.title
             if (descOverride === undefined) description = entry.description
@@ -123,10 +126,7 @@ function remarkBlogLink() {
                 child
               )
             if (!title)
-              return fail(
-                ':::blog-link without slug requires title="…"',
-                child
-              )
+              return fail(':::blog-link without slug requires title="…"', child)
           }
 
           const avatar = avatarOverride || defaultAvatar()
@@ -134,11 +134,7 @@ function remarkBlogLink() {
           const body = element('span', 'blog-link-card__body', [
             element('span', 'blog-link-card__title', [text(title)]),
             ...(description
-              ? [
-                  element('span', 'blog-link-card__desc', [
-                    text(description),
-                  ]),
-                ]
+              ? [element('span', 'blog-link-card__desc', [text(description)])]
               : []),
           ])
 

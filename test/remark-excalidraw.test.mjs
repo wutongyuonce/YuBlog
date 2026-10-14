@@ -47,7 +47,9 @@ test(':::excalidraw rejects blob src and missing files', async () => {
     /blob:/
   )
   await assert.rejects(
-    render(':::excalidraw{src="./image-layout-demo-img/missing.excalidraw"}\n:::'),
+    render(
+      ':::excalidraw{src="./image-layout-demo-img/missing.excalidraw"}\n:::'
+    ),
     /missing|mirrorable|relative path|preview/i
   )
 })

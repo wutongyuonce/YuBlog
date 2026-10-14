@@ -102,7 +102,10 @@ export class ImageInteractions extends HTMLElement {
     for (const view of document.querySelectorAll<HTMLElement>(
       '.markdown-content .image-view'
     )) {
-      if (view.closest('[data-marquee-clone]') || view.closest('.excalidraw-embed'))
+      if (
+        view.closest('[data-marquee-clone]') ||
+        view.closest('.excalidraw-embed')
+      )
         continue
       const image = view.querySelector<HTMLImageElement>('img')
       if (!image) continue

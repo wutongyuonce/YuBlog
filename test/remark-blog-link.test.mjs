@@ -33,7 +33,10 @@ test(':::blog-link allows explicit href overrides', async () => {
 })
 
 test(':::blog-link rejects unknown slug and unsafe href', async () => {
-  await assert.rejects(render(':::blog-link{slug="no-such-post-xyz"}\n:::'), /not found/)
+  await assert.rejects(
+    render(':::blog-link{slug="no-such-post-xyz"}\n:::'),
+    /not found/
+  )
   await assert.rejects(
     render(':::blog-link{href="javascript:alert(1)" title="x"}\n:::'),
     /safe href|requires slug/i

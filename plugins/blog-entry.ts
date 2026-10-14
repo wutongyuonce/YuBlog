@@ -19,7 +19,9 @@ const { parseFrontmatter } = require(
   }
 }
 
-const BLOGS_ROOT = fileURLToPath(new URL('../src/content/blogs/', import.meta.url))
+const BLOGS_ROOT = fileURLToPath(
+  new URL('../src/content/blogs/', import.meta.url)
+)
 
 export interface BlogEntryMeta {
   id: string
@@ -35,7 +37,12 @@ const entryIdForStem = (stem: string) => githubSlug(stem)
 /** 按内容集合 id（URL slug）或文件名主干解析博文；与 Astro glob generateId 一致。 */
 export function resolveBlogEntry(slug: string): BlogEntryMeta | null {
   const needle = slug.trim()
-  if (!needle || needle.includes('/') || needle.includes('\\') || needle.includes('..'))
+  if (
+    !needle ||
+    needle.includes('/') ||
+    needle.includes('\\') ||
+    needle.includes('..')
+  )
     return null
 
   const files = readdirSync(BLOGS_ROOT).filter((name) =>

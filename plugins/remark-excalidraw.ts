@@ -75,10 +75,7 @@ const resolvePreview = (
   for (const ext of PREVIEW_EXTS) {
     const absolute = path.join(parsed.dir, parsed.name + ext)
     if (existsSync(absolute)) {
-      const relative = path
-        .relative(dir, absolute)
-        .split(path.sep)
-        .join('/')
+      const relative = path.relative(dir, absolute).split(path.sep).join('/')
       return {
         relative: relative.startsWith('.') ? relative : `./${relative}`,
         absolute,
@@ -102,7 +99,10 @@ function remarkExcalidraw() {
       parent.children = parent.children.flatMap((child) => {
         if (isDirective(child) && child.name === 'excalidraw') {
           if (inside)
-            return fail('Nested :::excalidraw directives are not supported', child)
+            return fail(
+              'Nested :::excalidraw directives are not supported',
+              child
+            )
           if (child.children.some((c) => !isEmptyish(c)))
             return fail(
               ':::excalidraw must be empty; put src/preview in attributes',
@@ -110,7 +110,8 @@ function remarkExcalidraw() {
             )
 
           const src = child.attributes?.src?.trim() ?? ''
-          if (!src) return fail(':::excalidraw requires src="…excalidraw"', child)
+          if (!src)
+            return fail(':::excalidraw requires src="…excalidraw"', child)
 
           const ref = classifyMediaRef(src, markdownPath)
           if (ref.kind === 'unsupported' && ref.scheme === 'blob')
@@ -154,7 +155,9 @@ function remarkExcalidraw() {
               child
             )
           const previewExt = path.extname(preview.absolute).toLowerCase()
-          if (!PREVIEW_EXTS.includes(previewExt as (typeof PREVIEW_EXTS)[number]))
+          if (
+            !PREVIEW_EXTS.includes(previewExt as (typeof PREVIEW_EXTS)[number])
+          )
             return fail(
               `:::excalidraw preview must be an image (${PREVIEW_EXTS.join('/')})`,
               child
@@ -164,8 +167,7 @@ function remarkExcalidraw() {
             child.attributes?.alt?.trim() ||
             path.parse(ref.file).name ||
             'Excalidraw 图'
-          const height =
-            child.attributes?.height?.trim() || 'min(70vh, 520px)'
+          const height = child.attributes?.height?.trim() || 'min(70vh, 520px)'
 
           const image: Image = {
             type: 'image',
@@ -196,7 +198,9 @@ function remarkExcalidraw() {
                 type: 'button',
                 ariaLabel: '放大',
               }),
-              element('span', 'excalidraw-embed__sep', [], { ariaHidden: 'true' }),
+              element('span', 'excalidraw-embed__sep', [], {
+                ariaHidden: 'true',
+              }),
               element('button', 'excalidraw-embed__reset', [], {
                 type: 'button',
                 ariaLabel: '复位到初始大小',
@@ -245,10 +249,10 @@ function remarkExcalidraw() {
               noscript,
             ],
             {
-              style: `--excalidraw-height:${height}`,
-              role: 'region',
-              ariaLabel: alt,
-              tabIndex: 0,
+              'style': `--excalidraw-height:${height}`,
+              'role': 'region',
+              'ariaLabel': alt,
+              'tabIndex': 0,
               'data-excalidraw-viewer': '',
             }
           )

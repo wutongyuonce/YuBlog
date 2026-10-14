@@ -1118,8 +1118,12 @@ main:has(.post-content) > footer.prose :is(a, span) {
   opacity: 0.35;
   cursor: default;
 }
-.prose .excalidraw-embed__toolbar button:is(:hover, :focus-visible):not(:disabled),
-.prose .excalidraw-embed__toolbar a.excalidraw-embed__source:is(:hover, :focus-visible) {
+.prose
+  .excalidraw-embed__toolbar
+  button:is(:hover, :focus-visible):not(:disabled),
+.prose
+  .excalidraw-embed__toolbar
+  a.excalidraw-embed__source:is(:hover, :focus-visible) {
   background: color-mix(in srgb, var(--accent) 22%, transparent);
   outline: none;
 }
