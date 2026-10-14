@@ -124,7 +124,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 
 ### Excalidraw 与博文链接卡
 
-作者写 `:::excalidraw{src="…excalidraw"}`：客户端以 React island 渲染只读 Excalidraw 画布；源文件镜像到 `/_media/`；工具条提供展开与下载（静态 URL，不用 `blob:`）。文内：单指平移 + 双指 pinch；展开：固定框、单指不平移、pinch 可缩放并显示缩放条。`preview` 可选，作无 JS／失败回退。嵌入图不进入普通正文大图 dialog。
+作者写 `:::excalidraw{src="…excalidraw"}`：客户端以 React island 渲染只读 Excalidraw 画布（`@excalidraw/excalidraw@0.17`，viewMode／zen，对齐 Shiro）；默认横向 16:9 圆角卡片（高度封顶约 500px），并隐藏官方底栏／菜单等 chrome。源文件镜像到 `/_media/`；工具条提供缩放％／复位／展开／下载（静态 URL，不用 `blob:`）。文内：单指平移 + 双指 pinch；展开：固定框、单指不平移、pinch 可缩放，顶部工具条与底部缩放条不被官方 UI 遮挡。`preview` 可选，作无 JS／失败回退。嵌入图不进入普通正文大图 dialog。
 
 作者写 `:::blog-link{slug}`：构建期解析目标博文标题与描述，渲染横向链接卡，右侧为站点头像的圆角方图。双向互链由两篇文章各自放置卡片完成，不自动插入对端链接。
 
