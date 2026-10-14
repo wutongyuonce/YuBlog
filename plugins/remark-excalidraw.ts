@@ -19,8 +19,9 @@ import {
  * :::
  * ```
  *
- * 客户端用 React island 加载真实 Excalidraw 画布（viewMode）；`.excalidraw`
- * 源镜像到 `/_media/…`，下载链是永久静态 URL，不是 blob:。
+ * 客户端用 React island 加载只读 Excalidraw（对齐 Shiro：viewMode／zen、
+ * h-[500px]、原生 pinch／缩放条）；`.excalidraw` 镜像到 `/_media/…`。
+ * 展开用 dialog（不用 Shiro 移动端 blob:）；另加静态源下载。
  * `preview`（SVG／PNG）可选，仅作无 JS／加载失败时的回退。
  */
 
@@ -196,45 +197,23 @@ function remarkExcalidraw() {
             viewportChildren.push(image)
           }
 
-          const toolbar = element(
-            'div',
-            'excalidraw-embed__toolbar',
-            [
-              element('button', 'excalidraw-embed__zoom-out', [], {
-                type: 'button',
-                ariaLabel: '缩小',
-              }),
-              element('span', 'excalidraw-embed__zoom-label', [text('—')], {
-                ariaLive: 'polite',
-              }),
-              element('button', 'excalidraw-embed__zoom-in', [], {
-                type: 'button',
-                ariaLabel: '放大',
-              }),
-              element('button', 'excalidraw-embed__reset', [], {
-                type: 'button',
-                ariaLabel: '复位到适配大小',
-              }),
-              element('button', 'excalidraw-embed__expand', [], {
-                type: 'button',
-                ariaLabel: '展开画布',
-              }),
-              {
-                type: 'link',
-                url: sourceHref,
-                title: null,
-                children: [text('下载')],
-                data: {
-                  hProperties: {
-                    className: ['excalidraw-embed__source'],
-                    download: path.basename(ref.file),
-                    ariaLabel: '下载 Excalidraw 源文件',
-                  },
+          // Hidden source <a> so rehype-media-assets rewrites to /_media/…
+          // Visible download + expand are Shiro-style overlays from React.
+          const toolbar = element('div', 'excalidraw-embed__source-slot', [
+            {
+              type: 'link',
+              url: sourceHref,
+              title: null,
+              children: [text('Excalidraw 源文件')],
+              data: {
+                hProperties: {
+                  className: ['excalidraw-embed__source'],
+                  download: path.basename(ref.file),
+                  ariaLabel: '下载 Excalidraw 源文件',
                 },
               },
-            ],
-            { role: 'toolbar', ariaLabel: 'Excalidraw 图控制' }
-          )
+            },
+          ])
 
           const noscript = element('p', 'excalidraw-embed__noscript-source', [
             {

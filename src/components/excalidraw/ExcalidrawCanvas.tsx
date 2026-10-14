@@ -1,44 +1,55 @@
+/**
+ * Shiro-aligned read-only Excalidraw viewer.
+ * Source: Innei/Shiro `apps/web/src/components/ui/excalidraw/Excalidraw.tsx`
+ * Intentional YuBlog diffs: expand via <dialog> (not mobile blob:), plus
+ * static `/_media/…excalidraw` download control.
+ *
+ * Types are local shims (not imported from @excalidraw/…/types) so
+ * `astro check` does not OOM on the package's multi‑MB declarations.
+ */
 import {
+  forwardRef,
   useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
   useState,
-  forwardRef,
 } from 'react'
-import { Excalidraw } from '@excalidraw/excalidraw'
-import type { ExcalidrawElement } from '@excalidraw/excalidraw/types/element/types'
-import type {
-  AppState,
-  BinaryFiles,
-  ExcalidrawImperativeAPI,
-} from '@excalidraw/excalidraw/types/types'
+import { Excalidraw as Board } from '@excalidraw/excalidraw'
 
-export type ExcalidrawViewMode = 'embed' | 'expand'
+interface ExcalidrawApi {
+  scrollToContent: (target?: unknown, opts?: { fitToContent?: boolean }) => void
+  getSceneElements: () => readonly unknown[]
+  getAppState: () => { zoom: { value: number } }
+  updateScene: (scene: { appState?: { zoom?: { value: number } } }) => void
+}
 
 export interface ExcalidrawCanvasHandle {
   zoomBy: (delta: number) => void
-  setZoom: (value: number) => void
   fit: () => void
   getZoom: () => number
+  getFitZoom: () => number
 }
 
 export interface ExcalidrawCanvasProps {
-  /** Static `/_media/…/*.excalidraw` URL (never a permanent blob:). */
+  /** Static `/_media/…/*.excalidraw` (never a permanent blob: href). */
   sceneUrl: string
-  mode: ExcalidrawViewMode
-  theme?: 'light' | 'dark'
+  showExpandButton?: boolean
+  downloadUrl?: string
+  downloadName?: string
+  onExpand?: () => void
   className?: string
-  onZoomChange?: (zoom: number) => void
-  onReady?: () => void
+  theme?: 'light' | 'dark'
+  onZoomChange?: (zoom: number, fitZoom: number) => void
+  onReady?: (api: ExcalidrawApi) => void
   onError?: (message: string) => void
 }
 
 interface ScenePayload {
-  elements: readonly ExcalidrawElement[]
-  appState?: Partial<AppState>
-  files?: BinaryFiles
+  elements: readonly unknown[]
+  appState?: Record<string, unknown>
+  files?: Record<string, unknown>
 }
 
 const ZOOM_MIN = 0.1
@@ -53,34 +64,31 @@ const readTheme = (): 'light' | 'dark' =>
 const clampZoom = (value: number) =>
   Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, value))
 
-/**
- * Read-only Excalidraw canvas mirroring Shiro:
- * viewModeEnabled + zenModeEnabled, fitToContent, no editor chrome.
- * embed: single-finger pan + pinch; expand: single-finger pan locked.
- */
 export const ExcalidrawCanvas = forwardRef<
   ExcalidrawCanvasHandle,
   ExcalidrawCanvasProps
 >(function ExcalidrawCanvas(
   {
     sceneUrl,
-    mode,
-    theme: themeProp,
+    showExpandButton = true,
+    downloadUrl,
+    downloadName,
+    onExpand,
     className,
+    theme: themeProp,
     onZoomChange,
     onReady,
     onError,
   },
   ref
 ) {
-  const hostRef = useRef<HTMLDivElement>(null)
-  const apiRef = useRef<ExcalidrawImperativeAPI | null>(null)
-  const fittedRef = useRef(false)
+  const apiRef = useRef<ExcalidrawApi | undefined>(undefined)
+  const fitZoomRef = useRef(1)
   const [scene, setScene] = useState<ScenePayload | null>(null)
+  const [loading, setLoading] = useState(true)
   const [theme, setTheme] = useState<'light' | 'dark'>(
     () => themeProp ?? readTheme()
   )
-  const pointers = useRef(new Set<number>())
 
   useEffect(() => {
     if (themeProp) {
@@ -99,9 +107,8 @@ export const ExcalidrawCanvas = forwardRef<
 
   useEffect(() => {
     let cancelled = false
-    fittedRef.current = false
+    setLoading(true)
     setScene(null)
-
     ;(async () => {
       try {
         const response = await fetch(sceneUrl)
@@ -118,12 +125,13 @@ export const ExcalidrawCanvas = forwardRef<
         })
       } catch (error) {
         if (cancelled) return
-        const message =
+        onError?.(
           error instanceof Error ? error.message : 'Failed to load scene'
-        onError?.(message)
+        )
+      } finally {
+        if (!cancelled) setLoading(false)
       }
     })()
-
     return () => {
       cancelled = true
     }
@@ -132,35 +140,16 @@ export const ExcalidrawCanvas = forwardRef<
   const emitZoom = useCallback(() => {
     const api = apiRef.current
     if (!api) return
-    onZoomChange?.(api.getAppState().zoom.value)
+    onZoomChange?.(api.getAppState().zoom.value, fitZoomRef.current)
   }, [onZoomChange])
 
-  const fitOnce = useCallback(
-    (api: ExcalidrawImperativeAPI) => {
-      if (fittedRef.current) return
-      if (api.getSceneElements().length === 0) return
-      api.scrollToContent(undefined, { fitToContent: true })
-      fittedRef.current = true
-      emitZoom()
-      onReady?.()
-    },
-    [emitZoom, onReady]
-  )
-
-  const applyZoom = useCallback(
-    (next: number) => {
-      const api = apiRef.current
-      if (!api) return
-      const value = clampZoom(next)
-      api.updateScene({
-        appState: {
-          zoom: { value: value as AppState['zoom']['value'] },
-        },
-      })
-      onZoomChange?.(value)
-    },
-    [onZoomChange]
-  )
+  const fitToContent = useCallback(() => {
+    const api = apiRef.current
+    if (!api || api.getSceneElements().length === 0) return
+    api.scrollToContent(undefined, { fitToContent: true })
+    fitZoomRef.current = api.getAppState().zoom.value
+    emitZoom()
+  }, [emitZoom])
 
   useImperativeHandle(
     ref,
@@ -168,71 +157,16 @@ export const ExcalidrawCanvas = forwardRef<
       zoomBy: (delta) => {
         const api = apiRef.current
         if (!api) return
-        applyZoom(api.getAppState().zoom.value + delta)
+        const next = clampZoom(api.getAppState().zoom.value + delta)
+        api.updateScene({ appState: { zoom: { value: next } } })
+        onZoomChange?.(next, fitZoomRef.current)
       },
-      setZoom: (value) => applyZoom(value),
-      fit: () => {
-        const api = apiRef.current
-        if (!api) return
-        api.scrollToContent(undefined, { fitToContent: true })
-        emitZoom()
-      },
+      fit: () => fitToContent(),
       getZoom: () => apiRef.current?.getAppState().zoom.value ?? 1,
+      getFitZoom: () => fitZoomRef.current,
     }),
-    [applyZoom, emitZoom]
+    [fitToContent, onZoomChange]
   )
-
-  const handleApi = useCallback(
-    (api: ExcalidrawImperativeAPI) => {
-      apiRef.current = api
-      // Shiro: scrollToContent after short delay once scene is ready
-      window.setTimeout(() => fitOnce(api), 300)
-      const id = window.setInterval(() => {
-        if (!apiRef.current) {
-          window.clearInterval(id)
-          return
-        }
-        if (apiRef.current.getSceneElements().length > 0) {
-          fitOnce(apiRef.current)
-          window.clearInterval(id)
-        }
-      }, 16)
-      window.setTimeout(() => window.clearInterval(id), 4000)
-    },
-    [fitOnce]
-  )
-
-  // Expand: block single-pointer pan; allow multi-touch pinch.
-  useEffect(() => {
-    if (mode !== 'expand') return
-    const el = hostRef.current
-    if (!el) return
-
-    const onDown = (event: PointerEvent) => {
-      pointers.current.add(event.pointerId)
-    }
-    const onUp = (event: PointerEvent) => {
-      pointers.current.delete(event.pointerId)
-    }
-    const onMove = (event: PointerEvent) => {
-      if (pointers.current.size === 1) {
-        event.stopImmediatePropagation()
-        event.preventDefault()
-      }
-    }
-
-    el.addEventListener('pointerdown', onDown, true)
-    el.addEventListener('pointerup', onUp, true)
-    el.addEventListener('pointercancel', onUp, true)
-    el.addEventListener('pointermove', onMove, true)
-    return () => {
-      el.removeEventListener('pointerdown', onDown, true)
-      el.removeEventListener('pointerup', onUp, true)
-      el.removeEventListener('pointercancel', onUp, true)
-      el.removeEventListener('pointermove', onMove, true)
-      pointers.current.clear()
-    }
-  }, [mode, scene])
 
   const initialData = useMemo(() => {
     if (!scene) return null
@@ -240,72 +174,100 @@ export const ExcalidrawCanvas = forwardRef<
       elements: scene.elements,
       appState: {
         ...(scene.appState ?? {}),
-        viewBackgroundColor:
-          theme === 'dark'
-            ? (scene.appState?.viewBackgroundColor ?? '#121212')
-            : (scene.appState?.viewBackgroundColor ?? '#ffffff'),
         collaborators: new Map(),
       },
       files: scene.files ?? {},
-      scrollToContent: true,
     }
-  }, [scene, theme])
+  }, [scene])
 
-  if (!initialData) {
-    return (
-      <div
-        className={[
-          'excalidraw-canvas',
-          'excalidraw-canvas--loading',
-          className,
-        ]
-          .filter(Boolean)
-          .join(' ')}
-        role="status"
-        aria-live="polite"
-      >
-        加载画布…
-      </div>
-    )
-  }
+  const rootClass = ['excalidraw-shiro', className].filter(Boolean).join(' ')
 
   return (
     <div
-      ref={hostRef}
-      className={['excalidraw-canvas', `excalidraw-canvas--${mode}`, className]
-        .filter(Boolean)
-        .join(' ')}
-      data-pan-locked={mode === 'expand' ? '1' : undefined}
-      style={{ width: '100%', height: '100%' }}
+      className={rootClass}
       onKeyDown={(event) => event.stopPropagation()}
       onKeyUp={(event) => event.stopPropagation()}
     >
-      <Excalidraw
-        key={`${sceneUrl}:${theme}:${mode}`}
-        excalidrawAPI={handleApi}
-        initialData={initialData}
-        viewModeEnabled
-        zenModeEnabled
-        gridModeEnabled={false}
-        theme={theme}
-        UIOptions={{
-          canvasActions: {
-            changeViewBackgroundColor: false,
-            clearCanvas: false,
-            export: false,
-            loadScene: false,
-            saveToActiveFile: false,
-            toggleTheme: false,
-            saveAsImage: false,
-          },
-        }}
-        onScrollChange={() => emitZoom()}
-        onChange={(_elements, appState) => {
-          onZoomChange?.(appState.zoom.value)
-        }}
-        detectScroll={false}
-        handleKeyboardGlobally={false}
-      />
+      {loading && (
+        <div className="excalidraw-shiro__loading" role="status">
+          加载画布…
+        </div>
+      )}
+
+      {initialData && (
+        <Board
+          key={`${sceneUrl}:${theme}`}
+          theme={theme}
+          initialData={initialData as never}
+          detectScroll={false}
+          zenModeEnabled
+          viewModeEnabled
+          gridModeEnabled={false}
+          UIOptions={{
+            canvasActions: {
+              changeViewBackgroundColor: false,
+              clearCanvas: false,
+              export: false,
+              loadScene: false,
+              saveToActiveFile: false,
+              toggleTheme: false,
+              saveAsImage: false,
+            },
+          }}
+          onChange={(
+            _elements: unknown,
+            appState: { zoom: { value: number } }
+          ) => {
+            onZoomChange?.(appState.zoom.value, fitZoomRef.current)
+          }}
+          excalidrawAPI={(api) => {
+            const handle = api as unknown as ExcalidrawApi
+            apiRef.current = handle
+            window.setTimeout(() => {
+              fitToContent()
+              onReady?.(handle)
+            }, 300)
+          }}
+        />
+      )}
+
+      {(showExpandButton || downloadUrl) && (
+        <div className="excalidraw-shiro__actions">
+          {downloadUrl && (
+            <a
+              className="excalidraw-shiro__action"
+              href={downloadUrl}
+              download={downloadName || true}
+              rel="noopener noreferrer"
+              aria-label="下载 Excalidraw 源文件"
+              title="下载源文件"
+            >
+              <span
+                className="excalidraw-shiro__action-icon"
+                aria-hidden="true"
+              >
+                ↓
+              </span>
+            </a>
+          )}
+          {showExpandButton && (
+            <button
+              type="button"
+              className="excalidraw-shiro__action"
+              aria-label="展开画布"
+              title="展开"
+              onClick={() => onExpand?.()}
+            >
+              <span
+                className="excalidraw-shiro__action-icon"
+                aria-hidden="true"
+              >
+                ↗
+              </span>
+            </button>
+          )}
+        </div>
+      )}
     </div>
   )
 })

@@ -156,7 +156,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 1. 把 `.excalidraw` 源文件放进该文的 `*-img/`，文件名短 ASCII，例如 `verify.excalidraw`。
 2. **首选工作流**：只要有 `.excalidraw` 即可 → 复制进 `*-img/` → 正文写相对路径指令。构建时源文件镜像到 `/_media/…`；页面用只读 Excalidraw 画布渲染场景，下载按钮指向静态 `/_media` URL。
 3. `preview`（同主名或显式路径的 SVG／PNG）**可选**，仅作无 JS／画布加载失败时的回退；没有预览也能构建与发布。
-4. 属性：`src` 必填（相对路径的 `.excalidraw`／`.excalidrawlib`）；`preview`／`alt`／`height` 可选（默认横向 16:9、高度封顶约 500px，对齐 Shiro；`height` 可覆盖）。指令体必须为空。
+4. 属性：`src` 必填（相对路径的 `.excalidraw`／`.excalidrawlib`）；`preview`／`alt`／`height` 可选（默认高度 500px，对齐 Shiro；`height` 可覆盖）。指令体必须为空。
 
 ```md
 :::excalidraw{src="./image-layout-demo-img/verify.excalidraw" alt="Verify 页：离线 UI 目录示意"}

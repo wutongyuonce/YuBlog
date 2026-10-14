@@ -1031,7 +1031,7 @@ main:has(.post-content) > footer.prose :is(a, span) {
   }
 }
 
-/* :::excalidraw — Shiro-like viewMode/zen canvas; landscape card */
+/* :::excalidraw — Shiro Excalidraw.tsx 1:1 (h-[500px], zen+view native UI) */
 .prose .excalidraw-embed {
   position: relative;
   display: block;
@@ -1046,100 +1046,111 @@ main:has(.post-content) > footer.prose :is(a, span) {
   background: #141414;
   border-color: color-mix(in srgb, #fff 10%, transparent);
 }
-/* Landscape footprint (innei/Shiro-like): 16:9, cap ~500px like Shiro h-[500px] */
+
+/* Shiro: relative h-[500px] w-full */
 .prose .excalidraw-embed__viewport {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
-  height: auto;
-  max-height: min(50vh, 500px);
+  height: 500px;
   overflow: hidden;
-  touch-action: none;
 }
 .prose
   .excalidraw-embed[style*='--excalidraw-height']
   .excalidraw-embed__viewport {
-  aspect-ratio: auto;
   height: var(--excalidraw-height);
-  max-height: none;
 }
+
 .prose .excalidraw-embed__host,
-.prose .excalidraw-canvas {
+.prose .excalidraw-shiro {
+  position: relative;
   width: 100%;
   height: 100%;
   min-height: 0;
 }
-.prose .excalidraw-canvas .excalidraw,
-.excalidraw-expand .excalidraw-canvas .excalidraw {
+.prose .excalidraw-shiro .excalidraw,
+.excalidraw-expand .excalidraw-shiro .excalidraw {
   width: 100% !important;
   height: 100% !important;
 }
-.prose .excalidraw-canvas--loading,
+
+.prose .excalidraw-shiro__loading,
 .prose .excalidraw-embed__error {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
   display: grid;
   place-items: center;
-  height: 100%;
   margin: 0;
   padding: 1rem;
   font-size: 0.9rem;
   opacity: 0.75;
+  background: inherit;
 }
 
 /*
- * Hide Excalidraw editor chrome (zen/view leftovers on mobile).
- * Keep our custom toolbar above any remnant UI.
+ * Keep Excalidraw zen footer / .zoom-actions pill (Shiro does not hide it).
+ * Only suppress leftover editor chrome that still appears on some builds.
  */
-.prose .excalidraw-embed .App-menu,
-.prose .excalidraw-embed .App-menu__left,
-.prose .excalidraw-embed .App-menu__right,
-.prose .excalidraw-embed .App-bottom-bar,
-.prose .excalidraw-embed .App-toolbar,
-.prose .excalidraw-embed .App-toolbar-content,
-.prose .excalidraw-embed .layer-ui__wrapper,
-.prose .excalidraw-embed .layer-ui__wrapper__top-right,
-.prose .excalidraw-embed .layer-ui__wrapper__footer,
-.prose .excalidraw-embed .FixedSideContainer,
-.prose .excalidraw-embed .Island,
-.prose .excalidraw-embed .Stack,
 .prose .excalidraw-embed .main-menu-trigger,
-.prose .excalidraw-embed .ToolIcon,
-.prose .excalidraw-embed .zoom-actions,
-.prose .excalidraw-embed .undo-redo-buttons,
-.prose .excalidraw-embed .help-icon,
-.prose .excalidraw-embed footer,
+.prose .excalidraw-embed .App-menu__left,
+.prose .excalidraw-embed .layer-ui__wrapper__top-right,
+.prose .excalidraw-embed .HintViewer,
 .prose .excalidraw-embed .context-menu,
 .prose .excalidraw-embed .UserList,
-.prose .excalidraw-embed .scroll-back-to-content,
-.excalidraw-expand .App-menu,
-.excalidraw-expand .App-menu__left,
-.excalidraw-expand .App-menu__right,
-.excalidraw-expand .App-bottom-bar,
-.excalidraw-expand .App-toolbar,
-.excalidraw-expand .App-toolbar-content,
-.excalidraw-expand .layer-ui__wrapper,
-.excalidraw-expand .layer-ui__wrapper__top-right,
-.excalidraw-expand .layer-ui__wrapper__footer,
-.excalidraw-expand .FixedSideContainer,
-.excalidraw-expand .Island,
-.excalidraw-expand .Stack,
 .excalidraw-expand .main-menu-trigger,
-.excalidraw-expand .ToolIcon,
-.excalidraw-expand .zoom-actions,
-.excalidraw-expand .undo-redo-buttons,
-.excalidraw-expand .help-icon,
-.excalidraw-expand footer,
+.excalidraw-expand .App-menu__left,
+.excalidraw-expand .layer-ui__wrapper__top-right,
+.excalidraw-expand .HintViewer,
 .excalidraw-expand .context-menu,
-.excalidraw-expand .UserList,
-.excalidraw-expand .scroll-back-to-content {
+.excalidraw-expand .UserList {
   display: none !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-  opacity: 0 !important;
 }
 
-.prose .excalidraw-embed .excalidraw,
-.excalidraw-expand .excalidraw {
-  --color-primary: var(--accent);
+/* Shiro expand button: absolute bottom-2 right-2, size-5 + p-2, rounded-md border */
+.prose .excalidraw-shiro__actions,
+.excalidraw-expand .excalidraw-shiro__actions {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  pointer-events: auto;
+}
+.prose .excalidraw-shiro__action,
+.excalidraw-expand .excalidraw-shiro__action {
+  box-sizing: content-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0.5rem;
+  margin: 0;
+  border-radius: 0.375rem;
+  border: 1px solid color-mix(in srgb, var(--c-text) 14%, transparent);
+  background: color-mix(in srgb, var(--c-bg) 92%, transparent);
+  color: color-mix(in srgb, var(--c-text) 72%, transparent);
+  text-decoration: none;
+  cursor: pointer;
+  line-height: 1;
+}
+:root.dark .prose .excalidraw-shiro__action,
+:root.dark .excalidraw-expand .excalidraw-shiro__action {
+  border-color: color-mix(in srgb, #fff 12%, transparent);
+  background: color-mix(in srgb, #18181b 92%, transparent);
+  color: color-mix(in srgb, #fff 55%, transparent);
+}
+.prose .excalidraw-shiro__action:is(:hover, :focus-visible),
+.excalidraw-expand .excalidraw-shiro__action:is(:hover, :focus-visible) {
+  color: var(--c-text);
+  outline: none;
+}
+.prose .excalidraw-shiro__action-icon,
+.excalidraw-expand .excalidraw-shiro__action-icon {
+  font-size: 0.95rem;
+  line-height: 1;
 }
 
 .prose .excalidraw-embed__fallback,
@@ -1160,85 +1171,20 @@ main:has(.post-content) > footer.prose :is(a, span) {
   display: none;
 }
 
-/* Custom toolbar — bottom center like innei; above Excalidraw remnants */
-.prose .excalidraw-embed__toolbar {
+/* Source slot used for /_media rewrite; React shows download overlay */
+.prose .excalidraw-embed__source-slot {
   position: absolute;
-  left: 50%;
-  bottom: 0.55rem;
-  right: auto;
-  z-index: 20;
-  transform: translateX(-50%);
-  display: none;
-  align-items: center;
-  gap: 0.15rem;
-  padding: 0.28rem 0.45rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--c-text) 14%, transparent);
-  background: color-mix(in srgb, var(--c-bg) 82%, transparent);
-  backdrop-filter: blur(8px);
-  box-shadow: 0 4px 18px rgb(0 0 0 / 18%);
-  color: var(--c-text);
-  font-size: 0.78rem;
-  line-height: 1;
-  pointer-events: auto;
-}
-.prose .excalidraw-embed--enhanced .excalidraw-embed__toolbar {
-  display: inline-flex;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 .prose .excalidraw-embed--enhanced .excalidraw-embed__noscript-source {
   display: none;
-}
-.prose .excalidraw-embed__toolbar button,
-.prose .excalidraw-embed__toolbar a.excalidraw-embed__source {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.7rem;
-  height: 1.7rem;
-  padding: 0 0.35rem;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: inherit;
-  text-decoration: none;
-  cursor: pointer;
-  font-size: 0.78rem;
-}
-.prose .excalidraw-embed__toolbar button:is(:hover, :focus-visible),
-.prose
-  .excalidraw-embed__toolbar
-  a.excalidraw-embed__source:is(:hover, :focus-visible) {
-  background: color-mix(in srgb, var(--accent) 22%, transparent);
-  outline: none;
-}
-.prose .excalidraw-embed__zoom-out::before {
-  content: '−';
-  font-size: 1.05rem;
-}
-.prose .excalidraw-embed__zoom-in::before {
-  content: '+';
-  font-size: 1.05rem;
-}
-.prose .excalidraw-embed__reset::before {
-  content: '↺';
-  font-size: 0.95rem;
-}
-.prose .excalidraw-embed__expand::before {
-  content: '⤢';
-  font-size: 0.95rem;
-}
-.prose .excalidraw-embed__source {
-  font-size: 0;
-}
-.prose .excalidraw-embed__source::before {
-  content: '↓';
-  font-size: 0.95rem;
-}
-.prose .excalidraw-embed__zoom-label {
-  min-width: 2.6rem;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-  opacity: 0.85;
 }
 .prose .excalidraw-embed__noscript-source {
   margin: 0;
@@ -1250,14 +1196,14 @@ main:has(.post-content) > footer.prose :is(a, span) {
   outline-offset: 3px;
 }
 
-/* Expand dialog — fixed aspect; pan locked; our toolbar above chrome */
+/* Expand dialog (YuBlog: always dialog; Shiro mobile uses blob:) */
 .excalidraw-expand {
   padding: 0;
   border: 0;
   background: transparent;
-  max-width: min(960px, 96vw);
-  max-height: min(90vh, 720px);
-  width: min(960px, 96vw);
+  width: min(1100px, 96vw);
+  max-width: 96vw;
+  max-height: 92vh;
 }
 .excalidraw-expand::backdrop {
   background: rgb(0 0 0 / 55%);
@@ -1265,102 +1211,56 @@ main:has(.post-content) > footer.prose :is(a, span) {
 }
 .excalidraw-expand__frame {
   position: relative;
-  aspect-ratio: 16 / 9;
   width: 100%;
-  max-height: min(90vh, 720px);
+  height: min(80vh, 720px);
   border-radius: 0.65rem;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, #fff 18%, transparent);
   background: #121212;
   color: #f5f5f5;
 }
-.excalidraw-expand__host {
+.excalidraw-expand__host,
+.excalidraw-expand .excalidraw-shiro--expand {
   width: 100%;
   height: 100%;
-  touch-action: pinch-zoom;
 }
+/* Full-width zoom bar: longest at fit (zoomed out), shortest at max zoom */
 .excalidraw-expand__zoom-bar {
   position: absolute;
-  left: 50%;
-  bottom: 0.55rem;
-  z-index: 21;
-  transform: translateX(-50%);
-  width: min(42%, 220px);
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.65rem;
+  z-index: 12;
   height: 4px;
   border-radius: 999px;
-  background: rgb(255 255 255 / 18%);
+  background: rgb(255 255 255 / 16%);
   pointer-events: none;
 }
 .excalidraw-expand__zoom-bar-fill {
   height: 100%;
-  width: calc(100% * var(--zoom-bar-scale, 0.55));
-  margin-inline: auto;
+  width: calc(100% * var(--zoom-bar-scale, 1));
   border-radius: inherit;
   background: color-mix(in srgb, var(--accent, #e7a1b5) 85%, #fff);
   transition: width 120ms ease-out;
+  margin: 0; /* grow from left; full width when scale=1 */
 }
-.excalidraw-expand__toolbar {
+.excalidraw-expand__close {
   position: absolute;
-  left: 50%;
   top: 0.55rem;
-  right: auto;
-  z-index: 22;
-  transform: translateX(-50%);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.2rem;
-  padding: 0.28rem 0.45rem;
+  right: 0.55rem;
+  z-index: 13;
+  min-height: 2rem;
+  padding: 0.3rem 0.75rem;
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, #fff 22%, transparent);
   background: rgb(20 20 20 / 82%);
-  backdrop-filter: blur(8px);
-  pointer-events: auto;
-}
-.excalidraw-expand__toolbar button,
-.excalidraw-expand__toolbar a {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.7rem;
-  min-height: 1.7rem;
-  padding: 0 0.45rem;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
   color: inherit;
-  text-decoration: none;
   font-size: 0.82rem;
   cursor: pointer;
 }
-.excalidraw-expand__toolbar button:is(:hover, :focus-visible),
-.excalidraw-expand__toolbar a:is(:hover, :focus-visible) {
+.excalidraw-expand__close:is(:hover, :focus-visible) {
   background: color-mix(in srgb, var(--accent, #e7a1b5) 35%, #141414);
   outline: none;
-}
-.excalidraw-expand__zoom-out::before {
-  content: '−';
-  font-size: 1.05rem;
-}
-.excalidraw-expand__zoom-in::before {
-  content: '+';
-  font-size: 1.05rem;
-}
-.excalidraw-expand__reset::before {
-  content: '↺';
-  font-size: 0.95rem;
-}
-.excalidraw-expand__zoom-label {
-  min-width: 2.6rem;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-  opacity: 0.9;
-  font-size: 0.78rem;
-}
-.excalidraw-expand__download {
-  font-size: 0.78rem !important;
-}
-.excalidraw-expand__close {
-  font-size: 0.78rem !important;
 }
 
 /* :::blog-link — bidirectional post card */
@@ -1377,6 +1277,9 @@ main:has(.post-content) > footer.prose :is(a, span) {
   border: 1px solid color-mix(in srgb, var(--c-text) 10%, transparent);
   border-radius: 0.7rem;
   background: color-mix(in srgb, var(--c-text) 5%, var(--c-bg));
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--c-text) 6%, transparent),
+    0 6px 18px color-mix(in srgb, var(--c-text) 7%, transparent);
   color: inherit;
   text-decoration: none;
   box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
@@ -1388,6 +1291,9 @@ main:has(.post-content) > footer.prose :is(a, span) {
 :root.dark .prose a.blog-link-card {
   background: color-mix(in srgb, #fff 5%, #0a0a0a);
   border-color: color-mix(in srgb, #fff 10%, transparent);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 35%),
+    0 8px 22px rgb(0 0 0 / 28%);
 }
 .prose a.blog-link-card:is(:hover, :focus-visible) {
   border-color: color-mix(in srgb, var(--accent) 45%, transparent);

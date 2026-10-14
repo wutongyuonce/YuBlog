@@ -4,23 +4,12 @@ import { createRoot, type Root } from 'react-dom/client'
 import {
   ExcalidrawCanvas,
   type ExcalidrawCanvasHandle,
-  type ExcalidrawViewMode,
+  type ExcalidrawCanvasProps,
 } from '~/components/excalidraw/ExcalidrawCanvas'
 
-interface MountRecord {
-  root: Root
-  mode: ExcalidrawViewMode
-}
+const mounts = new WeakMap<HTMLElement, Root>()
 
-const mounts = new WeakMap<HTMLElement, MountRecord>()
-
-export interface MountExcalidrawOptions {
-  sceneUrl: string
-  mode: ExcalidrawViewMode
-  onZoomChange?: (zoom: number) => void
-  onReady?: () => void
-  onError?: (message: string) => void
-}
+export type MountExcalidrawOptions = ExcalidrawCanvasProps
 
 export interface MountExcalidrawResult {
   unmount: () => void
@@ -33,29 +22,20 @@ export const mountExcalidrawCanvas = (
 ): MountExcalidrawResult => {
   const existing = mounts.get(host)
   if (existing) {
-    existing.root.unmount()
+    existing.unmount()
     mounts.delete(host)
   }
 
   const canvasRef = createRef<ExcalidrawCanvasHandle>()
   const root = createRoot(host)
-  root.render(
-    createElement(ExcalidrawCanvas, {
-      ref: canvasRef,
-      sceneUrl: opts.sceneUrl,
-      mode: opts.mode,
-      onZoomChange: opts.onZoomChange,
-      onReady: opts.onReady,
-      onError: opts.onError,
-    })
-  )
-  mounts.set(host, { root, mode: opts.mode })
+  root.render(createElement(ExcalidrawCanvas, { ...opts, ref: canvasRef }))
+  mounts.set(host, root)
 
   const api: ExcalidrawCanvasHandle = {
     zoomBy: (delta) => canvasRef.current?.zoomBy(delta),
-    setZoom: (value) => canvasRef.current?.setZoom(value),
     fit: () => canvasRef.current?.fit(),
     getZoom: () => canvasRef.current?.getZoom() ?? 1,
+    getFitZoom: () => canvasRef.current?.getFitZoom() ?? 1,
   }
 
   return {

@@ -20,22 +20,17 @@ const render = async (source) => {
   return processor.render(source, { fileURL: pathToFileURL(postPath) })
 }
 
-test(':::excalidraw renders host, toolbar download and static source link', async () => {
+test(':::excalidraw renders host and static source link', async () => {
   const { code } = await render(
     ':::excalidraw{src="./image-layout-demo-img/verify.excalidraw" preview="./image-layout-demo-img/verify.svg" alt="示意"}\n:::'
   )
   assert.match(code, /class="[^"]*excalidraw-embed/)
   assert.match(code, /data-excalidraw-viewer/)
   assert.match(code, /data-excalidraw-host/)
-  assert.match(code, /excalidraw-embed__expand/)
-  assert.match(code, /excalidraw-embed__zoom-out/)
-  assert.match(code, /excalidraw-embed__reset/)
   assert.match(code, /href="\.\/image-layout-demo-img\/verify\.excalidraw"/)
   assert.match(code, /download="/)
   assert.doesNotMatch(code, /blob:/)
-  assert.match(code, /excalidraw-embed__toolbar/)
   assert.match(code, /Excalidraw 源文件/)
-  // Optional preview still emitted as fallback when present
   assert.match(code, /image-layout-demo-img\/verify\.svg/)
 })
 

@@ -1,16 +1,18 @@
-const ZOOM_STEP = 0.1
+/**
+ * Mount Shiro-like Excalidraw canvases into :::excalidraw figures.
+ * Expand uses <dialog> (YuBlog) instead of Shiro mobile blob: preview.
+ */
+
+type MountFn = typeof import('~/utils/excalidraw-mount').mountExcalidrawCanvas
 
 const resolveSceneUrl = (root: HTMLElement): string | null => {
-  // Prefer the download <a> — rehype rewrites it to /_media/….
   const link = root.querySelector<HTMLAnchorElement>(
     'a.excalidraw-embed__source'
   )
   if (link?.getAttribute('href')) return link.href
   const fromData = root.getAttribute('data-excalidraw-src')?.trim()
-  if (fromData) {
-    if (fromData.startsWith('/') || /^https?:/i.test(fromData))
-      return new URL(fromData, window.location.href).href
-  }
+  if (fromData && (fromData.startsWith('/') || /^https?:/i.test(fromData)))
+    return new URL(fromData, window.location.href).href
   return null
 }
 
@@ -29,24 +31,18 @@ const downloadName = (root: HTMLElement, sceneUrl: string) => {
   }
 }
 
-/** Zoom bar: longer when zoomed out, shorter when zoomed in. */
-const zoomBarScale = (zoom: number) => {
-  const min = 0.1
-  const max = 3
-  const z = Math.min(max, Math.max(min, zoom || 1))
-  const raw = min / z
-  return Math.min(1, Math.max(0.18, raw * 2.2))
+/**
+ * Zoom bar: longest when zoomed out (fit / initial), shortest at max zoom.
+ * Spans full track width at fitZoom.
+ */
+const zoomBarScale = (zoom: number, fitZoom: number) => {
+  const minZ = Math.max(0.05, Math.min(fitZoom || 1, zoom || 1))
+  const maxZ = 3
+  if (maxZ <= minZ) return 1
+  const t = (zoom - minZ) / (maxZ - minZ)
+  return Math.min(1, Math.max(0.1, 1 - t))
 }
 
-const formatZoom = (zoom: number) => `${Math.round(zoom * 100)}%`
-
-type MountFn = typeof import('~/utils/excalidraw-mount').mountExcalidrawCanvas
-
-/**
- * Mounts real Excalidraw canvases into :::excalidraw figures.
- * React + @excalidraw load only when an embed is present on the page.
- * Expand dialog: fixed box, single-finger pan locked, pinch/wheel zoom + zoom bar.
- */
 export class ExcalidrawViewer extends HTMLElement {
   private controller?: AbortController
   private cleanups: (() => void)[] = []
@@ -104,32 +100,17 @@ export class ExcalidrawViewer extends HTMLElement {
     const fallback = root.querySelector<HTMLElement>(
       '.excalidraw-embed__fallback'
     )
-    const zoomLabel = root.querySelector<HTMLElement>(
-      '.excalidraw-embed__zoom-label'
-    )
-    const zoomOut = root.querySelector<HTMLButtonElement>(
-      '.excalidraw-embed__zoom-out'
-    )
-    const zoomIn = root.querySelector<HTMLButtonElement>(
-      '.excalidraw-embed__zoom-in'
-    )
-    const reset = root.querySelector<HTMLButtonElement>(
-      '.excalidraw-embed__reset'
-    )
-    const expandBtn = root.querySelector<HTMLButtonElement>(
-      '.excalidraw-embed__expand'
-    )
+    const name = downloadName(root, sceneUrl)
 
-    const { unmount, api } = mountCanvas(host, {
+    const { unmount } = mountCanvas(host, {
       sceneUrl,
-      mode: 'embed',
-      onZoomChange: (zoom) => {
-        if (zoomLabel) zoomLabel.textContent = formatZoom(zoom)
-      },
+      downloadUrl: sceneUrl,
+      downloadName: name,
+      showExpandButton: true,
+      onExpand: () => this.openExpand(sceneUrl, name, mountCanvas),
       onReady: () => {
         fallback?.setAttribute('hidden', '')
         root.classList.add('excalidraw-embed--canvas-ready')
-        if (zoomLabel) zoomLabel.textContent = formatZoom(api.getZoom())
       },
       onError: (message) => {
         root.classList.add('excalidraw-embed--error')
@@ -145,24 +126,10 @@ export class ExcalidrawViewer extends HTMLElement {
     })
     this.cleanups.push(unmount)
     signal.addEventListener('abort', unmount, { once: true })
-
-    zoomOut?.addEventListener('click', () => api.zoomBy(-ZOOM_STEP), { signal })
-    zoomIn?.addEventListener('click', () => api.zoomBy(ZOOM_STEP), { signal })
-    reset?.addEventListener('click', () => api.fit(), { signal })
-    expandBtn?.addEventListener(
-      'click',
-      () => this.openExpand(root, sceneUrl, mountCanvas),
-      { signal }
-    )
   }
 
-  private openExpand(
-    sourceRoot: HTMLElement,
-    sceneUrl: string,
-    mountCanvas: MountFn
-  ) {
-    const existing = document.querySelector('dialog.excalidraw-expand')
-    existing?.remove()
+  private openExpand(sceneUrl: string, name: string, mountCanvas: MountFn) {
+    document.querySelector('dialog.excalidraw-expand')?.remove()
 
     const dialog = document.createElement('dialog')
     dialog.className = 'excalidraw-expand'
@@ -180,40 +147,9 @@ export class ExcalidrawViewer extends HTMLElement {
     barTrack.setAttribute('aria-hidden', 'true')
     const barFill = document.createElement('div')
     barFill.className = 'excalidraw-expand__zoom-bar-fill'
+    // Initial: longest (full track)
+    barFill.style.setProperty('--zoom-bar-scale', '1')
     barTrack.append(barFill)
-
-    const toolbar = document.createElement('div')
-    toolbar.className = 'excalidraw-expand__toolbar'
-    toolbar.setAttribute('role', 'toolbar')
-    toolbar.setAttribute('aria-label', 'Excalidraw 展开控制')
-
-    const zoomOut = document.createElement('button')
-    zoomOut.type = 'button'
-    zoomOut.className = 'excalidraw-expand__zoom-out'
-    zoomOut.setAttribute('aria-label', '缩小')
-
-    const zoomLabel = document.createElement('span')
-    zoomLabel.className = 'excalidraw-expand__zoom-label'
-    zoomLabel.setAttribute('aria-live', 'polite')
-    zoomLabel.textContent = '100%'
-
-    const zoomIn = document.createElement('button')
-    zoomIn.type = 'button'
-    zoomIn.className = 'excalidraw-expand__zoom-in'
-    zoomIn.setAttribute('aria-label', '放大')
-
-    const reset = document.createElement('button')
-    reset.type = 'button'
-    reset.className = 'excalidraw-expand__reset'
-    reset.setAttribute('aria-label', '复位')
-
-    const download = document.createElement('a')
-    download.className = 'excalidraw-expand__download'
-    download.href = sceneUrl
-    download.download = downloadName(sourceRoot, sceneUrl)
-    download.rel = 'noopener noreferrer'
-    download.textContent = '下载'
-    download.setAttribute('aria-label', '下载 Excalidraw 源文件')
 
     const close = document.createElement('button')
     close.type = 'button'
@@ -221,35 +157,39 @@ export class ExcalidrawViewer extends HTMLElement {
     close.setAttribute('aria-label', '关闭')
     close.textContent = '关闭'
 
-    toolbar.append(zoomOut, zoomLabel, zoomIn, reset, download, close)
-    frame.append(host, barTrack, toolbar)
+    frame.append(host, barTrack, close)
     dialog.append(frame)
     document.body.append(dialog)
 
-    const { unmount, api } = mountCanvas(host, {
+    let fitZoom = 1
+    const { unmount } = mountCanvas(host, {
       sceneUrl,
-      mode: 'expand',
-      onZoomChange: (zoom) => {
+      downloadUrl: sceneUrl,
+      downloadName: name,
+      // Shiro modal: no nested expand button
+      showExpandButton: false,
+      className: 'excalidraw-shiro--expand',
+      onReady: (api) => {
+        fitZoom = api.getAppState().zoom.value
         barFill.style.setProperty(
           '--zoom-bar-scale',
-          String(zoomBarScale(zoom))
+          String(zoomBarScale(fitZoom, fitZoom))
         )
-        zoomLabel.textContent = formatZoom(zoom)
+      },
+      onZoomChange: (zoom, fit) => {
+        fitZoom = fit || fitZoom
+        barFill.style.setProperty(
+          '--zoom-bar-scale',
+          String(zoomBarScale(zoom, fitZoom))
+        )
       },
     })
-
-    zoomOut.addEventListener('click', () => api.zoomBy(-ZOOM_STEP))
-    zoomIn.addEventListener('click', () => api.zoomBy(ZOOM_STEP))
-    reset.addEventListener('click', () => api.fit())
 
     const cleanup = () => {
       unmount()
       dialog.remove()
     }
-
-    close.addEventListener('click', () => {
-      dialog.close()
-    })
+    close.addEventListener('click', () => dialog.close())
     dialog.addEventListener('close', cleanup)
     dialog.addEventListener('click', (event) => {
       if (event.target === dialog) dialog.close()

@@ -532,7 +532,7 @@ console.log(total([1, 2, 3]))
 | 方形卡片栏 | `:::card{layout="square" scroll="auto" title="…" meta="…"}` | 1:1 封面；条目超出一屏才循环 | 不够宽时退回横滑 |
 | 图片网格 | `:::gallery{columns="2"}` | 并排对照的图片 | 自动单列 |
 | 横向相册 | `:::gallery{layout="scroll"}` | 连续浏览多张图片 | 主图与后续露出 |
-| Excalidraw | `:::excalidraw{src="…excalidraw"}` | 真实画布（可 pinch） | 展开锁定单指平移；下载静态源 |
+| Excalidraw | `:::excalidraw{src="…excalidraw"}` | Shiro 同款只读画布 | dialog 展开 + 静态源下载 |
 | 博文链接卡 | `:::blog-link{slug="…"}` | 链到本站其他博文 | 对方文再写一张即双向 |
 
 ```html
@@ -568,9 +568,9 @@ console.log(total([1, 2, 3]))
 
 ## Excalidraw 图
 
-把 `.excalidraw` 源文件放在文章旁的 `*-img/` 目录即可。客户端用只读 Excalidraw 画布渲染场景 JSON；源文件镜像到 `/_media/…`，下载按钮指向**永久静态地址**，不是浏览器里的 `blob:`。
+把 `.excalidraw` 源文件放在文章旁的 `*-img/` 目录即可。客户端按 [Shiro](https://github.com/Innei/Shiro) 同款只读画布渲染（`viewMode`／`zenMode`、高度 500px、原生 pinch／底部缩放条）；源文件镜像到 `/_media/…`。与 Shiro 的差异：展开用页面内 dialog（不用移动端 `blob:` 外链），并多一个**静态源下载**按钮。
 
-文内嵌为横向圆角卡片（约 16:9，高度封顶约 500px，对齐 Shiro／innei），只读画布可单指平移与双指 pinch；工具条含缩放／复位／展开／下载。展开视图：固定比例框内**单指不平移**，双指 pinch 仍可缩放，顶部有缩放％／复位／下载，底部有「缩得越小条越长」的缩放条。可选 `preview` 仅作无 JS／失败回退。
+可选 `preview`（SVG／PNG）仅作无 JS／失败回退。
 
 :::excalidraw{src="./image-layout-demo-img/verify.excalidraw" alt="Verify 页：离线 UI 目录示意"}
 :::
