@@ -643,6 +643,7 @@ accent-switch[hidden],
   color: var(--profile-muted);
   font-size: 0.75rem;
   text-decoration: none;
+  white-space: nowrap;
 }
 .blog-profile__arrow {
   width: 13px;
@@ -743,13 +744,10 @@ accent-switch[hidden],
 }
 @media (max-width: 600px) {
   .blog-profile__top {
-    grid-template-columns: 1fr;
     gap: 12px;
     margin-top: 22px;
   }
   .blog-profile__identity {
-    grid-column: 1;
-    justify-self: center;
     grid-template-columns: 44px minmax(0, 1fr);
     gap: 10px;
   }
@@ -771,8 +769,6 @@ accent-switch[hidden],
     gap: 5px;
   }
   .blog-profile__rss {
-    grid-column: 1;
-    justify-self: center;
     font-size: 0.6875rem;
   }
 }
