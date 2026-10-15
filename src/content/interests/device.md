@@ -52,7 +52,7 @@ order: 0
 ### 我的 Mac 软件
 
 - **AI&Agent：** [ChatGPT](https://chatgpt.com/)、[Grok Bot](https://x.ai/news/introducing-grok-bot)
-  
+  ![grok-bot|w600](./device/grok-bot.png)
   - [Ghostty](https://ghostty.org/) + [herdr](https://github.com/herdrdev/herdr)（插件：[herdr-sidebar](https://github.com/alexarthurs/herdr-sidebar)） + [pi](https://github.com/earendil-works/pi)（插件：[我的 pi-extensions](https://github.com/wutongyuonce/pi-extensions)）
     ![pi|w600](./device/pi.png)
   - [Paseo](https://paseo.sh/)、[Memoh](https://memoh.ai/)
