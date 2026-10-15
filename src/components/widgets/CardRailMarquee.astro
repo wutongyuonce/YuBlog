@@ -10,14 +10,24 @@
     reducedMotion: () => motion.matches,
   })
 
-  const watch = () => {
+  const observe = () => {
     for (const rail of document.querySelectorAll('.media-cards--auto')) {
       if (watched.has(rail)) continue
       watched.add(rail)
       resize.observe(rail)
     }
+  }
+  const watch = () => {
+    observe()
     controller.sync()
   }
+  // 运行时注入的卡片不改变容器尺寸，观察器不会触发：由注入方显式要求重算。
+  const refresh = () => {
+    observe()
+    for (const rail of document.querySelectorAll('.media-cards--auto'))
+      controller.refresh(rail)
+  }
+  document.addEventListener('content:added', refresh)
   const teardown = () => {
     for (const rail of watched) resize.unobserve(rail)
     watched.clear()

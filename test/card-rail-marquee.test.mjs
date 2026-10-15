@@ -143,3 +143,44 @@ test('an overflowing rail duplicates inside the plugin track and records the sea
   assert.equal(rail.dataset.marquee, undefined)
   assert.equal(rail.distance(), undefined)
 })
+
+test('refresh re-measures a rail whose cards were replaced at runtime', () => {
+  const rail = createRail([120, 120, 120], 200)
+  const controller = createMarqueeController({
+    query: () => [rail],
+    reducedMotion: () => false,
+  })
+  controller.sync()
+  assert.equal(rail.track.children.length, 6)
+
+  // 运行时注入：旧卡片与它们的副本一起消失，换成更宽的一组。
+  for (const card of [...rail.track.children]) card.remove()
+  assert.equal(rail.track.children.length, 0)
+  for (const width of [150, 150, 150, 150]) rail.track.append(createCard(width))
+
+  controller.refresh(rail)
+  assert.equal(rail.track.children.length, 8, 'one copy of the new cards')
+  assert.equal(rail.track.children[4].hasAttribute('aria-hidden'), true)
+  const loop =
+    rail.track.children[4].offsetLeft - rail.track.children[0].offsetLeft
+  assert.equal(rail.distance(), `${loop}px`)
+  assert.ok(loop > rail.clientWidth)
+})
+
+test('refresh stops a rail that no longer overflows after the swap', () => {
+  const rail = createRail([120, 120, 120], 200)
+  const controller = createMarqueeController({
+    query: () => [rail],
+    reducedMotion: () => false,
+  })
+  controller.sync()
+  assert.equal(rail.dataset.marquee, 'on')
+
+  for (const card of [...rail.track.children]) card.remove()
+  rail.track.append(createCard(50))
+
+  controller.refresh(rail)
+  assert.equal(rail.dataset.marquee, undefined)
+  assert.equal(rail.distance(), undefined)
+  assert.equal(rail.track.children.length, 1)
+})
