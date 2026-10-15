@@ -9,6 +9,7 @@ import { remarkPlugins, rehypePlugins } from './plugins' // 自定义 Markdown �
 import { katexWoff2Only } from './plugins/postcss-katex-woff2-only' // 只保留 KaTeX 的 woff2 字体
 import { subsetTitleFontsIntegration } from './plugins/astro-subset-title-fonts' // 标题字体子集化 + 产物校验
 import { mediaSyncIntegration } from './plugins/astro-media-sync' // 把 src/ 下的视频/音频镜像到 public/_media/
+import { listeningEndpointIntegration } from './plugins/astro-listening-endpoint' // dev 下挂载听歌数据接口，与线上同一实现
 import { SITE } from './src/config' // 导入站点配置（从 config.ts 导入）
 
 /**
@@ -43,6 +44,7 @@ export default defineConfig({
     mdx(), // 启用 MDX 支持
     subsetTitleFontsIntegration(), // 任何构建都产出标题字体子集，并校验引用
     mediaSyncIntegration(), // 先于 Astro 拷贝 public/，把视频/音频准备好
+    listeningEndpointIntegration(), // 本地 dev 提供听歌数据接口，线上由 Vercel 函数提供
   ],
 
   // ==================== Markdown 配置 ====================

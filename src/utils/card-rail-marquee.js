@@ -80,6 +80,13 @@ export function createMarqueeController({ query, reducedMotion }) {
     started.delete(rail)
     clearMarquee(rail)
   }
+  const apply = (rail) => {
+    if (reducedMotion() || !canMarquee(rail)) {
+      if (started.has(rail) || rail.dataset.marquee) stop(rail)
+      return
+    }
+    if (startMarquee(rail)) started.add(rail)
+  }
 
   return {
     sync() {
@@ -87,13 +94,12 @@ export function createMarqueeController({ query, reducedMotion }) {
       for (const rail of started) {
         if (!live.has(rail) || !rail.isConnected) stop(rail)
       }
-      for (const rail of live) {
-        if (reducedMotion() || !canMarquee(rail)) {
-          if (started.has(rail) || rail.dataset.marquee) stop(rail)
-          continue
-        }
-        if (startMarquee(rail)) started.add(rail)
-      }
+      for (const rail of live) apply(rail)
+    },
+    /** 轨道内容被替换后重来一次：旧副本不再是当前卡片，必须先清掉再重新判断。 */
+    refresh(rail) {
+      stop(rail)
+      if (rail.isConnected) apply(rail)
     },
     stopAll() {
       for (const rail of [...started]) stop(rail)

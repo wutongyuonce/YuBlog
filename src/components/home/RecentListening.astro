@@ -1,101 +1,135 @@
 ---
 /* eslint-disable astro/jsx-a11y/no-noninteractive-tabindex -- Scroll areas need focus for native keyboard scrolling. */
-import listening from '~/data/lastfm.json'
+/* eslint-disable astro/jsx-a11y/anchor-has-content, astro/jsx-a11y/anchor-is-valid -- 卡片模板的文字与链接由脚本按接口数据填入。 */
+import { LASTFM_USER, lastfmProfileUrl } from '~/utils/lastfm.mjs'
 
-const number = new Intl.NumberFormat('zh-CN')
-const updatedAt = new Intl.DateTimeFormat('zh-CN', {
-  timeZone: 'Asia/Shanghai',
-  month: 'numeric',
-  day: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false,
-}).format(new Date(listening.updatedAt))
+const profileUrl = lastfmProfileUrl(LASTFM_USER)
 ---
 
-<section class="recent-listening" aria-labelledby="recent-listening-title">
+<!--
+  听歌数据只在运行时取得，所以这里只输出骨架、卡片模板和失败说明；
+  统计、卡片和更新时间都由 `~/utils/recent-listening` 在校验响应后填入。
+-->
+<section
+  class="recent-listening"
+  aria-labelledby="recent-listening-title"
+  aria-busy="true"
+  data-listening
+  data-state="loading"
+>
   <header class="home-section-header">
     <h2 id="recent-listening-title">最近在听 Top10</h2>
-    <a href={listening.profileUrl} target="_blank" rel="noopener noreferrer">
+    <a href={profileUrl} target="_blank" rel="noopener noreferrer">
       Last.fm ↗
     </a>
   </header>
   <div class="recent-listening__stats" aria-label="听歌统计">
     <span>
-      过去 7 天 <strong>{number.format(listening.weeklyScrobbles)}</strong> 次
+      过去 7 天 <strong data-listening-stat>—</strong> 次
     </span>
     <span>
-      累计 <strong>{number.format(listening.totalScrobbles)}</strong> 次
+      累计 <strong data-listening-stat>—</strong> 次
     </span>
     <span>
-      常听歌手 <strong>{listening.topArtist || '暂无'}</strong>
+      常听歌手 <strong data-listening-stat>—</strong>
     </span>
   </div>
-  {listening.tracks.length ? (
-    <div class="prose markdown-content recent-listening__body">
-      <div
-        class="media-cards media-cards--rail media-cards--auto"
-        tabindex="0"
-        role="region"
-        aria-label="过去 7 天常听歌曲 Top 10，可左右滚动"
-      >
-        <div class="media-cards__track" role="list">
-          {listening.tracks.map((track) => (
-            <article class="media-card media-card--square" role="listitem">
-              <div class="image-view" title={track.album || '专辑信息暂缺'}>
-                {track.cover ? (
-                  <img
-                    class="media-card__cover"
-                    src={track.cover}
-                    width="300"
-                    height="300"
-                    loading="lazy"
-                    decoding="async"
-                    alt={`${track.artist} - ${track.album || track.name} 专辑封面`}
-                  />
-                ) : (
-                  <span
-                    class="recent-listening__placeholder"
-                    aria-hidden="true"
-                  >
-                    ♪
-                  </span>
-                )}
-                {track.fullCover && (
-                  <template class="image-view__source">
-                    <img
-                      src={track.fullCover}
-                      alt={`${track.artist} - ${track.album || track.name} 专辑封面`}
-                    />
-                  </template>
-                )}
-              </div>
-              <div class="media-card__body">
-                <a
-                  class="media-card__title"
-                  title={track.name}
-                  href={track.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {track.name}
-                </a>
-                <p class="media-card__meta" tabindex="0">
-                  {track.artist} - {track.album || '专辑信息暂缺'}
-                </p>
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
+  <div class="prose markdown-content recent-listening__body">
+    <div
+      class="media-cards media-cards--rail media-cards--auto"
+      tabindex="0"
+      role="region"
+      aria-label="过去 7 天常听歌曲 Top 10，可左右滚动"
+    >
+      <div class="media-cards__track" role="list" data-listening-track></div>
     </div>
-  ) : (
-    <p class="recent-listening__empty">过去 7 天还没有听歌记录。</p>
-  )}
+  </div>
+  <p class="recent-listening__message" data-listening-message hidden></p>
   <p class="recent-listening__updated">
-    更新于 <time datetime={listening.updatedAt}>{updatedAt}</time>（北京时间）
+    更新于 <time data-listening-time>—</time>（北京时间）
   </p>
+  <noscript>
+    <p class="recent-listening__message">
+      听歌数据由 Last.fm 实时提供，需要启用 JavaScript；也可以直接访问{' '}
+      <a href={profileUrl} target="_blank" rel="noopener noreferrer">
+        Last.fm 主页
+      </a>
+      。
+    </p>
+  </noscript>
+  <template data-listening-card>
+    <article class="media-card media-card--square" role="listitem">
+      <div class="image-view">
+        <img
+          class="media-card__cover"
+          width="300"
+          height="300"
+          loading="lazy"
+          decoding="async"
+          alt=""
+        />
+        <template class="image-view__source">
+          <img alt="" />
+        </template>
+      </div>
+      <div class="media-card__body">
+        <a
+          class="media-card__title"
+          target="_blank"
+          rel="noopener noreferrer"
+        ></a>
+        <p class="media-card__meta" tabindex="0"></p>
+      </div>
+    </article>
+  </template>
 </section>
+
+<script>
+  import {
+    parseListeningPayload,
+    renderListening,
+  } from '~/utils/recent-listening'
+
+  /** 与 Vercel 上的函数路径一致；接口不受站点 base 影响。 */
+  const ENDPOINT = '/api/lastfm'
+
+  let request: AbortController | undefined
+
+  const fill = async (root: HTMLElement, signal: AbortSignal) => {
+    let snapshot = null
+    try {
+      const response = await fetch(ENDPOINT, {
+        signal,
+        headers: { accept: 'application/json' },
+      })
+      if (response.ok) snapshot = parseListeningPayload(await response.json())
+    } catch (error) {
+      if (signal.aborted) return
+      // 网络错误、超时和非 JSON 响应都走同一套失败状态。
+      console.warn('Last.fm listening request failed', error)
+    }
+    if (signal.aborted || !root.isConnected) return
+    renderListening(root, snapshot)
+    // 注入的卡片需要重新接管：陈列架重算循环副本，图片查看器补键盘入口。
+    document.dispatchEvent(new Event('content:added'))
+  }
+
+  const load = () => {
+    const root = document.querySelector<HTMLElement>('[data-listening]')
+    if (!root || root.dataset.state !== 'loading' || request) return
+    request = new AbortController()
+    void fill(root, request.signal).finally(() => {
+      request = undefined
+    })
+  }
+
+  document.addEventListener('astro:before-swap', () => {
+    request?.abort()
+    request = undefined
+  })
+  document.addEventListener('astro:page-load', load)
+  load()
+</script>
 
 <style>
   .recent-listening {
@@ -128,6 +162,14 @@ const updatedAt = new Intl.DateTimeFormat('zh-CN', {
     -webkit-line-clamp: 2;
     overflow: hidden;
   }
+  /* 等待接口时占住一张卡片的高度，避免数据到达后页面位移。 */
+  .recent-listening[data-state='loading'] .media-cards--rail {
+    min-height: 12rem;
+  }
+  .recent-listening:is([data-state='empty'], [data-state='error'])
+    .recent-listening__body {
+    display: none;
+  }
   .recent-listening__placeholder {
     display: grid;
     place-items: center;
@@ -138,8 +180,8 @@ const updatedAt = new Intl.DateTimeFormat('zh-CN', {
     font-family: var(--font-heading);
     font-size: 2rem;
   }
-  .recent-listening__updated,
-  .recent-listening__empty {
+  .recent-listening__message,
+  .recent-listening__updated {
     margin: 0.75rem 0 0;
     font-size: 0.75rem;
     color: color-mix(in srgb, var(--c-text) 65%, var(--c-bg));
