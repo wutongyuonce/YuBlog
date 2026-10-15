@@ -1,0 +1,145 @@
+---
+import { GISCUS } from '~/config'
+import { ensureTrailingSlash } from '~/utils/path'
+
+interface Props {
+  title?: string
+  description?: string
+}
+const {
+  title = '评论',
+  description = '欢迎交流，使用 GitHub 账号登录后即可留言。',
+} = Astro.props
+const term = ensureTrailingSlash(
+  new URL(Astro.url.pathname, Astro.site).pathname
+)
+const discussionsUrl = `https://github.com/${GISCUS.repo}/discussions`
+---
+
+<section
+  class="comments"
+  aria-labelledby="comments-heading"
+  data-pagefind-ignore
+>
+  <header>
+    <h2 id="comments-heading">{title}</h2>
+    <p>{description}</p>
+    <a href={discussionsUrl} target="_blank" rel="noopener noreferrer">
+      在 GitHub Discussions 中查看讨论 ↗
+    </a>
+  </header>
+  <giscus-comments>
+    <template>
+      <giscus-widget
+        id="comments"
+        repo={GISCUS.repo}
+        repoid={GISCUS.repoId}
+        category={GISCUS.category}
+        categoryid={GISCUS.categoryId}
+        mapping="specific"
+        {term}
+        strict="1"
+        reactionsenabled="1"
+        emitmetadata="0"
+        inputposition="bottom"
+        lang="zh-CN"
+      ></giscus-widget>
+    </template>
+    <noscript>
+      启用 JavaScript 后可在此评论，也可以直接前往 GitHub 讨论。
+    </noscript>
+  </giscus-comments>
+</section>
+
+<script>
+  import { observeTheme } from '~/utils/theme-observer.js'
+
+  class GiscusComments extends HTMLElement {
+    private observer?: IntersectionObserver
+    private cleanupTheme?: () => void
+
+    connectedCallback() {
+      // OAuth callbacks must save the session even above the lazy-load boundary.
+      if (new URLSearchParams(location.search).has('giscus')) {
+        void this.load()
+        return
+      }
+      this.observer = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((entry) => entry.isIntersecting)) {
+            this.observer?.disconnect()
+            void this.load()
+          }
+        },
+        { rootMargin: '200px' }
+      )
+      this.observer.observe(this)
+    }
+
+    private async load() {
+      try {
+        await import('giscus')
+        if (!this.isConnected) return
+        const template = this.querySelector('template')!
+        const isCallback = new URLSearchParams(location.search).has('giscus')
+        const historyState = history.state
+        const content = template.content.cloneNode(true) as DocumentFragment
+        const widget = content.querySelector('giscus-widget')!
+        const syncTheme = () => {
+          widget.theme = document.documentElement.classList.contains('dark')
+            ? 'noborder_dark'
+            : 'noborder_light'
+        }
+        this.append(content)
+        // Giscus cleans the OAuth URL with replaceState(undefined); retain Astro's entry.
+        if (isCallback) history.replaceState(historyState, '')
+        syncTheme()
+        this.cleanupTheme = observeTheme(syncTheme)
+      } catch {
+        if (this.isConnected) {
+          this.append('评论暂时无法加载，请通过上方 GitHub 链接参与讨论。')
+        }
+      }
+    }
+
+    disconnectedCallback() {
+      this.observer?.disconnect()
+      this.cleanupTheme?.()
+    }
+  }
+
+  if (!customElements.get('giscus-comments')) {
+    customElements.define('giscus-comments', GiscusComments)
+  }
+</script>
+
+<style>
+  .comments {
+    margin: 3rem auto 0;
+    padding-top: 1.5rem;
+    border-top: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
+  }
+  .comments h2 {
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 400;
+  }
+  .comments p,
+  .comments a {
+    font-size: 0.875rem;
+    line-height: 1.7;
+  }
+  .comments p {
+    margin: 0.75rem 0 0;
+    opacity: 0.65;
+  }
+  .comments a {
+    color: var(--accent);
+  }
+  giscus-comments {
+    display: block;
+    min-height: 150px;
+    margin-top: 1.5rem;
+  }
+</style>

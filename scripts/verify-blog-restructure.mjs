@@ -6,6 +6,7 @@ import { visit } from 'unist-util-visit'
 import { XMLParser } from 'fast-xml-parser'
 import {
   AUTHOR_LINKS,
+  GISCUS,
   INTEREST_ICONS,
   MORE_LINKS,
   SITE,
@@ -61,6 +62,66 @@ const elements = (tree, predicate) => {
 const hasClass = (node, name) => node.properties.className?.includes(name)
 const textOf = (node) =>
   node.type === 'text' ? node.value : (node.children || []).map(textOf).join('')
+
+test('only articles, friends and every interest category have isolated comments after their content', async () => {
+  const interestFiles = (
+    await readdir(new URL('../dist/interests/', import.meta.url), {
+      recursive: true,
+    })
+  ).filter((file) => file.endsWith('/index.html'))
+  const interestPages = await Promise.all(
+    interestFiles.map((file) => load('interests/' + file))
+  )
+  const enabled = [friends, ...articles, ...interestPages]
+  const terms = new Set()
+  for (const page of [...pages, ...interestPages]) {
+    const roots = elements(page, (node) => node.tagName === 'giscus-comments')
+    assert.equal(roots.length, enabled.includes(page) ? 1 : 0)
+    if (!roots.length) continue
+    const root = roots[0]
+    const template = elements(root, (node) => node.tagName === 'template')[0]
+    const widgets = elements(
+      template.content,
+      (node) => node.tagName === 'giscus-widget'
+    )
+    assert.equal(widgets.length, 1)
+    const config = widgets[0].properties
+    const canonical = elements(
+      page,
+      (node) =>
+        node.tagName === 'link' && node.properties.rel?.includes('canonical')
+    )[0].properties.href
+    assert.equal(config.term, new URL(canonical).pathname)
+    assert.equal(config.mapping, 'specific')
+    assert.equal(config.strict, '1')
+    assert.equal(config.repo, GISCUS.repo)
+    assert.equal(config.repoid, GISCUS.repoId)
+    assert.equal(config.categoryid, GISCUS.categoryId)
+    assert.ok(!terms.has(config.term), 'Each page owns its discussion')
+    terms.add(config.term)
+    assert.equal(
+      elements(
+        page,
+        (node) =>
+          node.tagName === 'meta' && node.properties.name === 'giscus:backlink'
+      )[0].properties.content,
+      canonical
+    )
+    for (const body of elements(page, (node) =>
+      hasClass(node, 'markdown-content')
+    )) {
+      assert.equal(
+        elements(body, (node) => node.tagName === 'giscus-comments').length,
+        0,
+        'Comments must stay outside authored content and RSS'
+      )
+      assert.ok(
+        body.position.end.offset < root.position.start.offset,
+        'Comments follow the body'
+      )
+    }
+  }
+})
 
 test('deployment preserves the manuscript route', async () => {
   const { redirects = [] } = JSON.parse(
