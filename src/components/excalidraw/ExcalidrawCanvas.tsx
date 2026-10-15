@@ -1,7 +1,8 @@
 /**
  * Read-only Excalidraw embed for YuBlog.
  * Native chrome hidden; custom bottom-right pill drives zoom/reset/expand/download.
- * Toolbar zoom keeps the viewport-center scene point fixed (no drift).
+ * Pill ± zooms around a fixed scene-space anchor (content center from fit),
+ * so the same point stays centered — matching blog/user expectation vs innei.
  */
 import {
   forwardRef,
@@ -34,6 +35,7 @@ interface ExcalidrawApi {
 }
 
 export interface ExcalidrawCanvasHandle {
+  /** Positive → × ZOOM_FACTOR; negative → ÷ ZOOM_FACTOR. */
   zoomBy: (delta: number) => void
   fit: () => void
   getZoom: () => number
@@ -59,9 +61,15 @@ interface ScenePayload {
   files?: Record<string, unknown>
 }
 
+interface ScenePoint {
+  x: number
+  y: number
+}
+
 const ZOOM_MIN = 0.1
 const ZOOM_MAX = 30
-const ZOOM_STEP = 0.1
+/** Multiplicative zoom step (innei-style ×1.2 / ÷1.2). */
+const ZOOM_FACTOR = 1.2
 
 const readTheme = (): 'light' | 'dark' =>
   typeof document !== 'undefined' &&
@@ -75,24 +83,34 @@ const clampZoom = (value: number) =>
 const formatZoom = (zoom: number) => `${Math.round(zoom * 100)}%`
 
 /**
- * Change zoom while keeping the scene point under the viewport center fixed.
- * Plain `updateScene({ zoom })` zooms around origin and makes content "fly away".
+ * Zoom around a fixed scene-space anchor (content center captured at fit).
+ * Forces that anchor back to the viewport center on every ± so zoom always
+ * scales about the same scene point — even after the user has panned.
+ * Falls back to the current viewport-center scene point when no anchor yet.
+ * Scene mapping: scene = local/zoom - scroll.
  */
-const setZoomAtViewportCenter = (api: ExcalidrawApi, nextZoom: number) => {
+const setZoomAroundAnchor = (
+  api: ExcalidrawApi,
+  nextZoom: number,
+  anchor: ScenePoint | null
+) => {
   const state = api.getAppState()
   const prev = state.zoom.value
   const next = clampZoom(nextZoom)
   if (Math.abs(next - prev) < 1e-6) return next
 
-  // Excalidraw getStateForZoom at viewport center (keeps center scene point fixed).
-  const cx = state.width / 2
-  const cy = state.height / 2
+  const a =
+    anchor ??
+    ({
+      x: state.width / 2 / prev - state.scrollX,
+      y: state.height / 2 / prev - state.scrollY,
+    } satisfies ScenePoint)
 
   api.updateScene({
     appState: {
       zoom: { value: next },
-      scrollX: state.scrollX + cx * (1 / next - 1 / prev),
-      scrollY: state.scrollY + cy * (1 / next - 1 / prev),
+      scrollX: state.width / 2 / next - a.x,
+      scrollY: state.height / 2 / next - a.y,
     },
   })
   return next
@@ -118,6 +136,8 @@ export const ExcalidrawCanvas = forwardRef<
 ) {
   const apiRef = useRef<ExcalidrawApi | undefined>(undefined)
   const fitZoomRef = useRef(1)
+  /** Scene-space content center from last successful fit; not cleared on pan. */
+  const anchorRef = useRef<ScenePoint | null>(null)
   const [scene, setScene] = useState<ScenePayload | null>(null)
   const [loading, setLoading] = useState(true)
   const [zoomLabel, setZoomLabel] = useState('—')
@@ -144,6 +164,7 @@ export const ExcalidrawCanvas = forwardRef<
     let cancelled = false
     setLoading(true)
     setScene(null)
+    anchorRef.current = null
     ;(async () => {
       try {
         const response = await fetch(sceneUrl)
@@ -186,7 +207,13 @@ export const ExcalidrawCanvas = forwardRef<
     const api = apiRef.current
     if (!api || api.getSceneElements().length === 0) return
     api.scrollToContent(undefined, { fitToContent: true })
-    fitZoomRef.current = api.getAppState().zoom.value
+    const s = api.getAppState()
+    fitZoomRef.current = s.zoom.value
+    // Capture content center in scene coords so ± always zooms about this point.
+    anchorRef.current = {
+      x: s.width / 2 / s.zoom.value - s.scrollX,
+      y: s.height / 2 / s.zoom.value - s.scrollY,
+    }
     emitZoom(fitZoomRef.current)
   }, [emitZoom])
 
@@ -195,7 +222,9 @@ export const ExcalidrawCanvas = forwardRef<
       const api = apiRef.current
       if (!api) return
       const prev = api.getAppState().zoom.value
-      const next = setZoomAtViewportCenter(api, prev + delta)
+      const nextZoom =
+        delta > 0 ? prev * ZOOM_FACTOR : prev / ZOOM_FACTOR
+      const next = setZoomAroundAnchor(api, nextZoom, anchorRef.current)
       emitZoom(next)
     },
     [emitZoom]
@@ -288,7 +317,7 @@ export const ExcalidrawCanvas = forwardRef<
           className="excalidraw-pill__btn"
           aria-label="缩小"
           title="缩小"
-          onClick={() => zoomBy(-ZOOM_STEP)}
+          onClick={() => zoomBy(-1)}
         >
           <span className="excalidraw-pill__icon excalidraw-pill__icon--zoom-out" />
         </button>
@@ -300,7 +329,7 @@ export const ExcalidrawCanvas = forwardRef<
           className="excalidraw-pill__btn"
           aria-label="放大"
           title="放大"
-          onClick={() => zoomBy(ZOOM_STEP)}
+          onClick={() => zoomBy(1)}
         >
           <span className="excalidraw-pill__icon excalidraw-pill__icon--zoom-in" />
         </button>
