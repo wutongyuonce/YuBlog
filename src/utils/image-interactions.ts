@@ -16,7 +16,7 @@ export class ImageInteractions extends HTMLElement {
     dialog.className = 'image-lightbox'
     dialog.setAttribute('aria-label', '图片大图')
     dialog.innerHTML = `<div class="image-lightbox__panel">
-      <button type="button" class="image-lightbox__close" aria-label="关闭大图">×</button>
+      <button type="button" class="image-lightbox__close" aria-label="关闭大图"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
       <img alt="">
       <p class="image-lightbox__caption"></p>
     </div>`
@@ -77,7 +77,8 @@ export class ImageInteractions extends HTMLElement {
         const image = target.closest<HTMLElement>(
           '.markdown-content .image-view img'
         )
-        if (!image || image.closest('a')) return
+        if (!image || image.closest('a') || image.closest('.excalidraw-embed'))
+          return
         event.preventDefault()
         event.stopPropagation()
         openFrom(image)
@@ -91,7 +92,7 @@ export class ImageInteractions extends HTMLElement {
         const image = event.target
         if (!(image instanceof HTMLImageElement)) return
         if (!image.matches('.markdown-content .image-view img')) return
-        if (image.closest('a')) return
+        if (image.closest('a') || image.closest('.excalidraw-embed')) return
         event.preventDefault()
         openFrom(image)
       },
@@ -101,7 +102,11 @@ export class ImageInteractions extends HTMLElement {
     for (const view of document.querySelectorAll<HTMLElement>(
       '.markdown-content .image-view'
     )) {
-      if (view.closest('[data-marquee-clone]')) continue
+      if (
+        view.closest('[data-marquee-clone]') ||
+        view.closest('.excalidraw-embed')
+      )
+        continue
       const image = view.querySelector<HTMLImageElement>('img')
       if (!image) continue
       const link = image.closest('a')

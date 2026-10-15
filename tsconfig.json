@@ -1,7 +1,14 @@
 {
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist", "node_modules", ".local", "video"],
+  "exclude": [
+    "dist",
+    "node_modules",
+    ".local",
+    "video",
+    "public/excalidraw-assets",
+    "public/_media"
+  ],
   "compilerOptions": {
     "baseUrl": ".",
     "resolveJsonModule": true,

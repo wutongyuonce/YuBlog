@@ -8,7 +8,14 @@ import prettier from 'eslint-config-prettier/flat'
 export default defineConfig(
   {
     // https://eslint.org/docs/latest/use/configure/configuration-files#globally-ignoring-files-with-ignores
-    ignores: ['dist/', '.astro/', '.local/', 'video/'],
+    ignores: [
+      'dist/',
+      '.astro/',
+      '.local/',
+      'video/',
+      'public/_media/',
+      'public/excalidraw-assets/',
+    ],
   },
   {
     // https://eslint.org/docs/latest/use/configure/language-options

@@ -25,6 +25,9 @@ import {
   classifyMediaRef,
   mediaTargetFor,
   mediaUrlFor,
+  MEDIA_EXTENSIONS,
+  DRAWING_EXTENSIONS,
+  MIRROR_EXTENSIONS,
   MEDIA_ROOTS,
   MEDIA_URL_PREFIX,
 } from '../plugins/media-paths.ts'
@@ -455,7 +458,7 @@ test('无法服务的引用明确失败，并报出文件与行号', async () =>
     [
       '扩展名不在列表',
       '<video src="./clip.mkv"></video>',
-      /不在可镜像的媒体列表里/,
+      /不在可镜像(?:的媒体)?列表里/,
       './clip.mkv',
     ],
   ]
@@ -744,4 +747,11 @@ test('报错按实际源文件与 vfile 的关系定位，兼容裁剪正文与�
   } finally {
     rmSync(ARTICLE, { force: true })
   }
+})
+
+test('drawing extensions are mirrored but separate from media-only set', () => {
+  assert.ok(DRAWING_EXTENSIONS.has('.excalidraw'))
+  assert.ok(MIRROR_EXTENSIONS.has('.excalidraw'))
+  assert.equal(MEDIA_EXTENSIONS.has('.excalidraw'), false)
+  assert.ok(MIRROR_EXTENSIONS.has('.mp4'))
 })

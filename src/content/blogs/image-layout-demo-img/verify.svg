@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="440" viewBox="0 0 640 440" role="img" aria-label="Verify page diagram">
+  <rect width="640" height="440" fill="#1e1e1e"/>
+  <rect x="220" y="40" width="200" height="360" rx="18" fill="none" stroke="#e8e8e8" stroke-width="2"/>
+  <text x="320" y="78" fill="#e8e8e8" font-family="Segoe UI, Helvetica, sans-serif" font-size="18" text-anchor="middle">Debug &gt; Verify</text>
+  <rect x="250" y="120" width="140" height="36" rx="8" fill="#4c8bf5"/>
+  <text x="320" y="144" fill="#fff" font-family="Segoe UI, Helvetica, sans-serif" font-size="16" text-anchor="middle">composer</text>
+  <rect x="250" y="170" width="140" height="36" rx="8" fill="#4c8bf5"/>
+  <text x="320" y="194" fill="#fff" font-family="Segoe UI, Helvetica, sans-serif" font-size="16" text-anchor="middle">steer</text>
+  <rect x="250" y="220" width="140" height="36" rx="8" fill="#d45454"/>
+  <text x="320" y="244" fill="#fff" font-family="Segoe UI, Helvetica, sans-serif" font-size="14" text-anchor="middle">PoC: New Interaction</text>
+  <rect x="24" y="150" width="150" height="64" rx="10" fill="none" stroke="#3d9a6a" stroke-width="2"/>
+  <text x="99" y="178" fill="#3d9a6a" font-family="Segoe UI, Helvetica, sans-serif" font-size="14" text-anchor="middle">Offline fixture</text>
+  <text x="99" y="198" fill="#3d9a6a" font-family="Segoe UI, Helvetica, sans-serif" font-size="12" text-anchor="middle">fake data, no login</text>
+  <line x1="174" y1="182" x2="218" y2="182" stroke="#888" stroke-width="2"/>
+  <polygon points="218,182 208,177 208,187" fill="#888"/>
+  <rect x="460" y="150" width="150" height="64" rx="10" fill="none" stroke="#4c8bf5" stroke-width="2"/>
+  <text x="535" y="178" fill="#4c8bf5" font-family="Segoe UI, Helvetica, sans-serif" font-size="14" text-anchor="middle">Agent / Runner</text>
+  <text x="535" y="198" fill="#4c8bf5" font-family="Segoe UI, Helvetica, sans-serif" font-size="12" text-anchor="middle">deep link scenario</text>
+  <line x1="420" y1="182" x2="460" y2="182" stroke="#888" stroke-width="2"/>
+  <polygon points="460,182 450,177 450,187" fill="#888"/>
+  <text x="320" y="420" fill="#999" font-family="Segoe UI, Helvetica, sans-serif" font-size="13" text-anchor="middle">Verify page: offline UI catalog</text>
+</svg>

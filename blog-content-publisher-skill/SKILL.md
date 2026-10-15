@@ -4,7 +4,7 @@ description: >
   维护 YuBlog（Wutong-Yu Astro 站）所有可改内容。按页面改：文稿与配图、首页近期笔墨和标签/归档所依赖的文章元数据、
   项目 JSON、关于作者介绍、拾趣分类（可新增、图标可选）与个人社交、友链 JSON、顶栏导航与顶栏 GitHub、友链申请模板文案。
   触发：发博客、改文章、改封面、改 titleImage、改分类、改关于、改拾趣、新增拾趣分类、给拾趣分类补图标、改设备、改动漫、改影视、改游戏、改书、改 Kpop、改友链、改项目、改导航、改顶栏 GitHub、改关于页社交、改名片站名。
-  能把作者交来的稿子落地：本地图片复制进文章配图目录并改写引用（外链保持外链）、按内容自动排版（grid／横滚／绕排）、把书影视条目生成卡片（可联网补链接与封面），含排版或卡片时默认启动或复用同一 worktree 的 dev 并核实文章预览链接。
+  能把作者交来的稿子落地：本地图片复制进文章配图目录并改写引用（外链保持外链）、按内容自动排版（grid／横滚／绕排）、把书影视条目生成卡片（可联网补链接与封面）、落地 Excalidraw 图与博文链接卡，含排版／卡片／Excalidraw／博文链接卡时默认启动或复用同一 worktree 的 dev 并核实文章预览链接。
   不要用来做布局实现、CSS 或交互重构。
 ---
 
@@ -29,7 +29,7 @@ description: >
 | 个人社交（名字、链接、图标） | 首页与关于 | `config.ts` 的 `AUTHOR_LINKS`；若 `about.md` 也展示同一联系方式，再同步该字段 |
 | 站点标题、域名 | 全站 SEO | `src/config.ts` 的 `SITE` |
 
-本 skill 管理内容与配置，可以用现有 gallery／figure 语法排版正文；布局实现、CSS 和交互逻辑属于实现范围，不混入一次内容更新。
+本 skill 管理内容与配置，可以用现有 gallery／figure／card／excalidraw／blog-link 语法排版正文；布局实现、CSS 和交互逻辑属于实现范围，不混入一次内容更新。
 
 读 schema，再读同目录一份现成文件当样例。
 
@@ -149,9 +149,38 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 - 普通 Markdown 正文图直接点图或键盘 Enter／空格在原生 dialog 放大，不写额外放大标记，也不显示角落标识；悬浮时原边框内微缩放并显示 `zoom-in`，减少动态偏好下不缩放。大图显示 `zoom-out`，点图／Esc／遮罩／关闭按钮退出，恢复焦点与滚动锁；浅色遮罩灰白、深色暗色。作者图片链接仍跳转，链接外大图入口只在键盘焦点时显示；`titleImage` 头图／文稿列表缩略图和头像不属于此范围，`:::card` 配图仍可放大。原尺寸图在 inert template 内仍由 Astro 解析，打开前不加载，不手写资源 URL。RSS 沿用 sanitizer 去 template／样式／控件，剩余全部图文按源顺序降级。
 - 不为内容排版引入依赖、轮播库、第二解析器、预览后台、preview manager 脚本或测试框架；布局实现与交互 authority 不随内容更新改动。
 
+### Excalidraw 图
+
+作者发来架构图／手绘流程图时用 `:::excalidraw`，**不要**把完整 JSON 塞进 ` ```excalidraw ` 围栏，也不要写 `blob:` 链接。
+
+1. 把 `.excalidraw` 源文件放进该文的 `*-img/`，文件名短 ASCII，例如 `verify.excalidraw`。
+2. **首选工作流**：只要有 `.excalidraw` 即可 → 复制进 `*-img/` → 正文写相对路径指令。构建时源文件镜像到 `/_media/…`；页面用官方 SVG exporter 和独立只读视口渲染场景，下载按钮指向静态 `/_media` URL。
+3. `preview`（同主名或显式路径的 SVG／PNG）**可选**，仅作无 JS／画布加载失败时的回退；没有预览也能构建与发布。
+4. 属性：`src` 必填（相对路径的 `.excalidraw` 画布；`.excalidrawlib` 素材库需先导入画布再导出，不可直接嵌入）；`preview`／`alt`／`height` 可选（默认 16∶9 固定卡片；`height` 可覆盖）。指令体必须为空。
+
+```md
+:::excalidraw{src="./image-layout-demo-img/verify.excalidraw" alt="Verify 页：离线 UI 目录示意"}
+:::
+```
+
+下载打开的是站点上的静态 `/_media/…/*.excalidraw`，不是临时 `blob:`。完整演示见 `src/content/blogs/image-layout-demo.md`。
+
+### 博文链接卡片（双向）
+
+链到本站另一篇文章时用 `:::blog-link`。构建期按 `slug`（内容集合 id，与 `/blogs/<id>/` 一致）填入目标文的 `title`／`description`；右侧作者头像由站点提供（圆角方形），**内容侧不要写头像路径**。
+
+「双向」只是约定：若要对端也能点回来，在**两篇文章**里各自放一张卡；站点**不会**自动反链。
+
+```md
+:::blog-link{slug="astro"}
+:::
+```
+
+可选覆盖：`title`、`description`、`avatar`（一般不用）。无 `slug` 时必须手写安全的 `href`（http(s)／mailto／站内 `/…`）和 `title`。目标不存在或为草稿会使构建失败。
+
 ### 需要预览时自动启动 dev
 
-写完或改完博客后，读文章正文判断是否实际需要看效果：含 gallery／figure 排版或 `:::card` 卡片、视频／音频时默认预览；纯文字、只有普通正文图的文章不启动 dev，在交接里说明未预览。普通代码块里的示例不是实际布局，不为判断增加正则脚本。需要预览时默认执行以下步骤，不必再要求用户手动启动：
+写完或改完博客后，读文章正文判断是否实际需要看效果：含 gallery／figure 排版、`:::card` 卡片、`:::excalidraw`、`:::blog-link`、视频／音频时默认预览；纯文字、只有普通正文图的文章不启动 dev，在交接里说明未预览。普通代码块里的示例不是实际布局，不为判断增加正则脚本。需要预览时默认执行以下步骤，不必再要求用户手动启动：
 
 1. 确认本次编辑的仓库／worktree 绝对路径，后续命令都在该目录执行。先查平台可用的长期 pane／task 和服务进程；复用 dev 前必须确认服务进程 cwd 是这个 worktree（例如用平台任务信息或 `lsof -a -p <pid> -d cwd`），不能只凭端口、页面标题或仓库名，也不能复用其他 worktree 的服务。
 2. 若没有同 worktree 的 dev，通过平台可用的后台 pane／task 在该目录运行 `pnpm dev`（需要打开浏览器时可用 `pnpm dev --open`；pnpm 不在 PATH 而 Corepack 可用时用 `corepack pnpm dev`），保留日志并让服务持续运行供用户查看；不强绑定 Herdr，不新增进程管理脚本。端口占用时让 Astro 选择可用端口，不终止别人的服务，不依赖固定 4321。
@@ -319,7 +348,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --frie
 
 发文章涉及订阅时，成功构建后运行 `pnpm test:built-markdown` 核对全文与资源。列表／内容结构或拾趣分类／图标修改运行 `pnpm test:built-restructure`；拾趣正文修改运行 `pnpm test:built-markdown`；分页修改运行 `pnpm test:built-pagination`。构建测试跟随当前配置和内容，不要求保留具体文章、友链名单、拾趣分类数量或观看状态。
 
-含实际 gallery／figure 布局或卡片的博客还要按上面的自动 dev 预览步骤交付文章链接，不能以 dev 预览替代上述内容构建校验。布局实现的单测与浏览器交互检查属于实现范围，不要求每次发文章重复执行。
+含实际 gallery／figure 布局、卡片、`:::excalidraw` 或 `:::blog-link` 的博客还要按上面的自动 dev 预览步骤交付文章链接，不能以 dev 预览替代上述内容构建校验。布局实现的单测与浏览器交互检查属于实现范围，不要求每次发文章重复执行。
 
 文章、关于、拾趣、项目、友链等内容数据不记入 `CHANGELOG.md`。只有这次改动同时改变了网页结构、交互或代码时，才把那部分结构或代码结果写入「未发布」；未发布条目不填写已发布版本或日期。本 skill 只改内容与配置，不新增阶段性报告、规格或操作指南。
 

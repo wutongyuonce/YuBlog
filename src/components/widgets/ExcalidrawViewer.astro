@@ -1,0 +1,8 @@
+<excalidraw-viewer hidden></excalidraw-viewer>
+
+<script>
+  import { ExcalidrawViewer } from '~/utils/excalidraw-viewer'
+
+  if (!customElements.get('excalidraw-viewer'))
+    customElements.define('excalidraw-viewer', ExcalidrawViewer)
+</script>
