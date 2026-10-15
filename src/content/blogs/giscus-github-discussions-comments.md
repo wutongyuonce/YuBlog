@@ -4,7 +4,6 @@ description: 从 GitHub Discussions 配置到 Astro 共享组件，记录本站�
 pubDate: 2026-10-15
 category: 技术
 tags: [giscus, 博客评论系统]
-draft: true
 ---
 
 读到 EastonJiang 的[《给博客接入 GitHub 评论：Giscus 从配置到落地》](https://www.jiangxu.net/blog/giscus-github-discussions-comments)后，我也想给自己的博客加上评论。
