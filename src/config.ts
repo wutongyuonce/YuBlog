@@ -12,6 +12,13 @@ export const SITE: Site = {
   imageDomains: [],
 }
 
+export const GISCUS = {
+  repo: 'wutongyuonce/YuBlog',
+  repoId: 'R_kgDOSSGEzw',
+  category: 'Announcements',
+  categoryId: 'DIC_kwDOSSGEz84DIfZ_',
+}
+
 export const AUTHOR_LINKS = [
   {
     label: 'GitHub',

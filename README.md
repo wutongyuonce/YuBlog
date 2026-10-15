@@ -48,6 +48,8 @@ HTML 交互动画可在普通 `.md` 里用 `<iframe sandbox="allow-scripts">` �
 
 首页「最近在听 Top10」展示过去七天 Top 10 歌曲、专辑封面、歌手与专辑名，以及七天听歌次数、累计记录与常听歌手。单行方卡自动头尾滚动，按下或键盘聚焦暂停，无 JS／减少动态效果时仍可手动横滑；小字用 `歌手 - 专辑名`，封面可点击查看原尺寸，标题链接到 Last.fm。数据来自 `src/data/lastfm.json`，构建与浏览不调用 Last.fm API。`Sync Last.fm` 工作流每小时第 17 分钟更新快照并提交至 main，沿用 Vercel Git 部署；失败保留旧数据。仓库 Actions Secret 使用 `LASTFM_API_KEY`，本地可在被忽略的 `.env` 中设置同名变量，再运行 `pnpm sync:lastfm`。定时工作流进入默认分支后生效；详细契约、资料缺失与操作见 [Last.fm SPEC 与设计](docs/首页%20Last.fm%20SPEC%20与设计.md)。
 
+博客正文、友链页底部和全部拾趣分类子页支持 Giscus 评论，使用 GitHub 登录，评论保存在 `wutongyuonce/YuBlog` 的 Discussions。友链可按页面模板留言申请，审核后添加，也可提交 PR。共享组件为 `GiscusComments.astro`，仓库和分类配置集中在 `src/config.ts` 的 `GISCUS`；须在公开仓库启用 Discussions 并安装 Giscus App。评论按规范 pathname 严格关联，接近底部才加载，明暗随站点同步；本地与正式站的同一路径共用讨论，修改 slug／base 前需处理旧关联。详细行为和边界见 [站点 SPEC S12](docs/站点行为%20SPEC.md#s12在正文下评论与申请友链)，实现见 [评论 seam](docs/项目解析.md#410-评论-seam)。
+
 ## 技术
 
 - Astro 7 + TypeScript，Markdown / MDX Content Collections（使用 unified 的 Remark / Rehype 插件管线）

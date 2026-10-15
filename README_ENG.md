@@ -46,6 +46,8 @@ Home listening shows the past seven days’ Top 10 songs with album covers, arti
 
 Ordinary `.md` articles can embed HTML animations with `<iframe sandbox="allow-scripts">`. Store demos under `public/demos/<article-key>/` and reference `/demos/<article-key>/<file>.html`, with an explicit height and a plain link for RSS readers. HTML files next to article sources are not mirrored automatically. See the [custom-style demo article](src/content/blogs/image-layout-demo.md) and the [HTML and media specification](docs/正文%20HTML%20与媒体%20SPEC.md#本地-html-交互演示) for examples and resource rules.
 
+Blog articles, the friends page and every interest category page include Giscus comments. Readers sign in with GitHub; comments are stored in the repository’s Discussions. Friend requests can use the displayed template in a comment, with manual approval, or use the existing PR option. `GiscusComments.astro` owns the integration; `GISCUS` in `src/config.ts` holds the repository and category IDs. Enable Discussions in the public repository and install the Giscus App. Comments load near the section, follow the site theme and strictly match the canonical pathname. Local and production pages with the same path share a discussion. Renaming a slug or deployment base requires handling the old association. See [the specification](docs/站点行为%20SPEC.md#s12在正文下评论与申请友链) and [the design](docs/项目解析.md#410-评论-seam).
+
 ## Stack
 
 - Astro 7 + TypeScript, Markdown / MDX Content Collections (using the unified Remark / Rehype plugin pipeline)
