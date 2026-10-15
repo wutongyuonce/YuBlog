@@ -2,7 +2,7 @@
 title: 博客正文样式指南：Markdown、自定义媒体与交互组件
 description: 本站正文样式与交互组件的用法指南，涵盖卡片、图片排版、提示框、公式、代码、视频、Excalidraw 画布、博文链接与 HTML 演示，并提供可复制示例。
 pubDate: 2026-10-07
-category: 技术
+category: 博客开发
 tags: [Markdown, 自定义样式]
 titleImage: ./_title-images/image-layout-demo-cover.jpg
 titleImageAlt: 夜间街头戴墨镜的人像

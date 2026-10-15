@@ -2,7 +2,7 @@
 title: 用 Last.fm API 与 Vercel CDN 缓存做一个会自己更新的听歌排行
 description: 从 Last.fm 取首页听歌排行，再用一个 Vercel 函数和 CDN 缓存挡住重复请求：记录用到的接口、踩过的坑、Cache-Control 的写法与上线步骤。
 pubDate: 2026-10-15
-category: 技术
+category: 博客开发
 tags: [Last.fm, Vercel, 缓存]
 titleImage: ./_title-images/lastfm-profile.png
 titleImageAlt: Last.fm 个人主页截图：累计 219 次记录、46 位歌手，最常听歌曲是 Gareth.T 的《玻璃》，下方是最近的播放列表

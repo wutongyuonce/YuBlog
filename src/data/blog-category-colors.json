@@ -20,6 +20,7 @@
   "assignments": {
     "技术": "blue",
     "思考": "warm-red",
-    "日记": "cyan"
+    "日记": "cyan",
+    "博客开发": "green"
   }
 }

@@ -2,7 +2,7 @@
 title: 给 Astro 博客接入 Giscus：让每个页面拥有自己的 GitHub 评论区
 description: 从 GitHub Discussions 配置到 Astro 共享组件，记录本站文章评论、友链申请与拾趣留言的接入方式，以及路径映射、主题和本地测试的细节。
 pubDate: 2026-10-15
-category: 技术
+category: 博客开发
 tags: [giscus, 博客评论系统]
 titleImage: ./_title-images/giscus.png
 titleImageAlt: Giscus GitHub App 介绍页：蓝色菱形图标，以及基于 GitHub Discussions 的评论系统说明
