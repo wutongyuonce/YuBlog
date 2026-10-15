@@ -8,6 +8,7 @@ import {
   getCategoryPreviews,
   getPageNumbers,
   blogFirstPaintBootSource,
+  tagSelectionLinks,
 } from '../src/utils/blog-browser.js'
 
 const posts = Array.from({ length: 13 }, (_, id) => ({
@@ -86,6 +87,40 @@ test('the injected first-paint script hides posts outside the requested page', (
       '[data-blog-browser]:not([data-paged]) [data-blog-item]{display:none!important}'
     )
   }
+})
+
+test('a tag link selects that tag alone, even when the name contains slash or hash', () => {
+  const links = tagSelectionLinks([
+    ' Markdown ',
+    'a/b',
+    'C#',
+    '#already',
+    'a & b',
+    '自定义 样式',
+    ' Markdown ',
+    '   ',
+  ])
+  assert.deepEqual(
+    links.map(({ tag, label }) => [tag, label]),
+    [
+      ['Markdown', '#Markdown'],
+      ['a/b', '#a/b'],
+      ['C#', '#C#'],
+      ['#already', '##already'],
+      ['a & b', '#a & b'],
+      ['自定义 样式', '#自定义 样式'],
+    ]
+  )
+  for (const link of links) {
+    const url = new URL(link.query, 'https://example.test/tags/')
+    const parsed = parseBlogQuery(url.search, url.hash)
+    assert.equal(url.hash, '')
+    assert.equal(parsed.category, '')
+    assert.equal(parsed.page, 1)
+    assert.deepEqual(parsed.tags, [link.tag])
+    assert.equal(link.query.includes('#'), false)
+  }
+  assert.deepEqual(tagSelectionLinks(['  ', '']), [])
 })
 
 test('shared URLs preserve Chinese filters and AND tags without duplicate values', () => {

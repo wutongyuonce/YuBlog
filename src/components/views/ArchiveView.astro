@@ -1,10 +1,12 @@
 ---
 import { getGroupedPostsByYear } from '~/utils/data'
 import { withBasePath } from '~/utils/path'
+import { tagSelectionLinks } from '~/utils/blog-browser.js'
 import {
   getBlogCategoryColors,
   syncCategoryColors,
 } from '~/utils/blog-category-colors.js'
+import TagLinks from '~/components/base/TagLinks.astro'
 
 const groups = await getGroupedPostsByYear('blogs')
 const categoryColors = syncCategoryColors(
@@ -47,9 +49,9 @@ const categoryColors = syncCategoryColors(
                 </a>
                 <span class="archive-post__category">{category}</span>
               </div>
-              {item.data.tags.length > 0 && (
+              {tagSelectionLinks(item.data.tags).length > 0 && (
                 <p class="archive-post__tags">
-                  {item.data.tags.map((tag) => `#${tag}`).join(' ')}
+                  <TagLinks tags={item.data.tags} />
                 </p>
               )}
             </li>
