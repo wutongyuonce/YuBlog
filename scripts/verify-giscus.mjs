@@ -11,22 +11,57 @@ await page.cdp('Emulation.setDeviceMetricsOverride', {
   deviceScaleFactor: 1,
   mobile: false,
 })
-await page.goto(new URL('interests/device/', base).href)
-await page.waitForSelector('giscus-comments')
-assert.equal(
-  await page.evaluate(() => document.querySelector('giscus-widget') === null),
-  true,
-  'A long page must not load comments at its top'
+await page.goto(new URL('interests/', base).href)
+await page.waitForSelector('.interests-page__index')
+const categoryPath = await page.evaluate(() =>
+  document.querySelector('.interests-page__index a')?.getAttribute('href')
 )
-assert.equal(
+assert.ok(
+  categoryPath,
+  'The browser check needs at least one interest category'
+)
+
+// Keep comments offscreen before initialization, regardless of authored body length.
+const lazyFixture = await page.cdp('Page.addScriptToEvaluateOnNewDocument', {
+  source: `
+    const addFixture = () => {
+      if (!document.documentElement) return;
+      const style = document.createElement('style');
+      style.id = 'giscus-lazy-fixture';
+      style.textContent = 'giscus-comments { margin-top: 1200px !important; }';
+      document.documentElement.append(style);
+      observer.disconnect();
+    };
+    const observer = new MutationObserver(addFixture);
+    observer.observe(document, { childList: true });
+    addFixture();
+  `,
+})
+try {
+  await page.goto(new URL(categoryPath, base).href)
+  await page.waitForSelector('giscus-comments')
+  assert.equal(
+    await page.evaluate(() => document.querySelector('giscus-widget') === null),
+    true,
+    'Offscreen comments must not load before the reader approaches them'
+  )
+  assert.equal(
+    await page.evaluate(() =>
+      performance
+        .getEntriesByType('resource')
+        .some((entry) => entry.name.startsWith('https://giscus.app/'))
+    ),
+    false,
+    'Giscus requests wait until the reader approaches comments'
+  )
+} finally {
+  await page.cdp('Page.removeScriptToEvaluateOnNewDocument', {
+    identifier: lazyFixture.identifier,
+  })
   await page.evaluate(() =>
-    performance
-      .getEntriesByType('resource')
-      .some((entry) => entry.name.startsWith('https://giscus.app/'))
-  ),
-  false,
-  'Giscus requests wait until the reader approaches comments'
-)
+    document.getElementById('giscus-lazy-fixture')?.remove()
+  )
+}
 
 const reveal = async () => {
   await page.evaluate(() =>
@@ -150,9 +185,9 @@ const callbackScript = await page.cdp('Page.addScriptToEvaluateOnNewDocument', {
   `,
 })
 try {
-  await page.goto(
-    new URL('interests/device/?giscus=yublog-history-test', base).href
-  )
+  const callbackUrl = new URL(categoryPath, base)
+  callbackUrl.searchParams.set('giscus', 'yublog-history-test')
+  await page.goto(callbackUrl.href)
   await page.waitForFunction(
     () => !new URLSearchParams(location.search).has('giscus')
   )
