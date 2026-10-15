@@ -60,7 +60,7 @@ interface ScenePayload {
 }
 
 const ZOOM_MIN = 0.1
-const ZOOM_MAX = 3
+const ZOOM_MAX = 30
 const ZOOM_STEP = 0.1
 
 const readTheme = (): 'light' | 'dark' =>
@@ -84,16 +84,15 @@ const setZoomAtViewportCenter = (api: ExcalidrawApi, nextZoom: number) => {
   const next = clampZoom(nextZoom)
   if (Math.abs(next - prev) < 1e-6) return next
 
+  // Excalidraw getStateForZoom at viewport center (keeps center scene point fixed).
   const cx = state.width / 2
   const cy = state.height / 2
-  const sceneX = (cx - state.scrollX) / prev
-  const sceneY = (cy - state.scrollY) / prev
 
   api.updateScene({
     appState: {
       zoom: { value: next },
-      scrollX: cx - sceneX * next,
-      scrollY: cy - sceneY * next,
+      scrollX: state.scrollX + cx * (1 / next - 1 / prev),
+      scrollY: state.scrollY + cy * (1 / next - 1 / prev),
     },
   })
   return next
@@ -247,7 +246,7 @@ export const ExcalidrawCanvas = forwardRef<
           key={`${sceneUrl}:${theme}:${mode}`}
           theme={theme}
           initialData={initialData as never}
-          detectScroll={false}
+          detectScroll={true}
           zenModeEnabled
           viewModeEnabled
           gridModeEnabled={false}

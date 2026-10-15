@@ -35,7 +35,7 @@ const downloadName = (root: HTMLElement, sceneUrl: string) => {
 /** Longest at fit, shortest at max zoom; full track at fit. */
 const zoomBarScale = (zoom: number, fitZoom: number) => {
   const minZ = Math.max(0.05, Math.min(fitZoom || 1, zoom || 1))
-  const maxZ = 3
+  const maxZ = 30
   if (maxZ <= minZ) return 1
   const t = (zoom - minZ) / (maxZ - minZ)
   return Math.min(1, Math.max(0.1, 1 - t))
