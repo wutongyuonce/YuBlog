@@ -3,10 +3,10 @@ title: About
 ---
 一些自我介绍：
 
-* 网名梧桐雨
+* he/him，网名梧桐雨
 * mbti: INTJ
-* 正在申请香港 CS Msc，也在找 Agent 方向的 Intern
-* 喜欢写代码，也喜欢研究设计优雅、极简的系统
+* HKUST MS IT，最近在找 Agent 方向的 Intern
+* 喜欢研究设计优雅、极简的软件系统
 * 最近研究的领域：Long-horizon Harness、Agent Memory、Computer Use
 
 <a href="https://ghfind.com/u/wutongyuonce?ref=badge">
