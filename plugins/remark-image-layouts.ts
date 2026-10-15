@@ -205,8 +205,22 @@ export default function remarkImageLayouts() {
         element('template', 'image-view__source', [full]),
       ])
     }
+    const classList = (value: unknown) =>
+      Array.isArray(value) ? value.map(String) : value ? [String(value)] : []
+    const skipImageView = (node: RootContent) => {
+      const classes = classList(
+        (node.data as { hProperties?: { className?: unknown } } | undefined)
+          ?.hProperties?.className
+      )
+      return (
+        classes.includes('excalidraw-embed') ||
+        classes.includes('blog-link-card') ||
+        classes.includes('blog-link-cards')
+      )
+    }
     const wrap = (parent: Parent) => {
       parent.children = parent.children.map((child) => {
+        if (skipImageView(child)) return child
         if (isImage(child)) return view(child, child)
         // Keep the zoom control outside an authored link, not inside it.
         if (

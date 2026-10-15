@@ -4,6 +4,8 @@ description: 从 GitHub Discussions 配置到 Astro 共享组件，记录本站�
 pubDate: 2026-10-15
 category: 技术
 tags: [giscus, 博客评论系统]
+titleImage: ./_title-images/giscus.png
+titleImageAlt: Giscus GitHub App 介绍页：蓝色菱形图标，以及基于 GitHub Discussions 的评论系统说明
 ---
 
 读到 EastonJiang 的[《给博客接入 GitHub 评论：Giscus 从配置到落地》](https://www.jiangxu.net/blog/giscus-github-discussions-comments)后，我也想给自己的博客加上评论。

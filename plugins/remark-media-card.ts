@@ -163,7 +163,10 @@ const buildCard = (node: Directive): Element | null => {
   for (const child of review) {
     visit(child, (node) => {
       let containsMedia =
-        node.type === 'image' || node.type === 'imageReference'
+        node.type === 'image' ||
+        node.type === 'imageReference' ||
+        (node.type === 'containerDirective' &&
+          ['excalidraw', 'blog-link'].includes(node.name))
       if (
         node.type.startsWith('mdxJsx') &&
         'name' in node &&
