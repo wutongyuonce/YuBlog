@@ -43,7 +43,7 @@
 
 文稿和标签筛选结果的文章标题使用宋体加粗（700），共用 `ListItem`；文稿列表标题字号为 18px，描述与元信息使用普通字体。文稿先对全量数据筛选，再分页，每页七篇。类别 hash 优先于兼容的 `?category=`；重复标签归一化、多选为 AND。修改筛选回第一页，分页保留筛选，越界页回到有效页，前进／后退恢复 URL 状态。首屏不先展示不匹配的第一页；禁用脚本时文稿展示全量文章及说明，标签页保留标签目录和启用脚本提示。
 
-文章标题下和归档标题下的标签以 `#标签名` 逐个展示，标签之间留空隙，不用 ` / ` 拼接。每个标签链接到 `/tags/?tag=`，只选中该标签。标签名中的 `/`、`#` 或其他字符不是分隔符；展示前缀 `#` 不参与匹配，查询串编码后仍精确选中原值。空白标签不生成链接，重复标签只保留一个。列表卡片仍只展示 `#标签` 文本。无脚本时链接仍打开标签页，选中与列表筛选沿用既有脚本。
+文章标题下、归档标题下和文稿列表卡片的标签以 `#标签名` 逐个展示，标签之间留空隙，不用 ` / ` 拼接。每个标签链接到 `/tags/?tag=`，只选中该标签。标签名中的 `/`、`#` 或其他字符不是分隔符；展示前缀 `#` 不参与匹配，查询串编码后仍精确选中原值。空白标签不生成链接，重复标签只保留一个。无脚本时链接仍打开标签页，选中与列表筛选沿用既有脚本。
 
 文章分类和搜索状态以当前 frontmatter 为准，不要求保留具体文章或占位内容。`search: false` 只控制搜索；未标为草稿的文章仍进入生产列表、归档和 RSS。
 
@@ -186,7 +186,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 | Last.fm 排行、统计、资料缺失、请求上限与错误 | `scripts/lib/lastfm.mjs`；持久化在 `scripts/sync-lastfm.mjs` | 工作流获取静态快照，`RecentListening` 只呈现 | `lastfm.test.mjs`、首页产物与浏览器检查 |
 | 写作热力的日历日、强度、年份范围与年度字数与字数缺失／非法失败 | `utils/blog-heatmap.js` | `WritingHeatmap` 只呈现；文章集合仍从 `getPublishedBlogPosts` 取，字数来自渲染后的 `wordCount` | `blog-heatmap.test.mjs` |
 | 原值分类的动态入口、URL 兼容别名、精确筛选、页码和分页数量 | `utils/blog-browser.js` | `ListView`、导航 | `blog-browser.test.mjs`、构建分页 |
-| 单标签选中链接 | `utils/blog-browser.js` 的 `tagSelectionLinks` | `TagLinks` 只呈现；文章元信息与归档标题下标签调用 | `blog-browser.test.mjs` |
+| 单标签选中链接 | `utils/blog-browser.js` 的 `tagSelectionLinks` | `TagLinks` 只呈现；文章元信息、归档标题下标签和文稿列表卡片调用 | `blog-browser.test.mjs` |
 | 标签归一化与 AND | `utils/blog-tag-filter.js` | 分类工具、标签目录 | `blog-tag-filter.test.mjs` |
 | 导航路径归一化、父级与下拉类型 | `utils/nav-path.js` | `NavBar` 服务端／客户端、`NavItem` | `nav-path.test.mjs`、构建菜单检查 |
 | 顶层导航目标与请求预览 | `NavBar` | ClientRouter 准备／交换／完成、取消与字体／缩放事件 | `nav-feedback.test.mjs`、真实导航检查 |

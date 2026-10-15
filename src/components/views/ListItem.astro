@@ -1,8 +1,9 @@
 ---
 import { Image } from 'astro:assets'
 import Link from '~/components/base/Link.astro'
+import TagLinks from '~/components/base/TagLinks.astro'
 import { withBasePath } from '~/utils/path'
-import { serializeBlogQuery } from '~/utils/blog-browser.js'
+import { serializeBlogQuery, tagSelectionLinks } from '~/utils/blog-browser.js'
 import type { GroupedBlogItem } from '~/utils/data'
 interface Props {
   item: GroupedBlogItem
@@ -50,12 +51,10 @@ const href = data.redirect || withBasePath(`/blogs/${id}/`)
         {data.title}
       </Link>
     </h2>
-    {data.tags.length > 0 && (
-      <ul class="post-preview__tags">
-        {data.tags.map((tag) => (
-          <li>#{tag}</li>
-        ))}
-      </ul>
+    {tagSelectionLinks(data.tags).length > 0 && (
+      <div class="post-preview__tags">
+        <TagLinks tags={data.tags} />
+      </div>
     )}
     {data.description && <p>{data.description}</p>}
   </div>
@@ -120,9 +119,14 @@ const href = data.redirect || withBasePath(`/blogs/${id}/`)
     gap: 0.25rem 0.65rem;
     margin: 0 0 0.45rem;
     padding: 0;
-    list-style: none;
     font-size: 0.75rem;
     color: color-mix(in srgb, var(--c-text) 50%, transparent);
+  }
+  .post-preview__tags :global(.tag-links) {
+    display: contents;
+  }
+  .post-preview__tags :global(.tag-link) {
+    margin-right: 0;
   }
   .post-preview h2 :global(a) {
     opacity: 1;
