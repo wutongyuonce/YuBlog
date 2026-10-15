@@ -62,6 +62,14 @@ body {
   --uno: 'outline-none ring-3 ring-[#8884] ring-offset-2 ring-offset-[var(--c-bg)]';
 }
 
+/* Scripted image/dialog focus can match :focus-visible after a pointer click.
+   Keep the focus target and hover shadows; hide only its keyboard indicators. */
+:root[data-input-method='pointer'] :is(:focus-visible, :has(> :focus-visible)) {
+  outline: none !important;
+  --un-ring-shadow: 0 0 #0000;
+  --un-ring-offset-shadow: 0 0 #0000;
+}
+
 /* Page progress bar */
 #page-progress-bar {
   pointer-events: none;

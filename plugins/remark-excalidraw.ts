@@ -5,11 +5,7 @@ import type { Image, Parent, Root, RootContent } from 'mdast'
 import type { ElementContent } from 'hast'
 import type { VFile } from 'vfile'
 
-import {
-  classifyMediaRef,
-  DRAWING_EXTENSIONS,
-  isMirrorableFile,
-} from './media-paths.ts'
+import { classifyMediaRef, isMirrorableFile } from './media-paths.ts'
 
 /**
  * Excalidraw 嵌入。博客／拾趣／关于共用 Markdown 管线：
@@ -19,9 +15,8 @@ import {
  * :::
  * ```
  *
- * 客户端用 React island 加载只读 Excalidraw（对齐 Shiro：viewMode／zen、
- * h-[500px]、原生 pinch／缩放条）；`.excalidraw` 镜像到 `/_media/…`。
- * 展开用 dialog（不用 Shiro 移动端 blob:）；另加静态源下载。
+ * 客户端用官方 exportToSvg 渲染源文件，自控只读视口；展开用当页 dialog。
+ * `.excalidraw` 镜像到 `/_media/…`，下载保留原文件。
  * `preview`（SVG／PNG）可选，仅作无 JS／加载失败时的回退。
  */
 
@@ -127,9 +122,9 @@ function remarkExcalidraw() {
               child
             )
           const extension = path.extname(ref.file).toLowerCase()
-          if (!DRAWING_EXTENSIONS.has(extension))
+          if (extension !== '.excalidraw')
             return fail(
-              `:::excalidraw src must end with ${[...DRAWING_EXTENSIONS].join(' / ')}`,
+              ':::excalidraw src must be an .excalidraw scene; library files are not supported',
               child
             )
           if (!isMirrorableFile(ref.file))
@@ -198,7 +193,7 @@ function remarkExcalidraw() {
           }
 
           // Hidden source <a> so rehype-media-assets rewrites to /_media/…
-          // Visible download + expand are Shiro-style overlays from React.
+          // The viewer adds visible download and expand controls once ready.
           const toolbar = element('div', 'excalidraw-embed__source-slot', [
             {
               type: 'link',

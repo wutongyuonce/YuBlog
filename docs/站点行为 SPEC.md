@@ -21,6 +21,8 @@
 
 ## 2. 用户场景与产品规则
 
+鼠标／触屏操作及其弹窗焦点恢复不显示额外的焦点外框；Tab、方向键等键盘操作恢复可见焦点提示。焦点本身、原有悬停反馈与输入能力保持，站内页面交换保留当前输入方式，无脚本沿用浏览器焦点提示。图片大图与画布展开窗口共用无圆形底色的居中叉号关闭按钮；画布关闭叉号固定白色，图片大图关闭叉号随主题。浏览器回归见 `scripts/verify-media-focus.mjs`。
+
 ### S1：首页认识作者，再进入文稿
 
 首页先显示作者名片，写作热力下方、近期笔墨上方显示三列细时间进度。头像与作者信息作为一组居中；头像右侧的梧桐雨与 INTJ 上下排列、左边缘对齐，INTJ 在名字下方，字号为 13px；「订阅 RSS」始终在同一行右侧（含 600px 及以下），窄屏缩小头像与标题字号，按钮标签不换行。下方依次为一行居中的六个社交图标和独立一行居中的斜体名言「我与我周旋久，宁做我」。图标横向间距为桌面 15px／窄屏 9px，名言较长时在版心内自动换行，不再显示全站文章、字数或写作天数。社交入口保留名称供读屏和悬停提示，身份由 `AUTHOR_LINKS` 维护，包含 GitHub、X、Instagram、Bilibili、小红书与邮箱。
@@ -124,9 +126,9 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 
 ### Excalidraw 与博文链接卡
 
-作者写 `:::excalidraw{src="…excalidraw"}`：只读画布约 16:9；隐藏全部官方 Excalidraw chrome；右下角自定义 pill（缩小／％／放大｜复位｜展开｜下载，静态 `/_media`）；展开用 dialog（底部缩放条：适配最长、放大变短；单指／鼠标可平移、pinch 缩放（与正文一致））。`preview` 可选回退。嵌入图不进入普通正文大图 dialog。
+作者写 `:::excalidraw{src="…excalidraw"}`：仅接受 `.excalidraw` 画布场景，`.excalidrawlib` 素材库在构建时报错；默认 16∶9 固定画布，`height` 可覆盖；官方 SVG exporter 恢复源场景，保留作者配色，不挂载编辑器。右下角常驻胶囊（缩小／％／放大｜适配｜展开｜源下载）。所有缩放保持当前视口中心，拖动后围绕新中心缩放；鼠标／单指平移、双指或 Ctrl/Cmd＋滚轮缩放，普通滚轮滚动文章。实际缩放上下限固定为 5%–1600%，初始适配比例按内容／窗口计算并受该边界限制；方向键平移、`+`／`-`／`0` 控制缩放与适配。当页 dialog 保持打开时的中心与相对倍率，固定窗口内可平移、缩放，关闭／Esc／遮罩恢复滚动和按钮焦点，正文视口不重置。`preview` 可选，无 JS／加载失败时仍有预览和原始 `/_media` 源下载。嵌入图不进入普通正文大图 dialog。调研、取舍和模块设计见 [Excalidraw 设计依据](./excalidraw-reference-research.md)。
 
-作者写 `:::blog-link{slug}`：构建期解析目标博文标题与描述，渲染横向链接卡，右侧为站点头像的圆角方图。双向互链由两篇文章各自放置卡片完成，不自动插入对端链接。
+作者写 `:::blog-link{slug}`：按内容集合 id 解析目标博文，支持子目录、目录 index 和 frontmatter 自定义 slug；构建期取得标题与描述，渲染居中的横向链接卡，桌面宽为正文的三分之二，600px 及以下填满正文；右侧为 48px 圆角方形站点头像，描述最多两行；深浅主题下悬停或键盘聚焦均显示强调色边框与柔光；柔光范围一致，浅色不透明度 24%、深色 18%，补偿背景与强调色亮度差异。双向互链由两篇文章各自放置卡片完成，不自动插入对端链接。
 
 
 ### S11：全站点缀配色选择
@@ -187,7 +189,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 | 更多菜单条目 | `config.ts` `MORE_LINKS` | `NavDropdown` 呈现，UnoCSS 提取图标；友链路由归属由 `nav-path.js` 维护 | 导航路径与构建产物检查 |
 | 拾趣分类／标题／顺序／说明 | `content/interests/*.{md,mdx}`；集合范围由 `content.config.ts` 维护 | 入口、子页和导航；`intro.md` 与首页 `recent.md` 排除出集合。可选图标唯一映射 `config.ts` 的 `INTEREST_ICONS`，UnoCSS 自动加入 safelist | 构建页面与可选图标检查 |
 | 封面卡片（单封面／文字介绍边界、属性、链接安全、评分及分组） | `plugins/remark-media-card.ts` | 博客、拾趣、关于的 Markdown；样式只在 `prose.css` | `remark-media-card.test.mjs` |
-| Excalidraw 嵌入 | `plugins/remark-excalidraw.ts`；`ExcalidrawCanvas.tsx` + `excalidraw-viewer.ts` | 同上；样式 `prose.css` | `remark-excalidraw.test.mjs` |
+| Excalidraw 嵌入 | `plugins/remark-excalidraw.ts`；`excalidraw-canvas.ts` + `excalidraw-viewport.js` + `excalidraw-viewer.ts` | 同上；样式 `prose.css` | `remark-excalidraw.test.mjs`、`excalidraw-viewport.test.mjs` |
 | 博文链接卡 | `plugins/remark-blog-link.ts` | 同上；样式 `prose.css` | `remark-blog-link.test.mjs` |
 | 陈列架是否循环与视觉副本 | `src/utils/card-rail-marquee.js` | `CardRailMarquee.astro` 只接线；减少动态效果沿用 `reduced-motion.js`；位移、淡出和按下暂停在 `prose.css`，只在 `data-marquee="on"` 时生效 | `card-rail-marquee.test.mjs` |
 | gallery／figure 属性、内容结构、嵌套拒绝与带位置失败，普通正文图的 image-view／template 包装 | `plugins/remark-image-layouts.ts` | `plugins/index.ts` 在 `remarkMediaCard` 后接入；图片节点继续交给 Astro，不在组件或 RSS 重新推断布局 | `test/remark-image-layouts.test.mjs`、真实 Astro 产物检查 |

@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -32,51 +32,61 @@ export interface BlogEntryMeta {
   href: string
 }
 
-const entryIdForStem = (stem: string) => githubSlug(stem)
+const entryIdForStem = (stem: string) =>
+  stem
+    .split('/')
+    .map((segment) => githubSlug(segment))
+    .join('/')
+    .replace(/\/index$/, '')
 
-/** 按内容集合 id（URL slug）或文件名主干解析博文；与 Astro glob generateId 一致。 */
+/** Resolve collection IDs or relative filename stems, including nested posts. */
 export function resolveBlogEntry(slug: string): BlogEntryMeta | null {
   const needle = slug.trim()
   if (
     !needle ||
-    needle.includes('/') ||
+    path.isAbsolute(needle) ||
     needle.includes('\\') ||
-    needle.includes('..')
+    needle.split('/').some((segment) => segment === '.' || segment === '..')
   )
     return null
 
-  const files = readdirSync(BLOGS_ROOT).filter((name) =>
-    /\.(md|mdx)$/i.test(name)
-  )
+  // Enumerate real files rather than resolving the supplied slug as a path.
+  for (const entry of readdirSync(BLOGS_ROOT, {
+    recursive: true,
+    withFileTypes: true,
+  })) {
+    if (!entry.isFile() || !/\.(md|mdx)$/i.test(entry.name)) continue
+    const filePath = path.join(entry.parentPath, entry.name)
+    const stem = path
+      .relative(BLOGS_ROOT, filePath)
+      .replace(/\.(md|mdx)$/i, '')
+      .split(path.sep)
+      .join('/')
+    const { frontmatter } = parseFrontmatter(readFileSync(filePath, 'utf8'))
+    const id = frontmatter.slug
+      ? String(frontmatter.slug)
+      : entryIdForStem(stem)
+    if (stem !== needle && id !== needle && id !== entryIdForStem(needle))
+      continue
 
-  let match: string | null = null
-  for (const name of files) {
-    const stem = name.replace(/\.(md|mdx)$/i, '')
-    const id = entryIdForStem(stem)
-    if (stem === needle || id === needle || id === entryIdForStem(needle)) {
-      match = name
-      break
+    const title =
+      typeof frontmatter.title === 'string' ? frontmatter.title.trim() : ''
+    const description =
+      typeof frontmatter.description === 'string'
+        ? frontmatter.description.trim()
+        : ''
+    if (!title) return null
+
+    const base = SITE.base.replace(/\/+$/, '')
+    const href = `${base}/blogs/${id}/`.replace(/\/+/g, '/')
+    return {
+      id,
+      filePath,
+      title,
+      description,
+      draft: frontmatter.draft === true,
+      href,
     }
   }
-  if (!match) return null
-
-  const filePath = path.join(BLOGS_ROOT, match)
-  if (!existsSync(filePath)) return null
-
-  const stem = match.replace(/\.(md|mdx)$/i, '')
-  const id = entryIdForStem(stem)
-  const { frontmatter } = parseFrontmatter(readFileSync(filePath, 'utf8'))
-  const title =
-    typeof frontmatter.title === 'string' ? frontmatter.title.trim() : ''
-  const description =
-    typeof frontmatter.description === 'string'
-      ? frontmatter.description.trim()
-      : ''
-  const draft = frontmatter.draft === true
-  if (!title) return null
-
-  const base = SITE.base.replace(/\/+$/, '')
-  const href = `${base}/blogs/${id}/`.replace(/\/+/g, '/')
-
-  return { id, filePath, title, description, draft, href }
+  return null
 }

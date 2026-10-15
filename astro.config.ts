@@ -4,7 +4,6 @@ import sitemap from '@astrojs/sitemap' // 自动生成 sitemap.xml（网站地�
 import unocss from 'unocss/astro' // UnoCSS 原子化 CSS 引擎（按需生成 CSS 工具类）
 import astroExpressiveCode from 'astro-expressive-code' // 代码块美化插件（语法高亮、主题等）
 import mdx from '@astrojs/mdx' // MDX 支持（在 Markdown 中使用 JSX 组件）
-import react from '@astrojs/react' // React islands（Excalidraw 只读画布）
 
 import { remarkPlugins, rehypePlugins } from './plugins' // 自定义 Markdown 处理插件
 import { katexWoff2Only } from './plugins/postcss-katex-woff2-only' // 只保留 KaTeX 的 woff2 字体
@@ -42,7 +41,6 @@ export default defineConfig({
     }),
     astroExpressiveCode(), // 代码块美化（支持主题、行号、标题等）
     mdx(), // 启用 MDX 支持
-    react(), // Excalidraw 查看器（仅 client island）
     subsetTitleFontsIntegration(), // 任何构建都产出标题字体子集，并校验引用
     mediaSyncIntegration(), // 先于 Astro 拷贝 public/，把视频/音频准备好
   ],
@@ -71,15 +69,11 @@ export default defineConfig({
 
   // ==================== Vite 配置（底层构建工具） ====================
   vite: {
-    // Excalidraw 0.17（与 Shiro 同版）需要显式关掉 Preact 构建分支
-    define: {
-      'process.env.IS_PREACT': JSON.stringify('false'),
-    },
     // 在生成产物前裁掉 KaTeX 的 woff / ttf，字体与 CSS 哈希都一致
     css: { postcss: { plugins: [katexWoff2Only()] } },
     build: {
       cssCodeSplit: false, // 全站一份 CSS，避免硬刷新某个页面时丢掉顶栏/侧栏样式
-      chunkSizeWarningLimit: 2200, // Excalidraw 画布包较大；无嵌入页不加载
+      chunkSizeWarningLimit: 2200, // Excalidraw 导出包较大；画布接近视口才加载
       // 默认 500KB
     },
     optimizeDeps: {

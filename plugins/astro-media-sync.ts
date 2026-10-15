@@ -167,23 +167,19 @@ export function syncMedia(roots: MediaRoots = MEDIA_ROOTS) {
   return { total: mirror.size, copied, removed }
 }
 
-/**
- * Excalidraw 0.17（与 Shiro 同版）把字体／locale 放在 `excalidraw-assets/`，
- * 打包后 publicPath 为空字符串，浏览器从站点根路径 `/excalidraw-assets/…` 拉取。
- * 构建前从 node_modules 同步到 `public/excalidraw-assets/`（已 gitignore）。
- */
+/** Excalidraw SVG exports inline local font subsets; no runtime CDN is needed. */
 export function syncExcalidrawAssets(projectRoot = process.cwd()): {
   copied: boolean
 } {
   const source = path.join(
     projectRoot,
-    'node_modules/@excalidraw/excalidraw/dist/excalidraw-assets'
+    'node_modules/@excalidraw/excalidraw/dist/prod/fonts'
   )
   const target = path.join(projectRoot, 'public/excalidraw-assets')
   if (!existsSync(source)) return { copied: false }
   mkdirSync(path.dirname(target), { recursive: true })
   rmSync(target, { recursive: true, force: true })
-  cpSync(source, target, { recursive: true })
+  cpSync(source, path.join(target, 'fonts'), { recursive: true })
   return { copied: true }
 }
 

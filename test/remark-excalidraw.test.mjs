@@ -71,6 +71,13 @@ test(':::excalidraw allows src-only without any preview image', async () => {
   }
 })
 
+test(':::excalidraw rejects library files before publishing an unusable viewer', async () => {
+  await assert.rejects(
+    render(':::excalidraw{src="./shapes.excalidrawlib"}\n:::'),
+    /must be an \.excalidraw scene; library files are not supported/
+  )
+})
+
 test(':::excalidraw rejects blob src and missing files', async () => {
   await assert.rejects(
     render(':::excalidraw{src="blob:https://example/x"}\n:::'),

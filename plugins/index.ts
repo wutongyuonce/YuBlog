@@ -145,7 +145,14 @@ export const remarkPlugins: RemarkPlugins = [
         // 动态设置图片属性
         imgProps: linkImgProps,
       },
-      // 2.3 图片指令
+      // 2.3 B 站视频统一关闭自动播放
+      video: {
+        platforms: {
+          bilibili:
+            'https://player.bilibili.com/player.html?bvid={id}&autoplay=0',
+        },
+      },
+      // 2.4 图片指令
       image: {
         stripParagraph: false, // 保留图片周围的 <p> 标签
       },

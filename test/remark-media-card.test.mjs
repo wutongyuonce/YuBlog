@@ -7,6 +7,8 @@ import remarkDirectiveSugar from 'remark-directive-sugar'
 import remarkImageWidth from '../plugins/remark-image-width.ts'
 
 import remarkMediaCard from '../plugins/remark-media-card.ts'
+import remarkExcalidraw from '../plugins/remark-excalidraw.ts'
+import remarkBlogLink from '../plugins/remark-blog-link.ts'
 import { toRssHtml } from '../src/utils/rss-content.js'
 
 const source = `:::card{title="侦探杰克 第四季" score="3.5" label="Tv"}
@@ -183,6 +185,28 @@ test('preceding directives cannot generate media inside text-only card reviews',
   )
   assert.match(code, /文字/)
   assert.match(code, /href="https:\/\/example.com\/"/)
+})
+
+test('later drawing and blog-link directives cannot bypass text-only card reviews', async () => {
+  const processor = await createMarkdownProcessor({
+    remarkPlugins: [
+      remarkDirective,
+      remarkMediaCard,
+      remarkExcalidraw,
+      remarkBlogLink,
+    ],
+    syntaxHighlight: false,
+  })
+  for (const review of [
+    ':::excalidraw{src="./diagram.excalidraw"}\n:::',
+    ':::excalidraw{src="./diagram.excalidraw" preview="./diagram.svg"}\n:::',
+    ':::blog-link{href="/blogs/example/" title="链接"}\n:::',
+  ]) {
+    await assert.rejects(
+      processor.render(`::::card{title="仅文字介绍"}\n${review}\n::::`),
+      /Card review.*仅文字介绍.*media/
+    )
+  }
 })
 
 test('static MDX media cannot bypass the shared card transformer', () => {

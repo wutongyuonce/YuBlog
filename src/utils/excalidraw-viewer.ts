@@ -1,197 +1,153 @@
-/**
- * Mount Excalidraw canvases into :::excalidraw figures.
- * Embed: custom pill only (native chrome CSS-hidden).
- * Expand: dialog + L–R zoom bar + download; same pan/pinch as embed.
- */
+import { lockScroll } from './misc'
+import type { Drawing, DrawingView } from './excalidraw-canvas'
 
-type MountFn = typeof import('~/utils/excalidraw-mount').mountExcalidrawCanvas
+type CanvasModule = typeof import('./excalidraw-canvas')
 
-const resolveSceneUrl = (root: HTMLElement): string | null => {
-  const link = root.querySelector<HTMLAnchorElement>(
-    'a.excalidraw-embed__source'
-  )
-  if (link?.getAttribute('href')) return link.href
-  const fromData = root.getAttribute('data-excalidraw-src')?.trim()
-  if (fromData && (fromData.startsWith('/') || /^https?:/i.test(fromData)))
-    return new URL(fromData, window.location.href).href
-  return null
-}
-
-const downloadName = (root: HTMLElement, sceneUrl: string) => {
-  const link = root.querySelector<HTMLAnchorElement>(
-    'a.excalidraw-embed__source'
-  )
-  const attr = link?.getAttribute('download')?.trim()
-  if (attr) return attr
-  try {
-    return decodeURIComponent(
-      new URL(sceneUrl).pathname.split('/').pop() || 'drawing.excalidraw'
-    )
-  } catch {
-    return 'drawing.excalidraw'
-  }
-}
-
-/** Longest at fit, shortest at max zoom; full track at fit. */
-const zoomBarScale = (zoom: number, fitZoom: number) => {
-  const minZ = Math.max(0.05, Math.min(fitZoom || 1, zoom || 1))
-  const maxZ = 30
-  if (maxZ <= minZ) return 1
-  const t = (zoom - minZ) / (maxZ - minZ)
-  return Math.min(1, Math.max(0.1, 1 - t))
-}
-
+/** Page-scoped loading, fallback and modal ownership; camera rules live in the canvas. */
 export class ExcalidrawViewer extends HTMLElement {
   private controller?: AbortController
+  private observer?: IntersectionObserver
   private cleanups: (() => void)[] = []
+  private closeExpand?: () => void
 
   connectedCallback() {
     if (this.controller) return
     this.controller = new AbortController()
     const { signal } = this.controller
-    void this.enhanceAll(signal)
-    document.addEventListener(
-      'astro:page-load',
-      () => {
-        void this.enhanceAll(signal)
+    const enhanced = new WeakSet<HTMLElement>()
+    this.observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue
+          this.observer?.unobserve(entry.target)
+          void this.enhance(entry.target as HTMLElement, signal)
+        }
       },
-      { signal }
+      { rootMargin: '300px' }
     )
+    const discover = () => {
+      for (const root of document.querySelectorAll<HTMLElement>(
+        '.excalidraw-embed[data-excalidraw-viewer]'
+      )) {
+        if (enhanced.has(root)) continue
+        enhanced.add(root)
+        this.observer?.observe(root)
+      }
+    }
+    discover()
+    document.addEventListener('astro:page-load', discover, { signal })
   }
 
   disconnectedCallback() {
-    for (const stop of this.cleanups.splice(0)) stop()
+    this.closeExpand?.()
     this.controller?.abort()
+    this.observer?.disconnect()
+    for (const stop of this.cleanups.splice(0)) stop()
     this.controller = undefined
   }
 
-  private async enhanceAll(signal: AbortSignal) {
-    for (const stop of this.cleanups.splice(0)) stop()
-    const roots = [
-      ...document.querySelectorAll<HTMLElement>(
-        '.excalidraw-embed[data-excalidraw-viewer]'
-      ),
-    ]
-    if (!roots.length || signal.aborted) return
-
-    const { mountExcalidrawCanvas } = await import('~/utils/excalidraw-mount')
-    if (signal.aborted) return
-
-    for (const root of roots) {
+  private async enhance(root: HTMLElement, signal: AbortSignal) {
+    const host = root.querySelector<HTMLElement>('[data-excalidraw-host]')
+    const source = root.querySelector<HTMLAnchorElement>(
+      'a.excalidraw-embed__source'
+    )
+    if (!host || !source) return
+    const label = root.getAttribute('aria-label') || 'Excalidraw 图'
+    const status = document.createElement('p')
+    status.className = 'excalidraw-embed__status'
+    status.setAttribute('role', 'status')
+    status.textContent = '加载画布…'
+    host.append(status)
+    try {
+      const canvas = await import('./excalidraw-canvas')
       if (signal.aborted) return
-      this.enhance(root, signal, mountExcalidrawCanvas)
+      const drawing = await canvas.loadDrawing(source.href, signal)
+      if (signal.aborted) {
+        drawing.dispose()
+        return
+      }
+      this.cleanups.push(drawing.dispose)
+      const stop = canvas.createDrawingView(host, drawing, {
+        label,
+        sourceUrl: source.href,
+        name: source.download,
+        onExpand: (trigger, view) =>
+          this.openExpand(canvas, drawing, {
+            label,
+            sourceUrl: source.href,
+            name: source.download,
+            trigger,
+            view,
+          }),
+      })
+      this.cleanups.push(stop)
+      status.remove()
+      root.classList.add('excalidraw-embed--canvas-ready')
+    } catch (error) {
+      if (signal.aborted) return
+      console.error('Excalidraw 画布加载失败', error)
+      status.textContent = '画布加载失败，可下载源文件查看。'
+      root.classList.add('excalidraw-embed--error')
     }
   }
 
-  private enhance(
-    root: HTMLElement,
-    signal: AbortSignal,
-    mountCanvas: MountFn
+  private openExpand(
+    canvas: CanvasModule,
+    drawing: Drawing,
+    options: {
+      label: string
+      sourceUrl: string
+      name: string
+      trigger: HTMLButtonElement
+      view: DrawingView
+    }
   ) {
-    const host = root.querySelector<HTMLElement>('[data-excalidraw-host]')
-    const sceneUrl = resolveSceneUrl(root)
-    if (!host || !sceneUrl) return
-
-    root.classList.add('excalidraw-embed--enhanced')
-    root.dataset.excalidrawReady = '1'
-
-    const fallback = root.querySelector<HTMLElement>(
-      '.excalidraw-embed__fallback'
-    )
-    const name = downloadName(root, sceneUrl)
-
-    const { unmount } = mountCanvas(host, {
-      sceneUrl,
-      mode: 'embed',
-      downloadUrl: sceneUrl,
-      downloadName: name,
-      onExpand: () => this.openExpand(sceneUrl, name, mountCanvas),
-      onReady: () => {
-        fallback?.setAttribute('hidden', '')
-        root.classList.add('excalidraw-embed--canvas-ready')
-      },
-      onError: (message) => {
-        root.classList.add('excalidraw-embed--error')
-        host.replaceChildren()
-        const tip = document.createElement('p')
-        tip.className = 'excalidraw-embed__error'
-        tip.textContent = fallback
-          ? '画布加载失败，已保留预览图。'
-          : `画布加载失败：${message}`
-        host.append(tip)
-        if (fallback) fallback.removeAttribute('hidden')
-      },
-    })
-    this.cleanups.push(unmount)
-    signal.addEventListener('abort', unmount, { once: true })
-  }
-
-  private openExpand(sceneUrl: string, name: string, mountCanvas: MountFn) {
-    document.querySelector('dialog.excalidraw-expand')?.remove()
-
+    this.closeExpand?.()
     const dialog = document.createElement('dialog')
     dialog.className = 'excalidraw-expand'
-    dialog.setAttribute('aria-label', 'Excalidraw 展开视图')
-
+    dialog.setAttribute('aria-label', `${options.label}：展开画布`)
     const frame = document.createElement('div')
     frame.className = 'excalidraw-expand__frame'
-
-    const host = document.createElement('div')
-    host.className = 'excalidraw-expand__host'
-    host.dataset.excalidrawHost = ''
-
-    const barTrack = document.createElement('div')
-    barTrack.className = 'excalidraw-expand__zoom-bar'
-    barTrack.setAttribute('aria-hidden', 'true')
-    const barFill = document.createElement('div')
-    barFill.className = 'excalidraw-expand__zoom-bar-fill'
-    barFill.style.setProperty('--zoom-bar-scale', '1')
-    barTrack.append(barFill)
-
     const close = document.createElement('button')
     close.type = 'button'
     close.className = 'excalidraw-expand__close'
-    close.setAttribute('aria-label', '关闭')
-    close.textContent = '关闭'
-
-    frame.append(host, barTrack, close)
+    close.setAttribute('aria-label', '关闭画布')
+    close.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>'
+    frame.append(close)
     dialog.append(frame)
-    document.body.append(dialog)
-
-    let fitZoom = 1
-    const { unmount } = mountCanvas(host, {
-      sceneUrl,
-      mode: 'expand',
-      downloadUrl: sceneUrl,
-      downloadName: name,
-      className: 'excalidraw-view--in-dialog',
-      onReady: (api) => {
-        fitZoom = api.getAppState().zoom.value
-        barFill.style.setProperty(
-          '--zoom-bar-scale',
-          String(zoomBarScale(fitZoom, fitZoom))
-        )
-      },
-      onZoomChange: (zoom, fit) => {
-        fitZoom = fit || fitZoom
-        barFill.style.setProperty(
-          '--zoom-bar-scale',
-          String(zoomBarScale(zoom, fitZoom))
-        )
-      },
+    const stop = canvas.createDrawingView(frame, drawing, {
+      label: options.label,
+      sourceUrl: options.sourceUrl,
+      name: options.name,
+      initialView: options.view,
     })
-
+    let releaseScroll: (() => void) | undefined
+    let disposed = false
     const cleanup = () => {
-      unmount()
+      if (disposed) return
+      disposed = true
+      stop()
       dialog.remove()
+      releaseScroll?.()
+      this.closeExpand = undefined
+      if (options.trigger.isConnected)
+        options.trigger.focus({ preventScroll: true })
     }
+    this.closeExpand = cleanup
     close.addEventListener('click', () => dialog.close())
-    dialog.addEventListener('close', cleanup)
+    dialog.addEventListener('close', cleanup, { once: true })
     dialog.addEventListener('click', (event) => {
       if (event.target === dialog) dialog.close()
     })
-
-    if (typeof dialog.showModal === 'function') dialog.showModal()
-    else dialog.setAttribute('open', '')
+    document.body.append(dialog)
+    try {
+      dialog.showModal()
+      releaseScroll = lockScroll()
+      close.focus({ preventScroll: true })
+    } catch (error) {
+      cleanup()
+      console.error('Excalidraw 展开失败', error)
+    }
   }
 }

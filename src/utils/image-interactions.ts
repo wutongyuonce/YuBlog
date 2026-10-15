@@ -16,7 +16,7 @@ export class ImageInteractions extends HTMLElement {
     dialog.className = 'image-lightbox'
     dialog.setAttribute('aria-label', '图片大图')
     dialog.innerHTML = `<div class="image-lightbox__panel">
-      <button type="button" class="image-lightbox__close" aria-label="关闭大图">×</button>
+      <button type="button" class="image-lightbox__close" aria-label="关闭大图"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
       <img alt="">
       <p class="image-lightbox__caption"></p>
     </div>`
