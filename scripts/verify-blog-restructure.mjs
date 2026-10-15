@@ -562,70 +562,81 @@ test('article covers do not replace the standalone page heading', () => {
   }
 })
 
-test('home listening renders the saved ranking and statistics without client-side API calls', async () => {
-  const snapshot = JSON.parse(
-    await readFile(new URL('../src/data/lastfm.json', import.meta.url), 'utf8')
-  )
+test('home listening ships an empty skeleton the runtime endpoint fills', async () => {
   const section = elements(home, (node) =>
     hasClass(node, 'recent-listening')
   )[0]
   assert.ok(section, 'Listening belongs on the home page')
+  assert.ok('dataListening' in section.properties)
+  assert.equal(section.properties.dataState, 'loading')
+  assert.equal(section.properties.ariaBusy, 'true')
   const profile = elements(
     section,
-    (node) => node.properties.href === snapshot.profileUrl
+    (node) =>
+      typeof node.properties.href === 'string' &&
+      node.properties.href.includes('last.fm/user/')
   )[0]
   assert.equal(textOf(profile).trim(), 'Last.fm ↗')
   assert.equal(profile.properties.target, '_blank')
   assert.ok(profile.properties.rel.includes('noopener'))
-  const cards = elements(section, (node) => hasClass(node, 'media-card'))
-  assert.equal(cards.length, snapshot.tracks.length)
-  assert.ok(cards.length <= 10)
-  for (const [index, card] of cards.entries()) {
-    const source = snapshot.tracks[index]
-    const title = elements(card, (node) =>
-      hasClass(node, 'media-card__title')
-    )[0]
-    assert.equal(textOf(title).trim(), source.name)
-    assert.equal(title.properties.href, source.url)
-    const meta = elements(card, (node) => hasClass(node, 'media-card__meta'))[0]
-    assert.equal(
-      textOf(meta).trim(),
-      `${source.artist} - ${source.album || '专辑信息暂缺'}`
-    )
-    const images = elements(card, (node) => node.tagName === 'img')
-    assert.equal(images.length, source.cover ? 1 : 0)
-    if (source.cover) {
-      assert.equal(images[0].properties.src, source.cover)
-      assert.equal(images[0].properties.loading, 'lazy')
-      assert.equal(images[0].properties.width, 300)
-      assert.equal(images[0].properties.height, 300)
-      const template = elements(card, (node) => node.tagName === 'template')[0]
-      assert.ok(template, 'Original artwork stays inert until the viewer opens')
-      assert.equal(
-        template.content.children.find((node) => node.tagName === 'img')
-          .properties.src,
-        source.fullCover
-      )
-    }
-  }
+
+  // 构建产物里没有听歌数据：统计停在占位，轨道是空的。
   const stats = elements(section, (node) =>
     hasClass(node, 'recent-listening__stats')
   )[0]
-  const values = elements(stats, (node) => node.tagName === 'strong').map(
-    textOf
+  assert.deepEqual(
+    elements(stats, (node) => node.tagName === 'strong').map(textOf),
+    ['—', '—', '—']
   )
-  const number = new Intl.NumberFormat('zh-CN')
-  assert.deepEqual(values, [
-    number.format(snapshot.weeklyScrobbles),
-    number.format(snapshot.totalScrobbles),
-    snapshot.topArtist || '暂无',
-  ])
-  if (cards.length) {
-    const rail = elements(section, (node) =>
-      hasClass(node, 'media-cards--rail')
-    )[0]
-    assert.equal(rail.properties.tabIndex, 0)
-    assert.ok(hasClass(rail, 'media-cards--auto'))
-  }
-  assert.equal(elements(section, (node) => node.tagName === 'script').length, 0)
+  assert.match(textOf(stats), /过去 7 天/)
+  assert.match(textOf(stats), /累计/)
+  assert.match(textOf(stats), /常听歌手/)
+  const rail = elements(section, (node) =>
+    hasClass(node, 'media-cards--rail')
+  )[0]
+  assert.equal(rail.properties.tabIndex, 0)
+  assert.equal(rail.properties.role, 'region')
+  assert.ok(hasClass(rail, 'media-cards--auto'))
+  const track = elements(
+    section,
+    (node) => 'dataListeningTrack' in node.properties
+  )[0]
+  assert.ok(track, 'the rail needs its track container before the script runs')
+  assert.deepEqual(track.children, [])
+
+  // 卡片模板是脚本填充时唯一的结构来源，页面不再自带第二份标记。
+  const template = elements(
+    section,
+    (node) =>
+      node.tagName === 'template' && 'dataListeningCard' in node.properties
+  )[0]
+  assert.ok(
+    template,
+    'card markup stays in the component for the script to clone'
+  )
+  const card = elements(template.content, (node) =>
+    hasClass(node, 'media-card')
+  )[0]
+  assert.ok(hasClass(card, 'media-card--square'))
+  assert.equal(card.properties.role, 'listitem')
+  const cover = elements(card, (node) => hasClass(node, 'media-card__cover'))[0]
+  assert.equal(cover.properties.width, 300)
+  assert.equal(cover.properties.height, 300)
+  assert.equal(cover.properties.loading, 'lazy')
+  assert.equal(cover.properties.src, undefined)
+  const source = elements(card, (node) => node.tagName === 'template')[0]
+  assert.ok(source, 'author artwork stays inert until the viewer opens')
+  assert.ok(elements(source.content, (node) => node.tagName === 'img')[0])
+  const title = elements(card, (node) => hasClass(node, 'media-card__title'))[0]
+  assert.equal(title.tagName, 'a')
+  assert.equal(title.properties.href, undefined)
+  assert.equal(title.properties.target, '_blank')
+  assert.ok(title.properties.rel.includes('noopener'))
+  const meta = elements(card, (node) => hasClass(node, 'media-card__meta'))[0]
+  assert.equal(meta.properties.tabIndex, 0)
+
+  // 无脚本时给出去处，而不是停在占位。
+  const noscript = elements(section, (node) => node.tagName === 'noscript')[0]
+  assert.ok(noscript, 'the section explains itself without scripting')
+  assert.match(textOf(noscript), /JavaScript/)
 })

@@ -35,7 +35,7 @@
 
 近期笔墨下方显示近期书影游，内容只来自 `src/content/interests/recent.md`，不生成拾趣子页或菜单项。无外框或专用内容宽度，继承首页版心；标题层级、锚点和卡片均使用共享 Markdown 样式。近期条目用 S10 的竖版横滑栏，封面、标题与顺序沿用原内容，小字使用可适度精简的原介绍／评论；不显示原评分或类别角标。所有条目保持一排，后续可横滚；不启用 `scroll="auto"`，仅手动横滑。标题右侧「全部拾趣」进入拾趣入口；标题 `href` 指向对应作品 Wiki，而非本站拾趣分类。
 
-近期书影游下方是「最近在听 Top10」：过去七天 Top 10 歌曲保持一排横滑，封面使用专辑图，歌名为大字、小字用 `歌手 - 专辑名`；超出容器时沿用 S10 头尾自动循环及暂停／回退规则，封面可点击或键盘打开现有查看器查看远程原尺寸图。辅助统计展示七天听歌次数、累计记录数、七天最常听歌手，另注明快照更新时间；标题右侧「Last.fm ↗」进入个人主页。数据每小时同步，关键查询失败保留旧快照，构建与访问不调用 Last.fm API；专辑资料缺失使用真实空状态。完整失败、资源和验收契约见 [首页 Last.fm SPEC 与设计](./首页%20Last.fm%20SPEC%20与设计.md)。
+近期书影游下方是「最近在听 Top10」：过去七天 Top 10 歌曲保持一排横滑，封面使用专辑图，歌名为大字、小字用 `歌手 - 专辑名`；超出容器时沿用 S10 头尾自动循环及暂停／回退规则，封面可点击或键盘打开现有查看器查看远程原尺寸图。辅助统计展示七天听歌次数、累计记录数、七天最常听歌手，另注明数据时间；标题右侧「Last.fm ↗」进入个人主页。数据在访问时由 `/api/lastfm` 取得并缓存 30 分钟，构建产物不含听歌数据、也不请求 Last.fm API；接口失败时区块显示失败说明，专辑资料缺失使用真实空状态，无脚本时保留骨架与说明。完整失败、资源和验收契约见 [首页 Last.fm SPEC 与设计](./首页%20Last.fm%20SPEC%20与设计.md)。
 
 ### S2：分类、标签和分页
 
@@ -192,7 +192,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 | 规则／状态 | 唯一权威 | 调用方／接口 | 验证 |
 | --- | --- | --- | --- |
 | 集合、发布过滤、日期顺序与分组 | `utils/data.ts` | 首页、预览、列表、归档、RSS；开发网页列表／正文可预览草稿，公开摘要、顶部分类菜单与开发／生产 RSS 只读已发布集合 | 构建页面结构／RSS检查 |
-| Last.fm 排行、统计、资料缺失、请求上限与错误 | `scripts/lib/lastfm.mjs`；持久化在 `scripts/sync-lastfm.mjs` | 工作流获取静态快照，`RecentListening` 只呈现 | `lastfm.test.mjs`、首页产物与浏览器检查 |
+| Last.fm 排行、统计、资料缺失、请求上限与错误 | `src/utils/lastfm.mjs`；缓存、状态码与失败语义在 `api/lastfm.js` | 访问时经运行时接口与 CDN 缓存取得，`RecentListening` 只呈现 | `lastfm.test.mjs`、`listening-endpoint.test.mjs`、首页产物与浏览器检查 |
 | 写作热力的日历日、强度、年份范围与年度字数与字数缺失／非法失败 | `utils/blog-heatmap.js` | `WritingHeatmap` 只呈现；文章集合仍从 `getPublishedBlogPosts` 取，字数来自渲染后的 `wordCount` | `blog-heatmap.test.mjs` |
 | 原值分类的动态入口、URL 兼容别名、精确筛选、页码和分页数量 | `utils/blog-browser.js` | `ListView`、导航 | `blog-browser.test.mjs`、构建分页 |
 | 单标签选中链接 | `utils/blog-browser.js` 的 `tagSelectionLinks` | `TagLinks` 只呈现；文章元信息、归档标题下标签和文稿列表卡片调用 | `blog-browser.test.mjs` |

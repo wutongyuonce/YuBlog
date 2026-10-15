@@ -16,7 +16,7 @@
 
 | 路由 | 说明 | 内容源 |
 | :--- | :--- | :--- |
-| `/` | 作者、RSS、社交、写作热力、最近五篇文稿、近期书影游与 Last.fm 听歌排行；无文章分页和个人侧栏 | `BlogProfile`、`WritingHeatmap`、`RecentWriting`、`recent.md`、`lastfm.json` |
+| `/` | 作者、RSS、社交、写作热力、最近五篇文稿、近期书影游与 Last.fm 听歌排行；无文章分页和个人侧栏 | `BlogProfile`、`WritingHeatmap`、`RecentWriting`、`recent.md`、运行时 `/api/lastfm` |
 | `/blogs/` | 完整文稿，分类／标签筛选，每页七篇 | `src/content/blogs/**/*.{md,mdx}` |
 | `/blogs/#tech`、`#thought`、`#diary` | 技术、思考、日记及自动发现的新分类（如 `#旅行`）；兼容旧 query | `src/utils/blog-browser.js` |
 | `/tags/` | 标签目录和排序，多选 AND；选择后展示列表 | 文章 `tags` |
@@ -46,7 +46,7 @@ HTML 交互动画可在普通 `.md` 里用 `<iframe sandbox="allow-scripts">` �
 
 全站点缀默认使用原粉色（浅色 `#ad526c`、深色 `#e7a1b5`），顶部调色盘可选择原粉色、灰紫、深紫、雾蓝和鼠尾草绿。每套浅色与深色强调色不同：浅色使用主色，深色使用同色相更亮且仍能辨认的颜色，色点始终显示浅色主色。选择后立即作用于热力图、正文强调、搜索高亮、友链柔光等界面，不刷新页面。配色与亮暗主题独立，浏览器记住选择并在首屏及站内跳转前恢复；无脚本保留默认原粉色。黑白基底、内容图片、分类徽标、代码高亮与独立语义色保持原规则。预设统一维护在 `src/utils/accent-palette.js`。
 
-首页「最近在听 Top10」展示过去七天 Top 10 歌曲、专辑封面、歌手与专辑名，以及七天听歌次数、累计记录与常听歌手。单行方卡自动头尾滚动，按下或键盘聚焦暂停，无 JS／减少动态效果时仍可手动横滑；小字用 `歌手 - 专辑名`，封面可点击查看原尺寸，标题链接到 Last.fm。数据来自 `src/data/lastfm.json`，构建与浏览不调用 Last.fm API。`Sync Last.fm` 工作流每小时第 17 分钟更新快照并提交至 main，沿用 Vercel Git 部署；失败保留旧数据。仓库 Actions Secret 使用 `LASTFM_API_KEY`，本地可在被忽略的 `.env` 中设置同名变量，再运行 `pnpm sync:lastfm`。定时工作流进入默认分支后生效；详细契约、资料缺失与操作见 [Last.fm SPEC 与设计](docs/首页%20Last.fm%20SPEC%20与设计.md)。
+首页「最近在听 Top10」展示过去七天 Top 10 歌曲、专辑封面、歌手与专辑名，以及七天听歌次数、累计记录与常听歌手。单行方卡自动头尾滚动，按下或键盘聚焦暂停，减少动态效果时仍可手动横滑；小字用 `歌手 - 专辑名`，封面可点击查看原尺寸，标题链接到 Last.fm。数据在访问时由 `/api/lastfm` 取得并缓存 30 分钟，构建产物不含听歌数据，构建与页面渲染都不调用 Last.fm API；仓库不保存快照，也没有定时同步工作流。Vercel 项目环境变量（Production 与 Preview）使用 `LASTFM_API_KEY`，可选 `LASTFM_USER`；本地在被忽略的 `.env` 中设置同名变量后，`pnpm dev` 会提供同一接口。无脚本或接口失败时区块保留骨架与说明。详细契约、资料缺失与操作见 [Last.fm SPEC 与设计](docs/首页%20Last.fm%20SPEC%20与设计.md)。
 
 博客正文、友链页底部和全部拾趣分类子页支持 Giscus 评论，使用 GitHub 登录，评论保存在 `wutongyuonce/YuBlog` 的 Discussions。友链可按页面模板留言申请，审核后添加，也可提交 PR。共享组件为 `GiscusComments.astro`，仓库和分类配置集中在 `src/config.ts` 的 `GISCUS`；须在公开仓库启用 Discussions 并安装 Giscus App。评论按规范 pathname 严格关联，接近底部才加载，明暗随站点同步；本地与正式站的同一路径共用讨论，修改 slug／base 前需处理旧关联。详细行为和边界见 [站点 SPEC S12](docs/站点行为%20SPEC.md#s12在正文下评论与申请友链)，实现见 [评论 seam](docs/项目解析.md#410-评论-seam)。
 

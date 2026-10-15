@@ -5,6 +5,53 @@ const task = await taskSpace(Number('__TASK_SPACE_ID__'))
 const page = task.page('p1')
 const base = '__BASE_URL__'
 
+// 听歌数据只在运行时取得：固定一份载荷替换接口，让卡片、循环和查看器都可复现。
+const cover = (id, size) =>
+  `https://lastfm-img.freetls.fastly.net/i/u/${size}/${id}.jpg`
+const listening = {
+  updatedAt: '2026-10-15T07:29:23.000Z',
+  weeklyScrobbles: 39,
+  totalScrobbles: 219,
+  topArtist: 'Gareth.T',
+  tracks: Array.from({ length: 6 }, (_, index) => ({
+    name: `歌曲 ${index + 1}`,
+    artist: `歌手 ${index + 1}`,
+    album: index === 5 ? null : `专辑 ${index + 1}`,
+    cover: index === 5 ? null : cover(`cover-${index + 1}`, '300x300'),
+    fullCover: index === 5 ? null : cover(`cover-${index + 1}`, 'ar0'),
+    url: `https://www.last.fm/music/artist${index + 1}/_/song${index + 1}`,
+    playcount: 7,
+  })),
+}
+await page.cdp('Page.addScriptToEvaluateOnNewDocument', {
+  source: `(() => {
+  const payload = ${JSON.stringify(listening)}
+  const real = window.fetch.bind(window)
+  const mode = window.localStorage.getItem('listening-stub') || 'ready'
+  window.fetch = (input, init) => {
+    const url = typeof input === 'string' ? input : input.url
+    if (!url.endsWith('/api/lastfm')) return real(input, init)
+    const body =
+      mode === 'fail'
+        ? { status: 503, text: '{}' }
+        : {
+            status: 200,
+            text: JSON.stringify(
+              mode === 'empty'
+                ? { ...payload, weeklyScrobbles: 0, totalScrobbles: 0, topArtist: null, tracks: [] }
+                : payload
+            ),
+          }
+    return Promise.resolve(
+      new Response(body.text, {
+        status: body.status,
+        headers: { 'content-type': 'application/json' },
+      })
+    )
+  }
+})()`,
+})
+
 await page.goto(new URL('interests/book/', base).href)
 await page.waitForSelector('.media-cards--rail')
 for (const width of [1440, 390, 320]) {
@@ -49,6 +96,10 @@ await page.cdp('Emulation.setEmulatedMedia', {
   features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
 })
 await page.goto(base)
+// 卡片在接口载荷到达后才存在；先等区块离开加载状态，失败会停在明确的状态上。
+await page.waitForFunction(
+  () => document.querySelector('.recent-listening')?.dataset.state === 'ready'
+)
 await page.waitForFunction(
   () =>
     document.querySelector('.recent-listening .media-cards--auto')?.dataset
@@ -76,12 +127,30 @@ const markup = await page.evaluate(() => {
     originalNotPreloaded: !performance
       .getEntriesByType('resource')
       .some((entry) => entry.name.includes('/i/u/ar0/')),
+    stats: [...root.querySelectorAll('[data-listening-stat]')].map(
+      (node) => node.textContent
+    ),
+    updated: root.querySelector('[data-listening-time]').textContent,
+    placeholder: originals.filter((card) =>
+      card.querySelector('.recent-listening__placeholder')
+    ).length,
+    placeholderSized: originals.every((card) => {
+      const node = card.querySelector('.recent-listening__placeholder')
+      if (!node) return true
+      const box = node.getBoundingClientRect()
+      return box.width > 0 && box.height > 0
+    }),
   }
 })
+assert.equal(markup.originalCount, listening.tracks.length)
 assert.equal(markup.cloneCount, markup.originalCount)
 assert.equal(markup.clonesMuted, true)
 assert.equal(markup.metadata, true)
 assert.equal(markup.originalNotPreloaded, true)
+assert.deepEqual(markup.stats, ['39', '219', 'Gareth.T'])
+assert.equal(markup.updated, '10/15 15:29')
+assert.equal(markup.placeholder, 1, '缺封面的一首显示占位，不伪造图片')
+assert.equal(markup.placeholderSized, true)
 
 await page.focus('.recent-listening .media-cards--auto')
 assert.equal(
@@ -148,18 +217,62 @@ assert.equal(
 
 await page.cdp('Emulation.setScriptExecutionDisabled', { value: true })
 await page.reload()
+// 数据在运行时取得：无脚本时只保留骨架和说明，不假装有数据。
 const nojs = await page.evaluate(() => {
   const root = document.querySelector('.recent-listening')
-  const rail = root.querySelector('.media-cards--rail')
   return {
+    cards: root.querySelectorAll('.media-card').length,
     clones: root.querySelectorAll('[data-marquee-clone]').length,
-    scrollable: rail.scrollWidth > rail.clientWidth,
+    state: root.dataset.state,
+    hint: root.querySelector('noscript')?.textContent ?? '',
   }
 })
-assert.deepEqual(nojs, { clones: 0, scrollable: true })
+assert.equal(nojs.cards, 0)
+assert.equal(nojs.clones, 0)
+assert.equal(nojs.state, 'loading')
+assert.match(nojs.hint, /JavaScript/)
 await page.cdp('Emulation.setScriptExecutionDisabled', { value: false })
 await page.cdp('Emulation.setEmulatedMedia', { features: [] })
-await page.reload()
+
+// 接口失败与真实空数据都必须落在各自的状态，而不是停在“加载中”。
+const stateAfter = async (mode) => {
+  await page.evaluate(
+    (value) => window.localStorage.setItem('listening-stub', value),
+    mode
+  )
+  await page.reload()
+  await page.waitForFunction(
+    () =>
+      document.querySelector('.recent-listening')?.dataset.state !== 'loading'
+  )
+  return page.evaluate(() => {
+    const root = document.querySelector('.recent-listening')
+    return {
+      state: root.dataset.state,
+      message: root.querySelector('[data-listening-message]').textContent,
+      cards: root.querySelectorAll('.media-card').length,
+      busy: root.getAttribute('aria-busy'),
+      railHidden:
+        getComputedStyle(root.querySelector('.recent-listening__body'))
+          .display === 'none',
+    }
+  })
+}
+assert.deepEqual(await stateAfter('fail'), {
+  state: 'error',
+  message: '暂时无法获取听歌数据。',
+  cards: 0,
+  busy: 'false',
+  railHidden: true,
+})
+assert.deepEqual(await stateAfter('empty'), {
+  state: 'empty',
+  message: '过去 7 天还没有听歌记录。',
+  cards: 0,
+  busy: 'false',
+  railHidden: true,
+})
+await page.evaluate(() => window.localStorage.removeItem('listening-stub'))
 console.log(
-  'Card rails: book grouping, listening loop/clones, separator, original zoom, focus, reduced motion and no-JS passed'
+  'Card rails: book grouping, listening cards/loop/separator/zoom, focus, reduced motion, failure and empty states, no-JS passed'
 )

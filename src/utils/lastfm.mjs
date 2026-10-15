@@ -1,7 +1,20 @@
+/**
+ * Last.fm 听歌数据的唯一属主：用户身份、七天窗口、查询与校验、排行和统计、专辑封面。
+ *
+ * 只在服务端运行：Vercel 函数（`api/lastfm.js`）、本地 dev 中间件和单测。构建页面与
+ * 访问页面都不调用 Last.fm，听歌数据一律经运行时接口取得。
+ */
+
 const API_URL = 'https://ws.audioscrobbler.com/2.0/'
 const WEEK_SECONDS = 7 * 24 * 60 * 60
 const MAX_RECENT_PAGES = 10
 const PLACEHOLDER_IMAGE = '2a96cbd8b46e442fc41c2b86b821562f'
+
+/** 默认账户；请求与页面链接都从这一个常量派生。 */
+export const LASTFM_USER = 'ztyonce'
+
+export const lastfmProfileUrl = (user) =>
+  `https://www.last.fm/user/${encodeURIComponent(user)}`
 
 const text = (value, field) => {
   if (typeof value !== 'string' || !value.trim())
@@ -66,7 +79,7 @@ export const lastfmOriginalCover = (cover) =>
 
 export async function fetchLastfmSnapshot({
   apiKey,
-  user = 'ztyonce',
+  user = LASTFM_USER,
   now = new Date(),
   fetchImpl = fetch,
 } = {}) {
@@ -194,7 +207,7 @@ export async function fetchLastfmSnapshot({
 
   return {
     user,
-    profileUrl: `https://www.last.fm/user/${encodeURIComponent(user)}`,
+    profileUrl: lastfmProfileUrl(user),
     updatedAt: new Date(to * 1000).toISOString(),
     weeklyScrobbles,
     totalScrobbles,

@@ -1,10 +1,6 @@
 import assert from 'node:assert/strict'
-import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
 import test from 'node:test'
-import { fetchLastfmSnapshot } from '../scripts/lib/lastfm.mjs'
-import { syncLastfm } from '../scripts/sync-lastfm.mjs'
+import { fetchLastfmSnapshot } from '../src/utils/lastfm.mjs'
 
 const now = new Date('2026-10-10T12:00:00Z')
 const apiKey = 'test-only-key'
@@ -194,40 +190,19 @@ test('API errors and malformed counts fail without exposing credentials or upstr
   await assert.rejects(fetchLastfmSnapshot({ now }), /LASTFM_API_KEY/)
 })
 
-test('a failed refresh leaves the successful on-disk snapshot intact', async () => {
-  const directory = await mkdtemp(join(tmpdir(), 'lastfm-'))
-  const destination = join(directory, 'lastfm.json')
-  try {
-    await writeFile(destination, 'previous snapshot\n')
-    const missing = played()
-    missing.image = []
-    const invalidAlbums = [
-      {},
-      [],
-      { album: {} },
-      { album: { image: 'invalid' } },
-    ]
-    for (const options of [
-      fixture({ total: '-1' }),
-      ...invalidAlbums.map((response) =>
+test('malformed album responses fail the whole snapshot instead of hiding the cover', async () => {
+  const missing = played()
+  missing.image = []
+  for (const response of [
+    {},
+    [],
+    { album: {} },
+    { album: { image: 'invalid' } },
+  ])
+    await assert.rejects(
+      fetchLastfmSnapshot(
         fixture({ pages: [[missing]], albumInfo: () => response })
       ),
-    ]) {
-      await assert.rejects(syncLastfm({ ...options, destination }), /Last.fm:/)
-      assert.equal(await readFile(destination, 'utf8'), 'previous snapshot\n')
-      assert.deepEqual(await readdir(directory), ['lastfm.json'])
-    }
-    const successful = await syncLastfm({
-      ...fixture({ pages: [[missing]] }),
-      destination,
-    })
-    assert.equal(successful.tracks[0].cover, null)
-    assert.deepEqual(
-      JSON.parse(await readFile(destination, 'utf8')),
-      successful
+      /Last\.fm: invalid album\.getInfo response/
     )
-    assert.deepEqual(await readdir(directory), ['lastfm.json'])
-  } finally {
-    await rm(directory, { recursive: true, force: true })
-  }
 })
