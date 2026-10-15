@@ -5,6 +5,7 @@ import { getImage } from 'astro:assets'
 import BaseLayout from '~/layouts/BaseLayout.astro'
 import StandardLayout from '~/layouts/StandardLayout.astro'
 import PostMeta from '~/components/base/PostMeta.astro'
+import GiscusComments from '~/components/base/GiscusComments.astro'
 import PostHero from '~/components/base/PostHero.astro'
 import Warning from '~/components/base/Warning.astro'
 import DesktopAside from '~/components/base/DesktopAside.astro'
@@ -119,4 +120,5 @@ frontmatter to <code>false</code> or remove it to publish the post.`
       <Content />
     </Fragment>
   </StandardLayout>
+  <GiscusComments slot="after-content" />
 </BaseLayout>

@@ -148,6 +148,24 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 | 鼠标／触屏／键盘、关闭与焦点恢复、展开保持导航可见、320／390／1440px 边界 | 同一浏览器脚本验证用户操作和实际视口 |
 | 刷新／真实 ClientRouter 交换恢复、无 JS 默认与入口隐藏、存储失败 | 同一浏览器脚本验证页面生命周期与降级 |
 
+### S12：在正文下评论与申请友链
+
+读者在每篇博客正文与 `cd ..` 返回链接之后、友链页列表与交换说明之后、每个拾趣分类子页正文之后使用 Giscus 留言；拾趣入口、首页、列表、标签、归档、项目和关于不显示评论。新增拾趣分类自动沿用子页评论，不维护固定分类列表。友链申请使用现有模板中的站名、简介、网址、头像，留言供作者审核后人工维护友链数据，保留 PR 申请方式。
+
+评论区与正文、博客整体使用同一版心宽度并居中，随桌面与手机视口收窄；文章页顺序为正文 → `cd ..` → 评论区，评论 iframe 不得延伸到目录区域或撑宽页面。
+
+评论存入公开仓库的 GitHub Discussions，访客可以阅读，发表与回应需要 GitHub OAuth 登录。每个页面使用规范化、带尾斜杠的 pathname 作为独立关联键，忽略域名、query 和 hash；相似路径严格匹配，不共享评论。中文路径使用 URL 编码形式。站点 base 是路径的一部分；修改 slug 或 base 前需处理旧讨论的关联，本站不自动迁移。
+
+接近评论区时才加载评论模块及 iframe；OAuth 回调立即初始化以保存登录结果。评论初始配色及之后的切换都跟随博客实际明暗主题，切换不重建 iframe。ClientRouter 换页后使用新页面的关联键，旧组件停止观察主题与可见性，不后台轮询、不持有本站评论缓存。评论不属于作者正文，不进入全文 RSS 和 Pagefind 正文索引。
+
+尚无留言不是失败：Giscus 在第一次评论或回应时创建 Discussion。模块下载失败时显示提示；第三方网络、仓库配置或登录错误由 Giscus 展示，本站始终保留 GitHub Discussions 入口。无 JavaScript 时正文、友链模板和该入口可用。评论依赖 GitHub／Giscus 的网络与权限，不提供匿名身份、离线评论、自建审核后台、自动添加友链或独立限流机制。
+
+| 义务 | 验收证据 |
+| --- | --- |
+| 范围准确、所有分类自动接入、评论在正文外且后置、每页唯一关联键与正式站回链 | `pnpm test:built-restructure` 的评论用例读取真实产物及当前配置 |
+| 按需加载、明暗同步且保留 iframe、真实站内导航后页面隔离、正文与评论同宽对齐、返回链接顺序、手机宽度 | `scripts/verify-giscus.mjs` 在共享组件的真实浏览器接口验证 |
+| OAuth、首次评论创建、刷新后仍命中讨论 | 浏览器用 GitHub 实际账号发表测试留言，并核对 GitHub Discussion；需要 Giscus App 安装成功 |
+
 ## 3. 视觉不变量
 
 | 对象 | 规则与属主 |
@@ -198,6 +216,8 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 | 归档分类预设、持久分配、容量与失败 | `utils/blog-category-colors.js`；数据在 `data/blog-category-colors.json` | `ArchiveView` 传入实际展示的分类集合，CSS 只选择主题 | `blog-category-colors.test.mjs`、归档产物检查 |
 | 社交身份 | `config.ts` `AUTHOR_LINKS` | 首页读取配置，关于正文独立维护联系方式 | 构建产物检查核对身份 |
 | 访问统计 | `Head.astro` 的 Umami 脚本 | 全站经 `BaseLayout` 加载；不在页脚或正文渲染 | 构建产物头部含该脚本 |
+| 评论仓库与分类 | `config.ts` 的 `GISCUS` | `GiscusComments` 读取公开节点 ID，无服务端密钥 | 构建接线检查 |
+| 评论关联键、加载、主题与组件资源 | `GiscusComments.astro`；OAuth／评论数据由官方 `giscus` 组件与 Giscus 服务管理 | `RenderPost`、`FriendsView`、`InterestsView` 只声明挂载与文案；主题复用 `observeTheme` | 构建范围检查与 `verify-giscus.mjs` |
 | RSS HTML／XML与失败 | `rss-content.js`／`rss-feed.js`；endpoint编排 | `render(Content)` → 转换 → 序列化 | RSS owner-level 与产物检查 |
 | 点缀预设、默认／非法值回退、存储异常及恢复 | `utils/accent-palette.js` | `Head` 首屏样式／内联恢复、`AccentSwitch` 选择与 ClientRouter 交换前恢复；视图只消费变量 | `accent-palette.test.mjs`、`verify-accent-palette.mjs` |
 | 配色面板展开、选中展示、焦点与监听清理 | `AccentSwitch` | 偏好结果 → menuitemradio；`NavBar` 只读取展开状态保持可见 | `verify-accent-palette.mjs` |

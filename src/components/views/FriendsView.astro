@@ -1,6 +1,7 @@
 ---
 import Link from '~/components/base/Link.astro'
 import FriendsApplyPanel from '~/components/views/FriendsApplyPanel.astro'
+import GiscusComments from '~/components/base/GiscusComments.astro'
 import { getSortedFriends } from '~/utils/data'
 
 function getInitial(name: string) {
@@ -90,6 +91,10 @@ const groups = [
       <FriendsApplyPanel />
     </section>
   )}
+  <GiscusComments
+    title="申请友链与留言"
+    description="欢迎按上方模板提交友链信息，审核后会加入列表；也欢迎随意聊聊。"
+  />
 </section>
 
 <style>
