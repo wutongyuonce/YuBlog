@@ -42,6 +42,7 @@ API 多次查询期间用户仍可听歌，不提供跨接口事务一致性；�
 | L3、Last.fm 图片占位识别、专辑匹配与基础版封面 | 同上 | 同一函数，不向视图暴露 API 原始数据 | 同上 | 同一单测 |
 | 用户身份、主页地址 | 同上 | `LASTFM_USER`、`lastfmProfileUrl(user)` | 组件页头链接、适配器 | 产物检查 |
 | L4/L6、缓存策略、状态码、错误净化 | `api/lastfm.js` | `handleListening(request, { apiKey, user, fetchImpl, now })`；默认导出读取环境变量 | Vercel、dev 中间件、单测 | `test/listening-endpoint.test.mjs` |
+| L4 部署前提：根目录 `api/` 被收集为函数 | `vercel.json`（`framework: null`、`buildCommand`、`outputDirectory`） | 平台按 Other 预设构建，静态产物仍是 `dist` | Vercel 部署 | 预览部署的接口响应 |
 | 本地 dev 提供同一接口 | `plugins/astro-listening-endpoint.ts` | 在 `/api/lastfm` 调用同一处理函数；密钥取环境变量或 `.env` | `pnpm dev` | 本地 `curl` 检查 |
 | 响应形状校验、统计文案、卡片渲染 | `src/utils/recent-listening.js` | `parseListeningPayload`、`listeningStats`、`listeningUpdatedLabel`、`renderListening` | `RecentListening.astro` 的脚本 | `test/recent-listening.test.mjs`、`verify-card-rails.mjs` |
 | L5、骨架、空／失败状态、无脚本说明 | `src/components/home/RecentListening.astro` | 只读取接口结果；用既有 `.home-section-header`、方卡与 `.media-cards--auto` | `index.astro` | built 首页检查、真实浏览器 |
@@ -57,6 +58,8 @@ Last.fm 缩略图是 300px 远程图片，模板用固定宽高与懒加载的 `
 接口失败时 Last.fm 的错误消息已经过适配器净化（不含密钥与上游原文），处理函数只把它写入运行日志，响应体只返回机器可读的错误码。响应头的缓存策略、状态码和错误码都在 `api/lastfm.js` 一处决定。
 
 ## 配置与运行
+
+Vercel 项目的 Framework Preset 必须是 Other：仓库根目录 `api/` 只在没有框架预设接管时才被收集为函数，用 Astro 预设时该地址返回 404。`vercel.json` 用 `"framework": null` 加 `buildCommand`、`outputDirectory` 固定这一点，静态产物仍是 `dist`，Pagefind 与构建后检查不受影响。
 
 Vercel 项目环境变量（Production 与 Preview 都需要）：`LASTFM_API_KEY`；可选 `LASTFM_USER` 覆盖默认账户。本地在被忽略的 `.env` 中设置同名变量，`pnpm dev` 会把它交给同一个处理函数：
 
@@ -86,4 +89,4 @@ node --test test/listening-endpoint.test.mjs test/lastfm.test.mjs test/recent-li
 
 本地验证已完成：204 项单元测试全部通过且无跳过；format、lint、Astro check（0 错误）与生产构建通过；`test:built-pagination`、`test:built-restructure`、`test:built-markdown` 全部通过。浏览器检查 `verify-card-rails.mjs`（固定载荷）、`verify-home-content.mjs` 通过。`verify-image-layouts.mjs` 在 `.image-lightbox__close` 一步失败；把 `src/utils/image-interactions.ts` 还原成 `origin/main` 版本后在同一步失败同样错误，属于既有问题，不是本次改动引入。
 
-仍未验证：Vercel 项目是否会把仓库根目录的 `api/` 收集为函数（Astro 预设的文档只描述 adapter 方式，需要在 PR 预览部署上确认 `/api/lastfm` 的响应）、`stale-if-error`／`stale-while-revalidate` 的线上行为、以及预览与生产环境变量配置后的真实数据。本地实现与浏览器结果不能代替上线后的 Vercel 运行结果。
+已确认：Astro 预设下的预览部署上 `GET /api/lastfm` 返回 404——该预设接管构建后不收集仓库根目录 `api/`；据此把 Framework Preset 切到 Other 并在 `vercel.json` 固定。仍未验证：切换预设后该地址的实际响应（200，或缺密钥时的 503）、`stale-if-error`／`stale-while-revalidate` 的线上行为、以及配好环境变量后的真实数据。本地实现与浏览器结果不能代替上线后的 Vercel 运行结果。
