@@ -1,7 +1,9 @@
 ---
 import { formatDate } from '~/utils/datetime'
 import { withBasePath } from '~/utils/path'
+import { tagSelectionLinks } from '~/utils/blog-browser.js'
 import { UI } from '~/config'
+import TagLinks from '~/components/base/TagLinks.astro'
 
 interface Props {
   pubDate: string
@@ -21,6 +23,7 @@ const {
   variant = 'default',
 } = Astro.props
 
+const visibleTags = tagSelectionLinks(tags)
 const isMinimal = UI.postView.postMetaStyle === 'minimal'
 const showLastModDate =
   !!lastModDate && formatDate(lastModDate) !== formatDate(pubDate)
@@ -50,7 +53,12 @@ const showLastModDate =
       <time datetime={lastModDate}> · Updated {formatDate(lastModDate)}</time>
     )}
     {minutesRead > 0 && <span> · {minutesRead} min</span>}
-    {tags.length > 0 && <span> · {tags.join(' / ')}</span>}
+    {visibleTags.length > 0 && (
+      <span>
+        {' · '}
+        <TagLinks {tags} />
+      </span>
+    )}
   </div>
 ) : (
   <div
@@ -73,10 +81,9 @@ const showLastModDate =
       <span class="i-ri-timer-line mr-1.2 ml--0.6" />
       {minutesRead > 0 && <span>{minutesRead} min read</span>}
     </div>
-    {tags.length > 0 && (
+    {visibleTags.length > 0 && (
       <div>
-        <span class="i-ri-hashtag mr-1.2" />
-        {tags.join(' / ')}
+        <TagLinks {tags} />
       </div>
     )}
   </div>

@@ -1,0 +1,49 @@
+---
+import { withBasePath } from '~/utils/path'
+import { tagSelectionLinks } from '~/utils/blog-browser.js'
+
+interface Props {
+  tags: string[]
+}
+
+const links = tagSelectionLinks(Astro.props.tags)
+const tagsPath = withBasePath('/tags/')
+---
+
+{links.length > 0 && (
+  <span class="tag-links">
+    {links.map((link) => (
+      <a class="tag-link" href={`${tagsPath}${link.query}`}>
+        {link.label}
+      </a>
+    ))}
+  </span>
+)}
+
+<style>
+  .tag-links {
+    display: inline;
+  }
+
+  .tag-link,
+  :global(.prose) .tag-link {
+    color: inherit;
+    border-bottom: 0;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+
+  .tag-link:not(:last-child) {
+    margin-right: 0.35em;
+  }
+
+  .tag-link:hover,
+  .tag-link:focus-visible,
+  :global(.prose) .tag-link:hover,
+  :global(.prose) .tag-link:focus-visible {
+    color: var(--accent);
+    border-bottom: 0;
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+</style>

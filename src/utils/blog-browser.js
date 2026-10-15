@@ -127,6 +127,20 @@ export function serializeBlogQuery(query) {
 }
 
 /**
+ * One directory link per normalized tag. The label is display only; selection
+ * uses the query, so `/` or `#` inside a name is not a separator.
+ * @param {string[]} tags
+ * @returns {{tag: string, label: string, query: string}[]}
+ */
+export function tagSelectionLinks(tags) {
+  return normalizePostTags(tags).map((tag) => ({
+    tag,
+    label: `#${tag}`,
+    query: serializeBlogQuery({ category: '', tags: [tag], page: 1 }),
+  }))
+}
+
+/**
  * Takes date-sorted posts; filters the full set before selecting a page.
  * @template {{data: {category: string, tags: string[]}}} T
  * @param {T[]} posts
