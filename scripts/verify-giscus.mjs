@@ -55,7 +55,7 @@ assert.equal(first.backlink, first.canonical)
 assert.notEqual(new URL(first.backlink).origin, new URL(base).origin)
 
 // Exercise the site's actual switch; theme updates must preserve the iframe.
-await page.click('#theme-switch')
+await page.press('#theme-switch', 'Space')
 await page.waitForFunction(() => {
   const dark = document.documentElement.classList.contains('dark')
   return (
@@ -99,7 +99,7 @@ for (const width of [390, 320]) {
 await page.evaluate(() => {
   window.__giscusNavigation = true
 })
-await page.click('a[data-nav-link][href$="/interests/"]')
+await page.press('a[data-nav-link][href$="/interests/"]', 'Enter')
 await page.waitForFunction(() => !document.querySelector('giscus-comments'))
 assert.equal(await page.evaluate(() => window.__giscusNavigation), true)
 const paths = await page.evaluate(() =>
@@ -108,7 +108,7 @@ const paths = await page.evaluate(() =>
   )
 )
 for (const path of paths) {
-  await page.click(`a[href="${path}"]`)
+  await page.press(`.interests-page__index a[href="${path}"]`, 'Enter')
   await page.waitForURL(new URL(path, base).href)
   await reveal()
   assert.equal(
@@ -123,7 +123,7 @@ for (const path of paths) {
     true,
     `${path}: own discussion after client navigation`
   )
-  await page.click('a[data-nav-link][href$="/interests/"]')
+  await page.press('a[data-nav-link][href$="/interests/"]', 'Enter')
   await page.waitForFunction(() => !document.querySelector('giscus-comments'))
 }
 // A synthetic callback exercises the real vendor constructor's URL cleanup.
@@ -164,7 +164,7 @@ try {
   await page.evaluate(() => {
     window.__callbackNavigation = true
   })
-  await page.click('a[data-nav-link][href$="/interests/"]')
+  await page.press('a[data-nav-link][href$="/interests/"]', 'Enter')
   await page.waitForFunction(() => !document.querySelector('giscus-comments'))
   await page.evaluate(() => history.back())
   await page.waitForSelector('giscus-comments')
@@ -181,6 +181,61 @@ try {
 await page.goto(new URL('friends/', base).href)
 await reveal()
 assert.ok((await page.snapshot()).includes('申请友链与留言'))
+// Article comments must share the body column, even though main is full width.
+await page.press('a[data-nav-link][href$="/blogs/"]', 'Enter')
+await page.waitForSelector('.post-preview h2 a')
+const articlePath = await page.evaluate(() =>
+  [...document.querySelectorAll('.post-preview h2 a')]
+    .find(
+      (link) =>
+        link.origin === location.origin && link.pathname.includes('/blogs/')
+    )
+    .getAttribute('href')
+)
+await page.click('.post-preview h2 a[href="' + articlePath + '"]')
+await page.waitForSelector('.post-content')
+await reveal()
+for (const width of [1440, 390, 320]) {
+  await page.cdp('Emulation.setDeviceMetricsOverride', {
+    width,
+    height: 900,
+    deviceScaleFactor: 1,
+    mobile: false,
+  })
+  for (let theme = 0; theme < 2; theme++) {
+    await page.press('#theme-switch', 'Space')
+    await reveal()
+    const layout = await page.evaluate(() => {
+      const body = document
+        .querySelector('.post-content')
+        .getBoundingClientRect()
+      const comments = document
+        .querySelector('.comments')
+        .getBoundingClientRect()
+      const back = document
+        .querySelector('main > footer.prose')
+        .getBoundingClientRect()
+      const frame = document
+        .querySelector('giscus-widget')
+        .iframeRef.getBoundingClientRect()
+      return {
+        aligned:
+          Math.abs(body.left - comments.left) < 1 &&
+          Math.abs(body.width - comments.width) < 1,
+        frameFits: Math.abs(frame.width - comments.width) < 1,
+        order: body.bottom <= back.top && back.bottom < comments.top,
+        noOverflow: document.documentElement.scrollWidth <= innerWidth,
+      }
+    })
+    assert.deepEqual(
+      layout,
+      { aligned: true, frameFits: true, order: true, noOverflow: true },
+      '' +
+        width +
+        'px: body → cd .. → comments share the site column in both themes'
+    )
+  }
+}
 console.log(
-  'Giscus: lazy loading, canonical identity/backlink, theme, mobile and ClientRouter checks passed.'
+  'Giscus: lazy loading, canonical identity/backlink, theme, mobile, ClientRouter and article column/order checks passed.'
 )

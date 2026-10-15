@@ -120,6 +120,21 @@ test('only articles, friends and every interest category have isolated comments 
         'Comments follow the body'
       )
     }
+    if (articles.includes(page)) {
+      const body = elements(page, (node) => hasClass(node, 'post-content'))[0]
+      const back = elements(
+        page,
+        (node) => node.tagName === 'footer' && hasClass(node, 'prose')
+      )[0]
+      assert.ok(
+        body.position.end.offset < back.position.start.offset,
+        'The return link follows the article'
+      )
+      assert.ok(
+        back.position.end.offset < root.position.start.offset,
+        'The return link separates article and comments'
+      )
+    }
   }
 })
 
