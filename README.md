@@ -17,7 +17,7 @@
 | 路由 | 说明 | 内容源 |
 | :--- | :--- | :--- |
 | `/` | 作者、RSS、社交、写作热力、最近五篇文稿、近期书影游与 Last.fm 听歌排行；无文章分页和个人侧栏 | `BlogProfile`、`WritingHeatmap`、`RecentWriting`、`recent.md`、运行时 `/api/lastfm` |
-| `/blogs/` | 完整文稿，分类／标签筛选，每页七篇 | `src/content/blogs/**/*.{md,mdx}` |
+| `/blogs/` | 完整文稿，分类／标签筛选，每页八篇 | `src/content/blogs/**/*.{md,mdx}` |
 | `/blogs/#tech`、`#thought`、`#diary` | 技术、思考、日记及自动发现的新分类（如 `#旅行`）；兼容旧 query | `src/utils/blog-browser.js` |
 | `/tags/` | 标签目录和排序，多选 AND；选择后展示列表 | 文章 `tags` |
 | `/archives/` | 单条按年时间线，带分类徽标 | 文章 `pubDate`／`category` |

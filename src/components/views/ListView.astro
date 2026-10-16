@@ -108,11 +108,11 @@ const firstPagePaginationHtml = showFirstPagePagination
     border-top: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
   }
   /* The HTML lists every post. This holds the unpaginated tail back until the
-     pager sets data-paged. Literal 8 is BLOG_PAGE_SIZE + 1; nth-child cannot
+     pager sets data-paged. Literal 9 is BLOG_PAGE_SIZE + 1; nth-child cannot
      read a custom property. */
   [data-blog-browser]:not([data-paged])
     [data-post-list]
-    > [data-blog-item]:nth-child(n + 8) {
+    > [data-blog-item]:nth-child(n + 9) {
     display: none;
   }
   /* Page-1 controls are in the HTML. Hide them until the pager runs when the

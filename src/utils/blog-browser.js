@@ -1,6 +1,6 @@
 import { matchesAllTags, normalizePostTags } from './blog-tag-filter.js'
 
-export const BLOG_PAGE_SIZE = 7
+export const BLOG_PAGE_SIZE = 8
 
 // URL compatibility only; these aliases never create or merge categories.
 const LEGACY_CATEGORY_HASHES = { tech: '技术', thought: '思考', diary: '日记' }

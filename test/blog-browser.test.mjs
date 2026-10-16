@@ -55,7 +55,7 @@ test('the injected first-paint script hides posts outside the requested page', (
   assert.equal(first.paint, '1')
   assert.match(
     first.css,
-    /:nth-child\(n\+1\):nth-child\(-n\+7\)\{display:block!important}/
+    /:nth-child\(n\+1\):nth-child\(-n\+8\)\{display:block!important}/
   )
   assert.equal(paintOf('?page=1').css, first.css)
   for (const page of ['0', '-1', '1.5', 'NaN', 'foo', '9007199254740992']) {
@@ -68,11 +68,11 @@ test('the injected first-paint script hides posts outside the requested page', (
   assert.equal(second.paint, '2')
   assert.match(
     second.css,
-    /:not\(:nth-child\(n\+8\):nth-child\(-n\+14\)\)\{display:none!important}/
+    /:not\(:nth-child\(n\+9\):nth-child\(-n\+16\)\)\{display:none!important}/
   )
   assert.match(
     second.css,
-    /:nth-child\(n\+8\):nth-child\(-n\+14\)\{display:block!important}/
+    /:nth-child\(n\+9\):nth-child\(-n\+16\)\{display:block!important}/
   )
 
   for (const search of [
@@ -148,14 +148,27 @@ test('untrusted page values cannot produce an empty or partial page by accident'
   assert.equal(selectBlogPage(posts, parseBlogQuery('page=999')).page, 2)
 })
 
-test('seven-post pagination handles empty, exact and partial final pages', () => {
-  for (const size of [0, 1, 7, 8, 12, 13]) {
-    const result = selectBlogPage(
-      posts.slice(0, size),
-      parseBlogQuery('page=999')
-    )
-    assert.equal(result.pageCount, Math.ceil(size / 7))
-    assert.equal(result.items.length, size === 0 ? 0 : ((size - 1) % 7) + 1)
+test('eight-post pagination handles empty, exact and partial final pages', () => {
+  for (const size of [0, 1, 7, 8, 9, 12, 13]) {
+    const entries = posts.slice(0, size)
+    for (const search of [
+      '',
+      'category=技术向',
+      'tag=Agent',
+      'category=技术向&tag=Agent&tag=测试',
+    ]) {
+      const query = parseBlogQuery(search)
+      const matching = entries.filter(
+        ({ data }) =>
+          (!query.category || data.category === query.category) &&
+          query.tags.every((tag) => data.tags.includes(tag))
+      )
+      const first = selectBlogPage(entries, query)
+      assert.deepEqual(first.items, matching.slice(0, 8))
+      const last = selectBlogPage(entries, { ...query, page: 999 })
+      assert.equal(last.pageCount, Math.ceil(matching.length / 8))
+      assert.deepEqual(last.items, matching.slice((last.page - 1) * 8))
+    }
   }
 })
 
