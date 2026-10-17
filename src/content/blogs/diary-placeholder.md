@@ -1,5 +1,5 @@
 ---
-title: 10 月回顾
+title: 周记/月记
 description: 10 月回顾的占位文稿。
 pubDate: 2026-11-01
 category: 日记
