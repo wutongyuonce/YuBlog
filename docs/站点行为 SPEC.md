@@ -220,7 +220,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 | 归档分类预设、持久分配、容量与失败 | `utils/blog-category-colors.js`；数据在 `data/blog-category-colors.json` | `ArchiveView` 传入实际展示的分类集合，CSS 只选择主题 | `blog-category-colors.test.mjs`、归档产物检查 |
 | 社交身份 | `config.ts` `AUTHOR_LINKS` | 首页读取配置，关于正文独立维护联系方式 | 构建产物检查核对身份 |
 | 访问统计 | `Head.astro` 的 Umami 脚本 | 全站经 `BaseLayout` 加载；不在页脚或正文渲染 | 构建产物头部含该脚本 |
-| Oneko 开关与皮肤 | `config.ts` `FEATURES.oneko` | `BaseLayout` 首次注入托管脚本；`Footer` 提供 `data-oneko-toggle`；`NavBar` 标避让 | 人工：开关配置后猫出现／消失；换页不出现第二只 |
+| Oneko 开关与皮肤 | `config.ts` `FEATURES.oneko` | `BaseLayout` 用 `createOneko`，`astro:page-load` 缺失时重建；`Footer` 提供 `data-oneko-toggle`；`NavBar` 标避让 | 人工：开关配置后猫出现／消失；换页仍只一只且不消失 |
 | 评论仓库与分类 | `config.ts` 的 `GISCUS` | `GiscusComments` 读取公开节点 ID，无服务端密钥 | 构建接线检查 |
 | 评论关联键、加载、主题与组件资源 | `GiscusComments.astro`；OAuth／评论数据由官方 `giscus` 组件与 Giscus 服务管理 | `RenderPost`、`FriendsView`、`InterestsView` 只声明挂载与文案；主题复用 `observeTheme` | 构建范围检查与 `verify-giscus.mjs` |
 | RSS HTML／XML与失败 | `rss-content.js`／`rss-feed.js`；endpoint编排 | `render(Content)` → 转换 → 序列化 | RSS owner-level 与产物检查 |

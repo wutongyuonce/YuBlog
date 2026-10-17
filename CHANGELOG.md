@@ -10,6 +10,10 @@
 
 - 全站可选托管 Oneko 像素猫（`FEATURES.oneko`，默认 classic）：跟随光标、睡觉、气泡、记住位置、季节帽子，减少动态时隐藏；页脚可隐藏小猫，顶栏为避让区。不自托管、不开声音与激光。说明见 `docs/Oneko 像素猫.md`。
 
+### 修复
+
+- Oneko 像素猫在 Astro ClientRouter 站内跳转后不再消失：换页若移除 body 上的猫节点，则在 `astro:page-load` 上用 `createOneko` 重建；页脚隐藏开关仍由引擎同步。
+
 ## 1.3.0 — 2026-10-15
 
 ### 新增
