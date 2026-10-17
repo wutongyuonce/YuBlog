@@ -222,18 +222,36 @@ if (hasCustomCursor) style['--external-link-cursor'] = cursorType
 
         async function ensureOneko() {
           if (document.querySelector(CAT_SEL)) return
-          const prev = window.__yublogOneko
-          if (prev && typeof prev.destroy === 'function') {
-            try { prev.destroy() } catch {}
-            window.__yublogOneko = undefined
+          if (!window.__yublogOnekoEnsureInflight) {
+            window.__yublogOnekoEnsureInflight = (async () => {
+              try {
+                if (document.querySelector(CAT_SEL)) return
+                const prev = window.__yublogOneko
+                if (prev && typeof prev.destroy === 'function') {
+                  try {
+                    prev.destroy()
+                  } catch {}
+                  window.__yublogOneko = undefined
+                }
+                const { createOneko } =
+                  await import('https://oneko.dhrv.pw/oneko.js')
+                if (document.querySelector(CAT_SEL)) return
+                window.__yublogOneko = createOneko(opts)
+              } finally {
+                window.__yublogOnekoEnsureInflight = undefined
+              }
+            })()
           }
-          const { createOneko } = await import('https://oneko.dhrv.pw/oneko.js')
-          if (document.querySelector(CAT_SEL)) return // race
-          window.__yublogOneko = createOneko(opts)
+          await window.__yublogOnekoEnsureInflight
         }
 
         void ensureOneko()
-        document.addEventListener('astro:page-load', () => { void ensureOneko() })
+        if (!window.__yublogOnekoEnsureBound) {
+          window.__yublogOnekoEnsureBound = true
+          document.addEventListener('astro:page-load', () => {
+            void ensureOneko()
+          })
+        }
       })()
     </script>}
   </body>
