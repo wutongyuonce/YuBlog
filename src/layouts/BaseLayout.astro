@@ -207,21 +207,53 @@ if (hasCustomCursor) style['--external-link-cursor'] = cursorType
     </script>
     {onekoEnabled && <script is:inline define:vars={{ onekoSkin }}>
       ;(function () {
-        if (window.__yublogOnekoBooted) return
-        window.__yublogOnekoBooted = true
-        const s = document.createElement('script')
-        s.type = 'module'
-        s.src = 'https://oneko.dhrv.pw/oneko.js'
-        s.dataset.skin = onekoSkin
-        s.dataset.meow = 'false'
-        s.dataset.laserPointer = 'false'
-        s.dataset.seasonal = ''
-        s.dataset.persistPosition = ''
-        s.dataset.bubbleEnabled = ''
-        s.dataset.followCursor = ''
-        s.dataset.sleepEnabled = ''
-        s.dataset.reducedMotion = 'hide'
-        document.body.appendChild(s)
+        const opts = {
+          skin: onekoSkin,
+          meow: false,
+          laserPointer: false,
+          seasonal: true,
+          persistPosition: true,
+          bubbleEnabled: true,
+          followCursor: true,
+          sleepEnabled: true,
+          reducedMotion: 'hide',
+        }
+        const CAT_SEL = '[data-oneko-cat], #oneko-react'
+
+        async function ensureOneko() {
+          if (document.querySelector(CAT_SEL)) return
+          if (!window.__yublogOnekoEnsureInflight) {
+            window.__yublogOnekoEnsureInflight = (async () => {
+              try {
+                if (document.querySelector(CAT_SEL)) return
+                const prev = window.__yublogOneko
+                if (prev && typeof prev.destroy === 'function') {
+                  try {
+                    prev.destroy()
+                  } catch {
+                    // 旧实例可能已随 DOM 移除；忽略 destroy 错误后继续重建。
+                  }
+                  window.__yublogOneko = undefined
+                }
+                const { createOneko } =
+                  await import('https://oneko.dhrv.pw/oneko.js')
+                if (document.querySelector(CAT_SEL)) return
+                window.__yublogOneko = createOneko(opts)
+              } finally {
+                window.__yublogOnekoEnsureInflight = undefined
+              }
+            })()
+          }
+          await window.__yublogOnekoEnsureInflight
+        }
+
+        void ensureOneko()
+        if (!window.__yublogOnekoEnsureBound) {
+          window.__yublogOnekoEnsureBound = true
+          document.addEventListener('astro:page-load', () => {
+            void ensureOneko()
+          })
+        }
       })()
     </script>}
   </body>

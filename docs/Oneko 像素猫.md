@@ -13,7 +13,7 @@
 - **启用方式**：`FEATURES.oneko: FeatureConfig<OnekoConfig>`，默认 `[true, { skin: 'classic' }]`。
 - **ON**：跟随光标、睡觉、气泡、记住位置、季节帽子、`reducedMotion="hide"`、访客隐藏开关、导航避让区。
 - **OFF**：喵叫、激光笔、抓取、零食、跟随焦点、悬停栖息、打字时打盹。
-- **挂载**：`BaseLayout` 在首次进入站点时注入一次托管 `type="module"` 脚本；猫挂在 `document.body`，不占版心。
+- **挂载**：`BaseLayout` 用 `createOneko` 挂载托管引擎；猫挂在 `document.body`，不占版心。站内 View Transitions 换页后若猫被移除，则在 `astro:page-load` 上重建。
 - **隐藏**：页脚 `data-oneko-toggle` 按钮，文案「隐藏小猫」；引擎负责跨标签页记忆与 `aria-pressed` 同步。
 
 ### 非目标
@@ -29,7 +29,7 @@
 | :--- | :--- | :--- |
 | 开／关与皮肤 | `src/config.ts` `FEATURES.oneko` | 在布局里写死开关 |
 | 类型与配置形状 | `src/types.ts` `OnekoConfig` / `Features.oneko` | 另造 `boolean` 顶层开关 |
-| 脚本挂载与 VT 防重 | `src/layouts/BaseLayout.astro` | 在各页面再插一份 script |
+| 脚本挂载与 VT 重建 | `src/layouts/BaseLayout.astro` | 在各页面再插一份 script |
 | 访客隐藏按钮 | `src/components/base/Footer.astro` 的 `data-oneko-toggle` | 自写 localStorage 逻辑 |
 | 导航避让 | `NavBar.astro` `data-oneko-zone="avoid"` | 用 JS 每帧量矩形 |
 | 动画引擎与皮肤 | CDN `https://oneko.dhrv.pw/oneko.js` | 拷贝进 `public/` |
@@ -54,26 +54,26 @@ oneko: [false, { skin: 'classic' }],
 
 | 能力 | 设置 |
 | --- | --- |
-| 皮肤 | `data-skin` ← config |
-| 跟随光标 | `data-follow-cursor` |
-| 睡觉 | `data-sleep-enabled` |
-| 气泡 | `data-bubble-enabled` |
-| 记住位置 | `data-persist-position` |
-| 季节帽子 | `data-seasonal` |
-| 减少动态 | `data-reduced-motion="hide"` |
-| 喵叫／激光 | `data-meow="false"`、`data-laser-pointer="false"` |
-| 隐藏开关 | 页脚按钮 `data-oneko-toggle` |
+| 皮肤 | `createOneko({ skin })` ← config |
+| 跟随光标 | `followCursor: true` |
+| 睡觉 | `sleepEnabled: true` |
+| 气泡 | `bubbleEnabled: true` |
+| 记住位置 | `persistPosition: true` |
+| 季节帽子 | `seasonal: true` |
+| 减少动态 | `reducedMotion: 'hide'` |
+| 喵叫／激光 | `meow: false`、`laserPointer: false` |
+| 隐藏开关 | 页脚按钮 `data-oneko-toggle`（引擎同步，重建后仍有效） |
 | 避让 | 顶栏 `data-oneko-zone="avoid"`（开关关闭时属性仍在，无害） |
 
 ## View Transitions
 
-站点使用 Astro `ClientRouter`。布局里的脚本在站内跳转时可能再次出现在新文档里。做法：
+站点使用 Astro `ClientRouter`。`ClientRouter` 换页时会替换页面 DOM，挂在 `document.body`、且未标 `transition:persist` 的猫节点会被一并移除。做法：
 
 1. `BaseLayout` 用 `is:inline` + `define:vars` 输出一小段引导脚本。
-2. 引导脚本用 `window.__yublogOnekoBooted` 只在首次真正注入 CDN module。
-3. 猫实例挂在 `document.body`，换页不销毁、不重建。
+2. 引导脚本通过 CDN 模块的 `createOneko` 创建实例，并记在 `window.__yublogOneko`。
+3. 每次 `astro:page-load` 检查 `[data-oneko-cat], #oneko-react`；若猫已不在 DOM，先 `destroy` 旧句柄（若有），再 `createOneko` 重建。页脚 `data-oneko-toggle` 由引擎同步，重建后仍可用。
 
-不要对 CDN script 加 `data-astro-rerun`，也不要在 `astro:page-load` 里再次 `createOneko`。
+不要对 CDN script 加 `data-astro-rerun`，也不要用「只注入一次」的全局 flag 阻止重建——换页后猫节点已不在，flag 仍为真会导致猫消失直到整页刷新。
 
 ## 改动文件
 
@@ -81,7 +81,7 @@ oneko: [false, { skin: 'classic' }],
 | --- | --- |
 | `src/types.ts` | `OnekoConfig`、`Features.oneko` |
 | `src/config.ts` | 默认开启 classic |
-| `src/layouts/BaseLayout.astro` | 条件挂载 + VT 防重 |
+| `src/layouts/BaseLayout.astro` | 条件挂载 + VT 缺失时重建 |
 | `src/components/base/Footer.astro` | 隐藏按钮 |
 | `src/components/nav/NavBar.astro` | 导航避让 |
 | `docs/Oneko 像素猫.md` | 本说明 |
