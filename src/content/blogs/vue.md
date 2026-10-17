@@ -1,7 +1,7 @@
 ---
 title: Vue
 description: 从单文件组件与 Vite 开发入门，理解 Vue 的编译、响应式状态、组件挂载与更新，以及 Router、Pinia 和 TypeScript 的协作。
-pubDate: 2026-10-17
+pubDate: 2026-6-28
 category: 技术
 tags: [vue]
 titleImage: ./_title-images/vue.png
@@ -9,8 +9,8 @@ titleImageAlt: 浏览器中的 Vue.js 示例应用与 Vue 标志
 draft: false
 ---
 
-[Vue 官网](https://vuejs.org)
-
+> [Vue 官网](https://vuejs.org)
+>
 > 官网教程：https://cn.vuejs.org/guide/quick-start
 
 ## 1、先会写组件，再理解更新

@@ -1,13 +1,15 @@
 ---
 title: 前端从底层到上层
 description: 从 HTML、CSS 和 JavaScript 出发，串起浏览器、Node.js、React/Vue、前端工具链、构建与部署的完整主线。
-pubDate: 2026-10-17
+pubDate: 2026-6-27
 category: 技术
 tags: [前端]
 titleImage: ./_title-images/frontend-roadmap-2026.png
-titleImageAlt: roadmap.sh 2026 年前端技术路线图，涵盖基础语言、框架、构建工具、测试与部署
+titleImageAlt: 2026 年前端技术路线图
 draft: false
 ---
+
+> [现代前端开发学习路线](https://front-talk.com/roadmap)
 
 前端的主线是：**用 HTML、CSS 和 JavaScript 描述页面，通过工具链处理源码，由浏览器和 UI 框架完成显示与交互。**
 
