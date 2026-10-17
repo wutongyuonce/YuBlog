@@ -183,6 +183,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 | 图片与媒体 | 封面／正文图片由 Astro 生成变体，分享图 1200px；`public/` 放站点资源和独立 HTML 演示，不手写内容图片构建 URL；本地视频／音频由 `astro-media-sync` 镜像到 `public/_media/`，正文用相对路径引用；HTML 演示目录和 iframe 用法见[正文 HTML 与媒体 SPEC](./正文%20HTML%20与媒体%20SPEC.md#本地-html-交互演示) |
 | 页脚 | 宋体显示版权、Astro 和“萌ICP备20269668号”。作者名指向站点首页，Astro 指向 `https://astro.build`，备案指向 `https://icp.gov.moe/?keyword=20269668` 并在新标签页打开，带 `noopener noreferrer`。链接悬停或键盘焦点变为强调色 |
 | 访问统计 | `Head.astro` 加载一份 Umami Cloud 脚本；页面不显示计数、徽章或页脚文案 |
+| Oneko 像素猫 | 由 `FEATURES.oneko` 控制；默认托管 classic 皮肤，跟随光标／睡觉／气泡／记位置／季节帽，减少动态时隐藏；页脚提供「隐藏小猫」；顶栏为避让区。不自托管、不开声音与激光。详见 [Oneko 像素猫](./Oneko%20像素猫.md) |
 | 主题与焦点 | 颜色源于 `--c-bg`、`--c-text`、`--accent`；点缀规则与独立偏好见 S11，变量由 `accent-palette.js` 统一生成；站点声明的浏览器原生颜色方案与当前博客主题一致，不对自定义颜色自动暗化；首访跟随系统，有效保存值在刷新后恢复；系统模式发生变化时同步切换。非法保存值回退系统，存储不可用不妨碍当次显示和切换，但不保证跨导航／刷新保存。切换按钮、颜色方案和 canvas 背景同步；减少动效时保留静态背景，仍响应缩放和主题变化，不启动动画循环。提供深浅主题及可见键盘反馈，不依靠颜色表达类别 |
 
 装饰背景在主体内部的独立层级中，位于主体底色之上、页面内容之下；即使外部样式把主体底色改为不透明，也不因此遮挡背景。背景仍相对视口固定，不拦截内容交互。外部暗化工具可以覆盖站点声明的配色，不保证其覆盖后的颜色仍与主题按钮一致。
@@ -219,6 +220,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 | 归档分类预设、持久分配、容量与失败 | `utils/blog-category-colors.js`；数据在 `data/blog-category-colors.json` | `ArchiveView` 传入实际展示的分类集合，CSS 只选择主题 | `blog-category-colors.test.mjs`、归档产物检查 |
 | 社交身份 | `config.ts` `AUTHOR_LINKS` | 首页读取配置，关于正文独立维护联系方式 | 构建产物检查核对身份 |
 | 访问统计 | `Head.astro` 的 Umami 脚本 | 全站经 `BaseLayout` 加载；不在页脚或正文渲染 | 构建产物头部含该脚本 |
+| Oneko 开关与皮肤 | `config.ts` `FEATURES.oneko` | `BaseLayout` 首次注入托管脚本；`Footer` 提供 `data-oneko-toggle`；`NavBar` 标避让 | 人工：开关配置后猫出现／消失；换页不出现第二只 |
 | 评论仓库与分类 | `config.ts` 的 `GISCUS` | `GiscusComments` 读取公开节点 ID，无服务端密钥 | 构建接线检查 |
 | 评论关联键、加载、主题与组件资源 | `GiscusComments.astro`；OAuth／评论数据由官方 `giscus` 组件与 Giscus 服务管理 | `RenderPost`、`FriendsView`、`InterestsView` 只声明挂载与文案；主题复用 `observeTheme` | 构建范围检查与 `verify-giscus.mjs` |
 | RSS HTML／XML与失败 | `rss-content.js`／`rss-feed.js`；endpoint编排 | `render(Content)` → 转换 → 序列化 | RSS owner-level 与产物检查 |

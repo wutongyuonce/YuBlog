@@ -1,7 +1,10 @@
 ---
+import { FEATURES } from '~/config'
 import { withBasePath } from '~/utils/path'
 
 const currentYear = new Date().getFullYear()
+const oneko = FEATURES.oneko
+const onekoEnabled = Array.isArray(oneko) && oneko[0]
 ---
 
 <footer class="slide-enter animate-delay-1600! px-7 mt-auto mb-8">
@@ -29,6 +32,14 @@ const currentYear = new Date().getFullYear()
       >
         萌ICP备20269668号
       </a>
+      {onekoEnabled && (
+        <>
+          <span class="footer-mark lt-sm:hidden" aria-hidden="true"></span>
+          <button type="button" class="footer-oneko-toggle" data-oneko-toggle>
+            隐藏小猫
+          </button>
+        </>
+      )}
     </div>
   </div>
 </footer>
@@ -53,6 +64,31 @@ const currentYear = new Date().getFullYear()
   .footer-link:focus-visible {
     border-bottom-color: var(--accent);
     color: var(--accent);
+  }
+
+  .footer-oneko-toggle {
+    appearance: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--fg) 35%, transparent);
+    background: transparent;
+    color: color-mix(in srgb, var(--fg) 72%, transparent);
+    font: inherit;
+    cursor: pointer;
+    transition:
+      border-color 0.3s ease-in-out,
+      color 0.3s ease-in-out;
+  }
+
+  .footer-oneko-toggle:hover,
+  .footer-oneko-toggle:focus-visible {
+    border-bottom-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .footer-oneko-toggle[aria-pressed='true'] {
+    color: color-mix(in srgb, var(--fg) 55%, transparent);
   }
 
   .footer-mark {

@@ -168,6 +168,7 @@ export const FEATURES: Features = {
       maxItemsPerPage: [true, 3],
     },
   ],
+  oneko: [true, { skin: 'classic' }],
 }
 
 /** Dropdown icons also feed UnoCSS's dynamic-class safelist. */
