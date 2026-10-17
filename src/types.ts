@@ -537,6 +537,18 @@ interface SearchConfig {
   maxItemsPerPage: FeatureConfig<number>
 }
 
+export interface OnekoConfig {
+  /**
+   * Hosted oneko skin name. Defaults to `classic` when omitted.
+   *
+   * Allowed values (oneko.dhrv.pw): classic, black, gray, calico, tora,
+   * catppuccin, ghost, silver, spirit, valentine, maia, vaporwave, ginger,
+   * sage, siamese, strawberry-milk, blue-frost, lavender, tuxedo, peach,
+   * honey, mocha, mint, midnight-blue.
+   */
+  skin?: string
+}
+
 export interface Features {
   /**
    * Whether to enable slide-in animation on each page.
@@ -558,4 +570,12 @@ export interface Features {
    * For Pagefind’s built-in configuration, directly modify `src/components/widgets/SearchSwitch.astro`.
    */
   search: FeatureConfig<SearchConfig>
+
+  /**
+   * Whether to enable the hosted Oneko pixel cat (oneko.dhrv.pw).
+   *
+   * Mounts once from BaseLayout; Footer exposes a visitor hide toggle.
+   * See `docs/Oneko 像素猫.md`.
+   */
+  oneko: FeatureConfig<OnekoConfig>
 }

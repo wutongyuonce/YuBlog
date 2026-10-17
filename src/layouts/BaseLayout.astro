@@ -64,10 +64,14 @@ if (!hideBackLink) footerClasses.push('prose')
 
 let style: Record<string, string> = {}
 
-const { slideEnterAnim } = FEATURES
+const { slideEnterAnim, oneko } = FEATURES
 const enableSlideEnterAnim = Array.isArray(slideEnterAnim) && slideEnterAnim[0]
 if (enableSlideEnterAnim)
   style['--enter-step'] = `${slideEnterAnim[1].enterStep}ms`
+
+const onekoConfig = Array.isArray(oneko) && oneko[0] ? oneko[1] : undefined
+const onekoEnabled = Boolean(onekoConfig)
+const onekoSkin = onekoConfig?.skin ?? 'classic'
 
 const {
   externalLink: { newTab, cursorType },
@@ -201,5 +205,24 @@ if (hasCustomCursor) style['--external-link-cursor'] = cursorType
         setProgressState(false)
       })
     </script>
+    {onekoEnabled && <script is:inline define:vars={{ onekoSkin }}>
+      ;(function () {
+        if (window.__yublogOnekoBooted) return
+        window.__yublogOnekoBooted = true
+        const s = document.createElement('script')
+        s.type = 'module'
+        s.src = 'https://oneko.dhrv.pw/oneko.js'
+        s.dataset.skin = onekoSkin
+        s.dataset.meow = 'false'
+        s.dataset.laserPointer = 'false'
+        s.dataset.seasonal = ''
+        s.dataset.persistPosition = ''
+        s.dataset.bubbleEnabled = ''
+        s.dataset.followCursor = ''
+        s.dataset.sleepEnabled = ''
+        s.dataset.reducedMotion = 'hide'
+        document.body.appendChild(s)
+      })()
+    </script>}
   </body>
 </html>
