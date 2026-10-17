@@ -230,7 +230,9 @@ if (hasCustomCursor) style['--external-link-cursor'] = cursorType
                 if (prev && typeof prev.destroy === 'function') {
                   try {
                     prev.destroy()
-                  } catch {}
+                  } catch {
+                    // 旧实例可能已随 DOM 移除；忽略 destroy 错误后继续重建。
+                  }
                   window.__yublogOneko = undefined
                 }
                 const { createOneko } =
