@@ -1,767 +1,759 @@
 ---
-title: "从多页到混合：Web 应用架构演进的完整图谱(个人站点部署+国内访问)"
-description: "From Multi-page to Hybrid: A Complete Map of Web Application Architecture Evolution"
-pubDate: 2026-03-16
+title: 前端从底层到上层
+description: 从 HTML、CSS 和 JavaScript 出发，串起浏览器、Node.js、React/Vue、前端工具链、构建与部署的完整主线。
+pubDate: 2026-10-17
 category: 技术
-lastModDate: ''
-tags: [Web 架构, SSR, SSG]
-toc: true
-search: true
+tags: [前端]
+titleImage: ./_title-images/frontend-roadmap-2026.png
+titleImageAlt: roadmap.sh 2026 年前端技术路线图，涵盖基础语言、框架、构建工具、测试与部署
+draft: false
 ---
 
-今天的前端世界充满了各种术语：MPA、SPA、CSR、SSR、SSG、Hydration、同构、岛屿架构……它们并非彼此独立的概念，而是 Web 应用在“**如何渲染页面**”和“**如何进行页面导航**”这两个核心问题上，不断权衡、融合的结果。
+前端的主线是：**用 HTML、CSS 和 JavaScript 描述页面，通过工具链处理源码，由浏览器和 UI 框架完成显示与交互。**
 
-要真正理解这套图谱，我们需要先抓住两条主线：
+理解一个工具时，先分清它属于哪一层：语言、运行时、开发工具、UI 库，还是应用框架。本文保留常用写法和核心原理。
 
-1. **渲染位置**：页面的 HTML 内容**在哪里生成**？
-   - **服务端**：Server-Side Rendering (SSR)
-   - **客户端**：Client-Side Rendering (CSR)
-   - **构建时**：Static Site Generation (SSG)
+## 一、页面基础：HTML、CSS、JavaScript
 
-2. **导航方式**：页面切换时**浏览器怎么做**？
-   - **服务端路由**：整页刷新，重新请求新 HTML
-   - **前端路由**：单页无刷新，局部替换内容
+### 1. HTML：结构与语义
 
-几乎所有架构模式，都是这两条线不同组合的结果。
+HTML 描述内容结构。浏览器解析 HTML 后建立 DOM 树，JavaScript 通过 DOM API 读取和修改页面。
 
-## 目录
+```html
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>示例页面</title>
+    <link rel="stylesheet" href="./style.css">
+    <script type="module" src="./main.js"></script>
+  </head>
+  <body>
+    <header><nav><a href="/">首页</a></nav></header>
+    <main>
+      <h1>用户登录</h1>
+      <form action="/login" method="post">
+        <label for="email">邮箱</label>
+        <input id="email" name="email" type="email" autocomplete="email" required>
+        <button type="submit">登录</button>
+      </form>
+    </main>
+  </body>
+</html>
+```
 
-1. [初代架构：传统 MPA（多页应用）](#1-初代架构传统-mpa多页应用)
-2. [前端革命：SPA + CSR（单页应用与客户端渲染）](#2-前端革命spa--csr单页应用与客户端渲染)
-3. [性能与 SEO 的回归：SSR（服务端渲染）重生](#3-性能与-seo-的回归ssr服务端渲染重生)
-4. [混合时代：Hybrid 模式与现代 SPA](#4-混合时代hybrid-模式与现代-spa)
-5. [构建时渲染：SSG（静态站点生成）与 Jamstack](#5-构建时渲染ssg静态站点生成与-jamstack)
-6. [MPA 的现代化：岛屿架构与新 MPA 运动](#6-mpa-的现代化岛屿架构与新-mpa-运动)
-7. [基础设施：Node.js、Vite、框架与 UI 库的角色](#7-基础设施nodejsvite框架与-ui-库的角色)
-8. [SSG 与静态托管平台](#ssg-与静态托管平台)
-9. [Vercel快速部署网站+国内访问](#vercel快速部署网站国内访问)
+最需要掌握的规则：
 
-## 1 初代架构：传统 MPA（多页应用）
+- 用 `header`、`nav`、`main`、`article` 等表达结构；无合适语义时再用 `div`、`span`。
+- 标题按 `h1`–`h6` 的层级组织；按钮用 `button`，导航用 `a`，不要依赖 `div` 模拟交互。
+- 表单用 `label` 说明字段，`name` 决定提交字段名；普通按钮写 `type="button"`，避免意外提交。
+- 图片提供合适的 `alt`；交互元素应支持键盘操作和清晰的焦点样式。
+- `./` 相对当前 URL 目录，`/` 相对站点根路径。部署到子路径时，要同步处理资源路径。
+- `type="module"` 加载 ESM 脚本，默认延后到文档解析完成后执行；不要直接双击 HTML 调试模块项目，应通过本地 HTTP 服务访问。
 
-在 Web 早期，几乎所有网站都是 **MPA（Multi-Page Application，多页应用）**。它的本质是：
+`required`、`type="email"` 等浏览器校验改善体验；身份、权限、金额和数据合法性仍必须由后端检查。
 
-- **每个 URL 对应一个独立的 HTML 页面文件**（或由后端动态生成的页面）。
-- 用户每次点击链接、跳转到新页面，浏览器都会**向服务器发起一次完整的 HTTP 请求**，获取新的 HTML、CSS、JavaScript 资源，然后**整页刷新**。
+### 2. CSS：样式与布局
 
-### 工作原理
+CSS 的核心是：**选择元素 → 计算最终样式 → 确定尺寸和位置 → 绘制页面。** 先学原生 CSS，再使用 Tailwind 或组件库。
 
-1. 用户访问一个 URL（例如 `/products`）。
-2. 浏览器向服务器发送 `GET /products` 请求。
-3. 服务器处理请求，从数据库获取数据，通过模板引擎（如 JSP、Thymeleaf、PHP、ASP.NET）**渲染出完整的 HTML 页面**。
-4. 服务器返回该 HTML 给浏览器。
-5. 浏览器重新渲染整个页面。
+#### 层叠、继承与盒模型
 
-### 核心特点
+```css
+*, *::before, *::after {
+  box-sizing: border-box;
+}
 
-- **路由为服务端路由**：URL 变化一定触发 HTTP 请求，服务器根据路径返回对应页面。
-- **后端主导渲染**：页面内容在服务端组装完成，前端仅负责展示和少量交互。
-- **技术栈**：Spring MVC、Ruby on Rails、ASP.NET、Laravel + 模板引擎（Thymeleaf、Freemarker、Blade 等）。
+:root {
+  --brand: #2563eb;
+}
 
-### 例子：Spring MVC + Thymeleaf
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  color: #222;
+}
 
-通过 **Spring MVC 控制器**将数据传递给模板：
+.button {
+  padding: 0.5rem 1rem;
+  color: white;
+  background: var(--brand);
+}
 
-```java
-@Controller
-public class ProductController {
-    @GetMapping("/product/{id}")
-    public String getProduct(@PathVariable int id, Model model) {
-        Product product = productService.getProduct(id);
-        model.addAttribute("product", product);
-        return "product"; // 对应 product.html 模板，不需要加 .html 后缀
-    }
+.button:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
 }
 ```
 
-```html
-<!-- product.html (Thymeleaf) -->
-<div th:text="${product.name}"></div>
-<p th:text="${product.description}"></p>
-```
+- 选择器日常以类名为主；`:hover`、`:focus-visible` 是状态伪类，`::before`、`::after` 是伪元素。
+- 同一属性冲突时，浏览器综合来源、`!important`、层叠层（`@layer`）、选择器优先级和出现顺序决定结果。**在同一来源、重要性和层级下，才继续比较选择器优先级等因素。**
+- 字体、文字颜色通常可继承；宽高、边距通常不继承。先在 DevTools 看最终生效的规则，再修改样式。
+- 盒模型是 `content → padding → border → margin`；`border-box` 让声明的宽高包含内边距和边框，外边距仍在外部。
+- CSS 变量可以继承并在运行时覆盖，适合主题色、间距和主题切换。
 
-### 缺点
+#### 布局优先用 Flex 和 Grid
 
-- **页面跳转慢**：每次跳转都要重新请求并重建整个页面，出现白屏或闪烁。
-- **交互性差**：任何数据更新或交互往往需要整页刷新，无法实现如实时搜索、动态表单这类现代体验。
-- **前后端耦合**：前端逻辑与后端模板强绑定，难以独立开发和部署。
+| 需求 | 常用方式 | 核心属性 |
+| --- | --- | --- |
+| 导航、按钮组、一行或一列的对齐 | Flex | `justify-content`、`align-items`、`gap`、`flex` |
+| 页面分栏、卡片网格、同时控制行列 | Grid | `grid-template-columns`、`gap`、`grid-column` |
+| 徽标覆盖、弹出层等局部定位 | `position` | `relative`、`absolute`、`fixed`、`sticky` |
 
-**但是，MPA 的模式天然对 SEO 友好**，因为每个页面返回的就是完整的 HTML，搜索引擎爬虫可以直接读取所有内容。
+```css
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
 
-## 2 前端革命：SPA + CSR（单页应用与客户端渲染）
+.layout {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  gap: 1.5rem;
+}
 
-随着 JavaScript 引擎性能提升和 AJAX 技术成熟，一种新架构崛起：**SPA（Single Page Application，单页应用）+ CSR（Client-Side Rendering，客户端渲染）**。
-
-### SPA 的定义核心
-
-**SPA 的核心是“单页 + 前端路由”**，它不关心首屏是怎么渲染的，而是关心**整个应用只有一个 HTML 壳子，后续所有导航都不需要整页刷新**。
-
-- **单页**：整个应用只有一个 `index.html` 入口文件。
-- **前端路由**：URL 变化（如从 `/home` 到 `/about`）不会触发浏览器向服务器请求新 HTML，而是由 **JavaScript 前端路由库** 拦截链接点击，利用浏览器 History API（`pushState`、`replaceState`）无刷新改变地址栏，并动态渲染对应组件。
-
-### CSR 的渲染过程
-
-1. **初始加载**：
-   - 浏览器请求根路径（如 `/`）
-   - 服务器返回一个极简的 `index.html`（通常只有一个 `<div id="root"></div>`）
-   - 浏览器下载所有 JavaScript 资源（应用代码、框架、依赖库）
-   - 前端框架初始化，根据当前 URL 渲染对应的视图
-2. **路由切换**：
-   - 用户点击链接时，前端路由库（如 React Router、Vue Router）**拦截**默认行为
-   - 通过 History API 更新 URL（`history.pushState()`）
-   - 根据新 URL 加载对应的组件
-   - 仅更新 DOM 中需要变化的部分
-3. **数据获取**：
-   - 组件挂载后，通过 Fetch API 或 Axios 请求 JSON 数据
-   - 将数据绑定到组件状态
-   - 前端模板引擎（JSX、Vue 模板）将数据渲染为 DOM
-   - 通过虚拟 DOM diff 算法最小化 DOM 操作
-
-### 例子：前后端分离（Spring Boot + React/Vue）
-
-SPA 架构催生了**前后端完全分离**的开发模式
-
-```
-┌─────────────┐           ┌─────────────┐
-│   前端      │           │   后端      │
-│  (Client)   │           │  (Server)   │
-├─────────────┤           ├─────────────┤
-│ React/Vue   │           │ Spring Boot │
-│ Angular     │           │ Node.js     │
-│ Svelte      │           │ Django      │
-├─────────────┤           ├─────────────┤
-│ 路由管理    │           │ 业务逻辑    │
-│ 状态管理    │           │ 数据访问    │
-│ UI 组件     │           │ 安全控制    │
-├─────────────┤           ├─────────────┤
-│ REST/GraphQL│──────────▶│ REST/GraphQL│
-│ API 客户端  │           │ API 服务端  │
-└─────────────┘           └─────────────┘
-```
-
-前端：页面的渲染者 (Vue.js)
-
-```javascript
-export default {
-  // data：定义当前页面需要用到的“变量”。这里定义了一个空数组 products，准备用来存放等会儿拿到的商品数据
-  data() {
-    return { products: [] }; 
-  },
-  
-  // created：Vue 的生命周期钩子。意思是“当这个页面组件被创建出来的时候，立刻执行下面的代码”
-  async created() {
-    // 1. 发起网络请求！去敲后端的门（fetch 是浏览器自带的发请求的方法）
-    const res = await fetch('/api/products'); 
-    
-    // 2. 把后端返回的原始数据解析成 JavaScript 能读懂的 JSON 对象，并赋值给上面定义的 products 变量
-    this.products = await res.json(); 
+@media (max-width: 48rem) {
+  .layout {
+    grid-template-columns: 1fr;
   }
 }
 ```
 
-页面一加载，它就跑到 `/api/products` 这个地址，把后端准备好的 JSON 数据拉回来，存进自己的 `products` 变量里。随后，你在 HTML 模板中写的 `v-for="product in products"` 就会自动根据这些数据生成网页上的商品卡片。
+Flex 处理一维排列，Grid 处理二维布局，两者可以嵌套。Flex 主轴默认横向，`justify-content` 控制主轴分布，`align-items` 控制交叉轴对齐。
 
-后端：数据的提供者 (Spring Boot)
+常见边界只需要记住：
 
-```java
-// 告诉 Spring Boot：这是一个处理 HTTP 请求的控制器，并且返回的数据直接作为响应体（而不是跳转页面）
-@RestController 
-// 设定基础访问路径：所有这个类里的接口，前面都要加上 /api/products
-@RequestMapping("/api/products") 
-public class ProductApiController {
-    // 注入业务逻辑层（用来真正从数据库拿数据的）
-    @Autowired
-    private ProductService productService; 
+- `display: none` 不占布局空间；行内元素通常不能像块元素一样直接设置宽高。
+- `absolute` 脱离正常文档流，常用父元素的 `position: relative` 提供定位参照；普通页面布局不应大量依赖绝对定位。
+- Flex/Grid 子项被长内容撑开时，检查 `min-width: 0`、`minmax(0, 1fr)` 和换行规则。
+- 响应式优先依赖弹性尺寸，再按内容需要增加断点；`rem` 适合字号与间距，`px` 常用于边框，移动端满屏高度可考虑 `dvh`。
+- 图片通常设置 `max-width: 100%`；避免固定宽度导致小屏横向溢出。
 
-    // 监听前端的 GET 请求。完整路径是：/api/products
-    @GetMapping 
-    public List<Product> getProducts() {
-        // 调用业务层获取所有的产品数据，返回的是一个 Java 对象列表
-        return productService.getAllProducts();
-    }
+### 3. JavaScript：数据、函数、事件与异步
+
+JavaScript 负责保存状态、计算结果和响应操作。`document`、`fetch`、定时器等属于宿主环境提供的 API，不是语言本身。
+
+#### 数据与函数
+
+```js
+const users = [{ id: 1, name: '张三' }]
+const names = users.map(user => user.name)
+const nextUsers = [...users, { id: 2, name: '李四' }]
+```
+
+优先掌握 `const`/`let`、对象与数组、解构、展开语法、函数，以及 `map`、`filter`、`find` 等常用方法。
+
+- 原始值包括字符串、数字、布尔值、`null`、`undefined`、`bigint` 和 `symbol`；对象、数组、函数属于对象类型。
+- 对象赋值会共享同一个对象；`const` 禁止重新赋值，不会冻结对象。
+- `{ ...obj }`、`[...array]` 是浅拷贝，内部嵌套对象仍可能共享引用。
+- 通常使用 `===` 比较；用 `?.` 安全访问可空值，用 `??` 为 `null`/`undefined` 提供默认值。
+
+作用域决定变量能在哪里访问；闭包让函数在以后执行时仍能访问创建位置的外层变量：
+
+```js
+function createCounter() {
+  let count = 0
+  return () => ++count
+}
+
+const next = createCounter()
+next() // 1
+next() // 2
+```
+
+事件回调、定时器和组件函数中都可能用到闭包。它保留的是变量访问关系，不是创建时所有数据的固定快照。
+
+对象通过原型链共享属性和方法；`class` 建立在这套机制上。日常更需要注意 `this`：普通函数的 `this` 取决于调用方式，箭头函数使用外层的 `this`。
+
+#### DOM、事件与状态驱动
+
+```js
+const button = document.querySelector('#add')
+const output = document.querySelector('#count')
+let count = 0
+
+if (button && output) {
+  button.addEventListener('click', () => {
+    count += 1
+    output.textContent = String(count)
+  })
 }
 ```
 
-### 优势
+这是最直接的页面更新：监听事件，改变数据，再修改 DOM。React/Vue 将这套过程组织为：
 
-- **流畅的页面切换**：无整页刷新，体验接近原生 App。
-- **前后端分离**：前端独立开发、部署，后端专注提供 API。
-- **动态交互能力强**：非常适合复杂交互的应用。
-
-### 缺点
-
-- **首屏加载慢**：必须等 JS 下载、解析、执行完毕才能看到内容，白屏时间长。
-- **SEO 问题**：爬虫抓取时，`<div id="root"></div>` 里什么都没有，内容无法被索引（虽然后来 Google 能执行 JS，但效果和稳定性仍不如直接提供 HTML）。
-- **首次渲染耗时**：浏览器执行大量 JS 来构建页面，移动设备上尤其明显。
-
-**流程图：纯 CSR SPA**
-
-```mermaid
-graph TD
-    A[浏览器加载 SPA] --> B[请求初始 HTML/JS/CSS]
-    B --> C[前端框架初始化]
-    C --> D[调用 API 获取 JSON 数据]
-    D --> E[动态渲染页面]
-    E --> F[用户交互触发局部更新]
+```text
+状态 → 计算界面 → 用户操作 → 更新状态 → 更新界面
 ```
 
-这一时期的 SPA，**“SPA = CSR”** 的印象根深蒂固。因为几乎所有 SPA 框架都是这么做的。但很快，首屏性能和 SEO 的问题催生了服务端渲染的回归。
+#### Promise、async/await 与事件循环
 
-## 3 性能与 SEO 的回归：SSR（服务端渲染）重生
+```js
+console.log('开始')
+setTimeout(() => console.log('定时器'), 0)
+Promise.resolve().then(() => console.log('Promise'))
+console.log('结束')
+// 开始 → 结束 → Promise → 定时器
+```
 
-随着 SPA 的普及，其 SEO 和首屏性能问题日益凸显。SSR（Server-Side Rendering）并非新技术，但在现代前端框架中获得了新生：
+同一个 JavaScript 执行线程上，同步代码先完成。Promise 回调通过微任务执行；事件循环在处理下一个任务前会清空当前微任务队列，再按时机进行渲染等工作。`setTimeout(fn, 0)` 不代表立即执行，长时间同步计算仍会阻塞页面交互；重计算可考虑 Worker。
 
-- **SEO 需求**：内容型网站（新闻、电商、博客）必须对搜索引擎友好
-- **性能需求**：移动端用户占比增加，网络条件不稳定
-- **用户体验**：用户期望即时反馈，无法容忍长时间白屏
-- **技术成熟**：Node.js 使得 JavaScript 可以在服务端运行
+Promise 表示将来成功或失败的结果。`async` 函数总是返回 Promise，`await` 暂停当前异步函数，等待结果后继续，不会阻塞整个线程。
 
-### 新 SSR 的工作原理—同构
+- `then` 返回新的 Promise，后续步骤采用回调返回的值或 Promise 的结果；抛出的错误沿链传播。
+- 有先后依赖时逐个 `await`；独立请求可用 `Promise.all` 并发等待，其中一个失败会使整体拒绝，但不会自动取消其他请求。
+- 用 `try/catch/finally` 处理失败和加载状态，避免捕获错误后悄悄返回 `undefined`。
 
-现代 SSR 不是简单的 HTML 生成，而是一个**同构（Isomorphic）** 过程，代码既能在服务端运行，也能在客户端运行。
+#### 网络请求：先掌握 Fetch
 
-1. **服务端渲染阶段**：
-   - 浏览器请求 URL
-   - Node.js 服务器接收请求
-   - 前端框架（如 Next.js）在服务端执行组件渲染
-   - 组件中的数据获取逻辑（如 `getServerSideProps`）执行
-   - 生成包含实际数据的 HTML 字符串
-   - 返回完整的 HTML 响应，包含预注入的数据和 CSS
-2. **客户端水合（Hydration）阶段**：
-   - 浏览器解析 HTML，显示内容（首屏快速可见）
-   - 下载 JavaScript 资源
-   - 前端框架执行，接管已渲染的 DOM
-   - 将事件监听器绑定到 DOM 元素
-   - 将服务端注入的数据同步到客户端状态
-   - 应用变为完全交互式的 SPA
-3. **后续交互阶段**：
-   - 路由切换通过前端路由完成
-   - 数据获取通过客户端 API 调用
-   - 保持 SPA 的流畅体验
+```js
+async function loadUser(id, signal) {
+  const response = await fetch(`/api/users/${encodeURIComponent(id)}`, { signal })
+  if (!response.ok) {
+    throw new Error(`请求失败：HTTP ${response.status}`)
+  }
 
-**关键点**：服务端渲染的不是模板，而是**和客户端同一套组件代码**（这就是“同构”）。
+  const user = await response.json()
+  if (!user || typeof user.name !== 'string') {
+    throw new Error('用户数据格式不正确')
+  }
+  return user
+}
 
-**流式 SSR（Streaming SSR）**：服务器一旦渲染出 HTML 的**开头部分**（比如 `<html><head>...` 和页面骨架），就立刻发送给浏览器；接着继续渲染剩余内容，每完成一小块就再发送一小块。浏览器可以**边接收边显示**，用户能更早看到页面框架或占位符，感知性能大幅提升。
+const controller = new AbortController()
+try {
+  const user = await loadUser('123', controller.signal)
+  console.log(user.name)
+} catch (error) {
+  if (error instanceof Error && error.name === 'AbortError') {
+    console.log('请求已取消')
+  } else {
+    console.error(error)
+  }
+}
+// 页面离开或查询条件变化时，可调用 controller.abort() 取消不再需要的请求。
+```
 
-### 水合（Hydration）关键机制
+Fetch 是浏览器和现代 Node.js 提供的 API。网络失败通常会拒绝 Promise，`404`/`500` 则需要自己检查 `response.ok`。JSON 解析也可能失败，解析成功后仍需验证关键字段。
 
-水合是 SSR 的核心魔法，它让服务端渲染的静态 HTML "活" 起来。其工作原理：
+POST JSON 时设置 `method: 'POST'`、`Content-Type: application/json`，并用 `JSON.stringify` 生成请求体。需要统一拦截器、配置或已有请求层时再使用 Axios；不必从手写 XHR 开始。
 
-```javascript
-// 伪代码：水合过程
-function hydrate(rootElement, serverRenderedHTML) {
-    // 1. 解析服务端渲染的 HTML
-    const serverDOM = parseHTML(serverRenderedHTML);
-    
-    // 2. 在客户端渲染相同组件（不实际插入 DOM）
-    const clientVNode = renderComponent(App);
-    
-    // 3. 比对服务端 DOM 和客户端 VNode
-    const differences = diff(serverDOM, clientVNode);
-    
-    // 4. 仅修补差异，而非重新渲染整个页面
-    patch(rootElement, differences);
-    
-    // 5. 绑定事件监听器
-    attachEventListeners(rootElement);
-    
-    // 6. 标记水合完成
-    markAsHydrated(rootElement);
+浏览器跨域访问受 CORS 限制，需要服务端允许或通过同源后端代理处理。`mode: 'no-cors'` 不能让前端正常读取跨域响应。异步界面还需处理加载、空数据、失败，以及旧请求覆盖新结果的问题。
+
+## 二、运行环境：浏览器与 Node.js
+
+### 1. 引擎执行语言，宿主提供能力
+
+JavaScript 引擎负责解析和执行代码、优化热点代码、回收不可达对象。运行时再提供文件、网络或页面等能力。
+
+| 环境 | 主要能力 | 前端中的用途 |
+| --- | --- | --- |
+| 浏览器 | DOM、CSS、事件、网络、存储、渲染 | 运行页面与交互 |
+| Node.js | 文件系统、进程、网络服务，以及部分 Web API | 开发工具、构建、SSR、后端 |
+
+两者都能运行 JavaScript，也都能提供 `fetch` 等 API，但浏览器有 `window`/`document`，普通 Node.js 进程没有。浏览器也不能直接使用 `node:fs` 读取本地任意文件。
+
+Chromium 是浏览器项目，Blink 负责页面渲染，V8 执行 JavaScript 和 WebAssembly；Node.js 同样使用 V8。WebAssembly 是供引擎执行的可移植指令格式，适合图像处理等计算任务，通过宿主提供的接口与页面或系统交互。
+
+### 2. 浏览器如何显示页面
+
+```text
+HTML → DOM
+CSS → 样式规则
+        ↓
+样式计算 → 布局 → 绘制 → 合成 → 屏幕
+        ↑
+JavaScript 通过 DOM/CSS API 改变页面
+```
+
+- 布局决定元素大小和位置；绘制生成文字、背景、边框等绘制内容；合成把图层组合显示。
+- 修改内容或样式可能触发后续阶段，具体取决于修改了什么，并非每次都完整重走一遍。
+- DOM 更新和屏幕显示不是同一时刻；避免在循环里交替读取布局与修改样式。
+
+实际调试主要看 DevTools：Elements 查 DOM 和生效样式，Console 看错误，Network 查资源与接口，Performance 定位长任务和渲染开销。
+
+### 3. 分清开发时与访问时
+
+```text
+开发/构建：Node.js 运行 Vite、类型检查器、测试工具
+用户访问：浏览器执行交付的 HTML、CSS、JavaScript
+SSR 请求：服务端运行框架的服务端代码，再返回 HTML 和客户端资源
+```
+
+纯静态前端部署后，用户浏览器不需要安装 Node.js。SSR 则需要兼容的服务端运行环境；运行环境可以是 Node.js，也可以是框架支持的其他平台。
+
+## 三、源码组织：模块、TypeScript 与 JSX
+
+### 1. ESM：显式声明模块依赖
+
+```js
+// user.js
+export function getName(user) {
+  return user.name
+}
+
+// main.js
+import { getName } from './user.js'
+```
+
+新项目优先使用 ESM 的 `import`/`export`。它隔离文件作用域，声明依赖，也便于工具静态分析与拆包。
+
+- 浏览器支持 `<script type="module">`，导入通常使用 URL 或相对路径。
+- `import 'vue'` 这类包名需要构建工具解析，或通过 import map 映射为 URL。
+- Node.js 也支持 ESM；`package.json` 的 `"type": "module"` 将包内 `.js` 默认视为 ESM，`.mjs` 明确表示 ESM，`.cjs` 表示 CommonJS。
+- CommonJS 的 `require`/`module.exports` 仍常见于已有项目，不必为新项目主动混用两套写法。
+
+按需加载使用动态导入：
+
+```js
+const { openEditor } = await import('./editor.js')
+openEditor()
+```
+
+构建器通常据此拆出异步代码块，浏览器在这段逻辑执行时再加载它。
+
+### 2. TypeScript：开发时检查，不替代运行时验证
+
+TypeScript 为 JavaScript 增加类型系统。新项目主要掌握类型推导、对象类型、联合类型、泛型和函数参数/返回值，无需一开始研究复杂类型运算。
+
+```ts
+type User = {
+  id: string
+  name: string
+  avatarUrl?: string
+}
+
+function getDisplayName(user: User): string {
+  return user.name || '匿名用户'
 }
 ```
 
-1. 服务端渲染的 HTML 包含内容（如用户列表），也包含 `<script src="/app.js"></script>` 标签。
-2. 浏览器下载并执行 `app.js`（即你用 React/Vue 编写、并由框架打包出的客户端 JavaScript 代码）。
-3. 前端框架（React/Vue）在客户端启动，
-   1. **解析已有 DOM**：客户端的 React/Vue 代码执行后，会遍历服务端生成的 DOM 树。
-   2. **建立内部状态树**：框架会根据已有 DOM 结构，在内存中构建自己的虚拟 DOM（或响应式系统）。
-   3. **绑定事件监听器**：将组件中定义的 `onClick`、`onChange` 等事件处理函数绑定到对应的 DOM 节点上。
-   4. **关联组件状态**：将组件的 state、ref、context 等与 DOM 节点关联，使后续状态变化能驱动 UI 更新。
-   5. **接管后续渲染**：Hydration 完成后，页面的所有交互、路由切换、数据请求、局部更新完全由客户端框架接管。
+核心边界：
 
-**Hydration 是纯客户端行为，不发起网络请求**。它只是把框架的“灵魂”注入到服务端已经建好的“躯壳”中。
+- **类型检查**发现静态类型问题；**转换**移除类型并生成可执行代码，两者可以由不同工具完成。
+- 浏览器不直接执行 TS 类型语法，前端通常交给 Vite 等工具转换。
+- 现代 Node.js 可直接运行仅含可擦除类型语法的 `.ts`，但不做类型检查，也不读取 `tsconfig.json`；不等于完整支持所有 TS/TSX 特性。
+- `as User` 只影响类型系统，不会把错误的接口数据变成合法用户。外部数据仍需运行时校验，尚未确定的值优先用 `unknown` 表达。
+- 用 `import type` 明确导入类型；项目配置优先沿用脚手架的 `tsconfig`。
 
-**Hydration 与客户端 fetch 的区别**
+### 3. JSX、TSX 和 Vue 单文件组件
 
-| 维度     | Hydration                    | 客户端 fetch            |
-| -------- | ---------------------------- | ----------------------- |
-| 目的     | 激活交互（绑定事件）         | 获取新数据              |
-| 网络请求 | 无                           | 有                      |
-| 发生时机 | JS 加载后自动执行            | 用户操作或路由切换时    |
-| 例子     | 让按钮从“点不动”变成“能点击” | 点击“加载更多”去拿 JSON |
-
-因此，SSR 的页面流程是：**服务端发来带内容的 HTML → 浏览器展示首屏 → Hydration 激活交互 → 之后通过 API 交互获取新数据**。
-
-```mermaid
-graph TD
-    A[用户请求 /page] --> B[服务器生成初始 HTML]
-    B --> C[返回含数据和 script 标签的 HTML]
-    C --> D[浏览器渲染首屏]
-    D --> E[前端框架 Hydration 接管交互]
-    E --> F[后续操作通过 API 交互]
+```jsx
+const element = <button className="primary">保存</button>
 ```
 
-### 例子：Next.js 服务端渲染页面
+JSX 是嵌在 JavaScript 中的 UI 描述语法，TSX 是同时使用 TypeScript 和 JSX 的文件格式。它们需要转换，浏览器不会直接执行 JSX 标签。
 
-```javascript
-// getServerSideProps 是 Next.js 提供的服务端渲染函数
-// 它会在每次请求该页面时，在服务器端运行，用于获取页面所需的数据
-export async function getServerSideProps() {
-  // 这里的代码只运行在 Node.js 服务器上，不会暴露给浏览器
-  // 可以直接调用后端 API、读取数据库、访问文件系统等
-  
-  // 从外部 API 获取产品数据（这里的 fetch 是 Node.js 环境的，不是浏览器中的 fetch）
-  const res = await fetch('https://api.example.com/products');
-  // 将响应解析为 JSON 格式
-  const products = await res.json();
-  
-  // 返回一个包含 props 的对象，这些 props 将会传递给页面组件
-  // 页面组件可以通过参数接收这些数据
-  return { props: { products } };
-}
+React 通常使用 JSX/TSX，现代转换会生成对 `react/jsx-runtime` 的调用，因此不必为使用 JSX 单独 `import React`。Vue 通常使用 `.vue` 单文件组件，把 `<template>`、`<script setup>`、`<style>` 放在一起；模板由 Vue 编译器生成渲染函数。
 
-// 页面组件：接收 getServerSideProps 返回的 props 作为参数
-// 当用户访问该页面时，Next.js 会先用 getServerSideProps 获取数据，
-// 然后用这些数据在服务器上渲染出完整的 HTML，最后发送给浏览器
-export default function Home({ products }) {
+JSX 也能用于其他 UI 库，但转换必须匹配对应运行时。Vue 的常规项目直接使用模板即可；确需 JSX 时再接入 `@vitejs/plugin-vue-jsx`。不必为了开始写组件手动拼装 Babel 配置。
+
+## 四、React 与 Vue：组件和状态如何变成页面
+
+React 是 UI 库，Vue 是渐进式框架。两者都提供组件与状态更新机制；在 Web 项目中，最终仍通过浏览器 DOM API 改变页面。
+
+### 1. 先掌握组件的共同模型
+
+```text
+props 输入 + 组件状态 → 描述界面
+用户事件 → 更新状态 → 重新计算相关界面 → 更新 DOM
+```
+
+- **组件**封装一块 UI 及相关行为，组件名、文件名和真实 HTML 元素不是同一概念。
+- **props** 把数据从父级传给子级；子级通过回调或事件请求父级修改数据。
+- **状态**保存会影响界面的变化数据；能从已有数据算出的值，优先直接计算或使用计算属性。
+- 列表使用稳定的业务 `key` 标识项目，避免重排后组件状态对应错误。
+- 生命周期和副作用用于连接外部系统，例如订阅、定时器和 DOM 插件，并在适当时机清理。
+
+### 2. React：函数组件与 Hooks
+
+```tsx
+import { useState } from 'react'
+
+type CounterProps = { initial?: number }
+
+export default function Counter({ initial = 0 }: CounterProps) {
+  const [count, setCount] = useState(initial)
+
   return (
-    <div>
-      {/* 遍历 products 数组，为每个产品生成一个带 key 的 div，显示产品名称 */}
-      {products.map(p => <div key={p.id}>{p.name}</div>)}
-    </div>
-  );
+    <button onClick={() => setCount(current => current + 1)}>
+      数量：{count}
+    </button>
+  )
 }
 ```
 
-这个 Next.js 页面（通常位于 `pages/index.js` 或 `pages/products.js`）会在**每次用户请求该页面时，在服务器上预先获取外部 API 的数据**，然后将数据注入到 React 组件中，生成完整的 HTML 返回给浏览器。
+- 函数组件返回 UI 描述；`useState` 保存组件状态，更新函数请求重新渲染。
+- 每次渲染拿到的是当次状态快照。基于旧值计算新值时，用 `setCount(current => current + 1)`。
+- 把数组和对象状态视为只读，通过创建新值表达更新。
+- Hooks 通常在组件或自定义 Hook 顶层调用，遵循 React 的 Hooks 规则。
+- 用户点击触发的业务逻辑直接放事件处理函数；不要把所有计算和状态同步都塞进 `useEffect`。Effect 主要用于与外部系统同步，并按需要返回清理函数。
 
-### 服务端路由与前端路由的共存
+纯客户端入口通常是：
 
-在 SSR 模式下，**首次访问是服务端路由**（浏览器请求页面地址，服务器返回 HTML），**后续导航则变为前端路由**（由 React Router 等接管，不再整页刷新）。这就形成了混合路由模式。
+```tsx
+import { createRoot } from 'react-dom/client'
+import App from './App'
 
-### SSR 的缺点
-
-- **服务器压力大**：每次页面请求都需要服务器动态渲染，高并发下消耗 CPU/内存。
-- **交互延迟**：首屏 HTML 可见后，用户可能无法立即交互（因为 JS 还在加载，Hydration 尚未完成）。
-- **开发复杂度高**：需要同时处理服务端和客户端环境差异（如 `window` 对象只在客户端存在）。
-
-## 4 混合时代：Hybrid 模式与现代 SPA
-
-当 CSR 和 SSR 的优缺点了然于胸后，开发者自然会想：**能否按页面粒度选择渲染策略？** 这就是 **Hybrid（混合）模式**。
-
-### 现代 SPA = SSR + CSR 的按需组合
-
-- 对于内容为主、需要 SEO 的页面（如博客、商品详情），使用 **SSR** 预渲染首屏。
-- 对于高度交互、不关心 SEO 的页面（如后台管理、仪表盘），使用 **CSR** 在客户端动态渲染。
-- 整个应用仍然保持 **SPA 的前端路由**，导航体验流畅。
-
-现代框架（Next.js、Nuxt、SvelteKit）对此提供了原生支持，你可以通过配置或文件名（如 `.server.js`、`.client.js`）来决定页面渲染方式。
-
-### 现代 SPA 的核心特征
-
-- **同构渲染**：一套代码既能在服务端执行生成 HTML，也能在客户端执行接管交互。
-- **后端提供页面级渲染**：除 RESTful API 外，还负责部分页面的 SSR 或 SSG。
-- **Hydration**：服务端渲染的静态页面在客户端被激活。
-- **代码分割**：JS 不会一次性全部加载，而是按路由拆分，减少首屏体积。
-
-此时，**“SPA = CSR” 的等式彻底被打破**，SPA 成为了一种**导航模式**（单页 + 前端路由），渲染策略则灵活多变。
-
-```
-my-app/
-├── app/
-│   ├── (marketing)/
-│   │   ├── layout.tsx          # 营销页面布局
-│   │   ├── page.tsx            # 首页 (SSG)
-│   │   ├── about/
-│   │   │   └── page.tsx        # 关于页 (SSG)
-│   │   └── contact/
-│   │       └── page.tsx        # 联系页 (SSG)
-│   ├── dashboard/
-│   │   ├── layout.tsx          # 仪表盘布局 (需要认证)
-│   │   ├── page.tsx            # 仪表盘首页 (SSR)
-│   │   ├── settings/
-│   │   │   └── page.tsx        # 设置页面 (CSR)
-│   │   └── components/         # 仪表盘组件
-│   ├── products/
-│   │   ├── page.tsx            # 产品列表 (ISR)
-│   │   ├── [id]/
-│   │   │   └── page.tsx        # 产品详情 (SSR)
-│   │   └── search/
-│   │       └── page.tsx        # 搜索页面 (CSR)
-│   ├── api/                    # API 路由
-│   │   ├── auth/
-│   │   │   └── route.ts        # 认证 API
-│   │   └── products/
-│   │       └── route.ts        # 产品 API
-│   ├── layout.tsx              # 根布局
-│   ├── providers.tsx           # 全局 Provider
-│   └── page.tsx                # 根页面重定向
-├── components/
-│   ├── layout/
-│   │   ├── Header.tsx          # 通用头部
-│   │   ├── Footer.tsx          # 通用底部
-│   │   └── ThemeProvider.tsx   # 主题提供者
-│   ├── ui/                     # UI 组件
-│   │   ├── Button.tsx          # 按钮组件
-│   │   ├── Card.tsx            # 卡片组件
-│   │   └── Modal.tsx           # 模态框组件
-│   └── features/               # 功能组件
-│       ├── Cart.tsx            # 购物车组件
-│       └── Search.tsx          # 搜索组件
-├── lib/
-│   ├── auth.ts                 # 认证工具
-│   ├── db.ts                   # 数据库连接
-│   ├── api.ts                  # API 客户端
-│   └── utils.ts                # 工具函数
-├── styles/
-│   ├── globals.css             # 全局样式
-│   └── themes/                 # 主题样式
-├── public/                     # 静态资源
-├── .env                        # 环境变量
-├── next.config.js              # Next.js 配置
-├── tsconfig.json               # TypeScript 配置
-└── package.json                # 项目依赖
+const root = document.getElementById('root')
+if (!root) throw new Error('缺少 #root 挂载节点')
+createRoot(root).render(<App />)
 ```
 
-## 5 构建时渲染：SSG（静态站点生成）与 Jamstack
-
-SSR 虽然快，但每次请求都要动态渲染，服务器压力大。对于一些内容不常变化的站点（如博客、文档），更好的方案是 **SSG（Static Site Generation，静态站点生成）**。
-
-**框架支持：**
-
-- Next.js: `getStaticProps` + `getStaticPaths`
-- Nuxt.js: `generate` 模式
-- Gatsby: 基于 GraphQL 的数据层
-- Astro: 专注静态站点的新兴框架
-
-### SSG 原理
-
-- **构建时**（而不是请求时），将整个站点的所有页面预渲染为纯 HTML、CSS、JS 静态文件。
-- 部署时直接把这些静态文件放到 CDN 或静态服务器上。
-- 用户访问时，服务器直接返回对应的 HTML 文件，速度极快。
-
-### 比喻理解
-
-| 渲染模式 | 比喻                                             |
-| -------- | ------------------------------------------------ |
-| **SSG**  | 提前把每个房间装修好，放在仓库，有人来直接给钥匙 |
-| **SSR**  | 有人敲门时现场装修，装修完再让他进               |
-| **CSR**  | 只给个空房间，让用户自己装                       |
-
-SSG 兼具了 **SEO 友好** 和 **超高首屏性能** 的优点，但缺陷是内容更新必须重新构建整个站点，不适合实时数据。因此，实践中常结合 **增量静态生成 (ISR)** 或 **按需重新验证**，只重建变化的部分。
-
-## 6 MPA 的现代化：岛屿架构与新 MPA 运动
-
-MPA 并没有消亡，反而以全新的形态回归。现代 MPA 不再是传统的整页刷新 + 后端模板，而是吸收了 SPA 的优势，并发展出**岛屿架构（Islands Architecture）**。
-
-### 新 MPA 的特性
-
-- 每个路由仍然是独立的 HTML 页面（服务端路由），但页面切换可以**通过 AJAX 无刷新更新**（如使用 Turbo、htmx），或通过过渡动画平滑过渡。
-- 页面中的交互部分（如搜索建议、点赞按钮）可以加载对应的 JavaScript 组件，而这些组件**彼此独立，互不影响**。
-- 默认情况下，页面中 90% 的 HTML 是零 JavaScript 的纯静态内容，只有那些需要交互的“岛屿”才会加载相应的 JS。
-
-### 代表性框架
-
-- **Astro**：默认输出多个 HTML 页面（MPA），但允许你在页面中嵌入 React、Vue、Svelte 等组件作为交互岛屿。岛屿独立渲染，互不干扰。
-- **htmx + 任何后端模板**：通过 HTML 属性声明 AJAX 请求，服务器返回 HTML 片段直接替换 DOM，实现局部无刷新，但整体仍为 MPA。
-- **Hotwire（Turbo）**：服务器返回 HTML，Turbo Drive 拦截链接点击，用 fetch 获取新页面 HTML 并替换 `<body>`，实现类 SPA 的平滑导航，但本质仍是 MPA。
-
-### 岛屿架构的优势
-
-- **首屏极快**：大部分内容无需 JavaScript，只加载必要交互的少量 JS。
-- **SEO 天然友好**：每个页面都是完整的 HTML。
-- **简化开发**：不需要复杂的同构逻辑，按传统后端开发，交互按需加“岛屿”。
-
-**新 MPA 不是倒退，而是对“默认高性能”的追求。** 它更适合内容为主的网站，而重交互应用仍然更适合 SPA 或混合模式。
-
-## 7 基础设施：Node.js、Vite、框架与 UI 库的角色
-
-理解了架构演进，我们需要知道这些模式依赖怎样的工程基础设施。
-
-### Node.js：地基
-
-Node.js 彻底改变了前端开发范式，使 JavaScript 超越浏览器限制：
-
-**核心能力：**
-
-- **服务端 JavaScript**：使用同一语言编写前后端代码
-- **包管理生态**：npm 成为最大的开源库注册表
-- **构建工具基础**：Webpack、Vite、Rollup 等都依赖 Node.js
-- **SSR 运行时**：在服务器上执行 React/Vue 组件渲染
-
-**运行时环境对比：**
-
-| 环境        | 用途        | 全局对象 | 模块系统            | I/O 能力             |
-| :---------- | :---------- | :------- | :------------------ | :------------------- |
-| **浏览器**  | 客户端交互  | `window` | ESM (import/export) | 有限 (Fetch API)     |
-| **Node.js** | 服务端/构建 | `global` | CommonJS + ESM      | 完整 (fs, net, http) |
-
-**Node.js 在现代前端中的角色：**
-
-1. **开发服务器**：提供本地开发环境，支持热更新
-2. **构建工具**：编译、打包、优化前端资源
-3. **SSR 服务器**：运行时渲染 React/Vue 组件
-4. **API 服务器**：提供数据接口（Next.js API Routes）
-5. **工具链**：ESLint、Prettier、TypeScript 编译器
-
-### Vite：构建总工程师
-
-**Vite 是一个前端构建工具和开发服务器**，它本身基于 Node.js。
-
-**开发时**：
-
-- 它启动一个基于原生 ESM 的开发服务器，把 TypeScript、`.vue`、`.astro` 等源码文件按需转译为浏览器可识别的 JS/CSS，实现**秒级冷启动**和**毫秒级热更新（HMR）**。
-
-**生产时**：
-
-- 它调用 Rollup 对你的代码进行打包、压缩、摇树优化，生成最终部署的静态文件（或两套产物：客户端 + 服务端）。
-
-> **插件钩子**是 Vite 暴露给插件开发者的 API 接口。Vite 在构建流程的每一个环节（比如：服务器启动前、文件读取时、代码转换时、打包结束时）都埋下了“钩子”。
-
-Vite 与架构的关系：
-
-- **SPA**：Vite 默认构建纯客户端 SPA。
-- **SSR**：Vite 提供底层 API（如 `ssrLoadModule`），上层框架（Nuxt、SvelteKit、Astro 等）基于它实现服务端渲染。
-- **新 MPA / 岛屿架构**：Astro、SvelteKit 等同样使用 Vite 作为构建引擎。
-
-**关键点**：Vite 本身不直接提供 SSR 或 SPA，它是一个**引擎**，为各种渲染模式提供编译和开发支持。
-
-### 框架与 UI 库的分工
-
-**React/Vue 本身**：它们是**UI 库**，提供了**同构渲染的核心能力**。
-
-- **在服务端**：它们可以把组件“渲染”成 HTML 字符串。React 用的是 `renderToString()`，Vue 用的是 `createSSRApp()`。
-- **在客户端**：它们可以对服务端生成的 HTML 进行 **Hydration**，接管交互。React 用的是 `hydrateRoot()`，Vue 用的是 `app.mount()`。
-
-**UI 组件库（Ant Design、Element Plus、shadcn/ui）**：
-
-- 提供现成的按钮、表单、模态框等样式组件。
-- 不参与路由或渲染模式，只是“积木”。
-
-> 1. **最底层：React**
->    负责页面的渲染逻辑、事件响应和数据驱动视图更新。它是所有组件运行的环境。
-> 2. **中间层：Radix UI + Tailwind CSS（shadcn 的幕后功臣）**
->    - **Radix UI**：提供不带任何样式的“无头组件”。它只负责复杂的交互逻辑和无障碍访问（比如点击下拉菜单怎么弹出、键盘怎么控制焦点），但不决定它长什么样。
->    - **Tailwind CSS**：负责纯粹的视觉样式（颜色、间距、圆角、阴影等）。
-> 3. **最上层：shadcn/ui**
->    它把底层的 Radix UI（逻辑）和 Tailwind CSS（样式）完美地组装在一起，封装成一个个开箱即用的 React 组件（如 `<Button />`, `<Dialog />`）。
-
-**Next.js/Nuxt 等框架**：它们是**应用框架**，在 React/Vue 的基础上，提供了**一整套工程化解决方案**，让你能真正把同构渲染跑起来。
-
-- **数据获取的“编排者”**：框架提供了**约定好的数据获取方法**（如 Next.js 的 `getServerSideProps`、Nuxt 的 `asyncData`）。**框架负责在服务端渲染前调用这些方法，拿到数据，注入组件，然后再调用 React/Vue 的 `renderToString()`**。没有框架，你就需要手写一个 Node.js 服务来完成这个流程。
-- **路由系统**：处理服务端和客户端路由的统一。
-- **构建和部署**：打包出服务端和客户端两套代码。
-
-例如，一个现代 SSR 项目可以是：**Next.js（框架） + React（UI 库） + shadcn（组件库） + Vite（底层构建工具）**，全部运行在 Node.js 之上。
-
-## SSG 与静态托管平台
-
-创建一个博客，有很多开源的静态站点生成器（Static Site Generator, SSG）可以选择
-
-> [Hexo](https://hexo.io/)：老牌的静态站点生成器，生态成熟，主题选择丰富，适合快速上手。 
->
-> [Hugo](https://gohugo.io/)：Go 语言编写，速度极快，支持多语言，部署简单。 
->
-> [Astro](https://astro.build/)：近几年兴起的新星，支持部分渲染、MDX、整合 React/Vue/Svelte 等框架，非常适合写博客或文档。 
->
-> Next.js：严格意义上不算 SSG，但它提供 next export 静态导出能力，和 Vercel 原生契合，能做更复杂的动态功能。
->
-> VuePress 和 VitePress 都是 **基于 Vue 的静态站点生成器**，它们由 Vue.js 官方团队维护，但底层构建工具不同。VuePress 基于 **Vue 2 + Webpack** 构建，VitePress 基于 **Vue 3 + Vite** 构建。
->
-> 这些工具允许你用 Markdown 写文章，然后一键生成整站的静态文件。
-
-| 路由方式                    | 类型              | 实现原理                                    | Astro 实现                        | 页面刷新 | 典型技术                          |
-| :-------------------------- | :---------------- | :------------------------------------------ | :-------------------------------- | :------- | :-------------------------------- |
-| **静态资源路由**            | 纯静态站点（SSG） | 浏览器请求静态文件，无需服务端运行时        | **默认模式 (SSG)**                | 是       | Astro 默认行为（构建时生成 HTML） |
-| **服务端路由**              | 传统 MPA 或 SSR   | 每次导航向服务器请求新 HTML，服务器动态生成 | **SSR 模式** (`output: 'server'`) | 是       | Astro + 适配器 + 服务端运行时     |
-| **类前端路由 (动画增强)**   | MPA + SPA 体验    | 浏览器原生 API 为 MPA 导航添加过渡动画      | **View Transitions API**          | 是       | `@view-transition` CSS at-rule    |
-| **真前端路由 (客户端渲染)** | 完整 SPA          | 客户端路由库拦截并接管导航，无整页刷新      | **`<ClientRouter />` 组件**       | 否       | `<ClientRouter />`                |
-
-- Astro 默认的 SSG 模式是 **静态资源路由**，不是服务端路由。
-- 只有在显式开启 SSR 模式时，才是服务端路由。
-
-GitHub Pages / Netlify / Vercel 是**静态托管平台**
-
-| 平台         | 类型                      | 特点                                                         |
-| ------------ | ------------------------- | ------------------------------------------------------------ |
-| GitHub Pages | 静态网站托管              | 免费、与 GitHub 仓库集成紧密，适合文档、博客、简单项目展示；不支持服务端逻辑。 |
-| Netlify      | 静态网站托管 + Serverless | 支持自动构建、CDN、表单处理、边缘函数（Edge Functions）、身份验证等。 |
-| Vercel       | 静态网站托管 + Serverless | 专为前端优化，对 Next.js 等框架有深度集成，也支持边缘函数、API Routes。 |
-
-### 各静态托管平台推荐的部署方式
-
-**vite 部署官方教程**：https://vite.dev/guide/static-deploy
-
-1、Vercel
-
-- **直接连接 Git 仓库**（GitHub / GitLab / Bitbucket）
-- Vercel 会自动：
-  - 监听 `main`/`master` 分支推送
-  - 自动运行 `npm run build`
-  - 自动部署 `dist` 目录（或你指定的输出目录）
-- 支持预览部署（每个 PR 自动生成预览链接）
-
-> 📌 **推荐方式：直接用 Vercel Dashboard 导入项目，零配置即可部署。**
-
-2、Netlify
-
-- 同样通过 **连接 Git 仓库** 实现自动部署
-- 在 Netlify 后台设置：
-  - 构建命令：`npm run build`
-  - 发布目录：`dist`
-- 自动处理 SPA 路由（默认支持 `/* → /index.html` 重写）
-
-> 📌 **推荐方式：在 Netlify 网站一键导入 Git 项目，自动 CI/CD。**
-
-3、**GitHub Pages**
-
-用 **GitHub Actions（推荐）**
-
-- 因为 GitHub Pages **本身不提供构建环境**（只托管静态文件）
-- 所以你需要用 GitHub Actions：
-  - 在 CI 中运行 `npm run build`
-  - 把生成的 `dist` 推送到 `gh-pages` 分支 或 `docs/` 目录
-- 官方模板（`.github/workflows/deploy.yml`）非常成熟，可以从上方教程中找到
-
-注意上方教程默认用的是npm，如果改用pnpm，则需要参考[pnpm官网给出的模版](https://pnpm.io/zh/continuous-integration/)，合二为一，参考[给傻子的GitHub Actions前端教程](https://www.bilibili.com/video/BV19wmwB1EEM/?spm_id_from=333.1387.favlist.content.click&vd_source=1cb3877417a5472371e3e0e5fa4272e0)，其中的deploy.yml配置文件如下：
-
-```yml
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
-
-on:
-  # Runs on pushes targeting the default branch
-  push:
-    branches: ['main']
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# Sets the GITHUB_TOKEN permissions to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# Allow one concurrent deployment
-concurrency:
-  group: 'pages'
-  cancel-in-progress: true
-
-jobs:
-  # Single deploy job since we're just deploying
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [20]
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-            node-version: ${{ matrix.node-version }}
-            cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Build
-        run: pnpm run build
-        
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
-        with:
-          # Upload dist folder
-          path: './dist'
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+### 3. Vue：响应式状态与模板
+
+```vue
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+
+const props = defineProps<{ initial?: number }>()
+const count = ref(props.initial ?? 0)
+const doubled = computed(() => count.value * 2)
+</script>
+
+<template>
+  <button @click="count++">数量：{{ count }}，两倍：{{ doubled }}</button>
+</template>
 ```
 
-**附加提示：Vite 项目部署注意事项**
+- 新项目常用 Vue 3 的 Composition API 和 `<script setup>`。
+- `ref` 在脚本中通过 `.value` 访问，在模板中通常自动解包；`reactive` 适合响应式对象。
+- `computed` 表达派生值，`watch`/`watchEffect` 处理需要跟随数据变化的副作用。
+- 用 `defineProps` 接收输入，`defineEmits` 声明事件；常见模板指令包括 `v-if`、`v-for`、`v-model`。
+- `onMounted` 等生命周期钩子用于访问已挂载 DOM；外部订阅和定时器应在卸载时清理。
 
-无论用哪种平台，记得：
+客户端入口通常是：
 
-1. **配置 `base` 路径**（如果部署到子路径，如 `https://user.github.io/repo/`）：
+```ts
+import { createApp } from 'vue'
+import App from './App.vue'
 
-   ```js
-   // vite.config.js
-   export default {
-     base: '/repo-name/' // GitHub Pages 必须设，Vercel/Netlify 通常不需要
-   }
-   ```
+createApp(App).mount('#app')
+```
 
-2. **处理客户端路由**（如 Vue Router history 模式）：
+### 4. 核心原理：状态、调度、协调与 DOM
 
-   - Vercel/Netlify：配置重写规则（见前文）
-   - GitHub Pages：建议改用 hash 模式，或用 404 重定向 hack（不完美）
+| 环节 | React | Vue |
+| --- | --- | --- |
+| 源码转换 | JSX/TSX 转成 JavaScript 调用 | `.vue` 模板转成渲染函数 |
+| 更新触发 | 状态更新函数、父级更新等 | `ref`/`reactive` 的依赖追踪等 |
+| UI 描述 | React element | VNode |
+| 更新执行 | 调度渲染，协调结果，再提交变化 | 调度相关渲染副作用，比较并更新节点 |
+| Web 平台输出 | `react-dom` | Vue DOM 渲染器 |
 
-## Vercel快速部署网站+国内访问
+```text
+源码转换 → 执行组件/渲染函数 → 得到 UI 描述 → 首次挂载 DOM
+状态变化 → 调度相关更新 → 计算新 UI → 复用或调整节点 → 浏览器渲染
+```
 
-利用 Vercel，Cloudflare 平台进行代理，实现 cdn 加速国内代理，使得网站在国内能够访问
+Vue 的 `setup` 通常在组件实例创建时执行，后续更新主要重新运行渲染过程；React 函数组件则在渲染时重新调用。不能笼统地把两者都理解为“每次状态变化重新执行整个组件初始化代码”。
 
-## 使用静态站点生成器Astro构建一个部署在vercel的博客
+框架会根据节点类型、位置和 `key` 等判断复用关系，并合并或调度更新。虚拟 DOM 是组织 UI 更新的一种方式，不保证比每一种手写 DOM 操作都快。业务中先保证数据流清晰，再用性能工具定位瓶颈。
 
-[Vercel](https://github.com/vercel)是一家总部在美国的公司，前身叫 Zeit。
+### 5. CSR、SSR、SSG 与 hydration
 
-它提供了一个云端平台，让开发者可以一键部署前端项目，尤其是静态站点和 Serverless 应用。
+| 模式 | 主要页面 HTML 的生成时机 | 常见用途 |
+| --- | --- | --- |
+| CSR：客户端渲染 | 浏览器执行 JavaScript 时 | 管理后台、交互型应用 |
+| SSR：服务端渲染 | 服务端处理请求时，可结合缓存 | 需要首屏内容、请求相关数据的页面 |
+| SSG：静态生成 | 构建或预生成时 | 文档、博客、相对稳定的内容页 |
 
-其中[Serverless](https://aws.amazon.com/cn/campaigns/serverless/)是一个国外很流行的技术，属于**云服务**，这里就不展开。
+CSR 通常先返回入口 HTML，再由客户端创建主要界面。SSR/SSG 先提供已有页面内容；如果页面还需要框架交互，客户端通常执行 **hydration（水合）**，将客户端组件树与现有 DOM 对齐并接管后续更新。
 
-Vercel还和 [GitHub](https://github.com/)/[GitLab](https://about.gitlab.com/) 深度集成，提供了优质的**CI/CD**服务，每次`git push`的时候，都会自动重新构建、部署项目。
+hydration 不只是绑定事件，还涉及组件状态和内部结构的建立。服务端与客户端首次输出应保持一致，避免时间、随机数或浏览器专属数据造成不匹配。服务端通常没有 DOM，应把浏览器专属操作放到客户端执行阶段。
 
-SSG之前介绍了，我之前有使用过[Hexo](https://hexo.io/)、[Hugo](https://gohugo.io/)，但现在切换到了[Astro](https://astro.build/)。
+Next.js、Nuxt 等应用框架可以混合使用这些模式。React Server Components（服务端组件）描述的是组件在哪执行及如何传递结果，与 SSR 的“在哪里生成 HTML”不是同一个维度，也不必作为基础入门的起点。
 
-跟着官网的教程创建一个站点并部署在github上，然后你需要在vercel中，`add new project`打开这个项目。`import Github repository`将你的github项目导入，进入配置界面。在这里配置`框架预设`，如果你是astro就用其预设。
+## 五、前端工具链：从创建项目到部署运行
 
-> deploy完成后，vercel会给你一个类似 `[项目名].vercel.app` 的域名，通过这个域名你就可以访问你的项目了（前提是开了vpn），在中国大陆一般是访问不了的。 这个时候就需要另外一个东西：Cloudflare。
+工具链的职责是：**管理依赖，提供开发反馈，把源码变成可部署产物。** 按实际使用流程理解，比逐个背工具名称更直接。
 
-## 部署到国内（阿里云购买+Cloudflare转发）
+```text
+创建项目与安装依赖 → 本地开发 → 转换与检查 → 打包构建 → 预览部署 → 用户运行
+```
 
-阿里云购买个性化域名 wutongyu.site
+转换和检查在开发时也会持续发生；生产构建会重新组织并优化完整产物。
 
-点击Vercel左侧栏的Domains，选择右上侧的Add Existing，输入购买的个性化域名
+### 1. 创建项目与管理依赖
 
-![PixPin_2026-05-07_13-43-13](./deploy-img/PixPin_2026-05-07_13-43-13.png)
+先安装受项目支持的 Node.js LTS 版本，已有项目以版本声明、锁文件和 README 为准。Vue 官方脚手架基于 Vite，以下假设按提示将项目命名为 `my-vue-app`：
 
-打开 Cloudflare，进入 Domains-Overview-Add domain
+```bash
+npm create vue@latest
+# 按提示创建项目，可选择 TypeScript、Router 等能力
+cd my-vue-app
+npm install
+npm run dev
+```
 
-![PixPin_2026-05-07_13-49-42](./deploy-img/PixPin_2026-05-07_13-49-42.png)
+学习 React 基础、创建独立客户端应用时，可以使用 Vite：
 
-回到之前添加的两条域名，进行 Auto configure，分别各自增加 TXT 和 CNAME 两条 records
+```bash
+npm create vite@latest my-react-app -- --template react-ts
+cd my-react-app
+npm install
+npm run dev
+```
 
-![PixPin_2026-05-07_13-59-47](./deploy-img/PixPin_2026-05-07_13-59-47.png)
+React 官方对新应用建议优先评估框架；需要完整路由、数据加载或服务端能力时，可考虑 Next.js、React Router 框架模式等。Vite 提供开发与构建基础，应用能力按需求选择。
 
-![PixPin_2026-05-07_14-00-13](./deploy-img/PixPin_2026-05-07_14-00-13.png)
+日常依赖操作：
 
-在 Cloudflare 点击添加的 domain，进入 DNS-Records，可以看到四条
+```bash
+npm install                 # 安装依赖，必要时更新锁文件
+npm install axios           # 添加业务依赖
+npm install -D eslint       # 添加开发工具
+npm uninstall axios         # 删除依赖并更新声明
+npm ci                      # CI 中按已有锁文件干净安装
+```
 
-![PixPin_2026-05-07_14-03-26](./deploy-img/PixPin_2026-05-07_14-03-26.png)
+`npm ci` 要求存在锁文件，且它与 `package.json` 一致；不一致时失败，不会替你修改锁文件。
 
-可以看到下方有 Cloudflare Nameservers，复制这两条 NS
+| 文件或字段 | 用途 |
+| --- | --- |
+| `package.json` | 项目元数据、依赖声明、脚本命令 |
+| `dependencies` | 应用或库所需的依赖，如 React、Vue |
+| `devDependencies` | 开发、类型检查、测试和构建工具 |
+| `peerDependencies` | 这个库需要和项目里的哪些包、哪些版本搭配使用 |
+| `package-lock.json` | npm 解析出的具体依赖版本与校验信息，应提交 |
+| `node_modules` | 安装结果，不手动修改、不提交 |
 
-![PixPin_2026-05-07_13-51-25](./deploy-img/PixPin_2026-05-07_13-51-25.png)
+`peerDependencies` 可以理解为一个库在说：**“我需要和你项目里的某个包一起用，而且版本得合适。”** 比如 React 组件库要求项目使用 React 19，就是在声明搭配要求，让组件库和应用共用兼容的 React，避免各用各的导致问题。这个字段主要用于组件库、插件等供别人安装的包。
 
-进入阿里云，打开域名控制台修改DNS服务器地址
+`dependencies`/`devDependencies` 是依赖管理约定，**不决定某个包是否进入浏览器**；最终以实际导入关系和构建配置为准。构建通常需要安装开发依赖，静态产物部署后则不需要把整个 `node_modules` 一起上传。
 
-1. 前往[域名产品控制台](https://dc.console.aliyun.com/?spm=5176.28197678_55416700.console-base_help.18.63045b8eO61o25)，在域名列表中找到目标域名，单击操作列的 **管理** 按钮![image.png](./deploy-img/p751347.png)
-2. 在左侧导航栏选择 **DNS管理** 下的 **DNS修改** 菜单，单击 **修改DNS服务器** 按钮![image.png](./deploy-img/p751353.png)
-3. 输入 **云解析 DNS** 分配的DNS服务器地址，例如：`vip1.alidns.com`、`vip2.alidns.com`，提交变更。![image](./deploy-img/p852184.png)
+npm、pnpm、Yarn 都能管理依赖。除了前面介绍的 npm 锁文件，**pnpm 用 `pnpm-lock.yaml`，Yarn 用 `yarn.lock`**；它们都记录实际安装的依赖版本，让团队和 CI 安装时能对齐。已有项目遵循原包管理器，不混用锁文件。
 
-完成之后回到 Cloudflare 的域名Overview，可以 Check nameservers now，阿里云那边生效之后，这个页面会刷新：
+安装依赖不等于打包：包管理器先把需要的包准备到本地，构建器再分析源码实际引用了什么，并生成要交付的文件。
 
-![PixPin_2026-05-07_14-10-06](./deploy-img/PixPin_2026-05-07_14-10-06.png)
+### 2. 本地开发：开发服务器与 HMR
+
+典型 Vite 项目的主要文件：
+
+```text
+project/
+├── index.html          # Web 入口，引用 src/main.ts 或 main.tsx
+├── package.json        # 依赖和命令
+├── package-lock.json
+├── vite.config.ts     # Vite 配置与框架插件
+├── tsconfig.json      # TS 配置，可能引用多个子配置
+├── public/            # 按原文件名复制的公共资源
+└── src/
+    ├── main.ts        # React 项目通常是 main.tsx
+    ├── App.vue        # React 项目通常是 App.tsx
+    └── assets/
+```
+
+`npm run dev` 执行的是 `package.json` 中的 `scripts.dev`。npm 把项目依赖提供的命令加入脚本的查找路径，Vite 等 Node.js 工具由此启动；`dev` 是脚本名，具体行为取决于项目定义。最小脚本配置如下：
+
+```json
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  }
+}
+```
+
+```text
+npm run dev
+  → 启动 Vite，加载配置与框架插件
+  → 浏览器请求 index.html 和入口模块
+  → Vite 解析依赖，按需转换 TS、JSX、.vue 和 CSS
+  → 浏览器加载转换后的模块，框架创建页面
+```
+
+Vite 的常规开发模式基于原生 ESM，通常不先生成完整 `dist`。`import 'vue'` 等包引用会被解析和重写，部分第三方依赖还会预打包以处理格式兼容和减少碎片请求。
+
+保存文件后的 **HMR（热模块替换）**：
+
+```text
+文件变化 → 模块图确定影响范围 → WebSocket 通知浏览器
+        → 加载新模块 → 框架接收更新，尽量保留状态
+```
+
+HMR 边界无法安全接收更新时会刷新页面；它不是生产环境的动态更新机制。Vue/React 项目通常需要对应的 Vite 插件，脚手架已配置，不必自行重写转换流程。
+
+### 3. 源码转换与质量检查
+
+浏览器认识标准 HTML、CSS 和 JavaScript，不认识 TS 类型、JSX、Vue SFC 或 Sass。工具链先将它们转换成可执行模块与样式：
+
+```text
+.ts   → 擦除类型 → JavaScript
+.tsx  → 擦除类型 + JSX 转换 → JavaScript
+.vue  → Vue 编译器处理 script/template/style → JavaScript + CSS
+.scss → Sass → CSS（项目使用时才需要）
+```
+
+**转换成功不等于检查通过。** 常见工具的职责各有侧重：
+
+| 工作 | 常见工具 | 解决的问题 |
+| --- | --- | --- |
+| 类型检查 | TypeScript、Vue 的 `vue-tsc` | 参数、返回值、组件类型是否匹配 |
+| 语法转换 | Oxc、Babel、SWC 等 | 处理 TS/JSX 和目标语法 |
+| 代码检查 | ESLint 等 | 可疑写法、规则违规 |
+| 格式统一 | Prettier 等 | 缩进、换行、格式 |
+| 行为验证 | Vitest、Playwright 等 | 逻辑和用户操作是否符合预期 |
+
+类型检查常见命令是 `tsc --noEmit`，Vue 使用 `vue-tsc --noEmit`；有多个 TS 子项目的脚手架可能使用 `tsc -b`。沿用模板已有配置，CI 中显式执行项目提供的检查脚本，不要以为 `vite build` 自带类型检查。
+
+Vite 环境变量通过 `import.meta.env` 读取。默认以 `VITE_` 开头的变量会暴露给客户端，不能用于保存密钥；这些值通常在构建时替换，修改部署机器的环境变量不会自动改变已构建的静态文件。
+
+### 4. 打包构建：围绕模块图生成产物
+
+先区分三个动作：
+
+| 动作 | 含义 |
+| --- | --- |
+| 转换 | 将某个文件的 TS、JSX、模板等变成目标代码 |
+| 打包 | 从入口分析模块依赖，把代码组织成可加载的 chunk（代码块） |
+| 构建 | 项目级流程，包含转换、打包、资源处理、优化和输出 |
+
+打包器从入口追踪 `import`，解析相对文件和 npm 包入口，递归建立模块图：
+
+```text
+index.html
+└── src/main.ts
+    ├── App.vue
+    │   └── app.css
+    ├── vue
+    └── import('./pages/Admin.vue')
+```
+
+基于这张图，构建器完成：
+
+- **Tree Shaking**：在能静态证明安全时删除未使用代码；有副作用、动态访问或 CommonJS 会限制优化。
+- **Code Splitting**：按动态导入、多入口和共享关系拆分代码，不是把所有文件拼成一个大文件。
+- **资源处理**：转换和提取 CSS，处理图片、字体及其引用。
+- **优化输出**：压缩代码，生成带 hash 的资源名，并按配置生成 source map。语法降级不自动补齐所有缺失的运行时 API。
+
+Vite 是开发服务器和构建入口，底层再调用打包器、转换器与插件。**Vite 8 的主线使用 Rolldown 打包、Oxc 提供编译能力**；早期 Vite 常见 esbuild/Rollup 组合。Webpack、Rollup 等仍存在于大量项目和库构建中，按项目版本理解即可，不需要先掌握每种配置。
+
+默认静态应用的生产构建：
+
+```bash
+npm run build
+npm run preview
+```
+
+以 `scripts` 的实际定义为准：`build` 可能先做类型检查再调用 `vite build`，`preview` 通常用 `vite preview` 在本地预览已有产物。
+
+```text
+dist/
+├── index.html
+└── assets/
+    ├── index-a81c2.js
+    ├── index-42be1.css
+    ├── Admin-91d3f.js
+    └── logo-14aa2.svg
+```
+
+入口 HTML 引用生产资源；异步 chunk 在对应逻辑触发时加载；hash 支持按内容缓存。编译器和打包器本身通常不交给浏览器，业务代码和实际需要的 React/Vue 运行时才进入相应产物。
+
+### 5. 部署与运行：交付产物，浏览器执行
+
+| 应用形式 | 交付什么 | 需要的运行环境 |
+| --- | --- | --- |
+| CSR、纯静态站点、静态导出 | HTML、CSS、JS、图片等 | 静态服务器、对象存储或 CDN |
+| SSR、带服务端接口的应用 | 客户端资源 + 服务端代码 | 框架支持的 Node.js、边缘或托管平台等 |
+
+`vite preview` 用于本地验证构建结果，正式部署应使用适合生产的服务器或平台。应用框架的目录和启动命令以其部署文档为准，不能一律只上传 `dist`。
+
+部署时主要核对：
+
+- **路由**：History 模式的 SPA 需要将前端页面路径回退到入口 HTML，同时保留 API 和静态资源的正常响应。
+- **路径与接口**：部署子目录时配置正确的基础路径；开发服务器的 API 代理只用于开发，生产环境需配置真实接口地址或反向代理。
+- **缓存**：带内容 hash 的资源适合长期缓存，HTML 应及时更新或重新验证；发布时考虑旧页面仍可能请求旧 chunk。
+- **配置**：浏览器能读到的配置和代码都不是秘密，鉴权与业务规则在服务端落实。
+
+用户访问后，浏览器加载资源并执行 JavaScript；CSR 由 React/Vue 创建主要 DOM，SSR/SSG 则在需要时进行 hydration。后续状态变化仍走“计算 UI → 更新 DOM → 浏览器渲染”这条链路。
+
+## 六、项目扩展：路由、状态库、组件库与应用框架
+
+先把组件和局部状态用好，出现对应需求后再增加工具。
+
+| 层级 | 解决的问题 | 常见选择 |
+| --- | --- | --- |
+| 路由 | URL 对应页面、客户端导航 | Vue Router、React Router |
+| 共享状态 | 跨组件或跨页面的客户端状态 | Pinia、Zustand、Redux Toolkit |
+| 服务端数据管理 | 请求缓存、重新获取、失效和同步 | TanStack Query 等 |
+| 样式工具 | 组织或生成 CSS | 原生 CSS、CSS Modules、Tailwind CSS |
+| UI 组件 | 按钮、表单、弹窗等可复用交互 | Element Plus、Ant Design、MUI、shadcn/ui |
+| 应用框架 | 路由、渲染、数据与部署约定 | Next.js、Nuxt、React Router 框架模式 |
+| 独立后端 | 接口、鉴权、数据库和业务规则 | Express、NestJS 等 |
+
+### 1. 路由与状态
+
+客户端路由通常通过 History API 更新地址，再选择对应组件，不必每次下载完整页面。刷新页面仍然请求服务器，因此需要配合部署端的路由处理。
+
+状态按归属存放：输入框和弹窗状态留在组件，筛选条件可放 URL，真正共享的客户端状态再进入 store；接口数据的缓存与同步可交给专用请求库。不要把所有数据都搬进全局状态。
+
+### 2. 样式与组件库
+
+Tailwind 根据源码中的类名生成 CSS，不替代浏览器布局引擎。Element Plus、Ant Design、MUI 提供框架组件，组件最终仍由 Vue/React 渲染。
+
+Headless 组件侧重交互与无障碍行为，视觉样式由项目决定；shadcn/ui 主要将组件源码放入项目，由项目维护和修改。选择时先考虑框架兼容、交互需求和修改成本。
+
+### 3. 应用框架与后端
+
+Next.js 基于 React，Nuxt 基于 Vue。它们统一路由、布局、渲染方式、客户端/服务端边界、数据加载和部署；完整框架也可以用于 CSR 或静态导出，并非选择框架就一定需要长期运行服务器。
+
+Express/NestJS 等主要负责服务端接口和业务规则。应用框架可以提供服务端接口，也可以只调用独立后端。涉及数据库、密钥、权限和可信业务判断的代码应留在服务端。
+
+## 七、桌面扩展：Electron 与 Tauri
+
+Web 技术也能构建桌面界面，区别主要在渲染引擎和系统能力由谁提供。
+
+| 对比 | [Electron](https://www.electronjs.org) | [Tauri](https://tauri.app) |
+| --- | --- | --- |
+| 页面运行环境 | 随应用分发的 Chromium | 系统 WebView |
+| 系统侧能力 | Node.js 主进程与原生模块 | Rust 核心、命令与插件 |
+| 前端访问系统能力 | 通过受控的 preload/IPC 接口 | 通过受权限约束的命令/IPC 接口 |
+| 主要取舍 | 体积通常更大，渲染环境较一致 | 安装包通常更小，需要考虑系统 WebView 差异 |
+
+Electron 区分主进程与渲染进程，渲染页面不应直接暴露任意 Node.js 权限。Tauri 核心运行时不要求 Node.js，但开发前端时仍常使用 Node.js 工具链，也可按需求打包额外程序。两者都应只向界面开放必要的系统操作。
+
+## 八、学习顺序与完整主线
+
+1. 用 HTML/CSS 完成一个响应式页面，理解语义、盒模型、Flex/Grid。
+2. 用 JavaScript 实现表单、列表增删和 Fetch 请求，处理加载与失败。
+3. 选择 React 或 Vue 之一，用 TypeScript 掌握组件、props、事件、状态和派生数据。
+4. 用脚手架完成一个包含列表、详情和编辑的小应用，理解依赖、开发、检查和构建命令。
+5. 按需求加入路由、共享状态和请求缓存，部署一次并处理路径与刷新问题。
+6. 需要完整应用能力时再深入框架，理解服务端边界、SSR/SSG 与 hydration。
+
+整条链路可以放在一张图里：
+
+```text
+HTML/CSS/JS + TS/JSX/.vue 源码
+  ↓ 包管理器准备依赖，Node.js 运行开发与构建工具
+Vite + 框架插件：转换源码、组织模块、生成产物
+  ↓
+HTML + CSS + JS chunks + 资源 + 可选服务端代码
+  ↓ 静态服务或应用服务器交付
+浏览器加载；React/Vue 根据状态创建或接管 UI
+  ↓
+DOM/样式变化 → 布局、绘制与合成 → 用户看到并操作页面
+```
+
+## 参考资料
+
+- [封面来源：roadmap.sh 前端技术路线图（2026 年版）](https://roadmap.sh/frontend)
+
+- [MDN：学习 Web 开发](https://developer.mozilla.org/zh-CN/docs/Learn_web_development)
+- [MDN：层叠](https://developer.mozilla.org/zh-CN/docs/Web/CSS/CSS_cascade/Cascade)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)
+- [Node.js：运行 TypeScript 的支持范围](https://nodejs.org/api/typescript.html)
+- [Vue：快速上手](https://vuejs.org/guide/quick-start.html)
+- [Vue：渲染机制](https://vuejs.org/guide/extras/rendering-mechanism.html)
+- [React：创建应用](https://react.dev/learn/creating-a-react-app)
+- [React：渲染与提交](https://react.dev/learn/render-and-commit)
+- [Vite：入门与常用命令](https://vite.dev/guide/)
+- [Vite 8：Rolldown 与 Oxc](https://vite.dev/blog/announcing-vite8)
+- [Vite：生产构建](https://vite.dev/guide/build.html)
+- [npm：npm ci](https://docs.npmjs.com/cli/v11/commands/npm-ci)
+- [前端学习路线参考](https://github.com/sl1673495/frontend-roadmap)
