@@ -8,6 +8,12 @@ order: 1
 
 正在看：
 
+:::card{title="赛博朋克边缘行者 2" href="https://zh.wikipedia.org/wiki/赛博浪客" label="日漫"}
+![赛博朋克边缘行者 2 海报](./anime/edgerunners-2.png)
+
+正在看。
+:::
+
 :::card{title="FX战士久留美" href="https://zh.wikipedia.org/wiki/FX战士久留美" score="4" label="日漫"}
 ![FX战士久留美海报](./anime/fx-kurumi.jpg)
 

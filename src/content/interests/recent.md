@@ -14,6 +14,6 @@
 ![FX战士久留美海报](./anime/fx-kurumi.jpg)
 :::
 
-:::card{layout="portrait" title="速度与激情 8" href="https://zh.wikipedia.org/wiki/速度与激情8" meta="三刷速激系列。"}
-![速度与激情 8 海报](./movie/fast-8.jpg)
+:::card{layout="portrait" title="赛博朋克边缘行者 2" href="https://zh.wikipedia.org/wiki/赛博浪客" meta="正在看。"}
+![赛博朋克边缘行者 2 海报](./anime/edgerunners-2.png)
 :::

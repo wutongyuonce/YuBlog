@@ -16,3 +16,4 @@ order: 6
 * [IVE](https://zh.wikipedia.org/wiki/IVE)：[Gaeul](https://zh.wikipedia.org/wiki/Gaeul)、[Yujin](https://zh.wikipedia.org/wiki/安俞真)、[Rei](https://zh.wikipedia.org/wiki/Rei)、[Wonyoung](https://zh.wikipedia.org/wiki/張員瑛)、[Liz](https://zh.wikipedia.org/wiki/Liz_(IVE))、[Leeseo](https://zh.wikipedia.org/wiki/Leeseo)
 * Lessarafim [Chaewon](https://zh.wikipedia.org/wiki/金采源)
 * NMIXX [Sullyoon](https://zh.wikipedia.org/wiki/Sullyoon)
+* Hearts2Hearts [JIWOO](https://kprofiles.com/jiwoo-hearts2hearts-profile/)、[IAN](https://kprofiles.com/ian-hearts2hearts-profile-and-facts/)、[JUUN](https://kprofiles.com/juun-hearts2hearts-profile-and-facts/)、[STELLA](https://kprofiles.com/stella-hearts2hearts-profile-and-facts/)
