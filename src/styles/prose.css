@@ -985,6 +985,9 @@ main:has(.post-content) > footer.prose :is(a, span) {
   background: rgb(0 0 0 / 88%);
 }
 .image-lightbox__panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   max-width: 100%;
 }
 .image-lightbox img {
@@ -992,12 +995,14 @@ main:has(.post-content) > footer.prose :is(a, span) {
   width: auto;
   height: auto;
   max-width: 100%;
-  max-height: 80dvh;
+  max-height: calc(100dvh - 9rem);
   margin: auto;
   cursor: zoom-out;
   object-fit: contain;
 }
 .image-lightbox__close,
+.image-lightbox__prev,
+.image-lightbox__next,
 .excalidraw-expand__close {
   display: grid;
   place-items: center;
@@ -1011,6 +1016,8 @@ main:has(.post-content) > footer.prose :is(a, span) {
   cursor: pointer;
 }
 .image-lightbox__close svg,
+.image-lightbox__prev svg,
+.image-lightbox__next svg,
 .excalidraw-expand__close svg {
   display: block;
   width: 24px;
@@ -1020,16 +1027,50 @@ main:has(.post-content) > footer.prose :is(a, span) {
 .excalidraw-expand__close:hover {
   opacity: 0.65;
 }
-.image-lightbox__close {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
+/* Prev/next: muted at rest; :active briefly brighter; disabled quieter.
+   Do not use sticky :hover/:focus fill — a click must not leave the control
+   looking pressed. Keyboard a11y stays outline-only via focus-visible below. */
+.image-lightbox__prev,
+.image-lightbox__next {
+  opacity: 0.55;
+  color: color-mix(in srgb, var(--c-text) 78%, var(--c-bg));
+}
+.image-lightbox__prev:active:not(:disabled),
+.image-lightbox__next:active:not(:disabled) {
+  opacity: 1;
+  color: var(--c-text);
+}
+.image-lightbox__prev:disabled,
+.image-lightbox__next:disabled {
+  opacity: 0.28;
+  cursor: default;
 }
 .image-lightbox__caption {
   margin-top: 0.75rem;
   max-width: 80ch;
   text-align: center;
   overflow-wrap: anywhere;
+}
+.image-lightbox__toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  width: min(100%, 28rem);
+  margin-top: 0.75rem;
+}
+.image-lightbox__index {
+  justify-self: start;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--c-text) 72%, var(--c-bg));
+}
+.image-lightbox__arrows {
+  display: flex;
+  gap: 0.25rem;
+  justify-self: center;
+}
+.image-lightbox__close {
+  justify-self: end;
 }
 .image-view__linked-zoom:focus-visible,
 .image-gallery__controls button:focus-visible,

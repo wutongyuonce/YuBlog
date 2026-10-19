@@ -1,4 +1,16 @@
 import { lockScroll } from './misc'
+import {
+  clampSlideIndex,
+  lightboxViewsInArticle,
+  resolveLightboxSlideIndex,
+} from './image-lightbox-gallery.js'
+
+const CLOSE_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>'
+const PREV_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>'
+const NEXT_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>'
 
 /** Owns gallery controls, the modal viewer and their page-scoped resources. */
 export class ImageInteractions extends HTMLElement {
@@ -6,6 +18,11 @@ export class ImageInteractions extends HTMLElement {
   private dialog?: HTMLDialogElement
   private trigger?: HTMLElement
   private releaseScroll?: () => void
+  private slides: HTMLElement[] = []
+  private slideIndex = 0
+  private indexLabel?: HTMLElement
+  private previousButton?: HTMLButtonElement
+  private nextButton?: HTMLButtonElement
 
   connectedCallback() {
     if (this.controller) return
@@ -16,17 +33,30 @@ export class ImageInteractions extends HTMLElement {
     dialog.className = 'image-lightbox'
     dialog.setAttribute('aria-label', '图片大图')
     dialog.innerHTML = `<div class="image-lightbox__panel">
-      <button type="button" class="image-lightbox__close" aria-label="关闭大图"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
       <img alt="">
       <p class="image-lightbox__caption"></p>
+      <div class="image-lightbox__toolbar" role="group" aria-label="大图相册">
+        <span class="image-lightbox__index" aria-live="polite"></span>
+        <div class="image-lightbox__arrows">
+          <button type="button" class="image-lightbox__prev" aria-label="上一张">${PREV_ICON}</button>
+          <button type="button" class="image-lightbox__next" aria-label="下一张">${NEXT_ICON}</button>
+        </div>
+        <button type="button" class="image-lightbox__close" aria-label="关闭大图">${CLOSE_ICON}</button>
+      </div>
     </div>`
     document.body.append(dialog)
     this.dialog = dialog
+    this.indexLabel = dialog.querySelector('.image-lightbox__index')!
+    this.previousButton = dialog.querySelector('.image-lightbox__prev')!
+    this.nextButton = dialog.querySelector('.image-lightbox__next')!
+
     const close = () => {
       dialog.close()
       this.restore()
     }
-    dialog.querySelector('button')!.addEventListener('click', close, { signal })
+    dialog
+      .querySelector('.image-lightbox__close')!
+      .addEventListener('click', close, { signal })
     dialog.querySelector('img')!.addEventListener('click', close, { signal })
     dialog.addEventListener(
       'click',
@@ -43,23 +73,36 @@ export class ImageInteractions extends HTMLElement {
       },
       { signal }
     )
+    this.previousButton.addEventListener(
+      'click',
+      (event) => {
+        event.stopPropagation()
+        this.go(-1)
+      },
+      { signal }
+    )
+    this.nextButton.addEventListener(
+      'click',
+      (event) => {
+        event.stopPropagation()
+        this.go(1)
+      },
+      { signal }
+    )
 
     const openFrom = (trigger: HTMLElement) => {
-      if (dialog.open) return
       const view = trigger.closest<HTMLElement>('.image-view')
-      const image = view?.querySelector('img')
-      if (!view || !image) return
-      this.trigger = trigger
-      const source =
-        view
-          .querySelector<HTMLTemplateElement>('template')
-          ?.content.querySelector('img') ?? image
-      const target = dialog.querySelector('img')!
-      target.src = source.src
-      target.alt = image.alt
-      dialog.querySelector('p')!.textContent = image.alt
-      this.releaseScroll = lockScroll()
-      dialog.showModal()
+      if (!view?.querySelector('img')) return
+      // Marquee clones are openable (delegation) but must map onto the source slide.
+      this.slides = lightboxViewsInArticle(view)
+      const index = resolveLightboxSlideIndex(this.slides, view)
+      if (index < 0) return
+      this.slideIndex = index
+      this.showSlide(trigger)
+      if (!dialog.open) {
+        this.releaseScroll = lockScroll()
+        dialog.showModal()
+      }
     }
     // Delegation covers marquee clones. Those nodes copy markup, not listeners.
     document.addEventListener(
@@ -88,6 +131,19 @@ export class ImageInteractions extends HTMLElement {
     document.addEventListener(
       'keydown',
       (event) => {
+        if (dialog.open) {
+          if (event.key === 'ArrowLeft') {
+            event.preventDefault()
+            this.go(-1)
+            return
+          }
+          if (event.key === 'ArrowRight') {
+            event.preventDefault()
+            this.go(1)
+            return
+          }
+          return
+        }
         if (event.key !== 'Enter' && event.key !== ' ') return
         const image = event.target
         if (!(image instanceof HTMLImageElement)) return
@@ -110,6 +166,46 @@ export class ImageInteractions extends HTMLElement {
     )) {
       this.bindGallery(gallery, signal)
     }
+  }
+
+  private triggerFor(view: HTMLElement): HTMLElement | undefined {
+    return (
+      view.querySelector<HTMLElement>('.image-view__linked-zoom') ??
+      view.querySelector<HTMLElement>('img') ??
+      undefined
+    )
+  }
+
+  private showSlide(preferredTrigger?: HTMLElement) {
+    const view = this.slides[this.slideIndex]
+    const image = view?.querySelector<HTMLImageElement>('img')
+    const dialog = this.dialog
+    if (!view || !image || !dialog) return
+    this.trigger =
+      preferredTrigger && view.contains(preferredTrigger)
+        ? preferredTrigger
+        : (this.triggerFor(view) ?? preferredTrigger)
+    const source =
+      view
+        .querySelector<HTMLTemplateElement>('template')
+        ?.content.querySelector('img') ?? image
+    const target = dialog.querySelector('img')!
+    target.src = source.src
+    target.alt = image.alt
+    dialog.querySelector('p')!.textContent = image.alt
+    const total = this.slides.length
+    const current = this.slideIndex + 1
+    if (this.indexLabel) this.indexLabel.textContent = `${current}/${total}`
+    if (this.previousButton) this.previousButton.disabled = this.slideIndex <= 0
+    if (this.nextButton) this.nextButton.disabled = this.slideIndex >= total - 1
+  }
+
+  private go(delta: number) {
+    if (!this.dialog?.open || this.slides.length === 0) return
+    const next = clampSlideIndex(this.slideIndex + delta, this.slides.length)
+    if (next === this.slideIndex) return
+    this.slideIndex = next
+    this.showSlide()
   }
 
   /** 给没有作者链接的视图补上仅键盘可见的大图入口；克隆副本和已接管的视图跳过。 */
@@ -257,6 +353,8 @@ export class ImageInteractions extends HTMLElement {
   private restore() {
     this.releaseScroll?.()
     this.releaseScroll = undefined
+    this.slides = []
+    this.slideIndex = 0
     if (this.trigger?.isConnected) this.trigger.focus({ preventScroll: true })
     this.trigger = undefined
     this.dialog?.querySelector('img')?.removeAttribute('src')
@@ -269,5 +367,8 @@ export class ImageInteractions extends HTMLElement {
     this.restore()
     this.dialog?.remove()
     this.dialog = undefined
+    this.indexLabel = undefined
+    this.previousButton = undefined
+    this.nextButton = undefined
   }
 }

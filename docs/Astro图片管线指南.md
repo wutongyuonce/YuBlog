@@ -128,7 +128,7 @@ gallery／figure 不能嵌套或相互嵌套。非法属性、属性值或结构
 
 ## 普通正文图的大图
 
-普通 Markdown 正文图（包括 gallery／figure）启用 JS 后直接点击即可打开原生 dialog，不显示角落放大标识。鼠标悬浮时图片在原边框内轻微放大、移开复原，光标为 `zoom-in`；减少动态偏好下不缩放。键盘聚焦图片后可用 Enter／空格打开。大图光标为 `zoom-out`，点击图片、Esc、遮罩或关闭按钮均可退出，恢复焦点与打开前滚动锁；浅色遮罩灰白、深色暗色。作者用 `[![说明](./文章-img/a.png)](https://example.com/)` 或混合文字 `[![图](./photo.jpg) 文字](url)` 写的图片链接仍跳转，链接外的独立大图入口只在键盘焦点时显示；这种链接包图可用于普通正文，但不满足 gallery／figure 首图的直接图片约束。`titleImage` 的文章头图／文稿列表缩略图和站点头像不属于放大范围；`:::card` 配图属于正文，仍支持放大。
+普通 Markdown 正文图（包括 gallery／figure）启用 JS 后直接点击即可打开原生 dialog，不显示角落放大标识。鼠标悬浮时图片在原边框内轻微放大、移开复原，光标为 `zoom-in`；减少动态偏好下不缩放。键盘聚焦图片后可用 Enter／空格打开。大图光标为 `zoom-out`，点击图片、Esc、遮罩或关闭按钮均可退出，恢复焦点与打开前滚动锁；浅色遮罩灰白、深色暗色。打开后同一 `.markdown-content` 根下可放大图可翻页（含 `:::card` 封面与首页 MD 陈列架源卡；`data-marquee-clone` 副本去重；Excalidraw／blog-link 头像不进）：控件行在图与说明之下（索引、上一张／下一张、关闭），←／→ 可用，首末不循环；详见 [正文图片大图相册 SPEC](./正文图片大图相册%20SPEC.md)。作者用 `[![说明](./文章-img/a.png)](https://example.com/)` 或混合文字 `[![图](./photo.jpg) 文字](url)` 写的图片链接仍跳转，链接外的独立大图入口只在键盘焦点时显示；这种链接包图可用于普通正文，但不满足 gallery／figure 首图的直接图片约束。`titleImage` 的文章头图／文稿列表缩略图和站点头像不属于放大范围；`:::card` 配图属于正文，仍支持放大。
 
 `plugins/remark-image-layouts.ts` 在 `remarkMediaCard` 后生成布局和 image-view 包装；同模块的 `rehypeImageSources` 在 HTML 解析后保持 template 内大图对 Astro 图片 visitor 可见；每个普通 Markdown 正文图旁的 inert template 内有原尺寸 img，仍从图片节点交给 Astro 解析，不是作者手写 `<img>` 或资源 URL。可见图片沿用 `|w`；大图不沿用缩略图宽度，Astro 处理的大图副本只生成一个原尺寸版本，不生成无法使用的响应式变体；打开前不加载、不预加载。浏览器唯一交互属主是 `src/utils/image-interactions.ts`，widget 在 BaseLayout 只接线；关闭／disconnect 负责清理，并释放 `misc.ts` 的共享滚动锁。本地图继续走 Astro；远程图保持既有管线策略，不为放大新增外链抓取。
 
