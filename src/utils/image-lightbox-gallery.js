@@ -9,10 +9,11 @@
  * 的影游卡封面，含首页 MD 陈列架的**源**卡片).
  *
  * Excluded:
- * - `[data-marquee-clone]` — JS 为无缝横滑复制的 DOM 副本，不是第二份作者图；
- *   源卡片仍在相册里。从副本点开时用 src 对齐回源张（见 resolveLightboxSlideIndex）。
- * - `.excalidraw-embed` — 画布不是照片；有独立展开查看器，remark 也不包 image-view。
- * - `:::blog-link` 头像 — 站点导航缩略图，remark 故意不包 image-view。
+ * - `[data-marquee-clone]` — JS 为无缝横滑复制的 DOM 副本（首页专辑陈列架等同理）；
+ *   源卡封面仍进相册，每张逻辑图只一次。点副本用 src 对齐源张。
+ * - `.excalidraw-embed`（及其内部预览／导出图）— **始终**不进照片 lightbox：画布是
+ *   交互嵌入不是照片，有独立展开查看器；即使用 img 呈现也不并入相册。
+ * - 无 `.image-view` 的节点（如 `:::blog-link` 头像）— 本就不参与 zoom。
  */
 
 /** Prefer inert full-size template src; fall back to the visible img. */

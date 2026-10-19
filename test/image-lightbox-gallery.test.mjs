@@ -58,7 +58,8 @@ test('isLightboxGalleryView keeps marquee sources, drops clones and excalidraw',
   )
   assert.equal(
     isLightboxGalleryView(viewStub({ src: '/d.svg', excalidraw: true })),
-    false
+    false,
+    'preview/export img nested under excalidraw-embed stays out'
   )
 })
 
