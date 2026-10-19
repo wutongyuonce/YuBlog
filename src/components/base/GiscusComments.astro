@@ -54,9 +54,33 @@ const discussionsUrl = `https://github.com/${GISCUS.repo}/discussions`
 <script>
   import { observeTheme } from '~/utils/theme-observer.js'
 
+  /** Warm the same-origin giscus chunk without mounting the iframe. */
+  let modulePrefetch: Promise<unknown> | undefined
+  const prefetchModule = () => {
+    modulePrefetch ??= import('giscus').catch(() => {
+      modulePrefetch = undefined
+    })
+    return modulePrefetch
+  }
+
+  const ensurePreconnect = (href: string) => {
+    if (document.head.querySelector(`link[data-giscus-preconnect="${href}"]`)) {
+      return
+    }
+    const link = document.createElement('link')
+    link.rel = 'preconnect'
+    link.href = href
+    link.crossOrigin = 'anonymous'
+    link.dataset.giscusPreconnect = href
+    document.head.append(link)
+  }
+
   class GiscusComments extends HTMLElement {
     private observer?: IntersectionObserver
+    private idleId?: number
+    private idleTimer?: ReturnType<typeof setTimeout>
     private cleanupTheme?: () => void
+    private loading = false
 
     connectedCallback() {
       // OAuth callbacks must save the session even above the lazy-load boundary.
@@ -64,6 +88,19 @@ const discussionsUrl = `https://github.com/${GISCUS.repo}/discussions`
         void this.load()
         return
       }
+
+      // Idle: fetch the small Lit widget + TLS to giscus.app; still no iframe / GitHub.
+      const warm = () => {
+        ensurePreconnect('https://giscus.app')
+        void prefetchModule()
+      }
+      if ('requestIdleCallback' in window) {
+        this.idleId = requestIdleCallback(warm, { timeout: 3500 })
+      } else {
+        this.idleTimer = setTimeout(warm, 1800)
+      }
+
+      // Start the iframe a screen earlier so GitHub work overlaps the last scroll.
       this.observer = new IntersectionObserver(
         (entries) => {
           if (entries.some((entry) => entry.isIntersecting)) {
@@ -71,14 +108,17 @@ const discussionsUrl = `https://github.com/${GISCUS.repo}/discussions`
             void this.load()
           }
         },
-        { rootMargin: '200px' }
+        { rootMargin: '640px 0px' }
       )
       this.observer.observe(this)
     }
 
     private async load() {
+      if (this.loading || this.querySelector('giscus-widget')) return
+      this.loading = true
       try {
-        await import('giscus')
+        ensurePreconnect('https://giscus.app')
+        await prefetchModule()
         if (!this.isConnected) return
         const template = this.querySelector('template')!
         const isCallback = new URLSearchParams(location.search).has('giscus')
@@ -99,11 +139,17 @@ const discussionsUrl = `https://github.com/${GISCUS.repo}/discussions`
         if (this.isConnected) {
           this.append('评论暂时无法加载，请通过上方 GitHub 链接参与讨论。')
         }
+      } finally {
+        this.loading = false
       }
     }
 
     disconnectedCallback() {
       this.observer?.disconnect()
+      if (this.idleId !== undefined && 'cancelIdleCallback' in window) {
+        cancelIdleCallback(this.idleId)
+      }
+      if (this.idleTimer !== undefined) clearTimeout(this.idleTimer)
       this.cleanupTheme?.()
     }
   }
