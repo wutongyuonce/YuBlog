@@ -9,6 +9,8 @@ interface Props {
   label?: string
   /** When false, render a plain wrapper (for nesting inside another nav). */
   landmark?: boolean
+  /** Smaller muted text for home section headers. */
+  compact?: boolean
   class?: string
 }
 
@@ -17,6 +19,7 @@ const {
   excludeId,
   label = '随便逛逛',
   landmark = true,
+  compact = false,
   class: className,
 } = Astro.props
 
@@ -30,7 +33,11 @@ const Tag = landmark ? 'nav' : 'div'
 
 {fallback && hrefList.length > 0 && (
   <Tag
-    class:list={['random-browse', className]}
+    class:list={[
+      'random-browse',
+      className,
+      { 'random-browse--compact': compact },
+    ]}
     aria-label={landmark ? label : undefined}
     data-random-browse
   >
@@ -40,40 +47,60 @@ const Tag = landmark ? 'nav' : 'div'
       data-random-link
       data-candidates={JSON.stringify(hrefList)}
     >
-      随便逛逛
+      <span class="random-browse__wave" aria-hidden="true">
+        ～
+      </span>
+      <span class="random-browse__text">随便逛逛</span>
+      <span class="random-browse__wave" aria-hidden="true">
+        ～
+      </span>
     </a>
   </Tag>
 )}
 
 <style>
   .random-browse {
-    display: flex;
+    display: inline-flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
+    align-items: baseline;
   }
 
   .random-browse__link {
     display: inline-flex;
-    align-items: center;
-    padding: 0.4rem 0.8rem;
-    border: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
-    border-radius: 7px;
-    color: color-mix(in srgb, var(--c-text) 68%, transparent);
-    font-size: 0.875rem;
-    line-height: 1.4;
+    align-items: baseline;
+    gap: 0.28em;
+    color: var(--fg-deeper, var(--c-text));
+    font-size: 0.9375rem;
+    line-height: 1.5;
     text-decoration: none;
-    transition:
-      color 160ms ease,
-      background-color 160ms ease,
-      border-color 160ms ease;
+    border-bottom: 1px solid rgba(125, 125, 125, 0.3);
+    transition: border-color 0.3s ease-in-out;
   }
 
   .random-browse__link:hover,
   .random-browse__link:focus-visible {
-    color: var(--c-text);
-    background: color-mix(in srgb, var(--c-text) 8%, var(--c-bg));
-    border-color: color-mix(in srgb, var(--c-text) 22%, transparent);
+    border-bottom-color: var(--accent);
+  }
+
+  .random-browse__wave {
+    color: color-mix(in srgb, var(--c-text) 42%, transparent);
+    font-weight: 400;
+  }
+
+  .random-browse--compact .random-browse__link {
+    color: color-mix(in srgb, var(--c-text) 60%, var(--c-bg));
+    font-size: 0.75rem;
+    border-bottom-color: color-mix(in srgb, var(--c-text) 22%, transparent);
+  }
+
+  .random-browse--compact .random-browse__link:is(:hover, :focus-visible) {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .random-browse--compact .random-browse__wave {
+    color: inherit;
+    opacity: 0.72;
   }
 
   @media (prefers-reduced-motion: reduce) {

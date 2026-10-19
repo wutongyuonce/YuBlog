@@ -25,6 +25,9 @@ const showNav = Boolean(prev || next || items.length > 1)
     <div class="post-nav__row">
       {prev ? (
         <a class="post-nav__link" href={prev.href} title={prev.title}>
+          <span class="post-nav__icon" aria-hidden="true">
+            ←
+          </span>
           上一篇
         </a>
       ) : (
@@ -34,6 +37,9 @@ const showNav = Boolean(prev || next || items.length > 1)
       {next ? (
         <a class="post-nav__link" href={next.href} title={next.title}>
           下一篇
+          <span class="post-nav__icon" aria-hidden="true">
+            →
+          </span>
         </a>
       ) : (
         <span class="post-nav__spacer" aria-hidden="true" />
@@ -51,7 +57,7 @@ const showNav = Boolean(prev || next || items.length > 1)
   .post-nav__row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    align-items: center;
+    align-items: baseline;
     gap: 0.75rem;
   }
 
@@ -63,30 +69,29 @@ const showNav = Boolean(prev || next || items.length > 1)
     justify-self: end;
   }
 
+  /* Match markdown body links: soft underline, accent on hover. */
   .post-nav__link {
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    align-items: baseline;
+    gap: 0.3em;
     width: fit-content;
     max-width: 100%;
-    padding: 0.4rem 0.8rem;
-    border: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
-    border-radius: 7px;
-    color: color-mix(in srgb, var(--c-text) 68%, transparent);
-    font-size: 0.875rem;
-    line-height: 1.4;
+    color: var(--fg-deeper, var(--c-text));
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    font-weight: inherit;
     text-decoration: none;
-    transition:
-      color 160ms ease,
-      background-color 160ms ease,
-      border-color 160ms ease;
+    border-bottom: 1px solid rgba(125, 125, 125, 0.3);
+    transition: border-color 0.3s ease-in-out;
   }
 
   .post-nav__link:hover,
   .post-nav__link:focus-visible {
-    color: var(--c-text);
-    background: color-mix(in srgb, var(--c-text) 8%, var(--c-bg));
-    border-color: color-mix(in srgb, var(--c-text) 22%, transparent);
+    border-bottom-color: var(--accent);
+  }
+
+  .post-nav__icon {
+    color: color-mix(in srgb, var(--c-text) 48%, transparent);
   }
 
   .post-nav__spacer {
@@ -100,8 +105,7 @@ const showNav = Boolean(prev || next || items.length > 1)
 
     .post-nav__link,
     .post-nav :global(.random-browse__link) {
-      padding: 0.35rem 0.65rem;
-      font-size: 0.8125rem;
+      font-size: 0.875rem;
     }
   }
 
