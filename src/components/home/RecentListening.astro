@@ -153,8 +153,9 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
     font-variant-numeric: tabular-nums;
     overflow-wrap: anywhere;
   }
-  /* 常听歌手名：与写作热力摘要数值同级，仅值用强调色，标签保持 muted */
-  .recent-listening__artist {
+  /* 常听歌手名：与写作热力摘要数值同级，仅值用强调色，标签保持 muted。
+     选择器需压过 `.recent-listening__stats strong` 的正文色。 */
+  .recent-listening__stats strong.recent-listening__artist {
     color: var(--accent);
   }
   .recent-listening__body {

@@ -12,13 +12,7 @@ interface Props {
   hasSubtitle: boolean
 }
 
-const {
-  pubDate,
-  lastModDate,
-  minutesRead,
-  tags,
-  hasSubtitle,
-} = Astro.props
+const { pubDate, lastModDate, minutesRead, tags, hasSubtitle } = Astro.props
 
 const visibleTags = tagSelectionLinks(tags)
 const isMinimal = UI.postView.postMetaStyle === 'minimal'
