@@ -112,7 +112,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 
 普通 Markdown 正文图（包括 gallery／figure 中的图）不显示角落放大标识。可悬浮的精细指针下，图片在原显示边框内轻微放大，移开复原，不改变周围布局；光标为 `zoom-in`。减少动态效果偏好下不缩放。点图或键盘聚焦后按 Enter／空格，通过原生 `dialog` 查看原尺寸图；大图光标为 `zoom-out`，直接点击可收回，Esc、遮罩和关闭按钮也可退出，恢复焦点及打开前的滚动锁状态。浅色模式遮罩为灰白，深色模式保留暗色，文字和关闭控件随主题可读。作者用链接包裹的图片仍点击跳转，链接外的大图入口仅在键盘焦点时显示，不用放大行为劫持链接。此处排除的是 `titleImage` 的文章头图／文稿列表缩略图和站点头像；`:::card` 配图仍属于正文，支持放大。
 
-大图打开后，同一 `.markdown-content` 正文根下、已参与放大的图片组成相册：控件行在图与说明之下，左侧 `当前/总数`、中间上一张／下一张、右侧关闭；首张禁用上一张、末张禁用下一张，不循环；←／→ 翻页；说明随当前张更新。集合不另开发现路径，排除陈列架副本与 Excalidraw 嵌入。细节见 [正文图片大图相册 SPEC](./正文图片大图相册%20SPEC.md)。
+大图打开后，同一 `.markdown-content` 根（含首页 MD 陈列架等）下已参与放大的 `.image-view` 组成相册——含普通图、gallery／figure、影游／竖方卡封面（陈列架**源**卡）；过滤的是无缝横滑的 `data-marquee-clone` DOM 副本（避免同一封面重复），不是排除陈列架。Excalidraw 画布与 `:::blog-link` 头像不进照片相册。控件行在图与说明之下：左 `当前/总数`、中上一张／下一张、右关闭；首末禁用对应箭头、不循环；←／→ 翻页；说明随当前张更新。细节见 [正文图片大图相册 SPEC](./正文图片大图相册%20SPEC.md)。
 
 大图同样通过 Astro 解析，不沿用缩略图的 `|w` 宽度，不手写资源 URL，也不因放大功能在打开前预加载。Astro 处理的大图副本只产出单个原尺寸版本，不生成无法使用的响应式变体。RSS 保留全部可见图片和文字的源顺序，不重复输出大图副本、不复刻网格、横滚或绕排；实现与资源清理方式见架构文档 §4.9。
 
@@ -217,7 +217,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 | 博文链接卡 | `plugins/remark-blog-link.ts` | 同上；样式 `prose.css` | `remark-blog-link.test.mjs` |
 | 陈列架是否循环与视觉副本 | `src/utils/card-rail-marquee.js` | `CardRailMarquee.astro` 只接线；减少动态效果沿用 `reduced-motion.js`；位移、淡出和按下暂停在 `prose.css`，只在 `data-marquee="on"` 时生效 | `card-rail-marquee.test.mjs` |
 | gallery／figure 属性、内容结构、嵌套拒绝与带位置失败，普通正文图的 image-view／template 包装 | `plugins/remark-image-layouts.ts` | `plugins/index.ts` 在 `remarkMediaCard` 后接入；图片节点继续交给 Astro，不在组件或 RSS 重新推断布局 | `test/remark-image-layouts.test.mjs`、真实 Astro 产物检查 |
-| 相册箭头／圆点、dialog 大图（含正文相册翻页／索引／控件行）、页面资源清理（持有滚动锁 release） | `src/utils/image-interactions.ts` | `components/widgets/ImageInteractions.astro` 在 `BaseLayout` 只注册与接线；使用插件生成的 DOM 和 Astro 资源 | `scripts/verify-image-layouts.mjs`；相册契约见 `docs/正文图片大图相册 SPEC.md` |
+| 相册箭头／圆点、dialog 大图（含正文相册翻页／索引／控件行；陈列架源卡在、clone 去重）、页面资源清理（持有滚动锁 release） | `src/utils/image-interactions.ts`、`image-lightbox-gallery.js` | `components/widgets/ImageInteractions.astro` 在 `BaseLayout` 只注册与接线；使用插件生成的 DOM 和 Astro 资源 | `scripts/verify-image-layouts.mjs`、`test/image-lightbox-gallery.test.mjs`；契约见 `docs/正文图片大图相册 SPEC.md` |
 | 页面滚动锁、滚动条补偿及先前样式恢复 | `src/utils/misc.ts` | `lockScroll()` 返回对应 body 的 release；backdrop 和图片交互仅获取／释放，不自行改 overflow | `test/scroll-lock.test.mjs`、浏览器关闭与换页检查 |
 | 归档分类预设、持久分配、容量与失败 | `utils/blog-category-colors.js`；数据在 `data/blog-category-colors.json` | `ArchiveView` 传入实际展示的分类集合，CSS 只选择主题 | `blog-category-colors.test.mjs`、归档产物检查 |
 | 社交身份 | `config.ts` `AUTHOR_LINKS` | 首页读取配置，关于正文独立维护联系方式 | 构建产物检查核对身份 |

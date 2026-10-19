@@ -1,12 +1,56 @@
-/** Same-article views that already open today’s lightbox (no new discovery path). */
+/**
+ * Gallery discovery for the body-image lightbox.
+ *
+ * Scope: one `.markdown-content` root (blog body, interests MD, homepage
+ * 「近期书影游」等凡 Markdown 渲染进该根的内容).
+ *
+ * Included once each: every `.image-view` that already participates in zoom —
+ * ordinary images, gallery/figure, and `:::card` covers (竖／方陈列架与带外链
+ * 的影游卡封面，含首页 MD 陈列架的**源**卡片).
+ *
+ * Excluded:
+ * - `[data-marquee-clone]` — JS 为无缝横滑复制的 DOM 副本，不是第二份作者图；
+ *   源卡片仍在相册里。从副本点开时用 src 对齐回源张（见 resolveLightboxSlideIndex）。
+ * - `.excalidraw-embed` — 画布不是照片；有独立展开查看器，remark 也不包 image-view。
+ * - `:::blog-link` 头像 — 站点导航缩略图，remark 故意不包 image-view。
+ */
+
+/** Prefer inert full-size template src; fall back to the visible img. */
+export function imageViewSourceKey(view) {
+  const template = view.querySelector('template')
+  const full =
+    template && 'content' in template
+      ? template.content.querySelector('img')
+      : null
+  const image = full ?? view.querySelector('img')
+  if (!image) return ''
+  return image.getAttribute('src') || image.src || ''
+}
+
+export function isLightboxGalleryView(view) {
+  return (
+    !view.closest('[data-marquee-clone]') &&
+    !view.closest('.excalidraw-embed') &&
+    !!view.querySelector('img')
+  )
+}
+
+/** Same MD root; originals only (marquee sources in, clones out). */
 export function lightboxViewsInArticle(from) {
   const root = from.closest('.markdown-content') ?? document
-  return [...root.querySelectorAll('.image-view')].filter(
-    (view) =>
-      !view.closest('[data-marquee-clone]') &&
-      !view.closest('.excalidraw-embed') &&
-      !!view.querySelector('img')
-  )
+  return [...root.querySelectorAll('.image-view')].filter(isLightboxGalleryView)
+}
+
+/**
+ * Map a clicked view (including a marquee clone) onto the deduped slide list.
+ * @returns {number} index in slides, or -1
+ */
+export function resolveLightboxSlideIndex(slides, fromView) {
+  const direct = slides.indexOf(fromView)
+  if (direct >= 0) return direct
+  const key = imageViewSourceKey(fromView)
+  if (!key) return -1
+  return slides.findIndex((view) => imageViewSourceKey(view) === key)
 }
 
 export function clampSlideIndex(index, total) {

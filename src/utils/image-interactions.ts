@@ -2,6 +2,7 @@ import { lockScroll } from './misc'
 import {
   clampSlideIndex,
   lightboxViewsInArticle,
+  resolveLightboxSlideIndex,
 } from './image-lightbox-gallery.js'
 
 const CLOSE_ICON =
@@ -92,8 +93,9 @@ export class ImageInteractions extends HTMLElement {
     const openFrom = (trigger: HTMLElement) => {
       const view = trigger.closest<HTMLElement>('.image-view')
       if (!view?.querySelector('img')) return
+      // Marquee clones are openable (delegation) but must map onto the source slide.
       this.slides = lightboxViewsInArticle(view)
-      const index = this.slides.indexOf(view)
+      const index = resolveLightboxSlideIndex(this.slides, view)
       if (index < 0) return
       this.slideIndex = index
       this.showSlide(trigger)
