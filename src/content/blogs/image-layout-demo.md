@@ -492,9 +492,9 @@ $$
 $$
 ```
 
-## 代码块：行号、高亮与折叠
+## 代码块：行号、高亮、折叠与 diff
 
-代码围栏使用 Expressive Code，支持文件名、复制、行号、高亮和折叠。下面第 2–4 行默认折叠，点击即可展开，第 6 行高亮。
+代码围栏使用 Expressive Code，支持文件名、复制、行号、高亮、折叠，以及绿 `+` / 红 `-` 的改动标记。下面第 2–4 行默认折叠，点击即可展开，第 6 行高亮。
 
 ```js title="example.js" showLineNumbers collapse={2-4} {6}
 function total(values) {
@@ -513,6 +513,48 @@ function total(values) {
   }, 0)
 }
 console.log(total([1, 2, 3]))
+```
+````
+
+用 `diff` 语言在行首写 `+` / `-`，就会出现绿色新增、红色删除；加 `lang="js"` 还能保留 JavaScript 语法高亮。也可用 `ins={…}` / `del={…}` 按行号标记，不必改代码内容。
+
+```diff lang="js" title="example.js"
+ function total(values) {
+-  return values.reduce((sum, value) => sum + value, 0)
++  return values.reduce((sum, value) => {
++    return sum + value
++  }, 0)
+ }
+```
+
+````md
+```diff lang="js" title="example.js"
+ function total(values) {
+-  return values.reduce((sum, value) => sum + value, 0)
++  return values.reduce((sum, value) => {
++    return sum + value
++  }, 0)
+ }
+```
+````
+
+```js title="example.js" del={2} ins={3-5}
+function total(values) {
+  return values.reduce((sum, value) => sum + value, 0)
+  return values.reduce((sum, value) => {
+    return sum + value
+  }, 0)
+}
+```
+
+````md
+```js title="example.js" del={2} ins={3-5}
+function total(values) {
+  return values.reduce((sum, value) => sum + value, 0)
+  return values.reduce((sum, value) => {
+    return sum + value
+  }, 0)
+}
 ```
 ````
 
