@@ -1024,14 +1024,25 @@ main:has(.post-content) > footer.prose :is(a, span) {
   height: 24px;
 }
 .image-lightbox__close:hover,
-.image-lightbox__prev:hover,
-.image-lightbox__next:hover,
 .excalidraw-expand__close:hover {
   opacity: 0.65;
 }
+/* Prev/next: muted at rest; :active briefly brighter; disabled quieter.
+   Do not use sticky :hover/:focus fill — a click must not leave the control
+   looking pressed. Keyboard a11y stays outline-only via focus-visible below. */
+.image-lightbox__prev,
+.image-lightbox__next {
+  opacity: 0.55;
+  color: color-mix(in srgb, var(--c-text) 78%, var(--c-bg));
+}
+.image-lightbox__prev:active:not(:disabled),
+.image-lightbox__next:active:not(:disabled) {
+  opacity: 1;
+  color: var(--c-text);
+}
 .image-lightbox__prev:disabled,
 .image-lightbox__next:disabled {
-  opacity: 0.35;
+  opacity: 0.28;
   cursor: default;
 }
 .image-lightbox__caption {
