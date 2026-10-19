@@ -28,7 +28,7 @@ const lazyFixture = await page.cdp('Page.addScriptToEvaluateOnNewDocument', {
       if (!document.documentElement) return;
       const style = document.createElement('style');
       style.id = 'giscus-lazy-fixture';
-      style.textContent = 'giscus-comments { margin-top: 1200px !important; }';
+      style.textContent = 'giscus-comments { margin-top: 2800px !important; }';
       document.documentElement.append(style);
       observer.disconnect();
     };

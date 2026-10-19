@@ -1,6 +1,6 @@
 ---
 import { Image } from 'astro:assets'
-import PostMeta from '~/components/base/PostMeta.astro'
+import { withBasePath } from '~/utils/path'
 import { ARTICLE_COLUMN_WIDTH } from '~/utils/misc'
 
 import type { ImageMetadata } from 'astro'
@@ -10,10 +10,9 @@ interface Props {
   description: string
   titleImage: ImageMetadata
   titleImageAlt: string
-  pubDate: string
 }
 
-const { title, description, titleImage, titleImageAlt, pubDate } = Astro.props
+const { title, description, titleImage, titleImageAlt } = Astro.props
 ---
 
 <section class="post-hero" aria-label={title}>
@@ -25,16 +24,18 @@ const { title, description, titleImage, titleImageAlt, pubDate } = Astro.props
     priority
   />
   <div class="post-hero__content">
-    <p class="post-hero__title">{title}</p>
+    <div class="post-hero__title-row">
+      <img
+        class="post-hero__avatar"
+        src={withBasePath('/avatar.webp')}
+        alt=""
+        aria-hidden="true"
+        width="40"
+        height="40"
+      />
+      <p class="post-hero__title">{title}</p>
+    </div>
     {description && <p class="post-hero__subtitle">{description}</p>}
-    <PostMeta
-      {pubDate}
-      lastModDate={undefined}
-      minutesRead={0}
-      tags={[]}
-      hasSubtitle={!!description}
-      variant="hero"
-    />
   </div>
 </section>
 
@@ -84,6 +85,24 @@ const { title, description, titleImage, titleImageAlt, pubDate } = Astro.props
     align-items: flex-start;
     justify-content: flex-end;
     padding: clamp(1.25rem, 4vw, 2rem);
+    padding-bottom: clamp(1.5rem, 4.5vw, 2.35rem);
+  }
+
+  .post-hero__title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    max-width: 100%;
+  }
+
+  .post-hero__avatar {
+    flex-shrink: 0;
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    margin: 0 !important;
+    border: 1px solid currentColor;
+    border-radius: 999px !important;
+    object-fit: cover;
   }
 
   .post-hero__title {
@@ -100,7 +119,7 @@ const { title, description, titleImage, titleImageAlt, pubDate } = Astro.props
 
   .post-hero__subtitle {
     max-width: 60ch;
-    margin: 0.8rem 0 0 !important;
+    margin: 1.35rem 0 0 !important;
     color: inherit;
     font-size: 0.875rem;
     line-height: 1.7;
@@ -115,6 +134,15 @@ const { title, description, titleImage, titleImageAlt, pubDate } = Astro.props
 
     .post-hero__content {
       padding: 1.25rem;
+      padding-bottom: 1.55rem;
+    }
+
+    .post-hero__title-row {
+      gap: 0.65rem;
+    }
+
+    .post-hero__subtitle {
+      margin-top: 1.15rem !important;
     }
   }
 </style>
