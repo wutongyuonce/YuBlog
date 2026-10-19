@@ -146,8 +146,10 @@ const state = await page.evaluate(() => {
   button.setAttribute('aria-label', 'Test fixture: 30 posts')
   cell.replaceWith(button)
   const panel = button.closest('[data-year-panel]')
-  const yearSelect = root.querySelector('#writing-heatmap-year')
-  if (yearSelect) yearSelect.value = panel.dataset.yearPanel
+  const yearInput = root.querySelector(
+    `input[name="writing-heatmap-year"][value="${panel.dataset.yearPanel}"]`
+  )
+  if (yearInput) yearInput.checked = true
   const date = button.dataset.date
   const posts = Array.from({ length: 30 }, (_, index) => ({
     title: `LongTitle${index}${'x'.repeat(60)}`,
@@ -223,11 +225,13 @@ try {
   await page.goto('about:blank')
   await page.goto(base)
   const noJs = await page.evaluate(() => {
-    const select = document.querySelector('.writing-heatmap__year-select')
-    if (!select || select.options.length < 2) return null // Single-year calendar has no switch.
-    const option = [...select.options].find((item) => !item.selected)
+    const radios = [
+      ...document.querySelectorAll('input[name="writing-heatmap-year"]'),
+    ]
+    if (radios.length < 2) return null // Single-year calendar has no switch.
+    const option = radios.find((item) => !item.checked)
     if (!option) return null
-    select.value = option.value
+    option.checked = true
     return { year: option.value }
   })
   if (noJs) {

@@ -52,7 +52,7 @@ const yearOptions = [...years].reverse()
 const yearSwitchCss = years
   .map(
     (year) =>
-      `.writing-heatmap:has(#writing-heatmap-year option[value='${year.year}']:checked) [data-year-panel='${year.year}']{display:block}`
+      `.writing-heatmap:has(input[name='writing-heatmap-year'][value='${year.year}']:checked) [data-year-panel='${year.year}']{display:block}`
   )
   .join('')
 ---
@@ -67,22 +67,29 @@ const yearSwitchCss = years
     <header class="home-section-header">
       <h2 id="writing-heatmap-title">写作热力</h2>
       {years.length > 1 ? (
-        <label class="writing-heatmap__years">
-          <span class="writing-heatmap__years-label">年份</span>
-          <select
-            id="writing-heatmap-year"
-            class="writing-heatmap__year-select"
+        <details class="writing-heatmap__years" data-year-picker>
+          <summary class="writing-heatmap__year-trigger" aria-label="年份">
+            <span data-year-label>{heatmap.selectedYear}</span>
+            <span class="writing-heatmap__year-chevron" aria-hidden="true" />
+          </summary>
+          <div
+            class="writing-heatmap__year-list"
+            role="radiogroup"
+            aria-label="年份"
           >
             {yearOptions.map((year) => (
-              <option
-                value={year.year}
-                selected={year.year === heatmap.selectedYear}
-              >
+              <label class="writing-heatmap__year-option">
+                <input
+                  type="radio"
+                  name="writing-heatmap-year"
+                  value={year.year}
+                  checked={year.year === heatmap.selectedYear}
+                />
                 {year.year}
-              </option>
+              </label>
             ))}
-          </select>
-        </label>
+          </div>
+        </details>
       ) : (
         <p class="writing-heatmap__single-year">{years[0].year}</p>
       )}
@@ -201,15 +208,89 @@ const yearSwitchCss = years
   }
   .writing-heatmap__years {
     position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
     color: var(--accent);
     font-family: var(--font-heading);
     font-size: 0.875rem;
     font-variant-numeric: tabular-nums;
   }
-  .writing-heatmap__years-label {
+  .writing-heatmap__year-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    box-sizing: border-box;
+    min-width: 4.75rem;
+    margin: 0;
+    padding: 0.1rem 0.1rem 0.1rem 0.35rem;
+    border: 0;
+    border-radius: 0;
+    box-shadow: inset 0 -1px 0 var(--accent);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.4;
+    list-style: none;
+    cursor: pointer;
+  }
+  .writing-heatmap__year-trigger::-webkit-details-marker {
+    display: none;
+  }
+  .writing-heatmap__year-trigger:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  .writing-heatmap__year-chevron {
+    display: inline-block;
+    width: 0.4rem;
+    height: 0.4rem;
+    margin-inline: 0.15rem 0.2rem;
+    border-inline-end: 1.5px solid var(--accent);
+    border-bottom: 1.5px solid var(--accent);
+    transform: rotate(45deg) translateY(-1px);
+    transition: transform 120ms ease;
+  }
+  .writing-heatmap__years[open] .writing-heatmap__year-chevron {
+    transform: rotate(225deg) translateY(-1px);
+  }
+  .writing-heatmap__year-list {
+    position: absolute;
+    top: calc(100% + 0.3rem);
+    right: 0;
+    z-index: 50;
+    display: grid;
+    gap: 0.1rem;
+    min-width: 100%;
+    margin: 0;
+    padding: 0.3rem;
+    border: 1px solid color-mix(in srgb, var(--c-text) 12%, var(--c-bg));
+    background: var(--c-bg);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--c-text) 8%, transparent);
+  }
+  .writing-heatmap__years:not([open]) .writing-heatmap__year-list {
+    display: none;
+  }
+  .writing-heatmap__year-option {
+    display: block;
+    margin: 0;
+    padding: 0.28rem 0.55rem;
+    border-radius: 2px;
+    color: color-mix(in srgb, var(--c-text) 78%, var(--c-bg));
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.4;
+    text-align: end;
+    cursor: pointer;
+  }
+  .writing-heatmap__year-option:hover,
+  .writing-heatmap__year-option:focus-within {
+    background: color-mix(in srgb, var(--accent) 12%, var(--c-bg));
+    color: var(--accent);
+  }
+  .writing-heatmap__year-option:has(input:checked) {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .writing-heatmap__year-option input {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -219,36 +300,9 @@ const yearSwitchCss = years
     overflow: hidden;
     clip: rect(0 0 0 0);
   }
-  .writing-heatmap__year-select {
-    appearance: none;
-    box-sizing: border-box;
-    min-width: 4.75rem;
-    margin: 0;
-    padding: 0.1rem 1.35rem 0.1rem 0.35rem;
-    border: 0;
-    border-radius: 0;
-    box-shadow: inset 0 -1px 0 var(--accent);
-    background-color: transparent;
-    background-image: linear-gradient(
-        45deg,
-        transparent 50%,
-        var(--accent) 50%
-      ),
-      linear-gradient(135deg, var(--accent) 50%, transparent 50%);
-    background-position:
-      calc(100% - 0.85rem) 55%,
-      calc(100% - 0.55rem) 55%;
-    background-size: 5px 5px;
-    background-repeat: no-repeat;
-    color: var(--accent);
-    font: inherit;
-    font-variant-numeric: tabular-nums;
-    line-height: 1.4;
-    cursor: pointer;
-  }
-  .writing-heatmap__year-select:focus-visible {
+  .writing-heatmap__year-option:has(input:focus-visible) {
     outline: 2px solid var(--accent);
-    outline-offset: 3px;
+    outline-offset: 1px;
   }
   .writing-heatmap__panel {
     display: none;
@@ -583,10 +637,90 @@ const yearSwitchCss = years
     )
   }
 
+  const bindYearPicker = (root: HTMLElement) => {
+    const picker = root.querySelector<HTMLDetailsElement>('[data-year-picker]')
+    if (!picker || picker.dataset.bound) return
+    picker.dataset.bound = 'true'
+    const label = picker.querySelector<HTMLElement>('[data-year-label]')
+    const options = Array.from(
+      picker.querySelectorAll<HTMLLabelElement>('.writing-heatmap__year-option')
+    )
+    const controller = new AbortController()
+    const { signal } = controller
+
+    const sync = () => {
+      const checked = picker.querySelector<HTMLInputElement>(
+        'input[name="writing-heatmap-year"]:checked'
+      )
+      if (label && checked) label.textContent = checked.value
+    }
+
+    const close = (restoreFocus = false) => {
+      picker.open = false
+      if (restoreFocus)
+        picker
+          .querySelector<HTMLElement>('.writing-heatmap__year-trigger')
+          ?.focus({ preventScroll: true })
+    }
+
+    picker.addEventListener(
+      'change',
+      (event) => {
+        if (!(event.target instanceof HTMLInputElement)) return
+        if (event.target.name !== 'writing-heatmap-year') return
+        sync()
+        close(true)
+      },
+      { signal }
+    )
+    // Same-year reselect still closes (change does not fire).
+    options.forEach((option) => {
+      option.addEventListener(
+        'click',
+        () => {
+          if (!picker.open) return
+          const input = option.querySelector<HTMLInputElement>('input')
+          if (input?.checked) {
+            sync()
+            close(true)
+          }
+        },
+        { signal }
+      )
+    })
+    document.addEventListener(
+      'pointerdown',
+      (event) => {
+        if (!picker.open) return
+        if (event.target instanceof Node && !picker.contains(event.target))
+          close()
+      },
+      { signal }
+    )
+    document.addEventListener(
+      'keydown',
+      (event) => {
+        if (event.key === 'Escape' && picker.open) {
+          event.preventDefault()
+          close(true)
+        }
+      },
+      { signal }
+    )
+    document.addEventListener('astro:before-swap', () => controller.abort(), {
+      once: true,
+      signal,
+    })
+    sync()
+  }
+
   const bindAll = () => {
     document
       .querySelectorAll<HTMLElement>('[data-writing-heatmap]')
-      .forEach(bindHeatmap)
+      .forEach((root) => {
+        bindHeatmap(root)
+        bindYearPicker(root)
+      })
   }
 
   document.addEventListener('astro:page-load', bindAll)
