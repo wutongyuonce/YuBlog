@@ -18,6 +18,7 @@
 
 ### 修复
 
+- 窄屏 TOC 浮层提到正文嵌入视频之上：按钮与面板 `z-index` 高于 `.rds-video`（150），打开目录时不再被 B 站／YouTube 等嵌入层挡住或抢走点击。
 - Oneko 像素猫在 Astro ClientRouter 站内跳转后不再消失：换页若移除 body 上的猫节点，则在 `astro:page-load` 上用 `createOneko` 重建；页脚隐藏开关仍由引擎同步。
 
 ## 1.3.0 — 2026-10-15
