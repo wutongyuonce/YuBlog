@@ -14,13 +14,10 @@ interface Props {
 }
 
 const { items } = Astro.props
-const { maxGroupColumns, showGroupItemColorOnHover } = UI.groupView
+const { showGroupItemColorOnHover } = UI.groupView
 ---
 
-<div
-  class="group-grid"
-  style={`--group-columns: ${maxGroupColumns};`}
->
+<div class="group-grid">
   {
     items.map((item) => (
       <Link
@@ -49,12 +46,10 @@ const { maxGroupColumns, showGroupItemColorOnHover } = UI.groupView
 <style>
   .group-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.5rem;
-    margin: 0 auto;
-    max-width: calc(
-      350px * var(--group-columns) + (var(--group-columns) - 1) * 0.5rem
-    );
+    margin: 0;
+    max-width: 100%;
   }
 
   .group-card {
@@ -122,16 +117,21 @@ const { maxGroupColumns, showGroupItemColorOnHover } = UI.groupView
     margin-top: 0.125rem;
   }
 
-  @media (max-width: 1127.9px) {
-    .group-grid {
-      max-width: 100% !important;
-    }
-  }
-
   @media (max-width: 767.9px) {
     .group-grid {
-      grid-template-columns: 1fr;
-      max-width: 100% !important;
+      gap: 0.4rem;
+    }
+
+    .group-card {
+      padding: 0.625rem 0.7rem;
+    }
+
+    .group-card__title {
+      font-size: 0.9375rem;
+    }
+
+    .group-card__desc {
+      font-size: 0.8125rem;
     }
   }
 </style>
