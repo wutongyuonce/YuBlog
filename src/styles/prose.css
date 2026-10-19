@@ -324,16 +324,14 @@
   max-width: var(--blog-prose-width);
 }
 
-/* The back link is a sibling footer. Match the article column, then hang
-   left by the h2 anchor (0.9em of 1.6em) so ">" lines up with "#". */
+/* The back link is a sibling footer; share the article column left edge.
+   (Former left hang aligned ">" with floating heading "#"; both are gone.) */
 main:has(.post-content) > footer.prose {
   width: min(100%, var(--blog-prose-width));
   max-width: none;
-  /* ch must match .post-content; the link itself keeps the reading size. */
+  /* Match .post-content root size; the link keeps the reading size below. */
   font-size: 1rem;
   margin-inline: auto;
-  position: relative;
-  left: -1.44rem;
 }
 
 main:has(.post-content) > footer.prose :is(a, span) {
