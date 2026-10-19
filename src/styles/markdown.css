@@ -158,10 +158,9 @@ html.dark .prose {
   height: 1.4em;
 }
 
-/* rehype-autolink-headings */
+/* rehype-autolink-headings: `#` stays after heading text (append); no left float */
 a.header-anchor {
-  float: left;
-  margin-left: -0.9em;
+  margin-inline-start: 0.35em;
   border: 0 !important;
   opacity: 0.35;
   font-size: 1em;
