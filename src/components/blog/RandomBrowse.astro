@@ -1,0 +1,123 @@
+---
+import { fallbackRandomOther, type PostNavItem } from '~/utils/post-nav'
+
+interface Props {
+  candidates: PostNavItem[]
+  /** Exclude this post id (detail page). Omit on list page. */
+  excludeId?: string
+  /** Accessible name when rendering as a landmark. */
+  label?: string
+  /** When false, render a plain wrapper (for nesting inside another nav). */
+  landmark?: boolean
+  /** Smaller muted text for home section headers. */
+  compact?: boolean
+  class?: string
+}
+
+const {
+  candidates,
+  excludeId,
+  label = '随便逛逛',
+  landmark = true,
+  compact = false,
+  class: className,
+} = Astro.props
+
+const fallback = fallbackRandomOther(candidates, excludeId)
+const hrefList = (
+  excludeId ? candidates.filter((item) => item.id !== excludeId) : candidates
+).map((item) => item.href)
+
+const Tag = landmark ? 'nav' : 'div'
+---
+
+{fallback && hrefList.length > 0 && (
+  <Tag
+    class:list={[
+      'random-browse',
+      className,
+      { 'random-browse--compact': compact },
+    ]}
+    aria-label={landmark ? label : undefined}
+    data-random-browse
+  >
+    <a
+      class="random-browse__link"
+      href={fallback.href}
+      data-random-link
+      data-candidates={JSON.stringify(hrefList)}
+    >
+      <span class="random-browse__text">随便逛逛</span>
+      <span class="random-browse__wave" aria-hidden="true">
+        ～
+      </span>
+    </a>
+  </Tag>
+)}
+
+<style>
+  .random-browse {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+  }
+
+  .random-browse__link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.28em;
+    color: var(--fg-deeper, var(--c-text));
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(125, 125, 125, 0.3);
+    transition: border-color 0.3s ease-in-out;
+  }
+
+  .random-browse__link:hover,
+  .random-browse__link:focus-visible {
+    border-bottom-color: var(--accent);
+  }
+
+  .random-browse__wave {
+    color: color-mix(in srgb, var(--c-text) 42%, transparent);
+    font-weight: 400;
+  }
+
+  .random-browse--compact .random-browse__link {
+    color: color-mix(in srgb, var(--c-text) 60%, var(--c-bg));
+    font-size: 0.75rem;
+    border-bottom-color: color-mix(in srgb, var(--c-text) 22%, transparent);
+  }
+
+  .random-browse--compact .random-browse__link:is(:hover, :focus-visible) {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .random-browse--compact .random-browse__wave {
+    color: inherit;
+    opacity: 0.72;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .random-browse__link {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { bindRandomBrowseLinks } from '~/utils/post-nav-random.js'
+
+  declare global {
+    interface Window {
+      __yublogRandomBrowseBound?: boolean
+    }
+  }
+
+  if (!window.__yublogRandomBrowseBound) {
+    window.__yublogRandomBrowseBound = true
+    bindRandomBrowseLinks()
+  }
+</script>

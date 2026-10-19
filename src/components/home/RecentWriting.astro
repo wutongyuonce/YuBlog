@@ -1,15 +1,36 @@
 ---
-import { getRecentBlogPosts } from '~/utils/data'
+import RandomBrowse from '~/components/blog/RandomBrowse.astro'
+import {
+  getPublishedBlogPosts,
+  getRecentBlogPosts,
+  getSortedPosts,
+} from '~/utils/data'
+import type { PostNavItem } from '~/utils/post-nav'
 import { formatRecentPostDate } from '~/utils/recent-post-date.js'
 import { withBasePath } from '~/utils/path'
 
 const posts = await getRecentBlogPosts()
+const randomCandidates: PostNavItem[] = getSortedPosts(
+  await getPublishedBlogPosts()
+).map((post) => ({
+  id: post.id,
+  title: post.data.title,
+  href: post.data.redirect || withBasePath(`/blogs/${post.id}/`),
+}))
 ---
 
 <section class="recent-writing" aria-labelledby="recent-writing-title">
   <header class="home-section-header">
     <h2 id="recent-writing-title">近期笔墨</h2>
-    <a href={withBasePath('/blogs/')}>全部文稿</a>
+    <div class="home-section-header__aside">
+      <RandomBrowse
+        candidates={randomCandidates}
+        compact
+        landmark={false}
+        class="recent-writing__random"
+      />
+      <a href={withBasePath('/blogs/')}>全部文稿</a>
+    </div>
   </header>
   {posts.length ? (
     <ol class="recent-writing__timeline">
