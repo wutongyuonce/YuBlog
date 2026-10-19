@@ -16,14 +16,14 @@ const onekoEnabled = Array.isArray(oneko) && oneko[0]
           梧桐雨
         </a>
       </span>
-      <span class="footer-mark lt-sm:hidden" aria-hidden="true"></span>
+      <span class="footer-mark lt-sm:hidden" aria-hidden="true">·</span>
       <span>
         <span class="op-50">Built with</span>{' '}
         <a class="footer-link" href="https://astro.build">
           Astro
         </a>
       </span>
-      <span class="footer-mark lt-sm:hidden" aria-hidden="true"></span>
+      <span class="footer-mark lt-sm:hidden" aria-hidden="true">·</span>
       <a
         class="footer-link"
         href="https://icp.gov.moe/?keyword=20269668"
@@ -34,9 +34,9 @@ const onekoEnabled = Array.isArray(oneko) && oneko[0]
       </a>
       {onekoEnabled && (
         <>
-          <span class="footer-mark lt-sm:hidden" aria-hidden="true"></span>
+          <span class="footer-mark lt-sm:hidden" aria-hidden="true">·</span>
           <button type="button" class="footer-oneko-toggle" data-oneko-toggle>
-            隐藏小猫
+            <span aria-hidden="true">🐾</span> 隐藏小猫
           </button>
         </>
       )}
@@ -93,11 +93,9 @@ const onekoEnabled = Array.isArray(oneko) && oneko[0]
 
   .footer-mark {
     flex: none;
-    width: 0.38rem;
-    height: 0.38rem;
-    margin-inline: 0.55rem;
-    border-radius: 999px;
-    background: var(--accent);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+    margin-inline: 0.45rem;
+    color: color-mix(in srgb, var(--fg) 55%, transparent);
+    font-size: 1.15em;
+    line-height: 1;
   }
 </style>

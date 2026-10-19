@@ -14,7 +14,7 @@
 - **ON**：跟随光标、睡觉、气泡、记住位置、季节帽子、`reducedMotion="hide"`、访客隐藏开关、导航避让区。
 - **OFF**：喵叫、激光笔、抓取、零食、跟随焦点、悬停栖息、打字时打盹。
 - **挂载**：`BaseLayout` 用 `createOneko` 挂载托管引擎；猫挂在 `document.body`，不占版心。站内 View Transitions 换页后若猫被移除，则在 `astro:page-load` 上重建。
-- **隐藏**：页脚 `data-oneko-toggle` 按钮，文案「隐藏小猫」；引擎负责跨标签页记忆与 `aria-pressed` 同步。
+- **隐藏**：页脚 `data-oneko-toggle` 按钮，可见文案前有装饰性 `🐾`（`aria-hidden`），读屏仍为「隐藏小猫」；引擎负责跨标签页记忆与 `aria-pressed` 同步。
 
 ### 非目标
 
