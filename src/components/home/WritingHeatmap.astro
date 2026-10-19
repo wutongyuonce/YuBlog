@@ -208,32 +208,39 @@ const yearSwitchCss = years
   }
   .writing-heatmap__years {
     position: relative;
+    flex-shrink: 0;
     color: var(--accent);
     font-family: var(--font-heading);
     font-size: 0.875rem;
     font-variant-numeric: tabular-nums;
   }
+  @media (max-width: 600px) {
+    .writing-heatmap .home-section-header {
+      gap: 0.5rem;
+    }
+  }
   .writing-heatmap__year-trigger {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.25rem;
     box-sizing: border-box;
-    min-width: 4.75rem;
     margin: 0;
-    padding: 0.1rem 0.1rem 0.1rem 0.35rem;
+    padding: 0;
     border: 0;
     border-radius: 0;
-    box-shadow: inset 0 -1px 0 var(--accent);
     background: transparent;
     color: inherit;
     font: inherit;
     font-variant-numeric: tabular-nums;
     line-height: 1.4;
     list-style: none;
+    text-decoration: none;
     cursor: pointer;
   }
-  .writing-heatmap__year-trigger::-webkit-details-marker {
+  .writing-heatmap__year-trigger::-webkit-details-marker,
+  .writing-heatmap__year-trigger::marker {
     display: none;
+    content: '';
   }
   .writing-heatmap__year-trigger:focus-visible {
     outline: 2px solid var(--accent);
@@ -243,7 +250,7 @@ const yearSwitchCss = years
     display: inline-block;
     width: 0.4rem;
     height: 0.4rem;
-    margin-inline: 0.15rem 0.2rem;
+    margin-inline-start: 0.15rem;
     border-inline-end: 1.5px solid var(--accent);
     border-bottom: 1.5px solid var(--accent);
     transform: rotate(45deg) translateY(-1px);
@@ -254,17 +261,16 @@ const yearSwitchCss = years
   }
   .writing-heatmap__year-list {
     position: absolute;
-    top: calc(100% + 0.3rem);
+    top: calc(100% + 0.2rem);
     right: 0;
     z-index: 50;
     display: grid;
-    gap: 0.1rem;
+    gap: 0;
     min-width: 100%;
     margin: 0;
-    padding: 0.3rem;
-    border: 1px solid color-mix(in srgb, var(--c-text) 12%, var(--c-bg));
+    padding: 0.1rem 0;
+    border: 0;
     background: var(--c-bg);
-    box-shadow: 0 8px 24px color-mix(in srgb, var(--c-text) 8%, transparent);
   }
   .writing-heatmap__years:not([open]) .writing-heatmap__year-list {
     display: none;
@@ -272,8 +278,8 @@ const yearSwitchCss = years
   .writing-heatmap__year-option {
     display: block;
     margin: 0;
-    padding: 0.28rem 0.55rem;
-    border-radius: 2px;
+    padding: 0.2rem 0.05rem 0.2rem 0.55rem;
+    border-radius: 0;
     color: color-mix(in srgb, var(--c-text) 78%, var(--c-bg));
     font: inherit;
     font-variant-numeric: tabular-nums;
@@ -283,7 +289,6 @@ const yearSwitchCss = years
   }
   .writing-heatmap__year-option:hover,
   .writing-heatmap__year-option:focus-within {
-    background: color-mix(in srgb, var(--accent) 12%, var(--c-bg));
     color: var(--accent);
   }
   .writing-heatmap__year-option:has(input:checked) {
@@ -639,8 +644,8 @@ const yearSwitchCss = years
 
   const bindYearPicker = (root: HTMLElement) => {
     const picker = root.querySelector<HTMLDetailsElement>('[data-year-picker]')
-    if (!picker || picker.dataset.bound) return
-    picker.dataset.bound = 'true'
+    if (!picker || root.dataset.yearPickerBound) return
+    root.dataset.yearPickerBound = 'true'
     const label = picker.querySelector<HTMLElement>('[data-year-label]')
     const options = Array.from(
       picker.querySelectorAll<HTMLLabelElement>('.writing-heatmap__year-option')

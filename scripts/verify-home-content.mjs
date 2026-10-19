@@ -159,6 +159,7 @@ const state = await page.evaluate(() => {
   document.dispatchEvent(new Event('astro:before-swap'))
   const replacement = root.cloneNode(true)
   delete replacement.dataset.bound
+  delete replacement.dataset.yearPickerBound
   root.replaceWith(replacement)
   document.dispatchEvent(new Event('astro:page-load'))
   const nextButton = replacement.querySelector(`button[data-date="${date}"]`)
@@ -197,6 +198,7 @@ const state = await page.evaluate(() => {
   document.dispatchEvent(new Event('astro:before-swap'))
   const fresh = replacement.cloneNode(true)
   delete fresh.dataset.bound
+  delete fresh.dataset.yearPickerBound
   replacement.replaceWith(fresh)
   document.dispatchEvent(new Event('astro:page-load'))
   fresh.querySelector(`button[data-date="${date}"]`).click()
