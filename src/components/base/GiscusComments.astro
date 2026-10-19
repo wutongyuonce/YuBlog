@@ -57,8 +57,9 @@ const discussionsUrl = `https://github.com/${GISCUS.repo}/discussions`
   /** Warm the same-origin giscus chunk without mounting the iframe. */
   let modulePrefetch: Promise<unknown> | undefined
   const prefetchModule = () => {
-    modulePrefetch ??= import('giscus').catch(() => {
+    modulePrefetch ??= import('giscus').catch((error) => {
       modulePrefetch = undefined
+      throw error
     })
     return modulePrefetch
   }
@@ -83,6 +84,19 @@ const discussionsUrl = `https://github.com/${GISCUS.repo}/discussions`
     private loading = false
 
     connectedCallback() {
+      const widget = this.querySelector('giscus-widget')
+      if (widget) {
+        this.cleanupTheme?.()
+        const syncTheme = () => {
+          widget.theme = document.documentElement.classList.contains('dark')
+            ? 'noborder_dark'
+            : 'noborder_light'
+        }
+        syncTheme()
+        this.cleanupTheme = observeTheme(syncTheme)
+        return
+      }
+
       // OAuth callbacks must save the session even above the lazy-load boundary.
       if (new URLSearchParams(location.search).has('giscus')) {
         void this.load()
@@ -92,7 +106,9 @@ const discussionsUrl = `https://github.com/${GISCUS.repo}/discussions`
       // Idle: fetch the small Lit widget + TLS to giscus.app; still no iframe / GitHub.
       const warm = () => {
         ensurePreconnect('https://giscus.app')
-        void prefetchModule()
+        void prefetchModule().catch(() => {
+          // load() reports failures when comments are needed.
+        })
       }
       if ('requestIdleCallback' in window) {
         this.idleId = requestIdleCallback(warm, { timeout: 3500 })

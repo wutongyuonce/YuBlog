@@ -164,7 +164,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 
 评论存入公开仓库的 GitHub Discussions，访客可以阅读，发表与回应需要 GitHub OAuth 登录。每个页面使用规范化、带尾斜杠的 pathname 作为独立关联键，忽略域名、query 和 hash；相似路径严格匹配，不共享评论。中文路径使用 URL 编码形式。站点 base 是路径的一部分；修改 slug 或 base 前需处理旧讨论的关联，本站不自动迁移。
 
-接近评论区时才加载评论模块及 iframe；OAuth 回调立即初始化以保存登录结果。评论初始配色及之后的切换都跟随博客实际明暗主题，切换不重建 iframe。ClientRouter 换页后使用新页面的关联键，旧组件停止观察主题与可见性，不后台轮询、不持有本站评论缓存。评论不属于作者正文，不进入全文 RSS 和 Pagefind 正文索引。
+空闲时允许预取同域评论模块并预连接 giscus.app；接近评论区（进入视口外 640px 范围）时才挂载 iframe 并加载 GitHub，短页可能首屏已在此范围内，无需滚动即加载；OAuth 回调立即初始化以保存登录结果。评论初始配色及之后的切换都跟随博客实际明暗主题，切换不重建 iframe。ClientRouter 换页后使用新页面的关联键，旧组件停止观察主题与可见性，不后台轮询、不持有本站评论缓存。评论不属于作者正文，不进入全文 RSS 和 Pagefind 正文索引。
 
 尚无留言不是失败：Giscus 在第一次评论或回应时创建 Discussion。模块下载失败时显示提示；第三方网络、仓库配置或登录错误由 Giscus 展示，本站始终保留 GitHub Discussions 入口。无 JavaScript 时正文、友链模板和该入口可用。评论依赖 GitHub／Giscus 的网络与权限，不提供匿名身份、离线评论、自建审核后台、自动添加友链或独立限流机制。
 

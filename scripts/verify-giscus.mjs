@@ -40,6 +40,10 @@ const lazyFixture = await page.cdp('Page.addScriptToEvaluateOnNewDocument', {
 try {
   await page.goto(new URL(categoryPath, base).href)
   await page.waitForSelector('giscus-comments')
+  await page.waitForSelector('link[data-giscus-preconnect]', {
+    state: 'attached',
+    timeout: 6000,
+  })
   assert.equal(
     await page.evaluate(() => document.querySelector('giscus-widget') === null),
     true,
