@@ -47,10 +47,12 @@ const years =
     ),
   })) ?? []
 
+const yearOptions = [...years].reverse()
+
 const yearSwitchCss = years
   .map(
     (year) =>
-      `.writing-heatmap:has(#writing-heatmap-year-${year.year}:checked) [data-year-panel='${year.year}']{display:block}`
+      `.writing-heatmap:has(#writing-heatmap-year option[value='${year.year}']:checked) [data-year-panel='${year.year}']{display:block}`
   )
   .join('')
 ---
@@ -65,20 +67,22 @@ const yearSwitchCss = years
     <header class="home-section-header">
       <h2 id="writing-heatmap-title">写作热力</h2>
       {years.length > 1 ? (
-        <div class="writing-heatmap__years" role="radiogroup" aria-label="年份">
-          {years.map((year) => (
-            <label class="writing-heatmap__year">
-              <input
-                type="radio"
-                name="writing-heatmap-year"
-                id={`writing-heatmap-year-${year.year}`}
+        <label class="writing-heatmap__years">
+          <span class="writing-heatmap__years-label">年份</span>
+          <select
+            id="writing-heatmap-year"
+            class="writing-heatmap__year-select"
+          >
+            {yearOptions.map((year) => (
+              <option
                 value={year.year}
-                checked={year.year === heatmap.selectedYear}
-              />
-              <span>{year.year}</span>
-            </label>
-          ))}
-        </div>
+                selected={year.year === heatmap.selectedYear}
+              >
+                {year.year}
+              </option>
+            ))}
+          </select>
+        </label>
       ) : (
         <p class="writing-heatmap__single-year">{years[0].year}</p>
       )}
@@ -196,20 +200,16 @@ const yearSwitchCss = years
     font-variant-numeric: tabular-nums;
   }
   .writing-heatmap__years {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 0.35rem 1.1rem;
-  }
-  .writing-heatmap__year {
     position: relative;
-    color: color-mix(in srgb, var(--c-text) 42%, var(--c-bg));
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--accent);
     font-family: var(--font-heading);
     font-size: 0.875rem;
     font-variant-numeric: tabular-nums;
-    cursor: pointer;
   }
-  .writing-heatmap__year input {
+  .writing-heatmap__years-label {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -219,14 +219,34 @@ const yearSwitchCss = years
     overflow: hidden;
     clip: rect(0 0 0 0);
   }
-  .writing-heatmap__year:hover,
-  .writing-heatmap__year:has(:checked) {
-    color: var(--accent);
-  }
-  .writing-heatmap__year:has(:checked) {
+  .writing-heatmap__year-select {
+    appearance: none;
+    box-sizing: border-box;
+    min-width: 4.75rem;
+    margin: 0;
+    padding: 0.1rem 1.35rem 0.1rem 0.35rem;
+    border: 0;
+    border-radius: 0;
     box-shadow: inset 0 -1px 0 var(--accent);
+    background-color: transparent;
+    background-image: linear-gradient(
+        45deg,
+        transparent 50%,
+        var(--accent) 50%
+      ),
+      linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+    background-position:
+      calc(100% - 0.85rem) 55%,
+      calc(100% - 0.55rem) 55%;
+    background-size: 5px 5px;
+    background-repeat: no-repeat;
+    color: var(--accent);
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.4;
+    cursor: pointer;
   }
-  .writing-heatmap__year:has(:focus-visible) {
+  .writing-heatmap__year-select:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 3px;
   }

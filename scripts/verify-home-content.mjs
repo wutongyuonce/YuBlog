@@ -146,10 +146,8 @@ const state = await page.evaluate(() => {
   button.setAttribute('aria-label', 'Test fixture: 30 posts')
   cell.replaceWith(button)
   const panel = button.closest('[data-year-panel]')
-  const yearInput = root.querySelector(
-    `#writing-heatmap-year-${panel.dataset.yearPanel}`
-  )
-  if (yearInput) yearInput.checked = true
+  const yearSelect = root.querySelector('#writing-heatmap-year')
+  if (yearSelect) yearSelect.value = panel.dataset.yearPanel
   const date = button.dataset.date
   const posts = Array.from({ length: 30 }, (_, index) => ({
     title: `LongTitle${index}${'x'.repeat(60)}`,
@@ -225,21 +223,14 @@ try {
   await page.goto('about:blank')
   await page.goto(base)
   const noJs = await page.evaluate(() => {
-    const input = document.querySelector(
-      '.writing-heatmap__years input:not(:checked)'
-    )
-    if (!input) return null // A single-year calendar has no year switch.
-    const rect = input.parentElement.getBoundingClientRect()
-    return {
-      year: input.value,
-      x: rect.left + rect.width / 2,
-      y: rect.top + rect.height / 2,
-    }
+    const select = document.querySelector('.writing-heatmap__year-select')
+    if (!select || select.options.length < 2) return null // Single-year calendar has no switch.
+    const option = [...select.options].find((item) => !item.selected)
+    if (!option) return null
+    select.value = option.value
+    return { year: option.value }
   })
   if (noJs) {
-    await page.mouse.click(noJs.x, noJs.y, {
-      label: 'switch year without scripts',
-    })
     assert.equal(
       await page.evaluate(
         (year) =>
