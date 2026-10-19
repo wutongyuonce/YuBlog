@@ -4,7 +4,7 @@ description: 面向 Apple Silicon Mac 的新机开发环境配置指南，涵盖
 pubDate: 2026-02-02
 category: 技术
 lastModDate: 2026-10-17
-tags: [macOS、ghostty]
+tags: [macOS, ghostty]
 toc: true
 search: true
 draft: false
