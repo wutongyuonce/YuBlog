@@ -585,7 +585,9 @@ test('home listening ships an empty skeleton the runtime endpoint fills', async 
     hasClass(node, 'recent-listening__stats')
   )[0]
   assert.deepEqual(
-    elements(stats, (node) => node.tagName === 'strong').map(textOf),
+    elements(stats, (node) => 'dataListeningStat' in node.properties).map(
+      (node) => textOf(node).trim()
+    ),
     ['—', '—', '—']
   )
   assert.match(textOf(stats), /过去 7 天/)
