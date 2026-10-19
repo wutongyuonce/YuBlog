@@ -31,7 +31,7 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
       累计 <strong data-listening-stat>—</strong> 次
     </span>
     <span>
-      常听歌手 <strong data-listening-stat>—</strong>
+      常听歌手 <strong class="recent-listening__artist" data-listening-stat>—</strong>
     </span>
   </div>
   <div class="prose markdown-content recent-listening__body">
@@ -149,6 +149,10 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
     font-weight: 500;
     font-variant-numeric: tabular-nums;
     overflow-wrap: anywhere;
+  }
+  /* 常听歌手名：与写作热力摘要数值同级，仅值用强调色，标签保持 muted */
+  .recent-listening__artist {
+    color: var(--accent);
   }
   .recent-listening__body {
     margin-top: 0.75rem;
