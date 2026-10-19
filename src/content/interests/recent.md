@@ -1,5 +1,5 @@
-:::card{layout="portrait" title="生化危机：爆发夜" href="https://zh.wikipedia.org/wiki/恶灵古堡：爆发夜" meta="2026 年重启的生化危机。看到最后快被气死了 hhh"}
-![生化危机：爆发夜海报](./movie/resident-evil.jpg)
+:::card{layout="portrait" title="葬送的芙莉莲" href="https://zh.wikipedia.org/wiki/葬送的芙莉莲" meta="好温柔的动漫，世界上有这样的动漫真是太美好了"}
+![葬送的芙莉莲海报](./anime/frieren.jpg)
 :::
 
 :::card{layout="portrait" title="牧神记" href="https://zh.moegirl.org.cn/牧神记" meta="陪秦牧斗神"}

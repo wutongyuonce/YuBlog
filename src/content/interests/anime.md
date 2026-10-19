@@ -28,12 +28,6 @@ order: 1
 
 准备看的：
 
-:::card{title="葬送的芙莉莲" href="https://zh.wikipedia.org/wiki/葬送的芙莉莲" label="日漫"}
-![葬送的芙莉莲海报](./anime/frieren.jpg)
-
-准备看。
-:::
-
 :::card{title="进击的巨人" href="https://zh.wikipedia.org/wiki/進擊的巨人" label="日漫"}
 ![进击的巨人海报](./anime/aot.jpg)
 
@@ -101,6 +95,12 @@ order: 1
 :::
 
 日漫：
+
+:::card{title="葬送的芙莉莲" href="https://zh.wikipedia.org/wiki/葬送的芙莉莲" score="5" label="日漫"}
+![葬送的芙莉莲海报](./anime/frieren.jpg)
+
+好温柔的动漫，世界上有这样的动漫真是太美好了
+:::
 
 :::card{title="EVA 新世纪福音战士" href="https://zh.wikipedia.org/wiki/新世纪福音战士" score="5" label="日漫"}
 ![EVA 新世纪福音战士海报](./anime/eva.jpg)
