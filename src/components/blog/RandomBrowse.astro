@@ -1,0 +1,99 @@
+---
+import { fallbackRandomOther, type PostNavItem } from '~/utils/post-nav'
+
+interface Props {
+  candidates: PostNavItem[]
+  /** Exclude this post id (detail page). Omit on list page. */
+  excludeId?: string
+  /** Accessible name when rendering as a landmark. */
+  label?: string
+  /** When false, render a plain wrapper (for nesting inside another nav). */
+  landmark?: boolean
+  class?: string
+}
+
+const {
+  candidates,
+  excludeId,
+  label = '随便逛逛',
+  landmark = true,
+  class: className,
+} = Astro.props
+
+const fallback = fallbackRandomOther(candidates, excludeId)
+const hrefList = (
+  excludeId ? candidates.filter((item) => item.id !== excludeId) : candidates
+).map((item) => item.href)
+
+const Tag = landmark ? 'nav' : 'div'
+---
+
+{fallback && hrefList.length > 0 && (
+  <Tag
+    class:list={['random-browse', className]}
+    aria-label={landmark ? label : undefined}
+    data-random-browse
+  >
+    <a
+      class="random-browse__link"
+      href={fallback.href}
+      data-random-link
+      data-candidates={JSON.stringify(hrefList)}
+    >
+      随便逛逛
+    </a>
+  </Tag>
+)}
+
+<style>
+  .random-browse {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .random-browse__link {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
+    border-radius: 7px;
+    color: color-mix(in srgb, var(--c-text) 68%, transparent);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    text-decoration: none;
+    transition:
+      color 160ms ease,
+      background-color 160ms ease,
+      border-color 160ms ease;
+  }
+
+  .random-browse__link:hover,
+  .random-browse__link:focus-visible {
+    color: var(--c-text);
+    background: color-mix(in srgb, var(--c-text) 8%, var(--c-bg));
+    border-color: color-mix(in srgb, var(--c-text) 22%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .random-browse__link {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { bindRandomBrowseLinks } from '~/utils/post-nav-random.js'
+
+  declare global {
+    interface Window {
+      __yublogRandomBrowseBound?: boolean
+    }
+  }
+
+  if (!window.__yublogRandomBrowseBound) {
+    window.__yublogRandomBrowseBound = true
+    bindRandomBrowseLinks()
+  }
+</script>

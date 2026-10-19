@@ -1,0 +1,113 @@
+---
+import RandomBrowse from './RandomBrowse.astro'
+import { getFilteredPosts, getSortedPosts } from '~/utils/data'
+import { getPostNeighbors, type PostNavItem } from '~/utils/post-nav'
+import { withBasePath } from '~/utils/path'
+
+interface Props {
+  currentId: string
+}
+
+const { currentId } = Astro.props
+
+const posts = getSortedPosts(await getFilteredPosts('blogs'))
+const items: PostNavItem[] = posts.map((post) => ({
+  id: post.id,
+  title: post.data.title,
+  href: post.data.redirect || withBasePath(`/blogs/${post.id}/`),
+}))
+const { prev, next } = getPostNeighbors(items, currentId)
+const showNav = Boolean(prev || next || items.length > 1)
+---
+
+{showNav && (
+  <nav class="post-nav prose mx-auto" aria-label="文章导航">
+    <div class="post-nav__row">
+      {prev ? (
+        <a class="post-nav__link" href={prev.href} title={prev.title}>
+          上一篇
+        </a>
+      ) : (
+        <span class="post-nav__spacer" aria-hidden="true" />
+      )}
+      <RandomBrowse candidates={items} excludeId={currentId} landmark={false} />
+      {next ? (
+        <a class="post-nav__link" href={next.href} title={next.title}>
+          下一篇
+        </a>
+      ) : (
+        <span class="post-nav__spacer" aria-hidden="true" />
+      )}
+    </div>
+  </nav>
+)}
+
+<style>
+  .post-nav {
+    margin-top: 1.75rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .post-nav__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .post-nav__row > :first-child {
+    justify-self: start;
+  }
+
+  .post-nav__row > :last-child {
+    justify-self: end;
+  }
+
+  .post-nav__link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    max-width: 100%;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
+    border-radius: 7px;
+    color: color-mix(in srgb, var(--c-text) 68%, transparent);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    text-decoration: none;
+    transition:
+      color 160ms ease,
+      background-color 160ms ease,
+      border-color 160ms ease;
+  }
+
+  .post-nav__link:hover,
+  .post-nav__link:focus-visible {
+    color: var(--c-text);
+    background: color-mix(in srgb, var(--c-text) 8%, var(--c-bg));
+    border-color: color-mix(in srgb, var(--c-text) 22%, transparent);
+  }
+
+  .post-nav__spacer {
+    min-height: 1px;
+  }
+
+  @media (max-width: 480px) {
+    .post-nav__row {
+      gap: 0.45rem;
+    }
+
+    .post-nav__link,
+    .post-nav :global(.random-browse__link) {
+      padding: 0.35rem 0.65rem;
+      font-size: 0.8125rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .post-nav__link {
+      transition: none;
+    }
+  }
+</style>
