@@ -541,6 +541,13 @@ ${longGallery}
     true,
     'a linked image zoom button opens its associated image'
   )
+  assert.equal(
+    await page.evaluate(() =>
+      document.querySelector('dialog img').getAttribute('alt')
+    ),
+    '复杂链接',
+    'each linked zoom button opens its own image, not a sibling link image'
+  )
   await page.click('.image-lightbox__close')
   assert.equal(
     await page.evaluate(() =>
