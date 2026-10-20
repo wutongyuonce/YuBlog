@@ -71,7 +71,8 @@ export default defineConfig({
     // 在生成产物前裁掉 KaTeX 的 woff / ttf，字体与 CSS 哈希都一致
     css: { postcss: { plugins: [katexWoff2Only()] } },
     build: {
-      cssCodeSplit: false, // 全站一份 CSS，避免硬刷新某个页面时丢掉顶栏/侧栏样式
+      // 每个页面只内联自己引用到的样式块；样式仍随 HTML 到达，不新增外链。
+      cssCodeSplit: true,
       chunkSizeWarningLimit: 2200, // Excalidraw 导出包较大；画布接近视口才加载
       // 默认 500KB
     },

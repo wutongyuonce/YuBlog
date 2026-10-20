@@ -22,19 +22,18 @@ const sitePath = (path) => new URL(path.replace(/^\//, ''), siteBase).pathname
 
 const load = async (file) =>
   fromHtml(await readFile(new URL(`../dist/${file}`, import.meta.url), 'utf8'))
+const pageFiles = [
+  'index.html',
+  'blogs/index.html',
+  'interests/index.html',
+  'about/index.html',
+  'archives/index.html',
+  'tags/index.html',
+  'projects/index.html',
+  'friends/index.html',
+]
 const [home, blogs, interests, about, archives, tags, projects, friends] =
-  await Promise.all(
-    [
-      'index.html',
-      'blogs/index.html',
-      'interests/index.html',
-      'about/index.html',
-      'archives/index.html',
-      'tags/index.html',
-      'projects/index.html',
-      'friends/index.html',
-    ].map(load)
-  )
+  await Promise.all(pageFiles.map(load))
 const articleFiles = (
   await readdir(new URL('../dist/blogs/', import.meta.url), { recursive: true })
 ).filter((file) => file.endsWith('/index.html'))
@@ -63,26 +62,13 @@ const hasClass = (node, name) => node.properties.className?.includes(name)
 const textOf = (node) =>
   node.type === 'text' ? node.value : (node.children || []).map(textOf).join('')
 
-test('home delivers its complete layout without waiting for external stylesheets', () => {
-  assert.deepEqual(
-    elements(
-      home,
-      (node) =>
-        node.tagName === 'link' && node.properties.rel?.includes('stylesheet')
-    ),
-    [],
-    'a pending stylesheet must not block the homepage first paint'
-  )
+test('home ships its own layout and background rules inline', () => {
+  // Delivery itself (no external sheet, no @import, theme tokens inline) is owned
+  // by the per-page check below; this test owns the homepage-specific rules.
   const head = elements(home, (node) => node.tagName === 'head')[0]
   const css = elements(head, (node) => node.tagName === 'style')
     .map(textOf)
     .join('\n')
-  assert.doesNotMatch(
-    css,
-    /@import\b/i,
-    'inline CSS must not fetch another sheet'
-  )
-  assert.match(css, /--c-bg\s*:/, 'theme tokens arrive with the document')
   assert.match(
     css,
     /\.home-page\b/,
@@ -93,6 +79,63 @@ test('home delivers its complete layout without waiting for external stylesheets
     /\.fixed\s*\{/,
     'the background positioning arrives with the document'
   )
+})
+
+test('every page delivers its styles with the document', async () => {
+  // Splitting CSS per page means each page carries a different set of blocks;
+  // asserting only the homepage would let a page lose its styles silently.
+  // Article pages are the one exception: ExpressiveCode ships its own sheet.
+  const built = [
+    ...pageFiles.map((file, index) => ({ page: pages[index], file })),
+    ...articleFiles.map((file, index) => ({
+      page: articles[index],
+      file: `blogs/${file}`,
+    })),
+    {
+      page: fromHtml(
+        await readFile(new URL('../dist/404.html', import.meta.url), 'utf8')
+      ),
+      file: '404.html',
+    },
+    ...(await Promise.all(
+      (
+        await readdir(new URL('../dist/interests/', import.meta.url), {
+          recursive: true,
+        })
+      )
+        .filter((file) => file.endsWith('/index.html'))
+        .map(async (file) => ({
+          page: fromHtml(
+            await readFile(
+              new URL(`../dist/interests/${file}`, import.meta.url),
+              'utf8'
+            )
+          ),
+          file: `interests/${file}`,
+        }))
+    )),
+  ]
+  for (const { page, file } of built) {
+    const links = elements(
+      page,
+      (node) =>
+        node.tagName === 'link' && node.properties.rel?.includes('stylesheet')
+    )
+    for (const link of links)
+      assert.match(
+        String(link.properties.href),
+        /\/_astro\/ec\./,
+        `${file}: only the pre-existing code-block sheet may stay external`
+      )
+    const css = elements(
+      elements(page, (node) => node.tagName === 'head')[0],
+      (node) => node.tagName === 'style'
+    )
+      .map(textOf)
+      .join('\n')
+    assert.doesNotMatch(css, /@import\b/i, `${file}: no imported sheet`)
+    assert.match(css, /--c-bg\s*:/, `${file}: theme tokens arrive inline`)
+  }
 })
 
 test('only articles, friends and every interest category have isolated comments after their content', async () => {
