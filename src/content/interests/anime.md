@@ -8,12 +8,6 @@ order: 1
 
 正在看：
 
-:::card{title="赛博朋克边缘行者 2" href="https://zh.wikipedia.org/wiki/赛博浪客" label="日漫"}
-![赛博朋克边缘行者 2 海报](./anime/edgerunners-2.png)
-
-正在看。
-:::
-
 :::card{title="FX战士久留美" href="https://zh.wikipedia.org/wiki/FX战士久留美" score="4" label="日漫"}
 ![FX战士久留美海报](./anime/fx-kurumi.jpg)
 
@@ -244,6 +238,12 @@ order: 1
 ![赛博朋克边缘行者海报](./anime/edgerunners.jpg)
 
 夜之城边缘的一小队人。很短，戴维和露西那条线收得很狠。
+:::
+
+:::card{title="赛博朋克边缘行者 2" href="https://zh.wikipedia.org/wiki/赛博浪客" score="2" label="日漫"}
+![赛博朋克边缘行者 2 海报](./anime/edgerunners-2.png)
+
+彻头彻尾的失望，怎么能写出这样混乱毫无逻辑的剧本的，简直是在伤害赛博朋克这个 ip。
 :::
 
 :::card{title="86 不存在的战区" href="https://zh.wikipedia.org/wiki/86—不存在的戰區—" score="4.5" label="日漫"}
