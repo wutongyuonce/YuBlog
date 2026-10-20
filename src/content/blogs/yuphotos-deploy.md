@@ -1,5 +1,5 @@
 ---
-title: 部署梧桐雨相册，并同步 Afilmory 上游
+title: Afilmory相册部署
 description: 照片放 Cloudflare R2，网页用 GitHub Pages。第一次部署、加照片、同步上游。
 pubDate: 2026-10-21
 category: 博客开发

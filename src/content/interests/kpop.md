@@ -17,3 +17,4 @@ order: 6
 * Lessarafim [Chaewon](https://zh.wikipedia.org/wiki/金采源)
 * NMIXX [Sullyoon](https://zh.wikipedia.org/wiki/Sullyoon)
 * Hearts2Hearts [JIWOO](https://kprofiles.com/jiwoo-hearts2hearts-profile/)、[IAN](https://kprofiles.com/ian-hearts2hearts-profile-and-facts/)、[JUUN](https://kprofiles.com/juun-hearts2hearts-profile-and-facts/)、[STELLA](https://kprofiles.com/stella-hearts2hearts-profile-and-facts/)
+* A2O_LITE Aijing、RADA

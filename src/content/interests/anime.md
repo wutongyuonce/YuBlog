@@ -20,6 +20,12 @@ order: 1
 正在看。
 :::
 
+:::card{title="葬送的芙莉莲 2" href="https://zh.wikipedia.org/wiki/葬送的芙莉莲" score="4" label="日漫"}
+![葬送的芙莉莲 2 海报](./anime/frieren-2.jpg)
+
+正在看。
+:::
+
 准备看的：
 
 :::card{title="进击的巨人" href="https://zh.wikipedia.org/wiki/進擊的巨人" label="日漫"}
@@ -216,13 +222,13 @@ order: 1
 外表和家里完全两样的两个人。甜，剧情比较直。
 :::
 
-:::card{title="总之就是非常可爱" href="https://zh.wikipedia.org/wiki/總之就是非常可愛" score="3.5" label="日漫"}
+:::card{title="总之就是非常可爱" href="https://zh.wikipedia.org/wiki/總之就是非常可愛" score="3" label="日漫"}
 ![总之就是非常可爱海报](./anime/tonikawa.jpg)
 
 情侣日常，每集一个小场面。可爱是目的，别的不多。
 :::
 
-:::card{title="平家物语" href="https://zh.wikipedia.org/wiki/平家物语" score="4" label="日漫"}
+:::card{title="平家物语" href="https://zh.wikipedia.org/wiki/平家物语" score="3.5" label="日漫"}
 ![平家物语海报](./anime/heike.jpg)
 
 山田尚子拍平家衰落。史诗被收成一个人眼里的季节。
@@ -243,10 +249,10 @@ order: 1
 :::card{title="赛博朋克边缘行者 2" href="https://zh.wikipedia.org/wiki/赛博浪客" score="2" label="日漫"}
 ![赛博朋克边缘行者 2 海报](./anime/edgerunners-2.png)
 
-彻头彻尾的失望，怎么能写出这样混乱毫无逻辑的剧本的，简直是在伤害赛博朋克这个 ip。
+可惜了赛博朋克的设定和画面制作水平，第二季整个剧本混乱又缺乏张力，毫无内核。
 :::
 
-:::card{title="86 不存在的战区" href="https://zh.wikipedia.org/wiki/86—不存在的戰區—" score="4.5" label="日漫"}
+:::card{title="86 不存在的战区" href="https://zh.wikipedia.org/wiki/86—不存在的戰區—" score="4" label="日漫"}
 ![86 不存在的战区海报](./anime/eighty-six.jpg)
 
 墙外的人和墙内的指挥。战争、种族和那台机甲都没有轻松写。
@@ -302,7 +308,7 @@ order: 1
 猫腻那条线上的修行故事。世界观大，人还是在问自己要走哪条路。
 :::
 
-:::card{title="镇魂街" href="https://zh.wikipedia.org/wiki/镇魂街" score="4.5" label="国漫"}
+:::card{title="镇魂街" href="https://zh.wikipedia.org/wiki/镇魂街" score="4" label="国漫"}
 ![镇魂街海报](./anime/rakshasa.jpg)
 
 守护灵和镇魂将。热血打戏直给，人设也记得住。

@@ -1,9 +1,9 @@
-:::card{layout="portrait" title="赛博朋克边缘行者 2" href="https://zh.wikipedia.org/wiki/赛博浪客" meta="彻头彻尾的失望，怎么能写出这样混乱毫无逻辑的剧本的，简直是在伤害赛博朋克这个 ip。"}
+:::card{layout="portrait" title="赛博朋克边缘行者 2" href="https://zh.wikipedia.org/wiki/赛博浪客" meta="可惜了赛博朋克的设定和画面制作水平，第二季整个剧本混乱又缺乏张力，毫无内核。"}
 ![赛博朋克边缘行者 2 海报](./anime/edgerunners-2.png)
 :::
 
-:::card{layout="portrait" title="葬送的芙莉莲" href="https://zh.wikipedia.org/wiki/葬送的芙莉莲" meta="好温柔的动漫，世界上有这样的动漫真是太美好了"}
-![葬送的芙莉莲海报](./anime/frieren.jpg)
+:::card{layout="portrait" title="葬送的芙莉莲 2" href="https://zh.wikipedia.org/wiki/葬送的芙莉莲" meta="正在看。"}
+![葬送的芙莉莲 2 海报](./anime/frieren-2.jpg)
 :::
 
 :::card{layout="portrait" title="流人第六季" href="https://zh.wikipedia.org/wiki/流人" meta="看兰姆的刻薄与温情，边缘人办案、挣扎生存。"}
