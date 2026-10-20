@@ -266,7 +266,7 @@ const yearSwitchCss = years
     z-index: 50;
     display: grid;
     gap: 0;
-    min-width: max(100%, 4.25rem);
+    min-width: 100%;
     margin: 0;
     padding: 0.25rem 0;
     border: 1px solid color-mix(in srgb, var(--c-text) 12%, var(--c-bg));
@@ -278,13 +278,13 @@ const yearSwitchCss = years
   .writing-heatmap__year-option {
     display: block;
     margin: 0;
-    padding: 0.4rem 0.75rem;
+    padding: 0.4rem 0.55rem;
     border-radius: 0;
     color: color-mix(in srgb, var(--c-text) 78%, var(--c-bg));
     font: inherit;
     font-variant-numeric: tabular-nums;
     line-height: 1.4;
-    text-align: end;
+    text-align: center;
     cursor: pointer;
   }
   .writing-heatmap__year-option:hover,
