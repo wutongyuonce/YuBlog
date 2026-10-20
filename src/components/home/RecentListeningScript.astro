@@ -1,0 +1,48 @@
+<!-- Render before ClientRouter so listening does not queue behind its module dependencies. -->
+<script>
+  import {
+    parseListeningPayload,
+    renderListening,
+  } from '~/utils/recent-listening'
+
+  /** 与 Vercel 上的函数路径一致；接口不受站点 base 影响。 */
+  const ENDPOINT = '/api/lastfm'
+
+  let request: AbortController | undefined
+
+  const fill = async (root: HTMLElement, signal: AbortSignal) => {
+    let snapshot = null
+    try {
+      const response = await fetch(ENDPOINT, {
+        signal,
+        headers: { accept: 'application/json' },
+      })
+      if (response.ok) snapshot = parseListeningPayload(await response.json())
+    } catch (error) {
+      if (signal.aborted) return
+      // 网络错误、超时和非 JSON 响应都走同一套失败状态。
+      console.warn('Last.fm listening request failed', error)
+    }
+    if (signal.aborted || !root.isConnected) return
+    renderListening(root, snapshot)
+    // 注入的卡片需要重新接管：陈列架重算循环副本，图片查看器补键盘入口。
+    document.dispatchEvent(new Event('content:added'))
+  }
+
+  const load = () => {
+    const root = document.querySelector<HTMLElement>('[data-listening]')
+    if (!root || root.dataset.state !== 'loading' || request) return
+    const current = new AbortController()
+    request = current
+    void fill(root, current.signal).finally(() => {
+      if (request === current) request = undefined
+    })
+  }
+
+  document.addEventListener('astro:before-swap', () => {
+    request?.abort()
+    request = undefined
+  })
+  document.addEventListener('astro:page-load', load)
+  load()
+</script>

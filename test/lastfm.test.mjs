@@ -47,7 +47,8 @@ const fixture = ({
           'track': pages[Number(params.get('page')) - 1] || [],
         },
       }
-    else if (method === 'album.getInfo') data = albumInfo(params.get('album'))
+    else if (method === 'album.getInfo')
+      data = await albumInfo(params.get('album'), params.get('artist'))
     else assert.fail(`Unexpected method: ${method}`)
     return new Response(JSON.stringify(transform(method, data)))
   }
@@ -163,6 +164,82 @@ test('metadata scans stop at ten pages and preserve the complete ranking and tot
     options.requests.filter((r) => r.method === 'user.getRecentTracks').length,
     10
   )
+})
+
+test('cover lookups overlap in bounded batches without reordering the ranking', async () => {
+  let release
+  const gate = new Promise((resolve) => {
+    release = resolve
+  })
+  let active = 0
+  let peak = 0
+  let started = 0
+  const options = fixture({
+    tracks: Array.from({ length: 7 }, (_, i) => track(`Song ${i}`)),
+    pages: [
+      Array.from({ length: 7 }, (_, i) => ({
+        ...played(`Song ${i}`, 'Artist', `Album ${i}`),
+        image: [],
+      })),
+    ],
+    albumInfo: async () => {
+      started++
+      peak = Math.max(peak, ++active)
+      await gate
+      active--
+      return { album: { image: [{ '#text': cover }] } }
+    },
+  })
+  const pending = fetchLastfmSnapshot(options)
+  await new Promise(setImmediate)
+  const firstBatch = started
+  release()
+  const snapshot = await pending
+  assert.equal(firstBatch, 3, 'independent covers must not wait one by one')
+  assert.equal(
+    peak,
+    3,
+    'cover requests must stay below the upstream concurrency budget'
+  )
+  assert.equal(started, 7)
+  assert.deepEqual(
+    snapshot.tracks.map((t) => t.name),
+    Array.from({ length: 7 }, (_, i) => `Song ${i}`)
+  )
+})
+
+test('songs share edition and base-album queries only for the same artist', async () => {
+  const names = ['First', 'Second', 'Third', 'Fourth']
+  const editions = [
+    'Shared (Explicit)',
+    'Shared (Explicit)',
+    'Shared',
+    'Shared',
+  ]
+  const options = fixture({
+    tracks: names.map((name, i) => track(name, i === 3 ? 'Other' : 'Artist')),
+    pages: [
+      names.map((name, i) => ({
+        ...played(name, i === 3 ? 'Other' : 'Artist', editions[i]),
+        image: [],
+      })),
+    ],
+    albumInfo: (album) => ({
+      album: { image: [{ '#text': album === 'Shared' ? cover : placeholder }] },
+    }),
+  })
+  const snapshot = await fetchLastfmSnapshot(options)
+  assert.deepEqual(
+    snapshot.tracks.map((t) => t.album),
+    editions
+  )
+  assert.ok(snapshot.tracks.every((t) => t.cover === cover))
+  const queries = options.requests.filter((r) => r.method === 'album.getInfo')
+  assert.deepEqual(queries.map((r) => [r.artist, r.album]).sort(), [
+    ['Artist', 'Shared'],
+    ['Artist', 'Shared (Explicit)'],
+    ['Other', 'Shared'],
+  ])
 })
 
 test('API errors and malformed counts fail without exposing credentials or upstream messages', async () => {

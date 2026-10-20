@@ -2,7 +2,7 @@
 
 ## 行为契约
 
-首页在近期书影游下方保留「最近在听 Top10」。区块由服务端输出的空骨架和一张卡片模板组成；听歌数据在访问时由运行时接口取得，构建产物里没有任何听歌数据。接口成功后区块呈现过去七天 Top 10 歌曲（封面、歌名、`歌手 - 专辑名`）与辅助统计（七天听歌次数、累计记录数、七天最常听歌手）和更新时间；标题右侧「Last.fm ↗」直接来自站点身份常量，不依赖接口。歌曲保持单行，超出容器时按现有陈列架规则自动头尾循环：两端淡出，按下或键盘聚焦暂停，悬停继续。减少动态效果或无 JS 时保持原生手动横滑。点击封面或键盘 Enter／空格可用现有查看器打开 Last.fm 原尺寸图片，关闭后恢复焦点。歌名展示区按实际文字占一至两行，小字沿用陈列架两行限高。
+首页在近期书影游下方保留「最近在听 Top10」。区块由服务端输出的空骨架和一张卡片模板组成；听歌数据在访问时由运行时接口取得，构建产物里没有任何听歌数据。接口成功后区块呈现过去七天 Top 10 歌曲（封面、歌名、`歌手 - 专辑名`）与辅助统计（七天听歌次数、累计记录数、七天最常听歌手）和更新时间；标题右侧「Last.fm ↗」直接来自站点身份常量，不依赖接口。歌曲保持单行，超出容器时按现有陈列架规则自动头尾循环：两端淡出，按下或键盘聚焦暂停，悬停继续。减少动态效果或无 JS 时保持原生手动横滑。点击封面或键盘 Enter／空格可用现有查看器打开 Last.fm 原尺寸图片，关闭后恢复到相应源卡片的焦点（循环副本不增加重复焦点入口）。歌名展示区按实际文字占一至两行，小字沿用陈列架两行限高。
 
 区块只有四种状态：加载中（骨架，统计与时间显示占位 `—`，卡片区占住一张卡片的高度）、就绪（统计、卡片、更新时间）、真实空数据（`过去 7 天还没有听歌记录。`，隐藏卡片区）、失败（`暂时无法获取听歌数据。`，隐藏卡片区）。无脚本时保留骨架并显示说明文字，指向 Last.fm 主页。
 
@@ -16,10 +16,13 @@
 | L4 运行时获取与缓存 | 数据只在请求时从 Last.fm 取得；同一地址对应一份缓存。关键查询、响应校验失败时接口返回 502，缺少密钥返回 503，两者都不写入缓存，页面进入失败状态 |
 | L5 页面呈现 | 接口响应先校验再写 DOM；任何字段不合规都按失败处理，不用可疑字段渲染部分结果。键盘可聚焦并浏览，深浅主题可读，无 JS 保留骨架与说明 |
 | L6 凭据 | API Key 仅来自环境变量（Vercel 环境变量或本地 `.env`），不能进入源码、响应、构建 HTML 或日志；构建与页面渲染都不访问 Last.fm |
+| L7 启动与导航 | 首页听歌模块先于 ClientRouter 等模块执行，不等待无关模块的网络依赖；非首页不请求听歌接口。离开首页取消未完成请求，返回后重新加载，已取消请求不能覆盖新请求的状态 |
 
 API 多次查询期间用户仍可听歌，不提供跨接口事务一致性；时间窗以请求开始时的秒级 UTC 时间为准。缓存窗口内的访问看到的是同一份数据。
 
 同步仅读取七天内的播放记录，每页最多 200 条、最多十页，找到所有排行歌曲的专辑后提前结束。资料超过扫描范围时显示缺失专辑，不截断排行或周总数。每首缺封面的歌曲最多查询两次专辑：原名，以及去掉末尾 `Explicit`／`Deluxe Version` 等版本标签的基础专辑名；只补封面，展示仍保留真实播放记录的专辑名。使用基础专辑封面是可接受取舍，不能保证豪华版专用封面。每次 API 请求限时 15 秒，最多 33 次，无无限重试。
+
+每次快照补封面时按最多三首一批并行处理；同一歌手与同一专辑（含原名和基础版回退）共享该次快照内的查询 Promise，失败或缺图结果也不重复请求。复用表最多二十项，随快照调用结束释放，不引入跨请求缓存。版本名回退仍按原名、基础版的顺序执行，完成顺序不改变排行；畸形响应仍让整个快照失败。
 
 可接受取舍：构建产物不含听歌数据，所以首屏（以及无脚本、接口失败的访问）没有可读排行，爬虫也拿不到这部分内容；冷缓存的一次访问要等 Last.fm 完成查询，30 分钟缓存承担其余访问。这些取舍由「不把听歌数据写进仓库、不再定时提交」的目标换来。
 
@@ -29,7 +32,8 @@ API 多次查询期间用户仍可听歌，不提供跨接口事务一致性；�
 
 ```text
 访问首页 → RecentListening.astro：空骨架 + 卡片模板
-         → src/utils/recent-listening.js：GET /api/lastfm → 校验 → 写 DOM → content:added
+         → Head.astro 中的 RecentListeningScript.astro（首个模块）
+             → GET /api/lastfm → recent-listening.js 校验与写 DOM → content:added
          → api/lastfm.js（Vercel 函数）
              → src/utils/lastfm.mjs：查询、校验、排行和统计、专辑封面
              → 30 分钟 CDN 缓存
@@ -44,7 +48,8 @@ API 多次查询期间用户仍可听歌，不提供跨接口事务一致性；�
 | L4/L6、缓存策略、状态码、错误净化 | `api/lastfm.js` | `handleListening(request, { apiKey, user, fetchImpl, now })`；默认导出读取环境变量 | Vercel、dev 中间件、单测 | `test/listening-endpoint.test.mjs` |
 | L4 部署前提：根目录 `api/` 被收集为函数 | `vercel.json`（`framework: null`、`buildCommand`、`outputDirectory`） | 平台按 Other 预设构建，静态产物仍是 `dist` | Vercel 部署 | 预览部署的接口响应 |
 | 本地 dev 提供同一接口 | `plugins/astro-listening-endpoint.ts` | 在 `/api/lastfm` 调用同一处理函数；密钥取环境变量或 `.env` | `pnpm dev` | 本地 `curl` 检查 |
-| 响应形状校验、统计文案、卡片渲染 | `src/utils/recent-listening.js` | `parseListeningPayload`、`listeningStats`、`listeningUpdatedLabel`、`renderListening` | `RecentListening.astro` 的脚本 | `test/recent-listening.test.mjs`、`verify-card-rails.mjs` |
+| L7、请求启动顺序与导航取消 | `src/components/home/RecentListeningScript.astro` | `Head.astro` 在 ClientRouter 前输出；`astro:page-load` 加载、`astro:before-swap` 取消 | 首页与站内导航 | 产物脚本顺序检查、阻滞其它模块的浏览器检查 |
+| 响应形状校验、统计文案、卡片渲染 | `src/utils/recent-listening.js` | `parseListeningPayload`、`listeningStats`、`listeningUpdatedLabel`、`renderListening` | `RecentListeningScript.astro` | `test/recent-listening.test.mjs`、`verify-card-rails.mjs` |
 | L5、骨架、空／失败状态、无脚本说明 | `src/components/home/RecentListening.astro` | 只读取接口结果；用既有 `.home-section-header`、方卡与 `.media-cards--auto` | `index.astro` | built 首页检查、真实浏览器 |
 | 方卡尺寸、横滑与文字排版 | 既有 `prose.css` | 复用 `.media-cards--rail` / `.media-card--square` | 首页、Markdown 卡片 | 浏览器检查 |
 | 循环条件、副本与清理 | 既有 `src/utils/card-rail-marquee.js` | `refresh(rail)`：内容被替换后清掉旧副本再重算 | 首页听歌排、Markdown 卡片 | 既有单测与新增 `refresh` 用例 |
@@ -85,8 +90,8 @@ node --test test/listening-endpoint.test.mjs test/lastfm.test.mjs test/recent-li
 | 接口输出能被页面校验接受 | 端点单测调用 `parseListeningPayload` | 接口与页面是跨模块 seam，形状漂移会立刻失败 |
 | L5 与骨架结构 | `test:built-restructure` 的首页契约检查 | 覆盖生成 HTML：占位、模板、轨道为空、无脚本说明 |
 | L5 与运行时接线 | `verify-card-rails.mjs`（真实浏览器，固定载荷） | 覆盖卡片、统计、占位封面、循环与副本、焦点、大图、失败与空状态、无 JS |
+| L3 并行上限、同专辑复用与排行顺序 | 属主单测，以 Promise 闸门控制响应 | 不以真实耗时断言并发，验证每批至多三首且没有重复专辑查询 |
+| L7 首个模块与独立启动 | built 首页检查、`scripts/verify-listening-startup.mjs`（暂扣 ClientRouter 响应） | 确认页面不等无关模块就能请求并呈现听歌数据；正常恢复模块后继续检查站内往返 |
 | 完整仓库门禁 | format、lint、check、test、build、三项 built 检查 | 核对现有页面与内容回归 |
 
-本地验证已完成：204 项单元测试全部通过且无跳过；format、lint、Astro check（0 错误）与生产构建通过；`test:built-pagination`、`test:built-restructure`、`test:built-markdown` 全部通过。浏览器检查 `verify-card-rails.mjs`（固定载荷）、`verify-home-content.mjs` 通过。`verify-image-layouts.mjs` 在 `.image-lightbox__close` 一步失败；把 `src/utils/image-interactions.ts` 还原成 `origin/main` 版本后在同一步失败同样错误，属于既有问题，不是本次改动引入。
-
-已确认：Astro 预设下的预览部署上 `GET /api/lastfm` 返回 404——该预设接管构建后不收集仓库根目录 `api/`；据此把 Framework Preset 切到 Other 并在 `vercel.json` 固定。仍未验证：切换预设后该地址的实际响应（200，或缺密钥时的 503）、`stale-if-error`／`stale-while-revalidate` 的线上行为、以及配好环境变量后的真实数据。本地实现与浏览器结果不能代替上线后的 Vercel 运行结果。
+线上已观察到 `GET /api/lastfm` 返回 200 和 `x-vercel-cache: HIT`，页面能渲染真实数据。仍未验证：真实冷缓存的回源耗时，以及 `stale-if-error`／`stale-while-revalidate` 的线上行为。固定载荷、模块阻滞和假上游的验证不代替真实冷请求测量。

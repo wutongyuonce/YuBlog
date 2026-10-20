@@ -8,6 +8,7 @@
 const API_URL = 'https://ws.audioscrobbler.com/2.0/'
 const WEEK_SECONDS = 7 * 24 * 60 * 60
 const MAX_RECENT_PAGES = 10
+const COVER_CONCURRENCY = 3
 const PLACEHOLDER_IMAGE = '2a96cbd8b46e442fc41c2b86b821562f'
 
 /** 默认账户；请求与页面链接都从这一个常量派生。 */
@@ -186,24 +187,35 @@ export async function fetchLastfmSnapshot({
     if (albums.size === wanted.size) break
   }
 
-  for (const track of tracks) {
+  // Only this snapshot shares lookups; retain both in-flight and resolved results.
+  const covers = new Map()
+  const albumCover = (artist, album) => {
+    const key = JSON.stringify([artist, album])
+    if (!covers.has(key))
+      covers.set(
+        key,
+        request('album.getInfo', { artist, album }, true).then((details) =>
+          details ? coverOf(albumImages(details)) : null
+        )
+      )
+    return covers.get(key)
+  }
+  const fillCover = async (track) => {
     Object.assign(track, albums.get(songKey(track.name, track.artist)))
-    if (track.cover || !track.album) continue
+    if (track.cover || !track.album) return
     const baseAlbum = track.album
       .replace(/\s*\((?:explicit|deluxe(?:\s+(?:version|edition))?)\)\s*$/i, '')
       .trim()
     const albumNames = [...new Set([track.album, baseAlbum])].filter(Boolean)
     for (const album of albumNames) {
-      const details = await request(
-        'album.getInfo',
-        { artist: track.artist, album },
-        true
-      )
-      if (!details) continue
-      track.cover = coverOf(albumImages(details))
+      track.cover = await albumCover(track.artist, album)
       if (track.cover) break
     }
   }
+  for (let start = 0; start < tracks.length; start += COVER_CONCURRENCY)
+    await Promise.all(
+      tracks.slice(start, start + COVER_CONCURRENCY).map(fillCover)
+    )
 
   return {
     user,

@@ -197,8 +197,19 @@ await page.waitForFunction(
   () => !document.querySelector('dialog.image-lightbox').open
 )
 assert.equal(
-  await page.evaluate(() => document.activeElement.id),
-  'card-rails-cover'
+  await page.evaluate((source) => {
+    const active = document.activeElement
+    const view = active.closest('.image-view')
+    return (
+      active.matches(
+        '.recent-listening .media-card:not([data-marquee-clone]) img'
+      ) &&
+      view?.querySelector('template')?.content.querySelector('img')?.src ===
+        source
+    )
+  }, source),
+  true,
+  'closing a clone returns focus to its source card, not a duplicate tab stop'
 )
 
 await page.cdp('Emulation.setEmulatedMedia', {

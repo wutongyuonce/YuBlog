@@ -1,6 +1,7 @@
 ---
 import { ClientRouter } from 'astro:transitions'
 import shellCss from '../../../public/shell.css?raw'
+import RecentListeningScript from '~/components/home/RecentListeningScript.astro'
 
 import { withBasePath } from '~/utils/path'
 import { SITE } from '~/config'
@@ -186,6 +187,7 @@ const webPageData = {
   ></script>
 )}
 
+{Astro.url.pathname === withBasePath('/') && <RecentListeningScript />}
 <ClientRouter />
 
 <!-- Umami collects page views only. Keep this inline and do not rerun it. -->

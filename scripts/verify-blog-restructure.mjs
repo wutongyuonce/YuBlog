@@ -595,6 +595,16 @@ test('article covers do not replace the standalone page heading', () => {
 })
 
 test('home listening ships an empty skeleton the runtime endpoint fills', async () => {
+  const head = elements(home, (node) => node.tagName === 'head')[0]
+  const firstModule = elements(
+    head,
+    (node) => node.tagName === 'script' && node.properties.type === 'module'
+  )[0]
+  assert.match(
+    textOf(firstModule),
+    /\/api\/lastfm/,
+    'listening starts before unrelated module dependencies finish loading'
+  )
   const section = elements(home, (node) =>
     hasClass(node, 'recent-listening')
   )[0]
