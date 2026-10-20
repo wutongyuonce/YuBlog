@@ -1,8 +1,4 @@
 ---
-import { createHash } from 'node:crypto'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
-
 import { ClientRouter } from 'astro:transitions'
 
 import { withBasePath } from '~/utils/path'
@@ -14,13 +10,6 @@ import {
 } from '~/utils/accent-palette.js'
 
 const accentInit = `(${createAccentPreference.toString()})(${JSON.stringify(ACCENT_PALETTES)}).restore()`
-
-// Bust cache when public/shell.css content changes (static /shell.css alone can
-// leave Edge/Safari on a pre-fix shell across same-day deploys).
-const shellCssHash = createHash('sha256')
-  .update(readFileSync(join(process.cwd(), 'public/shell.css')))
-  .digest('hex')
-  .slice(0, 8)
 
 interface Props {
   title?: string
@@ -179,10 +168,7 @@ const webPageData = {
 />
 
 <!-- Shell UI: one stylesheet for navigation, layouts, home and archives. -->
-<link
-  rel="stylesheet"
-  href={withBasePath(`/shell.css?v=${shellCssHash}`)}
-/>
+<link rel="stylesheet" href={withBasePath('/shell.css')} />
 
 <!-- Google JSON-LD Structured Data -->
 {pubDate ? (
