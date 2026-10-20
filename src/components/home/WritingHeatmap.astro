@@ -261,15 +261,15 @@ const yearSwitchCss = years
   }
   .writing-heatmap__year-list {
     position: absolute;
-    top: calc(100% + 0.2rem);
+    top: calc(100% + 0.35rem);
     right: 0;
     z-index: 50;
     display: grid;
     gap: 0;
-    min-width: 100%;
+    min-width: max(100%, 4.25rem);
     margin: 0;
-    padding: 0.1rem 0;
-    border: 0;
+    padding: 0.25rem 0;
+    border: 1px solid color-mix(in srgb, var(--c-text) 12%, var(--c-bg));
     background: var(--c-bg);
   }
   .writing-heatmap__years:not([open]) .writing-heatmap__year-list {
@@ -278,7 +278,7 @@ const yearSwitchCss = years
   .writing-heatmap__year-option {
     display: block;
     margin: 0;
-    padding: 0.2rem 0.05rem 0.2rem 0.55rem;
+    padding: 0.4rem 0.75rem;
     border-radius: 0;
     color: color-mix(in srgb, var(--c-text) 78%, var(--c-bg));
     font: inherit;
