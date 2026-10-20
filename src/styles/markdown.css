@@ -10,9 +10,6 @@
   --fg-deeper: var(--c-text);
 
   color: var(--fg);
-  max-width: min(var(--blog-prose-width), 100%);
-  min-width: 0;
-  overflow-wrap: anywhere;
 }
 
 .prose a {
@@ -102,27 +99,19 @@ html.dark .prose {
 .prose code:not(.expressive-code code) {
   border-radius: 0.25rem;
   padding: 0.15rem 0.3rem;
-  /* Long tokens like run_in_threadpool(...) must wrap on narrow phones;
-     otherwise they widen the document and shift the centered nav. */
+  /* Long unbroken tokens wrap instead of widening the page. */
+  white-space: normal;
   overflow-wrap: anywhere;
-  word-break: break-word;
   --uno: 'bg-[#88888820] dark:bg-[#88888830]';
 }
 
-/* KaTeX: display math is nowrap inside KaTeX CSS; scroll instead of widening the page. */
+/* KaTeX display is nowrap upstream; scroll inside the block, don't widen the page. */
 .prose .katex-display {
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   padding-block: 0.15em;
 }
-.prose .katex-display > .katex {
-  max-width: 100%;
-}
-.prose p > .katex {
-  overflow-wrap: anywhere;
-}
-
 
 .prose div:has(> table) {
   margin-block: 1.1rem;
@@ -132,8 +121,6 @@ html.dark .prose {
 /* Expressive Code */
 .expressive-code {
   margin: 1em 0;
-  max-width: 100%;
-  min-width: 0;
 }
 
 .expressive-code .copy {

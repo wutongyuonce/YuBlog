@@ -48,10 +48,8 @@ header.nav-bar:has(:focus-visible) {
 }
 header.nav-bar .nav-bar__inner {
   font-family: var(--font-heading);
-  /* 100vw (not 100%): if a long token still widens the document, keep the
-     pill sized and centered to the viewport, not the overflowing page. */
-  width: min(var(--site-nav-width), calc(100vw - var(--site-gutter) * 2));
-  max-width: min(var(--site-nav-width), calc(100vw - var(--site-gutter) * 2));
+  width: min(var(--site-nav-width), calc(100% - var(--site-gutter) * 2));
+  max-width: min(var(--site-nav-width), calc(100% - var(--site-gutter) * 2));
   min-height: 46px;
   margin-inline: auto;
   padding: 3px 8px;
@@ -115,9 +113,6 @@ header.nav-bar :is(a, button):focus-visible {
 .site-main {
   padding-inline: var(--site-gutter);
   padding-top: 104px;
-  max-width: 100%;
-  min-width: 0;
-  overflow-x: clip;
 }
 
 #search-panel {
@@ -493,7 +488,7 @@ accent-switch[hidden],
     align-items: center;
     gap: 0.15rem 0.5rem;
     padding: 5px 8px;
-    width: min(var(--site-nav-width), calc(100vw - var(--site-gutter) * 2));
+    width: min(var(--site-nav-width), calc(100% - var(--site-gutter) * 2));
     max-width: none;
   }
 

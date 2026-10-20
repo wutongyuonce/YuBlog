@@ -321,8 +321,7 @@
 /* Article pages use a denser reading rhythm than landing pages. */
 .prose.post-header,
 .prose.post-content {
-  max-width: min(var(--blog-prose-width), 100%);
-  min-width: 0;
+  max-width: var(--blog-prose-width);
 }
 
 /* The back link is a sibling footer; share the article column left edge.

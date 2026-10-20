@@ -38,6 +38,7 @@
 
 html {
   scroll-behavior: smooth;
+  /* Sole document-level guard: long unbroken tokens must not widen the page. */
   overflow-x: clip;
   background-color: var(--c-bg);
 }
@@ -49,11 +50,7 @@ html:has(#bg-rose) {
 body {
   /* Keep negative-z decorations above the body fill and below content. */
   isolation: isolate;
-  /* clip: mobile Safari often still lets long inline tokens widen the page
-     when only body uses overflow-x: hidden. */
-  overflow-x: clip;
   overflow-y: scroll;
-  max-width: 100%;
 }
 
 ::selection {
