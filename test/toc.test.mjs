@@ -46,6 +46,7 @@ test('missing heading levels add fillers only where the level is absent', () => 
 
 test('heading bounds preserve the eligible order and support empty content', () => {
   assert.deepEqual(generateToc([], 2, 4), [])
+  assert.deepEqual(generateToc(headings([1, 5, 6]), 2, 4), [])
   assert.deepEqual(shape(generateToc(headings([1, 2, 6, 3]), 2, 4)), [
     ['1', [['3', []]]],
   ])

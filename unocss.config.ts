@@ -159,10 +159,5 @@ export default defineConfig({
     'before:bg-[radial-gradient(ellipse_at_bottom_left,#ffffff_0%,#fefefe_70%,#88888855_95%)]',
     'dark:before:bg-[radial-gradient(ellipse_at_bottom_left,#000000_0%,#000000_70%,#77777755_85%)]',
     'before:transform-rotate-[-45deg]',
-
-    /* StandardLayout (template literal) & ListView (attributify conflict) */
-    'mb-10',
-    'mb-16',
-    'mb-36',
   ],
 })

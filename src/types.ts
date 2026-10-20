@@ -376,11 +376,6 @@ interface PostView {
 
 interface GroupView {
   /**
-   * Sets the maximum number of columns displayed in the group view.
-   */
-  maxGroupColumns: 2 | 3
-
-  /**
    * Determines whether group item icons display in color when hovered over.
    *
    * If `true`, the icon for the group item will display in its original colors on hover.
@@ -447,7 +442,7 @@ export interface Ui {
   /**
    * Configures the `/projects` UIs.
    *
-   * Used in `src/components/views/GroupItem.astro` and `src/components/base/Categorizer.astro`.
+   * Used in `src/components/views/GroupItem.astro`.
    */
   groupView: GroupView
 

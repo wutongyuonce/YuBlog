@@ -1,23 +1,15 @@
 ---
 import TocItem from '~/components/toc/TocItem.astro'
-import { generateToc } from '~/utils/toc'
-import { FEATURES } from '~/config'
-
-import type { MarkdownHeading } from 'astro'
+import type { TocHeading } from '~/utils/toc'
 
 interface Props {
-  headings: MarkdownHeading[]
+  headings: TocHeading[]
 }
 
 const { headings } = Astro.props
-
-const { toc } = FEATURES
-if (!toc || (Array.isArray(toc) && !toc[0])) return
-const { minHeadingLevel, maxHeadingLevel } = toc[1]
-const specHeadings = generateToc(headings, minHeadingLevel, maxHeadingLevel)
 ---
 
-{specHeadings.length > 0 && (
+{headings.length > 0 && (
   <mobile-toc-control class="mobile-toc-control print:hidden">
     <button
       type="button"
@@ -38,7 +30,7 @@ const specHeadings = generateToc(headings, minHeadingLevel, maxHeadingLevel)
     >
       <div class="mobile-toc-control__header">Table of Contents</div>
       <ul class="mobile-toc-control__list">
-        {specHeadings.map((heading) => (
+        {headings.map((heading) => (
           <TocItem {heading} />
         ))}
       </ul>

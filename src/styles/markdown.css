@@ -96,7 +96,7 @@ html.dark .prose {
   white-space: nowrap;
 }
 
-.prose code:not(.expressive-code code) {
+.prose code:not(pre code) {
   border-radius: 0.25rem;
   padding: 0.15rem 0.3rem;
   /* Long unbroken tokens wrap instead of widening the page. */

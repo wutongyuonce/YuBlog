@@ -1,21 +1,13 @@
 ---
 import TocItem from '~/components/toc/TocItem.astro'
 import Link from '~/components/base/Link.astro'
-import { generateToc } from '~/utils/toc'
-import { FEATURES } from '~/config'
-
-import type { MarkdownHeading } from 'astro'
+import type { TocHeading } from '~/utils/toc'
 
 interface Props {
-  headings: MarkdownHeading[]
+  headings: TocHeading[]
 }
 
 const { headings } = Astro.props
-
-const { toc } = FEATURES
-if (!toc || (Array.isArray(toc) && !toc[0])) return
-const { minHeadingLevel, maxHeadingLevel } = toc[1]
-const specHeadings = generateToc(headings, minHeadingLevel, maxHeadingLevel)
 ---
 
 <nav id="toc-sidebar" class="desktop-toc" aria-label="Table of contents">
@@ -26,7 +18,7 @@ const specHeadings = generateToc(headings, minHeadingLevel, maxHeadingLevel)
     Skip toc
   </Link>
   <ul class="desktop-toc__list">
-    {specHeadings.map((heading) => (
+    {headings.map((heading) => (
       <TocItem {heading} />
     ))}
   </ul>

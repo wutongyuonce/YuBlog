@@ -4,17 +4,30 @@ import assert from 'node:assert/strict'
 
 const task = await taskSpace(Number('__TASK_SPACE_ID__'))
 const page = task.page('p1')
+const setViewport = async (width) => {
+  await page.cdp('Emulation.setDeviceMetricsOverride', {
+    width,
+    height: 900,
+    deviceScaleFactor: 1,
+    mobile: false,
+  })
+  assert.equal(await page.evaluate(() => innerWidth), width)
+}
 const blogsUrl = new URL('blogs/', '__BASE_URL__')
 await page.goto(blogsUrl.href)
+await page.waitForSelector('[data-blog-item] a[href]')
 const candidates = await page.evaluate(
-  (prefix) => [
+  (listPath) => [
     ...new Set(
       [...document.querySelectorAll('[data-blog-item] a[href]')]
         .map((link) => link.href)
         .filter((href) => {
           const url = new URL(href)
+          // Article routes only: category and tag links share the list path.
           return (
-            url.origin === location.origin && url.pathname.startsWith(prefix)
+            url.origin === location.origin &&
+            url.pathname.startsWith(listPath) &&
+            url.pathname !== listPath
           )
         })
     ),
@@ -39,6 +52,20 @@ assert.ok(
   'TOC regression needs a published article with at least four headings'
 )
 const results = []
+// Reveal the target inside the TOC's own list before clicking. Scrolling the
+// page instead starts the active-item auto-scroll, which can move the link out
+// from under the click and swallow the navigation.
+const clickTocLink = async (container, hash) => {
+  await page.evaluate(
+    ({ container, hash }) => {
+      document
+        .querySelector(`${container} a[href="${hash}"]`)
+        .scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    },
+    { container, hash }
+  )
+  await page.click(`${container} a[href="${hash}"]`)
+}
 const settle = async () => {
   await page.evaluate(
     () =>
@@ -49,6 +76,9 @@ const settle = async () => {
         const sample = () => {
           stable = Math.abs(scrollY - last) < 0.5 ? stable + 1 : 0
           last = scrollY
+          // Time out rather than hang: the landing assertions below still check
+          // where the page actually stopped, so a slow frame budget cannot hide
+          // a real misalignment.
           if (stable > 12 || performance.now() - start > 4000) resolve()
           else requestAnimationFrame(sample)
         }
@@ -114,18 +144,13 @@ const verify = async (hash, label, landing = true) => {
 }
 
 for (const width of [1440, 390, 320]) {
-  await page.cdp('Emulation.setDeviceMetricsOverride', {
-    width,
-    height: 900,
-    deviceScaleFactor: 1,
-    mobile: false,
-  })
   await page.goto(base)
+  await setViewport(width)
   await page.waitForSelector('table-of-contents')
   // Exercise a real click before content entrance animations have finished.
   if (width < 1200) await page.click('.mobile-toc-control__toggle')
   const earlyContainer = width < 1200 ? '#mobile-toc-panel' : '#toc-sidebar'
-  await page.click(`${earlyContainer} a[href="${firstHash}"]`)
+  await clickTocLink(earlyContainer, firstHash)
   await verify(firstHash, `${width}/early-click`)
   await page.waitForFunction(
     () =>
@@ -172,7 +197,7 @@ for (const width of [1440, 390, 320]) {
   ]) {
     if (width < 1200) await page.click('.mobile-toc-control__toggle')
     const container = width < 1200 ? '#mobile-toc-panel' : '#toc-sidebar'
-    await page.click(`${container} a[href="${hashes[index]}"]`)
+    await clickTocLink(container, hashes[index])
     await verify(hashes[index], `${prefix}/${label}`)
   }
   await page.evaluate(() => history.back())
@@ -181,6 +206,7 @@ for (const width of [1440, 390, 320]) {
   // its fragment after the reader has manually scrolled.
   await verify(hashes[3], `${prefix}/history-back`, false)
   await page.goto(base + hashes[2])
+  await setViewport(width)
   await page.waitForSelector('table-of-contents')
   await page.waitForFunction(
     () =>
@@ -197,13 +223,8 @@ for (const width of [1440, 390, 320]) {
 }
 // A nearby fragment must include travel accumulated before the click, in both
 // directions. Resetting a fresh prediction state would fail these landings.
-await page.cdp('Emulation.setDeviceMetricsOverride', {
-  width: 1440,
-  height: 900,
-  deviceScaleFactor: 1,
-  mobile: false,
-})
 await page.goto(base)
+await setViewport(1440)
 await page.waitForLoadState()
 await page.waitForFunction(() => document.fonts.status === 'loaded')
 const nearbyHash = firstHash
@@ -228,7 +249,7 @@ assert.equal(
   ),
   false
 )
-await page.click(`#toc-sidebar a[href="${nearbyHash}"]`)
+await clickTocLink('#toc-sidebar', nearbyHash)
 await verify(nearbyHash, 'nearby/downward-accumulated-travel')
 await page.evaluate((top) => scrollTo({ top, behavior: 'instant' }), headingY)
 await settle()
@@ -242,22 +263,17 @@ assert.equal(
   ),
   true
 )
-await page.click(`#toc-sidebar a[href="${nearbyHash}"]`)
+await clickTocLink('#toc-sidebar', nearbyHash)
 await verify(nearbyHash, 'nearby/upward-accumulated-travel')
 
 // Without JS, the static margin must cover the same two-row navigation range.
 await page.cdp('Emulation.setScriptExecutionDisabled', { value: true })
 try {
   for (const width of [780, 799, 800]) {
-    await page.cdp('Emulation.setDeviceMetricsOverride', {
-      width,
-      height: 900,
-      deviceScaleFactor: 1,
-      mobile: false,
-    })
     // A hash-only goto keeps the already initialized document and its scripts.
     await page.goto('about:blank')
     await page.goto(base + nearbyHash)
+    await setViewport(width)
     await page.waitForLoadState()
     const state = await page.evaluate((hash) => {
       const heading = document.getElementById(decodeURIComponent(hash.slice(1)))

@@ -7,7 +7,7 @@ const oneko = FEATURES.oneko
 const onekoEnabled = Array.isArray(oneko) && oneko[0]
 ---
 
-<footer class="slide-enter animate-delay-1600! px-7 mt-auto mb-8">
+<footer class="slide-enter animate-delay-1600! mt-auto mb-8">
   <div class="prose mx-auto">
     <div class="flex flex-wrap gap-y-1 lt-sm:flex-col items-center text-sm whitespace-nowrap">
       <span>
@@ -52,6 +52,8 @@ const onekoEnabled = Array.isArray(oneko) && oneko[0]
 
 <style>
   footer {
+    /* Share the shell gutter: the footer is chrome, not a second column. */
+    padding-inline: var(--site-gutter);
     font-family: var(--font-heading);
     font-weight: 400;
     font-synthesis: none;

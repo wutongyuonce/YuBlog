@@ -311,17 +311,8 @@
 .prose tbody td:last-child {
   padding-right: 0;
 }
-.prose > :first-child {
-  margin-top: 0;
-}
 .prose > :last-child {
   margin-bottom: 0;
-}
-
-/* Article pages use a denser reading rhythm than landing pages. */
-.prose.post-header,
-.prose.post-content {
-  max-width: var(--blog-prose-width);
 }
 
 /* The back link is a sibling footer; share the article column left edge.

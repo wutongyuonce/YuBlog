@@ -133,7 +133,6 @@ export const UI: Ui = {
     postMetaStyle: 'minimal',
   },
   groupView: {
-    maxGroupColumns: 2,
     showGroupItemColorOnHover: true,
   },
   externalLink: {

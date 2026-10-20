@@ -39,7 +39,7 @@
 
 ### S2：分类、标签和分页
 
-博客分类以 frontmatter 的 `category` 原值为准，不合并任何别名，不归到兜底类别。首页、列表与归档直接读取 `data.category`，菜单也按原值展示、计数与精确筛选。当前内容的分类名为“技术”“思考”“日记”；已发布菜单为技术 40 篇、思考 1 篇，日记仅含草稿而不显示。这是当前内容示例，名称与篇数不是业务常量。
+博客分类以 frontmatter 的 `category` 原值为准，不合并任何别名，不归到兜底类别。首页、列表与归档直接读取 `data.category`，菜单也按原值展示、计数与精确筛选；分类名称与篇数由当前已发布内容生成，不维护固定名单或数量快照。
 
 重新构建后，文稿菜单按已发布文章的原始分类生成入口，按篇数降序，同数按名称的 `zh-Hans-CN` 排序；不保留固定分组或空分类。分类使用 `/blogs/#旅行` 这样的名称编码 URL 片段（hash），旧 `?category=` 始终按原值精确筛选。分类 hash 及兼容 query 均可与标签、分页组合；畸形编码忽略 hash 后按 query 处理，不抛出异常。启用脚本后旧 query 规范为等价片段地址，保留标签、页码及其他参数。旧 `#tech`、`#thought`、`#diary` 仅作为 URL 兼容别名，分别定位原值“技术”“思考”“日记”，不合并“技术向”等名称；英文原值 `tech`、`thought`、`diary` 使用 `#category=tech` 等形式逃逸，仍为精确筛选。
 
@@ -73,23 +73,23 @@
 
 ### S5：归档和友链
 
-项目按 JSON 的 `category` 原值分组，不设分类允许名单；`constructor`、`__proto__` 等合法名称也必须正常分组，每条项目只呈现一次。
+项目按 JSON 的 `category` 原值分组，不设分类允许名单；`constructor`、`__proto__` 等合法名称也必须正常分组，每条项目只呈现一次。项目与友链卡片网格固定两列，宽度随版心伸缩，窄屏不切换为单列。
 
 归档按共享发布日期顺序排成一条时间线，年份为宋体 22px，日期为宋体，文章标题为宋体常规字重（400）、字号 14.72px；日期列右对齐并靠近时间线，年份在同一列展示。日期、标记与标题首行共用 24px 行高。标题下的标签使用同一 `#标签名` 单标签链接，换行不改变所选标签。所有分类的小点均为灰色，悬停／焦点均为当前强调色短竖线；标题右侧的圆角徽标包含分类文字，不能仅靠颜色区分。归档分类从 `src/data/blog-category-colors.json` 的 16 色预设池中领取配色，`assignments` 保存分类原值到配色 ID 的映射；不同分类不复用同一颜色值。开发访问归档或构建归档时，新分类领取未使用颜色并自动写入记录；开发归档中展示的草稿分类也会领取颜色。新增、删除分类或调整文章顺序不改变已有分配，删除分类后保留占位，重新出现沿用原色。「技术」「思考」「日记」预先记录为蓝、暖红、青色，保留当前配色。预设颜色值不同，但不保证任意两种都能肉眼明显区分。配色池耗尽时构建失败，须补充不同色相的新预设后重试；发布新分类时配色记录与文章一起提交。长分类徽标限制宽度并换行，不挤出手机页面。
 
-友链 category 仅允许“推荐”或“双向”，每条友链的类别以当前数据为准；不设必须保留或禁止添加的站点名单。组内按 `order`／名称排序，两组用较小宋体标题及说明分隔，“交换友链”使用普通无衬线字体加粗（700）。申请区在 920px 以上左右等宽并等高，更窄时上下排列；规则为“先友后链”和“使用 https 协议”。卡片悬停／键盘焦点加强边框和名称颜色，头像放大 10%，头像与卡片外边框显示 35% 主题强调色柔光，不加实色光圈；离开后以 180ms 过渡复原，减少动态偏好下取消过渡。黑夜卡片背景为纯黑，深浅主题可读，窄屏改为单列。
+友链 category 仅允许“推荐”或“双向”，每条友链的类别以当前数据为准；不设必须保留或禁止添加的站点名单。组内按 `order`／名称排序，两组用较小宋体标题及说明分隔，“交换友链”使用普通无衬线字体加粗（700）。申请区在 920px 以上左右等宽并等高，更窄时上下排列；规则为“先友后链”和“使用 https 协议”。卡片悬停／键盘焦点加强边框和名称颜色，头像放大 10%，头像与卡片外边框显示 35% 主题强调色柔光，不加实色光圈；离开后以 180ms 过渡复原，减少动态偏好下取消过渡。黑夜卡片背景为纯黑，深浅主题可读。
 
 ### S6a：文稿上下篇与随便逛逛
 
-文稿详情在正文与 `cd ..` 之后、评论区之前显示一行正文风格链接导航：「< 上一篇」「随便逛逛～」「下一篇 >」。排序与文稿列表相同（`getSortedPosts`：发布日期降序，同日按 `id` 升序）。「上一篇」指向更旧一篇，「下一篇」指向更新一篇；最新篇不显示上一篇，最旧篇不显示下一篇。随便逛逛跳到当前可见集合中的随机另一篇（排除当前）；无脚本时有确定回退链接，启用脚本后在每次页面加载时从候选重写。文稿列表（及复用 `ListView` 的标签列表在显示文章时）在分页列表上方固定一行「随便逛逛～」，不参与分页；首页「近期笔墨」标题右侧亦有同一入口。契约见 [博客上下篇与随便逛逛 SPEC](./博客上下篇与随便逛逛%20SPEC.md)。
+文稿详情在正文与 `cd ..` 之后、评论区之前显示「< 上一篇」「随便逛逛～」「下一篇 >」；列表及首页近期笔墨也提供「随便逛逛～」入口。邻接方向、边界、候选集合与无脚本回退以 [博客上下篇与随便逛逛 SPEC](./博客上下篇与随便逛逛%20SPEC.md) 为准。
 
 ### S6：有封面和无封面文章
 
-长行内代码可断行；宽块级公式在自身容器横滚，内容可访问，不带动页面横移。公式输入语法以 [publisher skill 的作者契约](../blog-content-publisher-skill/SKILL.md#公式与代码标记) 为准。
+长行内代码可断行，原生 `pre/code` 保留换行与缩进；宽块级公式在自身容器横滚，内容可访问，不带动页面横移。公式输入语法以 [publisher skill 的作者契约](../blog-content-publisher-skill/SKILL.md#公式与代码标记) 为准。
 
 文章始终保留一个独立宋体 h1 及日期／阅读时长／标签信息。标题下的标签为 `#标签名` 链接，指向标签页并只选中该标签；名字里的 `/` 或 `#` 不拆开标签。有封面时在其下渲染图片卡片：重复标题用段落，描述取 `description`、缺失时取 `subtitle`，作者行只含 40px 头像、梧桐雨与日期。封面白字和深色渐变遮罩适配两种主题。无封面时保持标题和正文结构，不构造假封面。
 
-目录按标题顺序与真实层级嵌套：h2 → h3 → h4 的 h4 属于已有 h3，仅在实际缺失中间层级时补空项，不制造重复父级。
+目录按配置的标题级别过滤，仅在存在可导航条目时挂载桌面和移动端目录；两端消费同一棵目录树，并按顺序与真实层级嵌套：h2 → h3 → h4 的 h4 属于已有 h3，仅在实际缺失中间层级时补空项，不制造重复父级。
 
 桌面 1200px 及以上目录常驻、无顶部 TOC 按钮；小屏保留浮动目录入口。目录在正文边缘和视口外边距之间的留白中线基础上向外移 16px，最大宽度 208px，宽度为侧边留白减 48px 与该上限中的较小值，靠正文一侧至少保留 40px，外侧至少保留 8px（另有视口外边距）；中心比视口中线高 32px；高度不超过 `min(50vh, 28rem)`，长目录在内部滚动，当前项移入可视范围。
 
@@ -189,7 +189,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 | 首页 | 无卡片底，作者 28px（窄屏 22px），名言 17px 斜体，INTJ 13px，社交图标 15px；进度是辅助信息。写作热力标题 20px 宋体，与近期笔墨左对齐，年份在标题右侧以自定义下拉选择；每年摘要含篇数、字数和天数。四块首页标题共用 `shell.css` 的 `.home-section-header`。格子颜色只由 `--accent` 混入 `--c-bg` |
 | 友链页头 | 推荐／双向 24px 宋体，小于主要页面标题；交换说明标题使用普通无衬线字体加粗（700） |
 | 图片与媒体 | 封面／正文图片由 Astro 生成变体，分享图 1200px；`public/` 放站点资源和独立 HTML 演示，不手写内容图片构建 URL；本地视频／音频由 `astro-media-sync` 镜像到 `public/_media/`，正文用相对路径引用；HTML 演示目录和 iframe 用法见[正文 HTML 与媒体 SPEC](./正文%20HTML%20与媒体%20SPEC.md#本地-html-交互演示) |
-| 页脚 | 宋体显示版权、Astro 和“萌ICP备20269668号”；启用 Oneko 时另有「隐藏小猫」按钮（左侧装饰性 `🐾`）。宽屏段间用次要字色 `·` 分隔，窄屏纵向堆叠并隐藏分隔符。作者名指向站点首页，Astro 指向 `https://astro.build`，备案指向 `https://icp.gov.moe/?keyword=20269668` 并在新标签页打开，带 `noopener noreferrer`。链接悬停或键盘焦点变为强调色 |
+| 页脚 | 宋体显示版权、Astro 和“萌ICP备20269668号”；启用 Oneko 时另有「隐藏小猫」按钮（左侧装饰性 `🐾`）。横向外边距与正文共用 `--site-gutter`，不另写固定内边距。宽屏段间用次要字色 `·` 分隔，窄屏纵向堆叠并隐藏分隔符。作者名指向站点首页，Astro 指向 `https://astro.build`，备案指向 `https://icp.gov.moe/?keyword=20269668` 并在新标签页打开，带 `noopener noreferrer`。链接悬停或键盘焦点变为强调色 |
 | 访问统计 | `Head.astro` 加载一份 Umami Cloud 脚本；页面不显示计数、徽章或页脚文案 |
 | Oneko 像素猫 | 由 `FEATURES.oneko` 控制；默认托管 classic 皮肤，跟随光标／睡觉／气泡／记位置／季节帽，减少动态时隐藏；页脚提供「隐藏小猫」；顶栏为避让区。不自托管、不开声音与激光。详见 [Oneko 像素猫](./Oneko%20像素猫.md) |
 | 主题与焦点 | 颜色源于 `--c-bg`、`--c-text`、`--accent`；点缀规则与独立偏好见 S11，变量由 `accent-palette.js` 统一生成；站点声明的浏览器原生颜色方案与当前博客主题一致，不对自定义颜色自动暗化；首访跟随系统，有效保存值在刷新后恢复；系统模式发生变化时同步切换。非法保存值回退系统，存储不可用不妨碍当次显示和切换，但不保证跨导航／刷新保存。切换按钮、颜色方案和 canvas 背景同步；减少动效时保留静态背景，仍响应缩放和主题变化，不启动动画循环。提供深浅主题及可见键盘反馈，不依靠颜色表达类别 |
@@ -211,7 +211,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 | 滑块位置与过渡起点 | `utils/sliding-indicator.js` | 导航和菜单预览 | `sliding-indicator.test.mjs` |
 | 累计滚动状态与显隐阈值 | `utils/nav-scroll.js` | `NavBar`、TOC点击预测 | `nav-scroll.test.mjs` |
 | 下拉展开与类别预览状态 | `NavDropdown` | 文稿／拾趣顶层入口，集合提供数据 | `verify-nav-dropdown.mjs` |
-| 目录树与跳级补层 | `utils/toc.ts` | `TocSidebar`、`MobileTocControl` 共用生成结果 | `toc.test.mjs` |
+| 目录树与跳级补层 | `utils/toc.ts` | `RenderPost` 按开关与标题级别生成一次，非空时挂载目录；`TocSidebar`、`MobileTocControl` 只呈现同一结果 | `toc.test.mjs`、构建目录检查 |
 | 章节判定 | `utils/toc-active.js` | `Toc` | `toc-active.test.mjs` |
 | 锚点间距、同步与内部揭示 | `Toc` | 桌面／移动目录；仅它写 `--post-anchor-offset` | `verify-toc-navigation.mjs` |
 | 项目原值分类分组 | `GroupView` | `projects` JSON 的分类键；分组字典不读取原型链 | 构建项目分组检查 |
@@ -224,7 +224,7 @@ RSS endpoint 只渲染集合 `Content`，经静态 HTML 转换输出 `content:en
 | 陈列架是否循环与视觉副本 | `src/utils/card-rail-marquee.js` | `CardRailMarquee.astro` 只接线；减少动态效果沿用 `reduced-motion.js`；位移、淡出和按下暂停在 `prose.css`，只在 `data-marquee="on"` 时生效 | `card-rail-marquee.test.mjs` |
 | gallery／figure 属性、内容结构、嵌套拒绝与带位置失败，普通正文图的 image-view／template 包装 | `plugins/remark-image-layouts.ts` | `plugins/index.ts` 在 `remarkMediaCard` 后接入；图片节点继续交给 Astro，不在组件或 RSS 重新推断布局 | `test/remark-image-layouts.test.mjs`、真实 Astro 产物检查 |
 | 相册箭头／圆点、dialog 大图（含正文相册翻页／索引／控件行；陈列架源卡在、clone 去重）、页面资源清理（持有滚动锁 release） | `src/utils/image-interactions.ts`、`image-lightbox-gallery.js` | `components/widgets/ImageInteractions.astro` 在 `BaseLayout` 只注册与接线；使用插件生成的 DOM 和 Astro 资源 | `scripts/verify-image-layouts.mjs`、`test/image-lightbox-gallery.test.mjs`；契约见 `docs/正文图片大图相册 SPEC.md` |
-| 页面滚动锁、滚动条补偿及先前样式恢复 | `src/utils/misc.ts` | `lockScroll()` 返回对应 body 的 release；backdrop 和图片交互仅获取／释放，不自行改 overflow | `test/scroll-lock.test.mjs`、浏览器关闭与换页检查 |
+| 页面滚动锁、滚动条补偿及先前样式恢复 | `src/utils/misc.ts` | `lockScroll()` 锁定页面根节点；稳定滚动条留白由 `main.css` 的 `html` 统一维护，不额外补偿；release 绑定对应 body，旧页释放不解锁新页；backdrop 和图片交互仅获取／释放，不自行改 overflow | `test/scroll-lock.test.mjs`、浏览器关闭与换页检查 |
 | 归档分类预设、持久分配、容量与失败 | `utils/blog-category-colors.js`；数据在 `data/blog-category-colors.json` | `ArchiveView` 传入实际展示的分类集合，CSS 只选择主题 | `blog-category-colors.test.mjs`、归档产物检查 |
 | 社交身份 | `config.ts` `AUTHOR_LINKS` | 首页读取配置，关于正文独立维护联系方式 | 构建产物检查核对身份 |
 | 访问统计 | `Head.astro` 的 Umami 脚本 | 全站经 `BaseLayout` 加载；不在页脚或正文渲染 | 构建产物头部含该脚本 |

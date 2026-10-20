@@ -40,17 +40,14 @@ html {
   scroll-behavior: smooth;
   /* Sole document-level guard: long unbroken tokens must not widen the page. */
   overflow-x: clip;
-  background-color: var(--c-bg);
-}
-
-html:has(#bg-rose) {
+  /* Reserve one viewport gutter so fixed nav and flow content share a center. */
   scrollbar-gutter: stable;
+  background-color: var(--c-bg);
 }
 
 body {
   /* Keep negative-z decorations above the body fill and below content. */
   isolation: isolate;
-  overflow-y: scroll;
 }
 
 ::selection {

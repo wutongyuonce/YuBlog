@@ -18,6 +18,8 @@ export class ImageInteractions extends HTMLElement {
   private dialog?: HTMLDialogElement
   private trigger?: HTMLElement
   private releaseScroll?: () => void
+  // Linked-image zoom buttons sit outside the authored link and image view.
+  private linkedViews = new Map<HTMLElement, HTMLElement>()
   private slides: HTMLElement[] = []
   private slideIndex = 0
   private indexLabel?: HTMLElement
@@ -91,7 +93,9 @@ export class ImageInteractions extends HTMLElement {
     )
 
     const openFrom = (trigger: HTMLElement) => {
-      const view = trigger.closest<HTMLElement>('.image-view')
+      const view =
+        this.linkedViews.get(trigger) ??
+        trigger.closest<HTMLElement>('.image-view')
       if (!view?.querySelector('img')) return
       // Marquee clones are openable (delegation) but must map onto the source slide.
       this.slides = lightboxViewsInArticle(view)
@@ -169,11 +173,9 @@ export class ImageInteractions extends HTMLElement {
   }
 
   private triggerFor(view: HTMLElement): HTMLElement | undefined {
-    return (
-      view.querySelector<HTMLElement>('.image-view__linked-zoom') ??
-      view.querySelector<HTMLElement>('img') ??
-      undefined
-    )
+    for (const [trigger, linkedView] of this.linkedViews)
+      if (linkedView === view) return trigger
+    return view.querySelector<HTMLElement>('img') ?? undefined
   }
 
   private showSlide(preferredTrigger?: HTMLElement) {
@@ -182,7 +184,9 @@ export class ImageInteractions extends HTMLElement {
     const dialog = this.dialog
     if (!view || !image || !dialog) return
     this.trigger =
-      preferredTrigger && view.contains(preferredTrigger)
+      preferredTrigger &&
+      (view.contains(preferredTrigger) ||
+        this.linkedViews.get(preferredTrigger) === view)
         ? preferredTrigger
         : (this.triggerFor(view) ?? preferredTrigger)
     const source =
@@ -208,7 +212,7 @@ export class ImageInteractions extends HTMLElement {
     this.showSlide()
   }
 
-  /** 给没有作者链接的视图补上仅键盘可见的大图入口；克隆副本和已接管的视图跳过。 */
+  /** 给带作者链接的视图补上仅键盘可见的大图入口；克隆副本和已接管的视图跳过。 */
   private bindViews() {
     for (const view of document.querySelectorAll<HTMLElement>(
       '.markdown-content .image-view'
@@ -231,6 +235,7 @@ export class ImageInteractions extends HTMLElement {
         button.className = 'image-view__linked-zoom'
         button.textContent = '查看大图'
         link.after(button)
+        this.linkedViews.set(button, view)
         trigger = button
       } else {
         view.classList.add('image-view--interactive')
@@ -365,6 +370,7 @@ export class ImageInteractions extends HTMLElement {
     this.controller = undefined
     this.trigger = undefined
     this.restore()
+    this.linkedViews.clear()
     this.dialog?.remove()
     this.dialog = undefined
     this.indexLabel = undefined

@@ -21,11 +21,18 @@ const focusState = () =>
   page.evaluate(() => {
     const active = document.activeElement
     const style = getComputedStyle(active)
+    const shadow = document.createElement('span')
+    shadow.style.boxShadow = style.getPropertyValue('--un-ring-shadow')
+    document.body.append(shadow)
+    const ring = getComputedStyle(shadow).boxShadow
+    shadow.style.boxShadow = '0 0 transparent'
+    const transparentRing = ring === getComputedStyle(shadow).boxShadow
+    shadow.remove()
     return {
       method: document.documentElement.dataset.inputMethod,
       tag: active.tagName,
       outline: style.outlineStyle,
-      ring: style.getPropertyValue('--un-ring-shadow'),
+      transparentRing,
       parentOutline: getComputedStyle(active.parentElement).outlineStyle,
     }
   })
@@ -38,11 +45,7 @@ assert.equal(state.tag, 'IMG', 'closing returns focus to the original image')
 assert.equal(state.method, 'pointer')
 assert.equal(state.outline, 'none')
 assert.equal(state.parentOutline, 'none', 'pointer restore has no image frame')
-assert.equal(
-  state.ring.trim(),
-  '0 0 #0000',
-  'pointer restore has no utility ring'
-)
+assert.equal(state.transparentRing, true, 'pointer restore has no utility ring')
 
 await page.keyboard.press('Tab')
 await page.keyboard.press('Shift+Tab')

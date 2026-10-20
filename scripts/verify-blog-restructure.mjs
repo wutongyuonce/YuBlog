@@ -247,17 +247,13 @@ test('project groups preserve every configured category and entry', async () => 
   assert.deepEqual(
     groups
       .map((group) =>
-        textOf(
-          elements(group, (node) => hasClass(node, 'categorizer__label'))[0]
-        )
+        textOf(elements(group, (node) => node.tagName === 'h2')[0])
       )
       .sort(),
     [...new Set(source.map(({ category }) => category))].sort()
   )
   for (const group of groups) {
-    const category = textOf(
-      elements(group, (node) => hasClass(node, 'categorizer__label'))[0]
-    )
+    const category = textOf(elements(group, (node) => node.tagName === 'h2')[0])
     assert.deepEqual(
       elements(group, (node) => hasClass(node, 'group-card__title'))
         .map(textOf)
@@ -277,6 +273,10 @@ test('desktop articles expose an authored TOC directly', () => {
       (node) => node.properties.id === 'desktop-aside'
     )[0]
     if (!aside) continue // Articles may disable TOC or have no eligible headings.
+    assert.ok(
+      elements(aside, (node) => 'dataTocLink' in node.properties).length > 0,
+      'a visible TOC must contain navigable headings'
+    )
     assert.equal(elements(aside, (node) => node.tagName === 'button').length, 0)
     assert.equal(
       elements(aside, (node) => node.properties.id === 'toc-sidebar').length,

@@ -15,8 +15,8 @@
 | Route | Purpose | Source |
 | :--- | :--- | :--- |
 | `/` | Author, RSS, socials, writing heatmap, five recent posts, recent media and Last.fm listening; no pager or personal sidebar | `BlogProfile`, `WritingHeatmap`, `RecentWriting`, `recent.md`, runtime `/api/lastfm` |
-| `/blogs/` | Full list, category/tag filtering, seven posts per page | `src/content/blogs/**/*.{md,mdx}` |
-| `/blogs/#tech`, `#thought`, `#diary` | Built-in groups and discovered categories such as `#旅行`; legacy query URLs still work | `utils/blog-browser.js` |
+| `/blogs/` | Full list, category/tag filtering, eight posts per page | `src/content/blogs/**/*.{md,mdx}` |
+| `/blogs/#技术`, `#旅行` | Exact category filtering from published content; `#tech/#thought/#diary` remain legacy fragment aliases and query URLs still work | `utils/blog-browser.js` |
 | `/tags/` | Sortable tag directory, multi-select AND, results after selection | Post tags |
 | `/archives/` | One timeline grouped by year with category badges | Post dates/categories |
 | `/interests/`, `/interests/<id>/` | Interest index and content-driven category pages | `src/content/interests/*.{md,mdx}` (excluding `intro.md` and `recent.md`) |

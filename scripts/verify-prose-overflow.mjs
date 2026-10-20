@@ -6,19 +6,20 @@ import assert from 'node:assert/strict'
 const task = await taskSpace(Number('__TASK_SPACE_ID__'))
 const page = task.page('p1')
 const base = '__BASE_URL__'
-await page.cdp('Emulation.setDeviceMetricsOverride', {
-  width: 390,
-  height: 900,
-  deviceScaleFactor: 1,
-  mobile: false,
-})
 
-// 样式指南提供长行内 code，护城河文章提供实际超宽公式，不注入内容。
+// 长行内代码与超宽公式仅使用真实文章；原生 pre/code 另以最小样例检查。
 let checkedCode = false
 let checkedWideMath = false
 for (const slug of ['image-layout-demo', '英伟达的护城河究竟是什么']) {
   await page.goto(new URL(`blogs/${encodeURIComponent(slug)}/`, base).href)
   await page.waitForSelector('.prose .katex-display')
+  await page.cdp('Emulation.setDeviceMetricsOverride', {
+    width: 390,
+    height: 900,
+    deviceScaleFactor: 1,
+    mobile: false,
+  })
+  assert.equal(await page.evaluate(() => innerWidth), 390)
   await page.evaluate(() => document.fonts.ready.then(() => undefined))
   const state = await page.evaluate(() => {
     // 不能只靠根 overflow 断言：clip 会产生假阴性，必须同时检查内容可访问。
@@ -89,6 +90,21 @@ for (const slug of ['image-layout-demo', '英伟达的护城河究竟是什么']
   checkedWideMath ||= state.wideCount > 0
   assert.ok(state.mathAccessible, `${slug}：宽公式可局部滚动至末端`)
 }
+// Plain pre/code is a separate CSS contract from Expressive Code's fenced blocks.
+assert.equal(
+  await page.evaluate(() => {
+    const pre = document.createElement('pre')
+    const code = document.createElement('code')
+    code.textContent = 'first line\n    indented second line\n\tthird line'
+    pre.append(code)
+    document.querySelector('.post-content').append(pre)
+    const preserved = code.innerText === code.textContent
+    pre.remove()
+    return preserved
+  }),
+  true,
+  '原生 pre/code 保留换行与缩进，不套用行内代码的换行规则'
+)
 assert.ok(checkedCode, '真实文章必须覆盖长行内代码')
 assert.ok(checkedWideMath, '真实文章必须覆盖超宽公式，避免空检查通过')
 console.log('窄屏正文防撑宽与内容可访问检查通过')

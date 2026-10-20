@@ -134,13 +134,20 @@ ${longGallery}
   })
 
   for (const width of [1440, 390, 320]) {
+    await page.goto(url)
     await page.cdp('Emulation.setDeviceMetricsOverride', {
       width,
       height: 900,
       deviceScaleFactor: 1,
       mobile: false,
     })
-    await page.goto(url)
+    assert.equal(await page.evaluate(() => innerWidth), width)
+    await page.evaluate(
+      () =>
+        new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve))
+        )
+    )
     await page.waitForSelector('img[role="button"]')
     for (const dark of [false, true]) {
       await page.evaluate(
@@ -259,7 +266,7 @@ ${longGallery}
       }
       assert.ok(
         Math.abs(state.galleryHeight - state.frameHeight) < 1,
-        'off-screen portraits must not create blank space below the active frame'
+        `${width}/${dark}: active gallery ${state.galleryHeight}px, frame ${state.frameHeight}px`
       )
       assert.ok(
         Math.abs(state.arrow.middle - state.arrow.stageMiddle) < 1,
@@ -478,6 +485,11 @@ ${longGallery}
   await page.keyboard.press('Enter')
   await page.waitForSelector('dialog[open]')
   assert.equal(
+    await page.evaluate(() => document.documentElement.style.overflow),
+    'hidden',
+    'the image viewer locks the document scroller'
+  )
+  assert.equal(
     await page.evaluate(
       () =>
         document.querySelector('dialog img').getAttribute('src') ===
@@ -517,11 +529,26 @@ ${longGallery}
     ),
     '查看大图：缩略图'
   )
-  assert.equal(await page.evaluate(() => document.body.style.overflow), '')
+  assert.equal(
+    await page.evaluate(() => document.documentElement.style.overflow),
+    ''
+  )
 
   await page.focus('.image-view__linked-zoom[aria-label="查看大图：复杂链接"]')
   await page.keyboard.press('Enter')
+  assert.equal(
+    await page.evaluate(() => document.querySelector('dialog').open),
+    true,
+    'a linked image zoom button opens its associated image'
+  )
   await page.click('.image-lightbox__close')
+  assert.equal(
+    await page.evaluate(() =>
+      document.activeElement?.getAttribute('aria-label')
+    ),
+    '查看大图：复杂链接',
+    'closing returns focus to the linked image zoom button'
+  )
   await page.focus('img[alt="缩略图"]')
   await page.keyboard.press('Space')
   await page.click('dialog img')
@@ -530,7 +557,10 @@ ${longGallery}
     false,
     'clicking the large image shrinks it back'
   )
-  assert.equal(await page.evaluate(() => document.body.style.overflow), '')
+  assert.equal(
+    await page.evaluate(() => document.documentElement.style.overflow),
+    ''
+  )
   await scrollTo('.image-view:has(> img[alt="缩略图"])')
   await page.click('img[alt="缩略图"]')
   await page.evaluate(() => document.querySelector('dialog').click())
@@ -543,7 +573,10 @@ ${longGallery}
   await page.click('img[alt="缩略图"]')
   await page.evaluate(() => document.querySelector('.nav-bar a[href]').click())
   await page.waitForFunction(() => !document.querySelector('.post-content'))
-  assert.equal(await page.evaluate(() => document.body.style.overflow), '')
+  assert.equal(
+    await page.evaluate(() => document.documentElement.style.overflow),
+    ''
+  )
   assert.equal(
     await page.evaluate(
       () => document.querySelectorAll('dialog.image-lightbox').length
@@ -551,7 +584,7 @@ ${longGallery}
     1
   )
 
-  // The shared scroll-lock consumer must acquire the replacement body too.
+  // The shared scroll-lock consumer must acquire the replacement page too.
   // A normal fade-out can be cancelled by the faster ClientRouter body swap.
   await page.cdp('Emulation.setEmulatedMedia', {
     features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
@@ -571,22 +604,25 @@ ${longGallery}
   )
   await page.click('#search-switch')
   assert.equal(
-    await page.evaluate(() => document.body.style.overflow),
+    await page.evaluate(() => document.documentElement.style.overflow),
     'hidden',
-    'search reacquires the new body after a cancelled exit animation'
+    'search reacquires the new page after a cancelled exit animation'
   )
   await page.keyboard.press('Escape')
-  await page.waitForFunction(() => document.body.style.overflow === '')
+  await page.waitForFunction(
+    () => document.documentElement.style.overflow === ''
+  )
 
   // Pagination must reveal the active dot inside its own scroller, not by
   // scrolling the article, once a gallery has more dots than fit.
+  await page.goto(url)
   await page.cdp('Emulation.setDeviceMetricsOverride', {
     width: 320,
     height: 900,
     deviceScaleFactor: 1,
     mobile: false,
   })
-  await page.goto(url)
+  assert.equal(await page.evaluate(() => innerWidth), 320)
   await page.waitForSelector('.image-gallery__arrow--next')
   await page.evaluate(() => {
     window.scrollTo(0, 0)

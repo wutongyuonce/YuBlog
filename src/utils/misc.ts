@@ -1,20 +1,22 @@
 /** Optimized hero image size; matches the 660px reading column. */
 export const ARTICLE_COLUMN_WIDTH = 660
 
-/** Lock this document body and return a release that restores its prior styles. */
+/** Lock the document scroller; an old page's release cannot unlock a new page. */
 export function lockScroll() {
+  const rootEl = document.documentElement
   const bodyEl = document.body
-  const previousOverflow = bodyEl.style.overflow
+  const previousOverflow = rootEl.style.overflow
   const previousPadding = bodyEl.style.paddingRight
-  const scrollbarWidth = window.innerWidth - bodyEl.clientWidth
-  const hasRose = document.getElementById('bg-rose')
-  if (scrollbarWidth > 0 && !hasRose) {
+  const scrollbarWidth = window.innerWidth - rootEl.clientWidth
+  const hasStableGutter =
+    getComputedStyle(rootEl).scrollbarGutter.includes('stable')
+  if (scrollbarWidth > 0 && !hasStableGutter) {
     const padding = parseFloat(getComputedStyle(bodyEl).paddingRight) || 0
     bodyEl.style.paddingRight = `${padding + scrollbarWidth}px`
   }
-  bodyEl.style.overflow = 'hidden'
+  rootEl.style.overflow = 'hidden'
   return () => {
-    bodyEl.style.overflow = previousOverflow
+    if (document.body === bodyEl) rootEl.style.overflow = previousOverflow
     bodyEl.style.paddingRight = previousPadding
   }
 }

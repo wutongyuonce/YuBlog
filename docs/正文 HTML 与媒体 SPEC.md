@@ -112,7 +112,7 @@ URL 前缀跟随 `SITE.base`，子路径部署时不会请求到错误位置。
 | `plugins/rehype-code-meta.ts` | 在原 `rehype-raw` 重建元素前，将代码围栏 `data.meta` 转为 Expressive Code 支持的 `metastring`，保留文件名、行号、高亮和折叠；随后由原 `rehype-raw` 解析 HTML |
 | `plugins/media-paths.ts` | 媒体引用规则：扩展名、`src/` → `public/_media/` 映射、把引用分成 external／rooted／inline／invalid／unsupported／local／outside，判定「在 `src/` 之内」「哪一段含取不到的字符」，并给出 URL 段 ↔ 文件名的两个方向（`decodeRefPath` 是作者想要的文件名，`decodeServedPath` 是静态层实际会去找的名字）。除 `isMirrorableFile` 要 lstat／realpath 外都是纯函数，不写文件 |
 | `plugins/rehype-media-assets.ts` | 按元素分派改写与报错策略；不做路径推导 |
-| `plugins/astro-media-sync.ts` | 把 `src/` 视频／音频落盘到 `public/_media/`；不做 URL 推导 |
+| `plugins/astro-media-sync.ts` | 按 `media-paths.ts` 的 `MIRROR_EXTENSIONS` 将 `src/` 媒体与 Excalidraw 文件镜像到 `public/_media/`；不做 URL 推导 |
 
 镜像目标与 URL 都由 `media-paths.ts` 推导，另两个模块不各自推断映射。
 

@@ -7,13 +7,14 @@ const page = task.page('p1')
 const base = new URL('__BASE_URL__').href
 
 for (const width of [1440, 390, 320]) {
+  await page.goto(base)
   await page.cdp('Emulation.setDeviceMetricsOverride', {
     width,
     height: 800,
     deviceScaleFactor: 1,
     mobile: false,
   })
-  await page.goto(base)
+  assert.equal(await page.evaluate(() => innerWidth), width)
   await page.waitForFunction(() =>
     [
       ...document.querySelectorAll(
@@ -76,11 +77,6 @@ for (const width of [1440, 390, 320]) {
             : getComputedStyle(node.closest('.media-card')).backgroundColor
           return contrast(style.color, background) >= 4.5
         }),
-        overflow: document.documentElement.scrollWidth > innerWidth,
-        contentWidth: body.getBoundingClientRect().width,
-        navWidth: document
-          .querySelector('.nav-bar__inner')
-          .getBoundingClientRect().width,
         headings: [...body.querySelectorAll('h1,h2,h3,h4,h5,h6')].every(
           (heading) =>
             heading.querySelector('.header-anchor')?.getAttribute('href') ===
@@ -99,15 +95,6 @@ for (const width of [1440, 390, 320]) {
       'coversLoaded',
     ])
       assert.equal(layout[name], true, `${width}/${dark}: ${name}`)
-    assert.equal(
-      layout.overflow,
-      false,
-      `${width}/${dark}: page must not overflow`
-    )
-    assert.ok(
-      Math.abs(layout.navWidth - layout.contentWidth) < 1,
-      'navigation and content share the responsive width'
-    )
     assert.equal(
       layout.readable,
       true,
