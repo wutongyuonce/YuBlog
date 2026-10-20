@@ -63,6 +63,38 @@ const hasClass = (node, name) => node.properties.className?.includes(name)
 const textOf = (node) =>
   node.type === 'text' ? node.value : (node.children || []).map(textOf).join('')
 
+test('home delivers its complete layout without waiting for external stylesheets', () => {
+  assert.deepEqual(
+    elements(
+      home,
+      (node) =>
+        node.tagName === 'link' && node.properties.rel?.includes('stylesheet')
+    ),
+    [],
+    'a pending stylesheet must not block the homepage first paint'
+  )
+  const head = elements(home, (node) => node.tagName === 'head')[0]
+  const css = elements(head, (node) => node.tagName === 'style')
+    .map(textOf)
+    .join('\n')
+  assert.doesNotMatch(
+    css,
+    /@import\b/i,
+    'inline CSS must not fetch another sheet'
+  )
+  assert.match(css, /--c-bg\s*:/, 'theme tokens arrive with the document')
+  assert.match(
+    css,
+    /\.home-page\b/,
+    'the homepage layout arrives with the document'
+  )
+  assert.match(
+    css,
+    /\.fixed\s*\{/,
+    'the background positioning arrives with the document'
+  )
+})
+
 test('only articles, friends and every interest category have isolated comments after their content', async () => {
   const interestFiles = (
     await readdir(new URL('../dist/interests/', import.meta.url), {

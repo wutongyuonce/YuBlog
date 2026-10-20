@@ -27,10 +27,7 @@ export default defineConfig({
 
   // ==================== 构建配置 ====================
   build: {
-    inlineStylesheets: 'never', // 从不内联样式，始终使用外部 CSS 文件
-    // 'never': 所有样式都生成独立 CSS 文件
-    // 'auto': 小样式内联，大样式外链
-    // 'always': 所有样式都内联
+    inlineStylesheets: 'always', // 样式随 HTML 到达，首屏不等待外链 CSS
   },
 
   // ==================== 集成插件 ====================

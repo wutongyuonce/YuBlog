@@ -1,5 +1,6 @@
 ---
 import { ClientRouter } from 'astro:transitions'
+import shellCss from '../../../public/shell.css?raw'
 
 import { withBasePath } from '~/utils/path'
 import { SITE } from '~/config'
@@ -167,8 +168,8 @@ const webPageData = {
   href={withBasePath('/rss.xml')}
 />
 
-<!-- Shell UI: one stylesheet for navigation, layouts, home and archives. -->
-<link rel="stylesheet" href={withBasePath('/shell.css')} />
+<!-- Keep the shell in the document too: a separate link would still block paint. -->
+<style is:inline set:html={shellCss}></style>
 
 <!-- Google JSON-LD Structured Data -->
 {pubDate ? (
