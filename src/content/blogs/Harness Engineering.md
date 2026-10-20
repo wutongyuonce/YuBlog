@@ -8,8 +8,6 @@ toc: true
 search: true
 ---
 
-## Harness Engineering
-
 ![PixPin_2026-08-05_13-26-30|w630](./harness-engineering-img/PixPin_2026-08-05_13-26-30.png)
 
 ![taxonomy](./harness-engineering-img/taxonomy.png)
