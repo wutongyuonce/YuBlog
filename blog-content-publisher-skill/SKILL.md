@@ -107,6 +107,12 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 ---
 
+## 公式与代码标记
+
+行内公式写 `$…$`；块级公式用独立行的 `$$` 包围公式正文。本站使用 remark-math，`\(...\)` 与 `\[...\]` 不会被解析为数学分隔符。
+
+代码围栏可用 Expressive Code 的 `diff`／`ins`／`del` 等 text-markers；演示见 `src/content/blogs/image-layout-demo.md`。
+
 ## 正文图片排版选择
 
 先读正文，按内容选最简单的排版，不为了展示功能把全部图片改成相册：单张需要看清细节用普通 Markdown 图；需要并排对照用 grid；一组按顺序浏览的图片用 scroll；一张图配连续正文用 figure。判断和改写由你直接完成，不必先让作者选语法；只对确实需要排版的图加布局，普通单图不加任何指令。保持作者图片与文字的源顺序，不虚构说明，也不替作者删图、并段或改说明。

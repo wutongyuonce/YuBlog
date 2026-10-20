@@ -42,7 +42,7 @@
 
 HTML 交互动画可在普通 `.md` 里用 `<iframe sandbox="allow-scripts">` 嵌入。演示文件放在 `public/demos/<文章短名>/`，用 `/demos/<文章短名>/<文件>.html` 引用，手动指定高度；HTML 不会从文章目录自动镜像。可运行例子见 [Markdown 自定义样式文章](src/content/blogs/image-layout-demo.md) 的「HTML 交互动画」，目录与资源规则见 [正文 HTML 与媒体 SPEC](docs/正文%20HTML%20与媒体%20SPEC.md#本地-html-交互演示)。
 
-作者操作见 [内容发布 skill](blog-content-publisher-skill/SKILL.md)，图片写法见 [图片管线指南](docs/Astro图片管线指南.md)。页面行为契约见 [站点行为 SPEC](docs/站点行为%20SPEC.md)，模块权威与边界见 [项目解析](docs/项目解析.md)，全文订阅见 [RSS SPEC](docs/RSS%20全文支持%20SPEC.md)。
+公式写法见 [作者公式契约](blog-content-publisher-skill/SKILL.md#公式与代码标记)。作者操作见 [内容发布 skill](blog-content-publisher-skill/SKILL.md)，图片写法见 [图片管线指南](docs/Astro图片管线指南.md)。页面行为契约见 [站点行为 SPEC](docs/站点行为%20SPEC.md)，模块权威与边界见 [项目解析](docs/项目解析.md)，全文订阅见 [RSS SPEC](docs/RSS%20全文支持%20SPEC.md)。
 
 全站点缀默认使用原粉色（浅色 `#ad526c`、深色 `#e7a1b5`），顶部调色盘可选择原粉色、灰紫、深紫、雾蓝和鼠尾草绿。每套浅色与深色强调色不同：浅色使用主色，深色使用同色相更亮且仍能辨认的颜色，色点始终显示浅色主色。选择后立即作用于热力图、正文强调、搜索高亮、友链柔光等界面，不刷新页面。配色与亮暗主题独立，浏览器记住选择并在首屏及站内跳转前恢复；无脚本保留默认原粉色。黑白基底、内容图片、分类徽标、代码高亮与独立语义色保持原规则。预设统一维护在 `src/utils/accent-palette.js`。
 
