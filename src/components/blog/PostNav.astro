@@ -26,7 +26,7 @@ const showNav = Boolean(prev || next || items.length > 1)
       {prev ? (
         <a class="post-nav__link" href={prev.href} title={prev.title}>
           <span class="post-nav__icon" aria-hidden="true">
-            ..
+            ←
           </span>
           上一篇
         </a>
@@ -38,7 +38,7 @@ const showNav = Boolean(prev || next || items.length > 1)
         <a class="post-nav__link" href={next.href} title={next.title}>
           下一篇
           <span class="post-nav__icon" aria-hidden="true">
-            ..
+            →
           </span>
         </a>
       ) : (
@@ -73,6 +73,7 @@ const showNav = Boolean(prev || next || items.length > 1)
   .post-nav__link {
     display: inline-flex;
     align-items: baseline;
+    gap: 0.4em;
     width: fit-content;
     max-width: 100%;
     color: var(--fg-deeper, var(--c-text));

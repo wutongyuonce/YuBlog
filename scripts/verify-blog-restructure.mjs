@@ -290,10 +290,7 @@ test('only articles, friends and every interest category have isolated comments 
         for (const link of elements(nav, (node) =>
           hasClass(node, 'post-nav__link')
         )) {
-          assert.match(
-            textOf(link).replace(/\s+/g, ''),
-            /^(\.\.上一篇|下一篇\.\.)$/
-          )
+          assert.match(textOf(link).replace(/\s+/g, ''), /^(←上一篇|下一篇→)$/)
         }
       }
     }
