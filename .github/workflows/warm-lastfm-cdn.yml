@@ -1,0 +1,33 @@
+name: Warm Last.fm CDN
+
+on:
+  schedule:
+    # Every 25 minutes (UTC), inside the 30-minute CDN fresh window.
+    - cron: '*/25 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  warm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: GET /api/lastfm
+        run: |
+          set -euo pipefail
+          headers=$(mktemp)
+          code=$(curl -sS -L --max-time 60 \
+            -o /tmp/lastfm.json -D "$headers" -w '%{http_code}' \
+            -H 'accept: application/json' \
+            'https://www.wutongyu.site/api/lastfm')
+          echo "HTTP ${code}"
+          grep -iE '^(HTTP/|age:|x-vercel-cache:|cache-control:)' "$headers" || true
+          test "${code}" = '200'
+          python3 - <<'PY'
+          import json
+          data = json.load(open('/tmp/lastfm.json'))
+          assert isinstance(data.get('tracks'), list), data
+          assert 'updatedAt' in data
+          print(f"tracks={len(data['tracks'])} updatedAt={data['updatedAt']}")
+          PY
