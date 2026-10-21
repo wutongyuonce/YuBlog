@@ -122,7 +122,6 @@ function createDocument() {
   return doc
 }
 
-
 function dataAttrName(key) {
   return `data-${key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`
 }
