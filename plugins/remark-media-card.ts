@@ -7,7 +7,7 @@ import { visit } from 'unist-util-visit'
  * 封面卡片。博客、拾趣、关于共用这条 Markdown 管线，所以 `.md` 里都能写：
  *
  * ```md
- * :::card{title="侦探杰克 第四季" href="https://example.com" score="3.5" label="Tv"}
+ * :::card{title="侦探杰克 第四季" href="https://example.com" score="3.5" date="2026.10.18" label="Tv"}
  * ![海报](./poster.jpg)
  *
  * 过到后期也是乏善可陈。介绍超出封面高度后在卡片内滚动。
@@ -17,7 +17,8 @@ import { visit } from 'unist-util-visit'
  * 封面必须是卡片里的第一张相对路径图片，这样仍走正文图片管线。
  * 连续的 `:::card` 合成一排；`href` 只接受 http(s)、mailto 和站内路径。
  * `layout="portrait"` 是 2:3 竖卡，`layout="square"` 是 1:1 方卡（专辑封面的常见比例）。
- * 两种陈列架都必须有标题和一张封面，`meta` 是可选小字，不接受评分、角标或介绍。
+ * 横卡的 `date` 是可选日期，显示在评分下方；留空时不显示。
+ * 两种陈列架都必须有标题和一张封面，`meta` 是可选小字，不接受评分、日期、角标或介绍。
  * `scroll="auto"` 只是请求循环；每张都要写。布局、滚动模式或正文变化会分隔连续卡片组。
  */
 type Directive = Extract<RootContent, { type: 'containerDirective' }>
@@ -143,6 +144,9 @@ const buildCard = (node: Directive): Element | null => {
   const meta = node.attributes?.meta?.trim() ?? ''
   if (!rail && node.attributes?.meta !== undefined)
     throw new Error('Card meta requires layout="portrait" or layout="square"')
+  const date = node.attributes?.date?.trim() ?? ''
+  if (rail && node.attributes?.date !== undefined)
+    throw new Error('Card date requires layout="horizontal"')
   const href = safeHref(node.attributes?.href)
   const label = node.attributes?.label?.trim() ?? ''
   const score = parseScore(node.attributes?.score)
@@ -240,6 +244,14 @@ const buildCard = (node: Directive): Element | null => {
         element('span', 'media-card__rating-value', [
           text(`${score} 分，满分 5 分`),
         ]),
+      ])
+    )
+  }
+  if (date) {
+    body.push(
+      element('p', 'media-card__date', [
+        text('日期：'),
+        element('span', 'media-card__date-value', [text(date)]),
       ])
     )
   }

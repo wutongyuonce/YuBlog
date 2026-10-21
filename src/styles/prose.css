@@ -497,17 +497,21 @@ main:has(.post-content) > footer.prose :is(a, span) {
   min-height: 9.33rem;
   max-height: 9.33rem;
 }
+.prose :is(a, p).media-card__title,
+.prose .media-card__date-value {
+  color: #526e47;
+}
 .prose :is(a, p).media-card__title {
   margin: 0;
   padding-right: 1.8rem;
   border-bottom: 0;
-  color: #526e47;
   font-size: 1.05rem;
   font-weight: 600;
   line-height: 1.35;
   text-decoration: none;
 }
-:root.dark .prose :is(a, p).media-card__title {
+:root.dark .prose :is(a, p).media-card__title,
+:root.dark .prose .media-card__date-value {
   color: #b7d0ae;
 }
 .prose a.media-card__title:is(:hover, :focus-visible) {
@@ -518,7 +522,8 @@ main:has(.post-content) > footer.prose :is(a, span) {
 .prose a.media-card__title .new-tab-icon {
   display: none;
 }
-.prose .media-card__score {
+.prose .media-card__score,
+.prose .media-card__date {
   display: flex;
   flex: none;
   flex-wrap: wrap;
@@ -527,6 +532,9 @@ main:has(.post-content) > footer.prose :is(a, span) {
   margin: 0.35rem 0 0.45rem;
   font-size: 0.92rem;
   line-height: 1.3;
+}
+.prose .media-card__score:has(+ .media-card__date) {
+  margin-bottom: 0;
 }
 .prose .media-card__rating-value {
   position: absolute;

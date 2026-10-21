@@ -68,6 +68,40 @@ test(':::card renders a scrollable media card and keeps the cover image', async 
   )
 })
 
+test('optional dates sit below scores, remain independent and render as text', async () => {
+  const processor = await createMarkdownProcessor({
+    remarkPlugins: [remarkDirective, remarkMediaCard],
+  })
+  const { code } = await processor.render(
+    ':::card{title="已看完" score="5" date=" 2026.10.18 "}\n短评。\n:::'
+  )
+  assert.match(
+    code,
+    /<p class="media-card__score">[\s\S]*<\/p>\s*<p class="media-card__date">日期：<span class="media-card__date-value">2026\.10\.18<\/span><\/p>\s*<div class="media-card__review">/
+  )
+  assert.match(toRssHtml(code, 'https://example.com/'), /日期：.*2026\.10\.18/)
+
+  const { code: dateOnly } = await processor.render(
+    ':::card{title="只填日期" date="2026.10.18"}\n:::'
+  )
+  assert.match(dateOnly, /class="media-card__date"/)
+  assert.doesNotMatch(dateOnly, /class="media-card__score"/)
+
+  for (const attrs of ['', 'date=""', 'date="   "']) {
+    const { code: withoutDate } = await processor.render(
+      `:::card{title="无日期" score="4" ${attrs}}\n:::`
+    )
+    assert.doesNotMatch(withoutDate, /media-card__date/)
+    assert.match(withoutDate, /class="media-card__score"/)
+  }
+
+  const { code: escaped } = await processor.render(
+    ':::card{title="日期文本" date="<img src=x onerror=alert(1)>"}\n:::'
+  )
+  assert.doesNotMatch(escaped, /<img/)
+  assert.match(escaped, /(?:&lt;|&#x3C;)img/)
+})
+
 test('headings split card groups and untrusted titles stay text', async () => {
   const processor = await createMarkdownProcessor({
     remarkPlugins: [remarkDirective, remarkMediaCard],
@@ -413,6 +447,16 @@ test('invalid portrait content fails rather than hiding authored information', a
       /no review, score or label/,
     ],
     ['title="横卡" meta="不能忽略"', '正文。', /meta requires/],
+    [
+      'layout="portrait" title="日期" date="2026.10.18"',
+      '![封面](./cover.jpg)',
+      /date requires/,
+    ],
+    [
+      'layout="square" title="日期" date="2026.10.18"',
+      '![封面](./cover.jpg)',
+      /date requires/,
+    ],
     ['layout="square" title="无封面"', '', /standalone cover/],
     [
       'layout="square" title="评分" score="4"',
