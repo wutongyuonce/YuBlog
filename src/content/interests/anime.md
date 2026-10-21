@@ -96,7 +96,7 @@ order: 1
 
 日漫：
 
-:::card{title="葬送的芙莉莲" href="https://zh.wikipedia.org/wiki/葬送的芙莉莲" score="5" date="2026.10.18" label="日漫"}
+:::card{title="葬送的芙莉莲" href="https://zh.wikipedia.org/wiki/葬送的芙莉莲" score="5" date="2026-10-18" label="日漫"}
 ![葬送的芙莉莲海报](./anime/frieren.jpg)
 
 好温柔的动漫，世界上有这样的动漫真是太美好了
