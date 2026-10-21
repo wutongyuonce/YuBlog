@@ -343,7 +343,7 @@ main:has(.post-content) > footer.prose :is(a, span) {
   margin-bottom: 0.75em;
 }
 
-.prose.post-content :is(h1, h2, h3, h4, h5, h6) {
+.prose.markdown-content :is(h1, h2, h3, h4, h5, h6) {
   /* Without the TOC script, navigation remains visible. */
   scroll-margin-top: var(--post-anchor-offset, 4.75rem);
 }
@@ -354,7 +354,7 @@ main:has(.post-content) > footer.prose :is(a, span) {
 }
 
 @media (max-width: 799px) {
-  .prose.post-content :is(h1, h2, h3, h4, h5, h6) {
+  .prose.markdown-content :is(h1, h2, h3, h4, h5, h6) {
     scroll-margin-top: var(--post-anchor-offset, 7rem);
   }
 }
@@ -419,23 +419,6 @@ main:has(.post-content) > footer.prose :is(a, span) {
 }
 .prose em {
   color: inherit;
-}
-
-/* Interests index note. Kept here so a hard refresh and client navigation share one rule. */
-.interests-page__intro {
-  margin-top: 1.5rem;
-  font-size: 0.875rem;
-  line-height: 1.7;
-  color: color-mix(in srgb, var(--c-text) 55%, var(--c-bg));
-}
-.interests-page__intro p {
-  margin: 0;
-  color: inherit;
-  font-size: inherit;
-  line-height: inherit;
-}
-.interests-page__intro p + p {
-  margin-top: 0.85rem;
 }
 
 /* :::card。评论区高度跟封面走，多出来的介绍在卡片内滚动。 */

@@ -1,6 +1,29 @@
-<table-of-contents data-pagefind-ignore="all">
-  <slot />
-</table-of-contents>
+---
+import DesktopAside from '~/components/base/DesktopAside.astro'
+import MobileTocControl from '~/components/toc/MobileTocControl.astro'
+import { FEATURES } from '~/config'
+import { generateToc } from '~/utils/toc'
+import type { MarkdownHeading } from 'astro'
+
+interface Props {
+  headings: MarkdownHeading[]
+  enabled?: boolean
+}
+
+const { headings, enabled = true } = Astro.props
+const { toc } = FEATURES
+const tocHeadings =
+  enabled && Array.isArray(toc) && toc[0]
+    ? generateToc(headings, toc[1].minHeadingLevel, toc[1].maxHeadingLevel)
+    : []
+---
+
+{tocHeadings.length > 0 && (
+  <table-of-contents data-pagefind-ignore="all">
+    <DesktopAside headings={tocHeadings} />
+    <MobileTocControl headings={tocHeadings} />
+  </table-of-contents>
+)}
 
 <script>
   import { pickActiveHeadingIndex } from '~/utils/toc-active'

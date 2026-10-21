@@ -9,12 +9,9 @@ import GiscusComments from '~/components/base/GiscusComments.astro'
 import PostNav from '~/components/blog/PostNav.astro'
 import PostHero from '~/components/base/PostHero.astro'
 import Warning from '~/components/base/Warning.astro'
-import DesktopAside from '~/components/base/DesktopAside.astro'
 import Toc from '~/components/toc/Toc.astro'
-import MobileTocControl from '~/components/toc/MobileTocControl.astro'
 
 import { getMinutesRead } from '~/utils/data'
-import { generateToc } from '~/utils/toc'
 import { FEATURES } from '~/config'
 
 import type { CollectionEntry } from 'astro:content'
@@ -24,7 +21,7 @@ interface Props {
 }
 
 const { post } = Astro.props
-const { toc, search } = FEATURES
+const { search } = FEATURES
 
 const { data: frontmatter } = post
 const { Content, headings, remarkPluginFrontmatter } = await render(post)
@@ -57,11 +54,6 @@ const socialImage = titleImage
       })
     ).src
   : undefined
-
-const tocHeadings =
-  Array.isArray(toc) && toc[0] && frontmatter.toc
-    ? generateToc(headings, toc[1].minHeadingLevel, toc[1].maxHeadingLevel)
-    : []
 
 const collectionType = post.collection
 const isSearchable =
@@ -114,12 +106,7 @@ frontmatter to <code>false</code> or remove it to publish the post.`
       </Fragment>
     )}
     <Fragment slot="article">
-      {tocHeadings.length > 0 && (
-        <Toc>
-          <DesktopAside headings={tocHeadings} />
-          <MobileTocControl headings={tocHeadings} />
-        </Toc>
-      )}
+      <Toc {headings} enabled={frontmatter.toc} />
       <Content />
     </Fragment>
   </StandardLayout>

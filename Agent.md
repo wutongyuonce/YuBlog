@@ -17,7 +17,7 @@
 
 Astro 通用语法笔记在 `docs/reference/astro.md`，只作学习参考。导航、社交、开关的配置入口是 `src/config.ts`，正文管线注册在 `plugins/index.ts`。
 
-新增拾趣分类属于内容维护：在 `src/content/interests/` 顶层新增 `.md`／`.mdx`，填写 `title`、`description`、`order`，构建后自动生成子页、入口和菜单。`intro.md`、`recent.md` 排除出分类，图标只在 `INTEREST_ICONS` 配置，无图标保留纯文字。
+新增拾趣分类属于内容维护：在 `src/content/interests/` 顶层新增 `.md`／`.mdx`，填写 `title`、`description`、`order`，构建后自动生成子页、入口和菜单。`recent.md` 排除出分类，图标只在 `INTEREST_ICONS` 配置，无图标保留纯文字。
 
 ## 文档与变更记录
 

@@ -6,6 +6,7 @@ import { visit } from 'unist-util-visit'
 import { XMLParser } from 'fast-xml-parser'
 import {
   AUTHOR_LINKS,
+  FEATURES,
   GISCUS,
   INTEREST_ICONS,
   MORE_LINKS,
@@ -566,9 +567,11 @@ test('interest menu and index agree and their links resolve to content pages', a
   )
   const sourceFiles = (
     await readdir(new URL('../src/content/interests/', import.meta.url))
-  ).filter(
-    (file) =>
-      /\.(md|mdx)$/.test(file) && !['intro.md', 'recent.md'].includes(file)
+  ).filter((file) => /\.(md|mdx)$/.test(file) && file !== 'recent.md')
+  assert.equal(
+    elements(interests, (node) => node.tagName === 'table-of-contents').length,
+    0,
+    'the category index has no body headings or directory'
   )
   assert.equal(indexLinks.length, sourceFiles.length)
   for (const link of indexLinks) {
@@ -596,6 +599,37 @@ test('interest menu and index agree and their links resolve to content pages', a
     const content = elements(page, (node) => 'dataInterest' in node.properties)
     assert.equal(content.length, 1)
     assert.equal(content[0].properties.dataInterest, id)
+    const { toc } = FEATURES
+    const headings =
+      Array.isArray(toc) && toc[0]
+        ? elements(content[0], (node) => {
+            const depth = /^h([1-6])$/.exec(node.tagName)?.[1]
+            return (
+              depth &&
+              Number(depth) >= toc[1].minHeadingLevel &&
+              Number(depth) <= toc[1].maxHeadingLevel
+            )
+          })
+        : []
+    assert.equal(
+      elements(page, (node) => node.tagName === 'table-of-contents').length,
+      headings.length ? 1 : 0,
+      `${id}: render a directory only for eligible body headings`
+    )
+    for (const containerId of ['toc-sidebar', 'mobile-toc-panel']) {
+      const container = elements(
+        page,
+        (node) => node.properties.id === containerId
+      )[0]
+      const links = container
+        ? elements(container, (node) => 'dataTocLink' in node.properties)
+        : []
+      assert.deepEqual(
+        links.map((node) => node.properties.href),
+        headings.map((node) => `#${node.properties.id}`),
+        `${id}: ${containerId} follows Markdown heading order and targets`
+      )
+    }
     assert.equal(
       elements(page, (node) => hasClass(node, 'recent-media')).length,
       0,

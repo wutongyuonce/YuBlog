@@ -63,7 +63,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site)
 
 动态入口、URL 和筛选由 [blog-browser.js](../../src/utils/blog-browser.js) 统一负责；归档分类配色由 [blog-category-colors.js](../../src/utils/blog-category-colors.js) 分配并持久记录。这些状态不新增 sitemap 条目，也不改变文章 URL、GUID、发布日期或 RSS 范围。
 
-独立内容页如 `/interests/movie/` 有静态 HTML 和独立 canonical。新增满足 schema 的 `src/content/interests/` 顶层 `.md` / `.mdx` 文件，重新构建会自动生成分类页、菜单入口和 sitemap 条目；`intro.md`、`recent.md` 不生成分类页。图标可选，不影响收录，拾趣不进入博客 RSS。
+独立内容页如 `/interests/movie/` 有静态 HTML 和独立 canonical。新增满足 schema 的 `src/content/interests/` 顶层 `.md` / `.mdx` 文件，重新构建会自动生成分类页、菜单入口和 sitemap 条目；`recent.md` 不生成分类页。图标可选，不影响收录，拾趣不进入博客 RSS。
 
 Head 同时输出页面标题（通常为“页面名 - Wutong Yu”）、描述、作者、社交元信息，以及有 `pubDate` 时的 `BlogPosting`、否则的 `WebPage` JSON-LD；结构化数据不是收录前提。favicon、manifest 也在此挂载，随 Head 内联的 shell CSS 与 SEO 无关。文章标题 schema 限制 60 字符，清晰摘要有助于搜索结果点击。
 

@@ -28,7 +28,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | :--- | :--- | :--- | :--- |
 | `/` | 作者介绍、写作热力、近期五篇笔墨、近期书影游与 Last.fm 听歌排行 | `src/pages/index.astro` | 已发布 `blogs`、`interests/recent.md`、运行时 `/api/lastfm` |
 | `/blogs/` | 完整文稿列表，八篇分页，原始分类共用 URL 片段精确筛选 | `src/pages/blogs/index.astro` | `blogs` 集合 |
-| `/interests/`、`/interests/<id>/` | 分类入口与按内容自动生成的独立页面 | `src/pages/interests.astro`、`src/pages/interests/[id].astro` | `interests` 集合：顶层 `*.{md,mdx}`，排除 `intro.md`、`recent.md` |
+| `/interests/`、`/interests/<id>/` | 分类入口与按内容自动生成的独立页面 | `src/pages/interests.astro`、`src/pages/interests/[id].astro` | `interests` 集合：顶层 `*.{md,mdx}`，排除 `recent.md` |
 | `/tags/` | 标签芯片；多选 AND；未选不列出文章 | `src/pages/tags.astro` | 同上，标签从文章 frontmatter 汇总 |
 | `/archives/` | 按年时间线 | `src/pages/archives.astro` | 同上，按 `pubDate` 分组 |
 | `/projects/` | 分类网格 | `src/pages/projects.mdx` | `src/content/projects/data.json` |
@@ -217,7 +217,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 ### 4.7 TOC seam
 
 `FEATURES.toc` 决定开不开、标题层级、左右。
-`RenderPost` 根据功能开关、文章配置与标题级别调用 `generateToc` 一次；结果非空时挂载目录，桌面和移动端只呈现同一棵树。`TocSidebar` 负责高度（不超过 `min(50vh, 28rem)`）和内部滚动。
+`RenderPost` 和 `InterestsView` 把 Markdown 渲染返回的 `headings` 交给共享 `Toc`；文章另传 `frontmatter.toc` 作为单篇开关。`Toc` 统一根据全局功能开关、页面开关与标题级别调用 `generateToc` 一次，结果非空时才挂载目录，桌面和移动端只呈现同一棵树。`TocSidebar` 负责高度（不超过 `min(50vh, 28rem)`）和内部滚动。
 `DesktopAside` 在 1200px 及以上始终显示目录，无顶部开关；宽度为侧边留白减 48px 与 208px 中的较小值，靠正文一侧至少留 40px、外侧至少留 8px（另有视口外边距）；在正文边缘与视口外边距之间的留白中线基础上向外移 16px，中心比视口中线高 32px。更窄视口继续使用 `MobileTocControl` 浮动入口，展开时通知共享目录逻辑将当前项滚入可视范围。
 
 当前章节由 `src/utils/toc-active.js` 的 `pickActiveHeadingIndex()` 决定：激活线取标题的 `scrollMarginTop`，到页面底部时最后一个标题胜出。`Toc` 唯一维护 `--post-anchor-offset`：导航隐藏时 20px，显示时为导航顶部位置加实际高度再加 12px。`nav-scroll.js` 唯一保存累计滚动状态，`NavBar` 用 `updateNavVisibility()` 更新它；点击前 `Toc` 用 `predictNavVisibility()` 从同一状态预测导航显隐，不消耗累计距离，原生锚点直接消费对应距离；滚动、导航显隐、缩放和字体加载后重新核对同一基准。保留正常 fragment 与历史记录行为，不补播第二次滚动。正文标题仅使用透明度入场，锚点位置不随入场动画变化；无脚本时保留导航可见所需的静态距离。
@@ -308,7 +308,7 @@ plugins/
 
 ### 首页 `/`
 
-`BlogProfile` 无卡片背景：头像与作者信息作为一组居中，头像右侧的名字与 INTJ 上下两行排列，INTJ 在名字下方，字号为 13px；RSS 居右；下方依次是一行居中的六个 15px 社交图标和独立一行居中的斜体名言「我与我周旋久，宁做我」。图标横向间距为桌面 15px／窄屏 9px，名言较长时在版心内自动换行，没有全站总数。社交入口由 `config.ts` 的 `AUTHOR_LINKS` 维护，名称保留给读屏器和悬停提示。窄屏仍保持作者组居中、RSS 靠右同一行，社交仍为单行、名言在其下方，缩小图标间隔；时间进度标签和数字上下排列。`WritingHeatmap` 放在名片下方，首页随后呈现独立的 `ProgressStats` 三列细时间进度，再显示近期笔墨。标题与近期笔墨左对齐，年份在标题右侧以自定义下拉选择（多一年时；列表在触发器下方展开）；日历按上海时区自然年、周一起始，只计已发布文章。每年摘要显示篇数、字数和有文章的天数。单篇格子是链接，多篇在脚本启用后从提示层进入。`RecentWriting` 在其下显示最近五篇已发布文稿，无卡片底色，标题大小接近正文。`RecentMedia` 再往下渲染 `src/content/interests/recent.md`，不另画边框，宽度跟首页版心走。正文标题和卡片仅使用共享 `prose.css`，没有首页专用覆盖；近期条目使用连续 `:::card{layout="portrait"}` 组成一排，原封面、标题和顺序保留，原评论精简后放入 `meta`，不显示评分或类别角标，作品标题 `href` 直接指向对应 Wiki；不写 `scroll="auto"`，仅手动横滑。标题右侧「全部拾趣」进入拾趣入口。Markdown 标题按原层级分段并保留锚点。该文件和 `intro.md` 一样排除出拾趣集合，不生成子页。`RecentListening` 接在近期书影游下方展示 Last.fm 听歌排行。首页不显示文章分页或个人侧栏。首页带 `?page=`、`?category=`、`?tag=` 的兼容书签在客户端转到 `/blogs/`。
+`BlogProfile` 无卡片背景：头像与作者信息作为一组居中，头像右侧的名字与 INTJ 上下两行排列，INTJ 在名字下方，字号为 13px；RSS 居右；下方依次是一行居中的六个 15px 社交图标和独立一行居中的斜体名言「我与我周旋久，宁做我」。图标横向间距为桌面 15px／窄屏 9px，名言较长时在版心内自动换行，没有全站总数。社交入口由 `config.ts` 的 `AUTHOR_LINKS` 维护，名称保留给读屏器和悬停提示。窄屏仍保持作者组居中、RSS 靠右同一行，社交仍为单行、名言在其下方，缩小图标间隔；时间进度标签和数字上下排列。`WritingHeatmap` 放在名片下方，首页随后呈现独立的 `ProgressStats` 三列细时间进度，再显示近期笔墨。标题与近期笔墨左对齐，年份在标题右侧以自定义下拉选择（多一年时；列表在触发器下方展开）；日历按上海时区自然年、周一起始，只计已发布文章。每年摘要显示篇数、字数和有文章的天数。单篇格子是链接，多篇在脚本启用后从提示层进入。`RecentWriting` 在其下显示最近五篇已发布文稿，无卡片底色，标题大小接近正文。`RecentMedia` 再往下渲染 `src/content/interests/recent.md`，不另画边框，宽度跟首页版心走。正文标题和卡片仅使用共享 `prose.css`，没有首页专用覆盖；近期条目使用连续 `:::card{layout="portrait"}` 组成一排，原封面、标题和顺序保留，原评论精简后放入 `meta`，不显示评分或类别角标，作品标题 `href` 直接指向对应 Wiki；不写 `scroll="auto"`，仅手动横滑。标题右侧「全部拾趣」进入拾趣入口。Markdown 标题按原层级分段并保留锚点。该文件排除出拾趣集合，不生成子页。`RecentListening` 接在近期书影游下方展示 Last.fm 听歌排行。首页不显示文章分页或个人侧栏。首页带 `?page=`、`?category=`、`?tag=` 的兼容书签在客户端转到 `/blogs/`。
 
 ### 文稿 `/blogs/`
 
@@ -320,7 +320,7 @@ plugins/
 
 拾趣各类有独立 Markdown 和静态 HTML，因此使用路径路由；博客分类复用全量文稿 HTML 并在客户端筛选，因此使用 hash。两者表达不同内容结构。
 
-`src/content.config.ts` 扫描 `src/content/interests/` 顶层 `*.{md,mdx}`，排除 `intro.md`、`recent.md`；配图目录内的文件不自动成为分类。`interestSchema` 要求非空 `title`、`description` 和非负整数 `order`，不限定分类 ID 或数量，也没有 `draft` 过滤。`[id].astro` 的 `getStaticPaths()` 为集合条目生成静态子页，因此新增文件在重新构建后自动加入页面、入口与菜单。入口页按 `order` 升序展示分类链接，说明放在列表下方，只来自 `src/content/interests/intro.md`；首页近期书影游只读取 `recent.md`，二者都不生成子页或菜单项。
+`src/content.config.ts` 扫描 `src/content/interests/` 顶层 `*.{md,mdx}`，排除 `recent.md`；配图目录内的文件不自动成为分类。`interestSchema` 要求非空 `title`、`description` 和非负整数 `order`，不限定分类 ID 或数量，也没有 `draft` 过滤。`[id].astro` 的 `getStaticPaths()` 为集合条目生成静态子页，因此新增文件在重新构建后自动加入页面、入口与菜单。入口页按 `order` 升序展示分类链接；首页近期书影游只读取 `recent.md`，该文件不生成子页或菜单项。分类子页把 `render(entry)` 返回的 `headings` 交给共享 `Toc`，无符合级别的正文标题时不挂载目录。
 
 `InterestsView` 在 `/interests/<id>/` 只渲染该分类的内容，页面标题直接使用分类名。入口和顶部下拉菜单读取同一份集合元数据，内容无需 JS 即可阅读。`NavDropdown` 仅在 `INTEREST_ICONS` 自身含该 ID 且图标非空时输出图标节点，不读取原型链，无图标分类保留文字与链接、不留占位；`unocss.config.ts` 自动将映射值加入 safelist。分类增加后仍需检查菜单换行、窄屏边界与内部滚动。
 

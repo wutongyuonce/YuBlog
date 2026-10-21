@@ -43,7 +43,7 @@ src/content/interests/
 ```
 
 拾趣新增分类如 `travel.md` 时，图片可放 `travel/`，用 `./travel/file.png` 引用。
-分类入口与菜单由内容元数据生成；`intro.md`、`recent.md` 不生成分类子页。菜单图标仅按需配置 `INTEREST_ICONS`，与正文图片无关，不要求占位文件。
+分类入口与菜单由内容元数据生成；`recent.md` 不生成分类子页。菜单图标仅按需配置 `INTEREST_ICONS`，与正文图片无关，不要求占位文件。
 
 | 场景 | 作者写法 | 资源处理 |
 | --- | --- | --- |

@@ -65,7 +65,7 @@ See [verification](docs/guides/development.md#verification) for format, lint, te
 | Posts and body assets | `src/content/blogs/`; assets next to the article or in a child directory |
 | Article covers | `src/content/blogs/_title-images/`, referenced with `titleImage`/`titleImageAlt` |
 | Interest categories and assets | `src/content/interests/<id>.md` or `.mdx`, with matching asset directories |
-| Interest-index note / home recent media | `src/content/interests/intro.md` / `recent.md` |
+| Home recent media | `src/content/interests/recent.md` |
 | Author introduction | `src/content/about/about.md` |
 | Projects / friends | `src/content/projects/data.json` / `src/content/friends/data.json` |
 

@@ -3,7 +3,7 @@ import { getCollection, render } from 'astro:content'
 import { withBasePath } from '~/utils/path'
 import PageHeading from '~/components/base/PageHeading.astro'
 import GiscusComments from '~/components/base/GiscusComments.astro'
-import { Content as InterestsIntro } from '../../content/interests/intro.md'
+import Toc from '~/components/toc/Toc.astro'
 import type { CollectionEntry } from 'astro:content'
 
 interface Props {
@@ -15,7 +15,9 @@ const entries = entry
   : (await getCollection('interests')).sort(
       (a, b) => a.data.order - b.data.order
     )
-const Content = entry ? (await render(entry)).Content : null
+const { Content, headings } = entry
+  ? await render(entry)
+  : { Content: null, headings: [] }
 ---
 
 <div class="interests-page">
@@ -30,6 +32,7 @@ const Content = entry ? (await render(entry)).Content : null
       class="prose markdown-content interests-page__content"
       data-interest={entry.id}
     >
+      <Toc {headings} />
       <Content />
     </article>
   ) : (
@@ -42,9 +45,6 @@ const Content = entry ? (await render(entry)).Content : null
           </a>
         ))}
       </nav>
-      <div class="interests-page__intro">
-        <InterestsIntro />
-      </div>
     </>
   )}
   {entry && <GiscusComments />}

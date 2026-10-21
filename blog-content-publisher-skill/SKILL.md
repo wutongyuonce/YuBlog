@@ -210,7 +210,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 `/about/` 只渲染 `src/content/about/about.md`。保持作者原文，仅做必要 Markdown 结构，不编造经历或人设。页面标题／说明由 `src/pages/about.mdx` 配合 `PageHeading` 渲染，不由内容 frontmatter 创建按钮。关于内容仅维护这一个 Markdown 文件。
 
-兴趣内容位于 `src/content/interests/`，入口 `/interests/`，子页 `/interests/<id>/`。分类来自该目录顶层的 `.md` / `.mdx` 文件，排除 `intro.md`、`recent.md`；**不固定分类 ID 或数量**。下表是现有分类示例，不是允许列表：
+兴趣内容位于 `src/content/interests/`，入口 `/interests/`，子页 `/interests/<id>/`。分类来自该目录顶层的 `.md` / `.mdx` 文件，排除 `recent.md`；**不固定分类 ID 或数量**。下表是现有分类示例，不是允许列表：
 
 | ID | 内容 |
 | :--- | :--- |
@@ -248,7 +248,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 图片放在对应子目录，例如 `src/content/interests/device/`，Markdown 用 `![说明](./device/file.png)`，需要限宽时写 alt 的 `|w300`。共享图也可用 `../`；引用按 Markdown 文件所在位置解析。拾趣内容和图片统一维护在 `src/content/interests/`。
 
-入口页列表下方的说明只改 `intro.md`。首页近期书影游只改 `recent.md`。这两个文件不进分类集合，不要给它们写 `order`，也不要加进顶部菜单。
+入口页只展示分类列表。首页近期书影游只改 `recent.md`；该文件不进分类集合，不写 `order`，不加入顶部菜单。分类子页自动按全局目录配置收录正文标题，没有符合级别的标题时隐藏目录。
 
 电影、电视剧、动漫、游戏的条目使用默认横卡。作者可按需填写评分 `score` 和日期 `date`，两者都与观看／游玩状态无关；没有作者提供的值时省略对应属性：
 

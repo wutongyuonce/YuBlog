@@ -318,7 +318,7 @@ test('home and interest cards preserve authored content through the shared pipel
       }))
   const files = (
     await readdir(new URL('../src/content/interests/', import.meta.url))
-  ).filter((file) => /\.(md|mdx)$/.test(file) && file !== 'intro.md')
+  ).filter((file) => /\.(md|mdx)$/.test(file))
   for (const file of files) {
     const source = await readFile(
       new URL(`../src/content/interests/${file}`, import.meta.url),
@@ -367,7 +367,7 @@ test('home and interest cards preserve authored content through the shared pipel
       }
     }
   }
-  for (const id of ['intro', 'recent']) {
+  for (const id of ['recent']) {
     await assert.rejects(access(built(`interests/${id}/index.html`)), {
       code: 'ENOENT',
     })

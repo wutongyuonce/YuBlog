@@ -62,7 +62,6 @@ Markdown 插件修改后若 dev 仍输出旧结构，用 `pnpm dev --force` 清�
 | 项目 | `src/content/projects/data.json` | 按原始 `category` 分组 |
 | 友链 | `src/content/friends/data.json` | `category` 为推荐或双向，组内按 `order`／名称排序 |
 | 拾趣分类 | `src/content/interests/<id>.md` 或 `.mdx` | 顶层文件自动生成子页、入口和菜单；无草稿开关 |
-| 拾趣入口说明 | `src/content/interests/intro.md` | 不生成分类子页 |
 | 首页近期书影游 | `src/content/interests/recent.md` | 不生成分类子页，使用竖卡 |
 
 新博客的最小起点：
@@ -83,7 +82,7 @@ draft: true
 
 示例日期需替换为实际发布日期。博客 `category` 是必填的非空原值，新分类随已发布内容自动进入菜单。归档会为新分类领取配色并更新 `src/data/blog-category-colors.json`，把记录与文章一起提交；已有分类的颜色不重排，删除后仍保留占位，预设用尽需扩充 `palette`。
 
-新增拾趣分类只需在顶层放文件并填写非空 `title`、`description` 和非负整数 `order`，不改路由或导航数组。`intro.md` 与 `recent.md` 排除出分类集合，配图子目录也不生成分类。
+新增拾趣分类只需在顶层放文件并填写非空 `title`、`description` 和非负整数 `order`，不改路由或导航数组。`recent.md` 排除出分类集合，配图子目录也不生成分类。
 
 作者操作与 AI 内容维护使用仓库内可独立安装的 [内容发布 skill](../../blog-content-publisher-skill/SKILL.md)。将整个 `blog-content-publisher-skill/` 复制到 Agent 的 skills 目录，保留 `SKILL.md`、脚本等依赖；可以直接提出“发博客”“新增拾趣分类”“换封面”“加友链”。skill 负责内容与配置，新博客在未明确发布时保留草稿；提交、推送和部署需有用户授权。
 
