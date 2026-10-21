@@ -1,6 +1,9 @@
 ---
 import { ClientRouter } from 'astro:transitions'
 import shellCss from '../../../public/shell.css?raw'
+import mainCss from '~/styles/main.css?inline'
+import proseCss from '~/styles/prose.css?inline'
+import markdownCss from '~/styles/markdown.css?inline'
 import RecentListeningScript from '~/components/home/RecentListeningScript.astro'
 
 import { withBasePath } from '~/utils/path'
@@ -11,6 +14,7 @@ import {
   createAccentPreference,
 } from '~/utils/accent-palette.js'
 
+const sharedCss = [shellCss, mainCss, proseCss, markdownCss].join('\n')
 const accentInit = `(${createAccentPreference.toString()})(${JSON.stringify(ACCENT_PALETTES)}).restore()`
 
 interface Props {
@@ -169,8 +173,8 @@ const webPageData = {
   href={withBasePath('/rss.xml')}
 />
 
-<!-- Keep the shell in the document too: a separate link would still block paint. -->
-<style is:inline set:html={shellCss}></style>
+<!-- Identical processed CSS is retained by ClientRouter across page swaps. -->
+<style id="site-styles" is:inline set:html={sharedCss}></style>
 
 <!-- Google JSON-LD Structured Data -->
 {pubDate ? (

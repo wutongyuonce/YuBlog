@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict'
-import { readFile, readdir } from 'node:fs/promises'
+import { access, readFile, readdir } from 'node:fs/promises'
 import test from 'node:test'
 import { fromHtml } from 'hast-util-from-html'
 import { visit } from 'unist-util-visit'
 import { XMLParser } from 'fast-xml-parser'
+import { parse as parseCss, walk as walkCss } from 'css-tree'
 import {
   AUTHOR_LINKS,
   FEATURES,
@@ -151,6 +152,7 @@ test('every page delivers its styles with the document', async () => {
         }))
     )),
   ]
+  let sharedCss
   for (const { page, file } of built) {
     const links = elements(
       page,
@@ -163,15 +165,50 @@ test('every page delivers its styles with the document', async () => {
         /\/_astro\/ec\./,
         `${file}: only the pre-existing code-block sheet may stay external`
       )
-    const css = elements(
+    const styles = elements(
       elements(page, (node) => node.tagName === 'head')[0],
       (node) => node.tagName === 'style'
     )
-      .map(textOf)
-      .join('\n')
-    assert.doesNotMatch(css, /@import\b/i, `${file}: no imported sheet`)
-    assert.match(css, /--c-bg\s*:/, `${file}: theme tokens arrive inline`)
+    const shared = styles.filter((node) => node.properties.id === 'site-styles')
+    assert.equal(shared.length, 1, `${file}: one shared stylesheet`)
+    sharedCss ??= textOf(shared[0])
+    assert.equal(
+      textOf(shared[0]),
+      sharedCss,
+      `${file}: shared CSS is page-independent`
+    )
+    const css = styles.map(textOf).join('\n')
+    assert.doesNotMatch(
+      css,
+      /@import\b|__VITE_ASSET|__VITE_PUBLIC_ASSET/i,
+      `${file}: processed CSS and resources`
+    )
+    assert.match(
+      sharedCss,
+      /--c-bg\s*:/,
+      `${file}: shared theme tokens arrive inline`
+    )
+    for (const style of styles.filter((node) => node !== shared[0]))
+      assert.doesNotMatch(
+        textOf(style),
+        /--c-bg\s*:/,
+        `${file}: shared styles are not bundled twice`
+      )
   }
+  for (const selector of ['.site-main', '.prose', '.katex', '.callout'])
+    assert.ok(sharedCss.includes(selector), `shared CSS includes ${selector}`)
+  const assets = new Set()
+  walkCss(parseCss(sharedCss), (node) => {
+    if (node.type === 'Url' && node.value.startsWith('/'))
+      assets.add(node.value)
+  })
+  for (const asset of assets)
+    await access(
+      new URL(
+        '../dist/' + asset.replace(siteBase.pathname, ''),
+        import.meta.url
+      )
+    )
 })
 
 test('only articles, friends and every interest category have isolated comments after their content', async () => {

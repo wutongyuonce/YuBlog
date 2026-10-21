@@ -1,7 +1,57 @@
-/* Shell chrome (nav, layouts, archives, pagination), inlined by Head.astro.
-   Astro also inlines the bundled stylesheet; neither sheet needs a separate
-   request before first paint. Keep shared rules here and verify intentional
-   component overrides in the browser. See docs/design/architecture.md §4.4. */
+/* Shared chrome (nav, layouts, archives, pagination) and font declarations.
+   Head combines this source with main/prose/markdown CSS into one stable inline
+   stylesheet. Keep page-specific rules in their components.
+   See docs/design/architecture.md §4.4. */
+@font-face {
+  font-family: Inter;
+  src: url('/fonts/Inter-latin.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: Inter;
+  src: url('/fonts/Inter-latin.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: Inter;
+  src: url('/fonts/Inter-latin.woff2') format('woff2');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'DM Mono';
+  src: url('/fonts/DMMono-latin.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF;
+}
+
+@font-face {
+  font-family: 'SourceHanSerifCN-Regular';
+  src: url('/fonts/SourceHanSerifCN-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 
 /* Title subsets are generated after Vite builds CSS; keep these font URLs in
    the static sheet so Vite does not try to resolve files that do not exist yet. */

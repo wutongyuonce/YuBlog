@@ -46,7 +46,7 @@ Markdown 插件修改后若 dev 仍输出旧结构，用 `pnpm dev --force` 清�
 | 拾趣菜单图标 | `src/config.ts` → `INTEREST_ICONS` | 键为分类文件名，不含扩展名；未配即纯文字菜单 |
 | 点缀配色预设 | `src/utils/accent-palette.js` | 亮暗主题与点缀独立，预设首项为默认 |
 
-样式职责保持清晰：跨页壳层在 `public/shell.css`，全局变量与字体在 `src/styles/main.css`，正文组件在 `prose.css`，Markdown 基础排版在 `markdown.css`；局部组件样式仍由组件拥有。字体、首屏内联和 ClientRouter 生命周期见 [架构设计](../design/architecture.md#boundaries)。
+样式职责保持清晰：跨页壳层与共享字体声明在 `public/shell.css`，全局变量与目录样式在 `src/styles/main.css`，正文组件在 `prose.css`，Markdown 基础排版在 `markdown.css`；四份公共源码由 `Head.astro` 统一输出为跨页固定的 `site-styles`，其中三份 `src/styles/` CSS 通过 `?inline` 使用 Vite 处理，不可改为 `?raw`。局部组件样式仍由组件拥有并按页打包。字体、首屏内联和 ClientRouter 生命周期见 [架构设计](../design/architecture.md#boundaries)。
 
 <a id="content"></a>
 
@@ -161,7 +161,7 @@ pnpm test:built-markdown
 | 列表、分类、标签、分页 | 对应 `blog-browser`／`blog-tag-filter` 单测与 built 分页、结构检查 |
 | 图片、卡片、HTML／音视频 | [正文验证映射](../design/content.md#verification)，检查源码资源与产物引用 |
 | RSS／canonical／sitemap | [订阅验证映射](../design/distribution.md#verification)，真实阅读器另验 |
-| 布局、导航、主题、搜索、评论 | 对应真实浏览器脚本、深浅主题及 1440／390／320px 可读性与横向溢出 |
+| 布局、导航、主题、搜索、评论 | 对应真实浏览器脚本、深浅主题及 1440／390／320px 可读性与横向溢出；字体声明或 CSS 拆分改动另跑 `scripts/verify-navigation-fonts.mjs`，检查切页时已加载字体不回退 |
 | Last.fm 接口 | 属主和端点单测、固定载荷浏览器检查，部署后再验真实凭据与缓存 |
 
 ```bash

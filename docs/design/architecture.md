@@ -148,13 +148,13 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 ### 4.4 壳层样式 seam
 
 界面：`public/shell.css` 的 class（`header.nav-bar`、`.blog-profile`、`.archive-*`、`.nav-dropdown`、`[data-pagination]`）。
-加载：`Head.astro` 以 `?raw` 读取 `public/shell.css` 并输出内联 `<style>`；Astro 通过 `inlineStylesheets: 'always'` 内联打包样式。两份样式保持原有顺序，随 HTML 一起到达。
+加载：`Head.astro` 是公共样式输出的唯一入口，以 `?inline` 导入 `src/styles/main.css`、`prose.css`、`markdown.css`，让 Vite 展开依赖、处理资源 URL 并应用既有 PostCSS 插件；`public/shell.css` 仍以 `?raw` 读取，保留构建末尾才生成的标题字体子集路径。四份源码按 shell → main → prose → markdown 顺序组成一个 `<style id="site-styles">`，不包含页面数据。`BaseLayout` 不再重复导入它们。每个站点页面输出的该样式内容相同，ClientRouter 因而保留同一个节点。
 
 首屏契约：HTML 到达后，首页的导航、名片、写作热力和正文布局不等待任何外链 CSS，也不依赖 JavaScript 加载样式；CSS 请求慢载或失败不会造成白屏或先无样式后补齐。字体保持 `font-display: swap`，下载失败时使用回退字体；深浅主题、320px 起的响应式布局及 ClientRouter 往返导航保持可读。无 JavaScript 时使用默认浅色和原有静态内容。HTML 自身慢载、第三方页面和外部暗化工具不在此保证内。
 
-实现取舍：`cssCodeSplit: true` 让每个页面只内联自己引用到的样式块，`inlineStylesheets: 'always'` 保证这些样式仍随 HTML 到达，不新增外链。接受每页 HTML 携带样式的传输成本，换取无需关键 CSS 副本、异步加载器和失败恢复状态。颜色／版心变量仍只由 `main.css` 维护，点阵定位仍由 `Dot.astro` 的工具类表达。`shell.css` 维护跨页壳层规则及构建后字体子集引用；正文与 Markdown 规则在 `src/styles/`，友链卡片等组件样式由对应组件维护。目录链接的共享规则在 `main.css`，桌面目录位置和尺寸分别由 `DesktopAside`、`TocSidebar` 管理。共享规则集中维护；组件可以按需局部覆盖，以硬刷新和跨页导航中的实际效果验证，不将跨文件同名选择器一概判为错误。
+实现取舍：公共源码继续按职责分文件，不复制规则、不新增打包插件或客户端加载器。公共样式仍随每份 HTML 传输，跨页复用的是浏览器中的样式节点，不声称消除重复传输。`cssCodeSplit: true` 与 `inlineStylesheets: 'always'` 仅继续负责组件／工具类等按页样式，避免把所有组件装进公共包。接受每页 HTML 携带样式的成本，保留无脚本首屏，不新增外链依赖。颜色／版心变量仍只由 `main.css` 维护，点阵定位仍由 `Dot.astro` 的工具类表达。`shell.css` 维护跨页壳层规则及构建后字体子集引用；正文与 Markdown 规则在 `src/styles/`，友链卡片等组件样式由对应组件维护。目录链接的共享规则在 `main.css`，桌面目录位置和尺寸分别由 `DesktopAside`、`TocSidebar` 管理。共享规则集中维护；组件可以按需局部覆盖，以硬刷新和跨页导航中的实际效果验证，不将跨文件同名选择器一概判为错误。
 
-验收：`scripts/verify-blog-restructure.mjs` 逐页检查生产 HTML——除文章页既有的 ExpressiveCode 代码块样式表外不引用外链样式、不含 CSS `@import`，且主题与壳层规则随文档内联；首页另检查版心与背景定位样式。浏览器在 CSS 和字体请求不可用时检查首绘与布局，并验证无脚本、深浅主题、窄屏和 ClientRouter 往返。
+验收：`scripts/verify-blog-restructure.mjs` 逐页检查生产 HTML——公共样式唯一、内容跨页一致、没有重复混入页面包、依赖已展开且本地 CSS 资源存在；除文章页既有的 ExpressiveCode 代码块样式表外不引用外链样式。首页另检查版心与背景定位样式。`scripts/verify-navigation-fonts.mjs` 用真实切页检查公共样式节点复用与已加载字形宽度稳定。浏览器在 CSS 和字体请求不可用时检查首绘与布局，并验证无脚本、深浅主题、窄屏和 ClientRouter 往返。
 
 KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；版本与公式渲染依赖一致，浏览器按实际页面内容加载所需字体。
 
@@ -162,7 +162,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 `--font-heading`（本地思源宋体 400 字重）用于页面大标题、文章顶部标题、作者名、写作热力与近期笔墨；文稿列表与归档文章标题使用同一宋体，字重分别为 700 与 400，分别由 `ListItem.astro` 的 `.post-preview h2` 和 `shell.css` 的 `.archive-post__title` 维护；标签筛选结果复用 `ListItem`。字体资源提供 400 字重，700 由浏览器合成加粗。Markdown 内部 h1–h6、正文和标签使用 Inter／系统无衬线字体。顶栏及下拉菜单文字使用宋体；品牌为「梧桐雨の博客」，使用桌面 16px、601–799px 为 14.72px、600px 及以下为 14.4px 思源宋体，行高 1；归档年份与日期也使用思源宋体。`PageHeading` 是标签、拾趣（含子页）、项目、关于的共享页头：标题 28px 宋体 400 字重，说明 14px 普通字体；友链分组标题为 24px 宋体。
 
-正文字体 Inter 和代码字体 DM Mono 也在本地：`public/fonts/Inter-latin.woff2`、`public/fonts/DMMono-latin.woff2`，由 `src/styles/main.css` 的 `@font-face` 引用。不要再接 Google Fonts 或 `presetWebFonts`。这两份只含拉丁字符，中文走字体栈后面的系统字体。保留的两种手写字体 `@font-face` 在 `public/shell.css` 中，优先引用构建结束后生成的 `*-title.woff2` 子集，再回退到完整字体；`plugins/astro-subset-title-fonts.ts` 在构建后检查每个子集引用和文件都存在。Vite 不会提前解析尚未生成的字体路径。开发服务器没有子集时会回退到同一次声明里的完整文件，那不是线上行为。
+正文字体 Inter 和代码字体 DM Mono 也在本地：`public/fonts/Inter-latin.woff2`、`public/fonts/DMMono-latin.woff2`，与思源宋体一起由 `public/shell.css` 的 `@font-face` 引用。这些声明随 `site-styles` 跨页保留，避免已加载字体回退；不要把共享字体声明放进会被替换的组件样式。不要再接 Google Fonts 或 `presetWebFonts`。这两份只含拉丁字符，中文走字体栈后面的系统字体。保留的两种手写字体 `@font-face` 在 `public/shell.css` 中，优先引用构建结束后生成的 `*-title.woff2` 子集，再回退到完整字体；`plugins/astro-subset-title-fonts.ts` 在构建后检查每个子集引用和文件都存在。Vite 不会提前解析尚未生成的字体路径。开发服务器没有子集时会回退到同一次声明里的完整文件，那不是线上行为。
 
 主题、搜索、回顶、遮罩的点击在脚本执行时就绑定，不等第一次 `window` `load`。`astro:page-load` 只负责换页后的新节点，并用元素上的 `dataset` 避免重复绑定。
 
@@ -268,7 +268,7 @@ components/views             这一页怎么拼
 shell.css + src/styles       壳层 + 正文
 ```
 
-`astro.config.ts` 通过 `cssCodeSplit: true` 按页面引用关系拆分样式，再由 `inlineStylesheets: 'always'` 写入该页 HTML；`Head.astro` 同时内联壳层样式。首屏契约和取舍见 §4.4。修改加载方式时，需验证硬刷新与 ClientRouter 跨页导航中的组件样式。
+公共样式由 `Head.astro` 统一处理和内联，组件样式继续由 `astro.config.ts` 的 `cssCodeSplit: true` 与 `inlineStylesheets: 'always'` 按页输出。首屏契约、固定顺序与取舍见 §4.4。修改加载方式时，需验证硬刷新与 ClientRouter 跨页导航中的组件样式。
 
 <a id="structure"></a>
 
