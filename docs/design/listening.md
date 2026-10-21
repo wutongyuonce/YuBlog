@@ -4,9 +4,9 @@
 
 ## 行为契约
 
-首页在近期书影游下方保留「最近在听 Top10」。区块由服务端输出的空骨架和一张卡片模板组成；听歌数据在访问时由运行时接口取得，构建产物里没有任何听歌数据。接口成功后区块呈现过去七天 Top 10 歌曲（封面、歌名、`歌手 - 专辑名`）与辅助统计（七天听歌次数、累计记录数、七天最常听歌手）和更新时间；标题右侧「Last.fm ↗」直接来自站点身份常量，不依赖接口。歌曲保持单行，超出容器时按现有陈列架规则自动头尾循环：两端淡出，按下或键盘聚焦暂停，悬停继续。减少动态效果或无 JS 时保持原生手动横滑。点击封面或键盘 Enter／空格可用现有查看器打开 Last.fm 原尺寸图片，关闭后恢复到相应源卡片的焦点（循环副本不增加重复焦点入口）。歌名展示区按实际文字占一至两行，小字沿用陈列架两行限高。
+首页在近期书影游下方保留「最近在听 Top10」。区块由服务端输出的加载态骨架（十张方卡形占位）和一张卡片模板组成；听歌数据在访问时由运行时接口取得，构建产物里没有任何听歌数据。接口成功后区块呈现过去七天 Top 10 歌曲（封面、歌名、`歌手 - 专辑名`）与辅助统计（七天听歌次数、累计记录数、七天最常听歌手）和更新时间；标题右侧「Last.fm ↗」直接来自站点身份常量，不依赖接口。歌曲保持单行，超出容器时按现有陈列架规则自动头尾循环：两端淡出，按下或键盘聚焦暂停，悬停继续。减少动态效果或无 JS 时保持原生手动横滑。点击封面或键盘 Enter／空格可用现有查看器打开 Last.fm 原尺寸图片，关闭后恢复到相应源卡片的焦点（循环副本不增加重复焦点入口）。歌名展示区按实际文字占一至两行，小字沿用陈列架两行限高。
 
-区块只有四种状态：加载中（骨架，统计与时间显示占位 `—`，卡片区占住一张卡片的高度）、就绪（统计、卡片、更新时间）、真实空数据（`过去 7 天还没有听歌记录。`，隐藏卡片区）、失败（`暂时无法获取听歌数据。`，隐藏卡片区）。无脚本时保留骨架并显示说明文字，指向 Last.fm 主页。
+区块只有四种状态：加载中（十张不可聚焦的方卡形骨架占位，轻量脉冲；`prefers-reduced-motion: reduce` 时静止；统计与时间显示占位 `—`）、就绪（统计、卡片、更新时间；骨架被清空）、真实空数据（`过去 7 天还没有听歌记录。`，隐藏卡片区）、失败（`暂时无法获取听歌数据。`，隐藏卡片区）。无脚本时保留骨架卡并显示说明文字，指向 Last.fm 主页。封面仍按既有 `img` 懒加载，不为图片另做第二套骨架。
 
 听歌接口只接受不带查询参数的 `GET /api/lastfm`；其它方法返回 405（`Allow: GET`），带查询参数返回 400。成功响应由 CDN 缓存 30 分钟，过期后 5 分钟内先返回旧数据并在后台刷新，上游出错时最多再沿用一天旧数据。失败响应一律不缓存。 仓库用 GitHub Actions（`.github/workflows/warm-lastfm-cdn.yml`）约每 25 分钟（UTC）请求一次正式站该地址以暖 CDN，也可手动触发；这不替代按需回源，也不把听歌数据写进仓库。
 
@@ -33,7 +33,7 @@ API 多次查询期间用户仍可听歌，不提供跨接口事务一致性；�
 ## 架构与 authority
 
 ```text
-访问首页 → RecentListening.astro：空骨架 + 卡片模板
+访问首页 → RecentListening.astro：十张骨架卡 + 卡片模板
          → Head.astro 中的 RecentListeningScript.astro（首个模块）
              → GET /api/lastfm → recent-listening.js 校验与写 DOM → content:added
          → api/lastfm.js（Vercel 函数）
@@ -51,8 +51,8 @@ API 多次查询期间用户仍可听歌，不提供跨接口事务一致性；�
 | L4 部署前提：根目录 `api/` 被收集为函数 | `vercel.json`（`framework: null`、`buildCommand`、`outputDirectory`） | 平台按 Other 预设构建，静态产物仍是 `dist` | Vercel 部署 | 预览部署的接口响应 |
 | 本地 dev 提供同一接口 | `plugins/astro-listening-endpoint.ts` | 在 `/api/lastfm` 调用同一处理函数；密钥取环境变量或 `.env` | `pnpm dev` | 本地 `curl` 检查 |
 | L7、请求启动顺序与导航取消 | `src/components/home/RecentListeningScript.astro` | `Head.astro` 在 ClientRouter 前输出；`astro:page-load` 加载、`astro:before-swap` 取消 | 首页与站内导航 | 产物脚本顺序检查、阻滞其它模块的浏览器检查 |
-| 响应形状校验、统计文案、卡片渲染 | `src/utils/recent-listening.js` | `parseListeningPayload`、`listeningStats`、`listeningUpdatedLabel`、`renderListening` | `RecentListeningScript.astro` | `test/recent-listening.test.mjs`、`verify-card-rails.mjs` |
-| L5、骨架、空／失败状态、无脚本说明 | `src/components/home/RecentListening.astro` | 只读取接口结果；用既有 `.home-section-header`、方卡与 `.media-cards--auto` | `index.astro` | built 首页检查、真实浏览器 |
+| 响应形状校验、统计文案、卡片渲染、清空骨架 | `src/utils/recent-listening.js` | `parseListeningPayload`、`listeningStats`、`listeningUpdatedLabel`、`renderListening`（`replaceChildren` 清掉加载态骨架） | `RecentListeningScript.astro` | `test/recent-listening.test.mjs`、`verify-card-rails.mjs` |
+| L5、加载态骨架卡、空／失败状态、无脚本说明 | `src/components/home/RecentListening.astro` | 只读取接口结果；用既有 `.home-section-header`、方卡轨与 `.media-cards--auto`；骨架不用 `.media-card`，以免陈列架把占位当成真实条目循环 | `index.astro` | built 首页检查、真实浏览器 |
 | 方卡尺寸、横滑与文字排版 | 既有 `prose.css` | 复用 `.media-cards--rail` / `.media-card--square` | 首页、Markdown 卡片 | 浏览器检查 |
 | 循环条件、副本与清理 | 既有 `src/utils/card-rail-marquee.js` | `refresh(rail)`：内容被替换后清掉旧副本再重算 | 首页听歌排、Markdown 卡片 | 既有单测与新增 `refresh` 用例 |
 | 注入内容的重新接管 | `content:added` 约定 | 陈列架与图片查看器各自监听并重算／重绑 | 听歌区块脚本 | `verify-card-rails.mjs` |
@@ -90,7 +90,7 @@ node --test test/listening-endpoint.test.mjs test/lastfm.test.mjs test/recent-li
 | L3 匹配、翻页、占位图、专辑缺失与基础版补图 | 同一属主单测，小夹具 | 防止错误专辑／歌手匹配和伪封面 |
 | L4/L6 缓存头、状态码、失败不外泄、地址与方法的边界 | 端点单测，注入假上游 | 直接检验缓存与失败语义，不需要真实网络 |
 | 接口输出能被页面校验接受 | 端点单测调用 `parseListeningPayload` | 接口与页面是跨模块 seam，形状漂移会立刻失败 |
-| L5 与骨架结构 | `test:built-restructure` 的首页契约检查 | 覆盖生成 HTML：占位、模板、轨道为空、无脚本说明 |
+| L5 与加载态骨架结构 | `test:built-restructure` 的首页契约检查 | 覆盖生成 HTML：十张骨架卡、模板、无脚本说明 |
 | L5 与运行时接线 | `verify-card-rails.mjs`（真实浏览器，固定载荷） | 覆盖卡片、统计、占位封面、循环与副本、焦点、大图、失败与空状态、无 JS |
 | L3 并行上限、同专辑复用与排行顺序 | 属主单测，以 Promise 闸门控制响应 | 不以真实耗时断言并发，验证每批至多三首且没有重复专辑查询 |
 | L7 首个模块与独立启动 | built 首页检查、`scripts/verify-listening-startup.mjs`（暂扣 ClientRouter 响应） | 确认页面不等无关模块就能请求并呈现听歌数据；正常恢复模块后继续检查站内往返 |

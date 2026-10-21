@@ -637,7 +637,7 @@ test('article covers do not replace the standalone page heading', () => {
   }
 })
 
-test('home listening ships an empty skeleton the runtime endpoint fills', async () => {
+test('home listening ships ten loading skeletons the runtime endpoint fills', async () => {
   const head = elements(home, (node) => node.tagName === 'head')[0]
   const firstModule = elements(
     head,
@@ -665,7 +665,7 @@ test('home listening ships an empty skeleton the runtime endpoint fills', async 
   assert.equal(profile.properties.target, '_blank')
   assert.ok(profile.properties.rel.includes('noopener'))
 
-  // 构建产物里没有听歌数据：统计停在占位，轨道是空的。
+  // 构建产物里没有听歌数据：统计停在占位，轨道先放十张骨架卡。
   const stats = elements(section, (node) =>
     hasClass(node, 'recent-listening__stats')
   )[0]
@@ -689,7 +689,44 @@ test('home listening ships an empty skeleton the runtime endpoint fills', async 
     (node) => 'dataListeningTrack' in node.properties
   )[0]
   assert.ok(track, 'the rail needs its track container before the script runs')
-  assert.deepEqual(track.children, [])
+  const skeletons = elements(
+    track,
+    (node) => 'dataListeningSkeleton' in node.properties
+  )
+  assert.equal(skeletons.length, 10, 'loading shows ten inert skeleton cards')
+  for (const skeleton of skeletons) {
+    assert.equal(skeleton.tagName, 'article')
+    assert.ok(hasClass(skeleton, 'recent-listening__skeleton'))
+    assert.equal(skeleton.properties.ariaHidden, 'true')
+    assert.equal(
+      elements(skeleton, (node) => node.tagName === 'a').length,
+      0,
+      'skeletons stay out of the tab order'
+    )
+    assert.equal(
+      elements(skeleton, (node) => node.tagName === 'img').length,
+      0,
+      'skeletons are not a second image-loading system'
+    )
+    assert.ok(
+      elements(skeleton, (node) =>
+        hasClass(node, 'recent-listening__skeleton-cover')
+      )[0],
+      'cover block'
+    )
+    assert.equal(
+      elements(skeleton, (node) =>
+        hasClass(node, 'recent-listening__skeleton-line')
+      ).length,
+      2,
+      'two text-line placeholders'
+    )
+  }
+  assert.equal(
+    elements(track, (node) => hasClass(node, 'media-card')).length,
+    0,
+    'skeletons must not use media-card so marquee ignores them'
+  )
 
   // 卡片模板是脚本填充时唯一的结构来源，页面不再自带第二份标记。
   const template = elements(

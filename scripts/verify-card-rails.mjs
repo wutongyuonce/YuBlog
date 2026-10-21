@@ -233,12 +233,14 @@ const nojs = await page.evaluate(() => {
   const root = document.querySelector('.recent-listening')
   return {
     cards: root.querySelectorAll('.media-card').length,
+    skeletons: root.querySelectorAll('[data-listening-skeleton]').length,
     clones: root.querySelectorAll('[data-marquee-clone]').length,
     state: root.dataset.state,
     hint: root.querySelector('noscript')?.textContent ?? '',
   }
 })
 assert.equal(nojs.cards, 0)
+assert.equal(nojs.skeletons, 10)
 assert.equal(nojs.clones, 0)
 assert.equal(nojs.state, 'loading')
 assert.match(nojs.hint, /JavaScript/)
