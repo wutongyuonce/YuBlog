@@ -4,7 +4,7 @@ description: 日常在用的软硬件和服务
 order: 0
 ---
 
-## 我的电子设备
+### 我的电子设备
 
 ![device|w450](./device/device.jpg)
 
@@ -17,7 +17,7 @@ order: 0
 - **🎮 Controller 手柄：** 盖世小鸡 G7 Pro
 - **⌨️ Keyboard 键盘：** Lofree FLOW2
 
-## 我的生活设备
+### 我的生活设备
 
 - **💺 Chair 椅子：** 京东京造Z9Elite2代
 
@@ -32,7 +32,7 @@ order: 0
   ![elephant|w300](./device/elephant.jpg)
 - **吹风机：** 徕芬 SE2
 
-## 我的 AI 服务
+### 我的 AI 服务
 
 [![Tokens Stats](https://tokens.ci/api/embed/wutongyuonce/svg?theme=light&template=graph&tokens=compact&cost=compact)](https://tokens.ci/u/wutongyuonce)
 
@@ -42,7 +42,7 @@ order: 0
 
 * Deepseek API：Deepseek V4.1 Flash
 
-## 我的会员订阅
+### 我的会员订阅
 
 * qq 音乐
 * apple music：已停
@@ -50,7 +50,7 @@ order: 0
 * vpn
 * netflix：已停
 
-## 我的 Mac 软件
+### 我的 Mac 软件
 
 - **AI&Agent：** [ChatGPT](https://chatgpt.com/)、[Grok Bot](https://x.ai/news/introducing-grok-bot)
   ![grok-bot|w250](./device/grok-bot.png)
@@ -72,7 +72,7 @@ order: 0
 - **其他工具：** [RunCatNeo](https://github.com/runcat-dev/RunCatNeo)（Mac 监控）、[Deck](https://deckclip.app/)（最好用的 Mac 剪切板历史）、[PixPin](https://pixpin.com/)（截图）、[Pearcleaner](https://github.com/alienator88/Pearcleaner) / [App Cleaner](https://freemacsoft.net/appcleaner/) / [mole](https://mole.fit/zh/)（清理卸载）、[Slidepad](https://slidepad.app/)（右侧浏览器）、[TopNotch](https://topnotch.app/)（遮挡刘海）、[FineTune](https://github.com/ronitsingh10/FineTune)（音频控制）、[超级右键](https://www.irightmouse.com/)、[CleanMyKeyboard](https://apps.apple.com/us/app/cleanmykeyboard/id6468120888)、[Mos](https://mos.caldis.me/)（鼠标）、[Bob](https://bobtranslate.com/)（翻译）、[Loop](https://github.com/mrkai77/Loop)（最丝滑的分屏软件）
 - **游戏：** [Steam](https://store.steampowered.com/)、[CrossOver](https://www.codeweavers.com/crossover)
 
-## 我的手机软件
+### 我的手机软件
 
 * 微信、豆包输入法
 * 社交媒体：vx、qq、zfb、wb、X、ins、Substack、Github、telegram、discord、Twitch、Proton Authenticator（密钥）

@@ -6,7 +6,7 @@ order: 1
 
 [我的b站追番/追剧](https://space.bilibili.com/521627597/bangumi)
 
-## 正在看
+### 正在看
 
 :::card{title="FX战士久留美" href="https://zh.wikipedia.org/wiki/FX战士久留美" score="4" label="日漫"}
 ![FX战士久留美海报](./anime/fx-kurumi.jpg)
@@ -26,7 +26,7 @@ order: 1
 正在看。
 :::
 
-## 准备看
+### 准备看
 
 :::card{title="进击的巨人" href="https://zh.wikipedia.org/wiki/進擊的巨人" label="日漫"}
 ![进击的巨人海报](./anime/aot.jpg)
@@ -94,9 +94,9 @@ order: 1
 准备看。
 :::
 
-## 看过
+### 看过
 
-### 日漫
+#### 日漫
 
 :::card{title="葬送的芙莉莲" href="https://zh.wikipedia.org/wiki/葬送的芙莉莲" score="5" date="2026-10-18" label="日漫"}
 ![葬送的芙莉莲海报](./anime/frieren.jpg)
@@ -290,7 +290,7 @@ order: 1
 很短的猫咪日常。没有剧情负担，就看那只猫怎么占住夜晚。
 :::
 
-### 国漫
+#### 国漫
 
 :::card{title="凡人修仙传" href="https://zh.wikipedia.org/wiki/凡人修仙传" score="5" label="国漫"}
 ![凡人修仙传海报](./anime/fanren.jpg)
@@ -358,7 +358,7 @@ order: 1
 想躺平的人被卷进各种事。笑话接地气，不端着。
 :::
 
-### 动漫电影
+#### 动漫电影
 
 :::card{title="你的名字" href="https://zh.wikipedia.org/wiki/你的名字。" score="5" label="动画电影"}
 ![你的名字海报](./anime/your-name.jpg)

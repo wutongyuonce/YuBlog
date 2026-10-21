@@ -217,7 +217,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 ### 4.7 TOC seam
 
 `FEATURES.toc` 决定开不开、标题层级、左右。
-`RenderPost` 和 `InterestsView` 把 Markdown 渲染返回的 `headings` 交给共享 `Toc`；文章另传 `frontmatter.toc` 作为单篇开关。`Toc` 统一根据全局功能开关、页面开关与标题级别调用 `generateToc` 一次，结果非空时才挂载目录，桌面和移动端只呈现同一棵树。`TocSidebar` 负责高度（不超过 `min(50vh, 28rem)`）和内部滚动。
+`RenderPost`、`InterestsView` 和 `AboutView` 把 Markdown 渲染返回的 `headings` 交给共享 `Toc`；文章另传 `frontmatter.toc` 作为单篇开关。`Toc` 统一根据全局功能开关、页面开关与标题级别调用 `generateToc` 一次，`generateToc` 拥有级别过滤与父子树生成，结果非空时 `Toc` 才挂载目录；桌面和移动端只呈现同一棵树。正文级别与页面顶部标题的行为约定见 [文章与目录](./site.md#article)。`TocSidebar` 负责高度（不超过 `min(50vh, 28rem)`）和内部滚动。
 `DesktopAside` 在 1200px 及以上始终显示目录，无顶部开关；宽度为侧边留白减 48px 与 208px 中的较小值，靠正文一侧至少留 40px、外侧至少留 8px（另有视口外边距）；在正文边缘与视口外边距之间的留白中线基础上向外移 16px，中心比视口中线高 32px。更窄视口继续使用 `MobileTocControl` 浮动入口，展开时通知共享目录逻辑将当前项滚入可视范围。
 
 当前章节由 `src/utils/toc-active.js` 的 `pickActiveHeadingIndex()` 决定：激活线取标题的 `scrollMarginTop`，到页面底部时最后一个标题胜出。`Toc` 唯一维护 `--post-anchor-offset`：导航隐藏时 20px，显示时为导航顶部位置加实际高度再加 12px。`nav-scroll.js` 唯一保存累计滚动状态，`NavBar` 用 `updateNavVisibility()` 更新它；点击前 `Toc` 用 `predictNavVisibility()` 从同一状态预测导航显隐，不消耗累计距离，原生锚点直接消费对应距离；滚动、导航显隐、缩放和字体加载后重新核对同一基准。保留正常 fragment 与历史记录行为，不补播第二次滚动。正文标题仅使用透明度入场，锚点位置不随入场动画变化；无脚本时保留导航可见所需的静态距离。
@@ -324,7 +324,7 @@ plugins/
 
 `InterestsView` 在 `/interests/<id>/` 只渲染该分类的内容，页面标题直接使用分类名。入口和顶部下拉菜单读取同一份集合元数据，内容无需 JS 即可阅读。`NavDropdown` 仅在 `INTEREST_ICONS` 自身含该 ID 且图标非空时输出图标节点，不读取原型链，无图标分类保留文字与链接、不留占位；`unocss.config.ts` 自动将映射值加入 safelist。分类增加后仍需检查菜单换行、窄屏边界与内部滚动。
 
-入口与子页均使用点状背景。当前内容包括设备、动漫、电影、电视剧、游戏、书与 Kpop，分类列表和说明可以随内容调整。电影、电视剧、动漫、游戏的条目用默认 `:::card`，按容器宽度自动分列，当前版心最多两列。作者可按需填写 `score`，不由观看／游玩状态决定；未填写时不生成评分。书页使用竖卡，原作者姓名放在 `meta`、不显示评分；内容按类型用二级标题分组，每类独立一排横滑栏，组内保留原顺序，封面位于 `src/content/interests/book/`；当前版心大约四本半显示并继续横滑。封面放在对应分类子目录，仍走图片管线。
+入口与子页均使用点状背景。当前内容包括设备、动漫、电影、电视剧、游戏、书与 Kpop，分类列表和说明可以随内容调整。电影、电视剧、动漫、游戏的条目用默认 `:::card`，按容器宽度自动分列，当前版心最多两列。作者可按需填写 `score`，不由观看／游玩状态决定；未填写时不生成评分。书页使用竖卡，原作者姓名放在 `meta`、不显示评分；内容按类型用三级标题分组，每类独立一排横滑栏，组内保留原顺序，封面位于 `src/content/interests/book/`；当前版心大约四本半显示并继续横滑。封面放在对应分类子目录，仍走图片管线。
 
 ### 标签 `/tags/`
 
@@ -358,7 +358,7 @@ Pagefind **按需加载**：面板打开时调 `window.ensurePagefind()`（打�
 
 ### 关于 `/about/`
 
-页头由共享 `PageHeading` 展示「关于／关于我，也关于这个博客。」；`AboutView` 只读取 `about/about.md`，无子页面按钮、隐藏面板或切换脚本。关于内容仅维护 `about.md`，设备与兴趣内容由拾趣集合提供。关于页不放背景。首页社交链接由 `AUTHOR_LINKS` 独立维护，关于正文不必重复社交链接。
+页头由共享 `PageHeading` 展示「关于／关于我，也关于这个博客。」；`AboutView` 只读取 `about/about.md`，无子页面按钮、隐藏面板或切换脚本。关于内容仅维护 `about.md`；`AboutView` 将渲染返回的 `headings` 交给共享 `Toc`，无符合级别的标题时不显示目录。设备与兴趣内容由拾趣集合提供。关于页不放背景。首页社交链接由 `AUTHOR_LINKS` 独立维护，关于正文不必重复社交链接。
 
 ### 友链 `/friends/`
 

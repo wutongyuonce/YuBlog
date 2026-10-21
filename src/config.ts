@@ -152,7 +152,7 @@ export const FEATURES: Features = {
   toc: [
     true,
     {
-      minHeadingLevel: 2,
+      minHeadingLevel: 1,
       maxHeadingLevel: 4,
       displayPosition: 'right',
     },

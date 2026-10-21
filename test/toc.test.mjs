@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
+import { FEATURES } from '../src/config.ts'
 import { generateToc } from '../src/utils/toc.ts'
 
 const headings = (depths) =>
@@ -42,6 +43,30 @@ test('missing heading levels add fillers only where the level is absent', () => 
       ],
     ],
   ])
+})
+
+test('the configured TOC includes h1 and supports h2 or h3 as its first layer', () => {
+  const { toc } = FEATURES
+  assert.ok(Array.isArray(toc) && toc[0])
+  for (const rootDepth of [1, 2, 3]) {
+    const input = headings([rootDepth, rootDepth + 1, rootDepth + 1, rootDepth])
+    const tree = generateToc(
+      input,
+      toc[1].minHeadingLevel,
+      toc[1].maxHeadingLevel
+    )
+    assert.deepEqual(shape(tree), [
+      [
+        '0',
+        [
+          ['1', []],
+          ['2', []],
+        ],
+      ],
+      ['3', []],
+    ])
+    assert.equal(tree[0].depth, rootDepth, 'HTML heading levels are preserved')
+  }
 })
 
 test('heading bounds preserve the eligible order and support empty content', () => {

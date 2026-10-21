@@ -63,6 +63,41 @@ const hasClass = (node, name) => node.properties.className?.includes(name)
 const textOf = (node) =>
   node.type === 'text' ? node.value : (node.children || []).map(textOf).join('')
 
+function assertBodyToc(page, body, label) {
+  assert.ok(body, `${label}: body exists`)
+  const { toc } = FEATURES
+  const headings =
+    Array.isArray(toc) && toc[0]
+      ? elements(body, (node) => {
+          const depth = /^h([1-6])$/.exec(node.tagName)?.[1]
+          return (
+            depth &&
+            Number(depth) >= toc[1].minHeadingLevel &&
+            Number(depth) <= toc[1].maxHeadingLevel
+          )
+        })
+      : []
+  assert.equal(
+    elements(page, (node) => node.tagName === 'table-of-contents').length,
+    headings.length ? 1 : 0,
+    `${label}: render a directory only for eligible body headings`
+  )
+  for (const containerId of ['toc-sidebar', 'mobile-toc-panel']) {
+    const container = elements(
+      page,
+      (node) => node.properties.id === containerId
+    )[0]
+    const links = container
+      ? elements(container, (node) => 'dataTocLink' in node.properties)
+      : []
+    assert.deepEqual(
+      links.map((node) => node.properties.href),
+      headings.map((node) => `#${node.properties.id}`),
+      `${label}: ${containerId} follows body heading order and targets`
+    )
+  }
+}
+
 test('home ships its own layout and background rules inline', () => {
   // Delivery itself (no external sheet, no @import, theme tokens inline) is owned
   // by the per-page check below; this test owns the homepage-specific rules.
@@ -599,37 +634,7 @@ test('interest menu and index agree and their links resolve to content pages', a
     const content = elements(page, (node) => 'dataInterest' in node.properties)
     assert.equal(content.length, 1)
     assert.equal(content[0].properties.dataInterest, id)
-    const { toc } = FEATURES
-    const headings =
-      Array.isArray(toc) && toc[0]
-        ? elements(content[0], (node) => {
-            const depth = /^h([1-6])$/.exec(node.tagName)?.[1]
-            return (
-              depth &&
-              Number(depth) >= toc[1].minHeadingLevel &&
-              Number(depth) <= toc[1].maxHeadingLevel
-            )
-          })
-        : []
-    assert.equal(
-      elements(page, (node) => node.tagName === 'table-of-contents').length,
-      headings.length ? 1 : 0,
-      `${id}: render a directory only for eligible body headings`
-    )
-    for (const containerId of ['toc-sidebar', 'mobile-toc-panel']) {
-      const container = elements(
-        page,
-        (node) => node.properties.id === containerId
-      )[0]
-      const links = container
-        ? elements(container, (node) => 'dataTocLink' in node.properties)
-        : []
-      assert.deepEqual(
-        links.map((node) => node.properties.href),
-        headings.map((node) => `#${node.properties.id}`),
-        `${id}: ${containerId} follows Markdown heading order and targets`
-      )
-    }
+    assertBodyToc(page, content[0], id)
     assert.equal(
       elements(page, (node) => hasClass(node, 'recent-media')).length,
       0,
@@ -650,6 +655,14 @@ test('interest menu and index agree and their links resolve to content pages', a
       1
     )
   }
+})
+
+test('about TOC follows body headings, never the standalone page title', () => {
+  assertBodyToc(
+    about,
+    elements(about, (node) => hasClass(node, 'about-panel'))[0],
+    'about'
+  )
 })
 
 test('article covers do not replace the standalone page heading', () => {

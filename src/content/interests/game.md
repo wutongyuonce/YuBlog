@@ -6,7 +6,7 @@ order: 4
 
 我的 **Steam Friend Code**：[1554038676](https://steamcommunity.com/id/wutongyuonce/)
 
-## 最近在玩
+### 最近在玩
 
 :::card{title="影之刃零" href="https://zh.wikipedia.org/wiki/影之刃零" label="游戏"}
 ![影之刃零海报](./game/shadowblade.jpg)
@@ -26,7 +26,7 @@ order: 4
 准备玩。
 :::
 
-## 玩过
+### 玩过
 
 :::card{title="无畏契约" href="https://zh.wikipedia.org/wiki/无畏契约" score="4.5" label="游戏"}
 ![无畏契约海报](./game/valorant.png)
