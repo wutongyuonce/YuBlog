@@ -40,7 +40,7 @@ https://ws.audioscrobbler.com/2.0/?method=user.getTopTracks&user=你的用户名
 
 | 首页要显示 | 方法 | 关键参数 | 注意 |
 | --- | --- | --- | --- |
-| 过去七天 Top 10 | `user.getTopTracks` | `period=7day`、`limit=10` | 每首自带 `playcount`，但不含专辑与封面 |
+| 过去七天 TOP 10 | `user.getTopTracks` | `period=7day`、`limit=10` | 每首自带 `playcount`，但不含专辑与封面 |
 | 七天听歌总次数 | `user.getRecentTracks` | `from`、`to`、`limit=200`、`page` | 次数在 `@attr.total`，见下 |
 | 是否正在播放 | `user.getRecentTracks` | 同上 | 正在播放的记录带 `@attr.nowplaying` |
 | 累计记录数 | `user.getInfo` | — | `user.playcount` |
@@ -49,9 +49,9 @@ https://ws.audioscrobbler.com/2.0/?method=user.getTopTracks&user=你的用户名
 
 所以“接一个听歌接口”听起来是一个请求，实际是四到五个并发请求，再加一批补封面的请求。下面是四个真正费过时间的细节。
 
-### 一：七天的总次数不能拿 Top 10 的播放次数相加
+### 一：七天的总次数不能拿 TOP 10 的播放次数相加
 
-Top 10 只返回前十首，把它们相加得到的是“前十首的次数”，不是这一周的总次数。听了很多首冷门歌的人，这两个数字能差出一大截。
+TOP 10 只返回前十首，把它们相加得到的是“前十首的次数”，不是这一周的总次数。听了很多首冷门歌的人，这两个数字能差出一大截。
 
 正确做法是用 `user.getRecentTracks`：固定一个 7 天的 UTC 起止时间，读 `@attr.total`，那是这段时间内的播放总数（与 `limit`、`page` 无关）。
 

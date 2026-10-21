@@ -18,7 +18,7 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
   data-state="loading"
 >
   <header class="home-section-header">
-    <h2 id="recent-listening-title">最近在听 Top10</h2>
+    <h2 id="recent-listening-title">最近在听 TOP10</h2>
     <a href={profileUrl} target="_blank" rel="noopener noreferrer">
       Last.fm ↗
     </a>
@@ -42,7 +42,7 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
       class="media-cards media-cards--rail media-cards--auto"
       tabindex="0"
       role="region"
-      aria-label="过去 7 天常听歌曲 Top 10，可左右滚动"
+      aria-label="过去 7 天常听歌曲 TOP 10，可左右滚动"
     >
       <div class="media-cards__track" role="list" data-listening-track>
         {Array.from({ length: 10 }, () => (
