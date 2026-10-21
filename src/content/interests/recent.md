@@ -7,7 +7,7 @@
 :::
 
 :::card{layout="portrait" title="流人第六季" href="https://zh.wikipedia.org/wiki/流人" meta="看兰姆的刻薄与温情，边缘人办案、挣扎生存。"}
-![流人第六季海报](./tv/slow-horses.jpg)
+![流人第六季海报](./tv/slow-horses-season-6.png)
 :::
 
 :::card{layout="portrait" title="FX战士久留美" href="https://zh.wikipedia.org/wiki/FX战士久留美" meta="人-稿子-钻石。"}

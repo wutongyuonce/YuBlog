@@ -7,7 +7,7 @@ order: 3
 ### 正在看
 
 :::card{title="流人第六季" href="https://zh.wikipedia.org/wiki/流人" label="英剧"}
-![流人第六季海报](./tv/slow-horses.jpg)
+![流人第六季海报](./tv/slow-horses-season-6.png)
 
 正在看。
 :::
@@ -158,8 +158,8 @@ order: 3
 一个职业杀手接下一单几乎不可能的目标。筹备比开枪更紧张。
 :::
 
-:::card{title="流人" href="https://zh.wikipedia.org/wiki/流人" score="5" label="英剧"}
-![流人海报](./tv/slow-horses.jpg)
+:::card{title="流人 1-5 季" href="https://zh.wikipedia.org/wiki/流人" score="5" label="英剧"}
+![流人 1-5 季海报](./tv/slow-horses-seasons-1-5.png)
 
 一群被流放的情报员还在干活。兰姆的刻薄和每季的案子一样好看。
 :::
