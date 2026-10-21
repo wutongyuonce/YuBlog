@@ -4,6 +4,8 @@ description: 银幕里的故事
 order: 2
 ---
 
+## 看过
+
 :::card{title="生化危机：爆发夜" href="https://zh.wikipedia.org/wiki/恶灵古堡：爆发夜" score="3" label="电影"}
 ![生化危机：爆发夜海报](./movie/resident-evil.jpg)
 

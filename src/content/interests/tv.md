@@ -4,7 +4,7 @@ description: 剧集与综艺
 order: 3
 ---
 
-正在看：
+## 正在看
 
 :::card{title="流人第六季" href="https://zh.wikipedia.org/wiki/流人" label="英剧"}
 ![流人第六季海报](./tv/slow-horses.jpg)
@@ -12,7 +12,7 @@ order: 3
 正在看。
 :::
 
-准备看：
+## 准备看
 
 :::card{title="谜探路德维希" href="https://en.wikipedia.org/wiki/Ludwig_(2024_TV_series)" label="英剧"}
 ![谜探路德维希海报](./tv/ludwig.jpg)
@@ -38,7 +38,9 @@ order: 3
 准备看前两季。
 :::
 
-美剧：
+## 看过
+
+### 美剧
 
 :::card{title="怪奇物语" href="https://zh.wikipedia.org/wiki/怪奇物語" score="5" label="美剧"}
 ![怪奇物语海报](./tv/stranger-things.jpg)
@@ -142,7 +144,7 @@ order: 3
 记者撞进东京黑社会。夜色和规矩都冷，追查过程很稳。
 :::
 
-英剧：
+### 英剧
 
 :::card{title="浴血黑帮" href="https://zh.wikipedia.org/wiki/浴血黑帮" score="5" label="英剧"}
 ![浴血黑帮海报](./tv/peaky.jpg)
@@ -162,7 +164,7 @@ order: 3
 一群被流放的情报员还在干活。兰姆的刻薄和每季的案子一样好看。
 :::
 
-德剧：
+### 德剧
 
 :::card{title="暗黑" href="https://zh.wikipedia.org/wiki/暗黑_(电视剧)" score="5" label="德剧"}
 ![暗黑海报](./tv/dark.jpg)
@@ -170,7 +172,7 @@ order: 3
 德国小镇的时间循环。家族树比怪物更难，三季收得也很完整。
 :::
 
-韩剧：
+### 韩剧
 
 :::card{title="我的大叔" href="https://zh.wikipedia.org/wiki/我的大叔" score="5" label="韩剧"}
 ![我的大叔海报](./tv/my-mister.png)
@@ -220,7 +222,7 @@ IU 和三个叔叔的生活剧。很静，欠债、加班和一句关心都有�
 双门洞的一条街。邻居比剧情重要，看完会想回家吃饭。
 :::
 
-国产剧：
+### 国产剧
 
 :::card{title="人世间" href="https://zh.wikipedia.org/wiki/人世间_(电视剧)" score="4" label="国产剧"}
 ![人世间海报](./tv/lifetimes.jpg)
@@ -282,7 +284,7 @@ IU 和三个叔叔的生活剧。很静，欠债、加班和一句关心都有�
 三个女人在东京开茶坊。市井和案子并行，人比朝堂好看。
 :::
 
-综艺：
+### 综艺
 
 :::card{title="孝利家民宿" href="https://zh.wikipedia.org/wiki/孝利家民宿" score="5" label="综艺"}
 ![孝利家民宿海报](./tv/hyori.jpg)
