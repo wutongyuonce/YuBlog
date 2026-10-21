@@ -137,8 +137,10 @@ export function renderListening(root, snapshot) {
   const values = snapshot ? listeningStats(snapshot) : null
   for (const [index, node] of [
     ...root.querySelectorAll('[data-listening-stat]'),
-  ].entries())
+  ].entries()) {
     node.textContent = values ? values[index] : '—'
+    node.title = node.textContent
+  }
 
   const track = root.querySelector('[data-listening-track]')
   const template = root.querySelector('template[data-listening-card]')
