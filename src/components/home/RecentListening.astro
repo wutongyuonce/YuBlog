@@ -7,7 +7,7 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
 ---
 
 <!--
-  听歌数据只在运行时取得，所以这里只输出骨架、卡片模板和失败说明；
+  听歌数据只在运行时取得，所以这里只输出加载态骨架卡、卡片模板和失败说明；
   统计、卡片和更新时间都由 `~/utils/recent-listening` 在校验响应后填入。
 -->
 <section
@@ -44,7 +44,21 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
       role="region"
       aria-label="过去 7 天常听歌曲 Top 10，可左右滚动"
     >
-      <div class="media-cards__track" role="list" data-listening-track></div>
+      <div class="media-cards__track" role="list" data-listening-track>
+        {Array.from({ length: 10 }, () => (
+          <article
+            class="recent-listening__skeleton"
+            aria-hidden="true"
+            data-listening-skeleton
+          >
+            <div class="recent-listening__skeleton-cover"></div>
+            <div class="recent-listening__skeleton-body">
+              <span class="recent-listening__skeleton-line"></span>
+              <span class="recent-listening__skeleton-line recent-listening__skeleton-line--meta"></span>
+            </div>
+          </article>
+        ))}
+      </div>
     </div>
   </div>
   <p class="recent-listening__message" data-listening-message hidden></p>
@@ -123,9 +137,51 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
     -webkit-line-clamp: 2;
     overflow: hidden;
   }
-  /* 等待接口时占住一张卡片的高度，避免数据到达后页面位移。 */
+  /* 加载态：方卡轨距与真实方卡一致，避免就绪后布局跳动；骨架不参与陈列架循环。 */
   .recent-listening[data-state='loading'] .media-cards--rail {
-    min-height: 12rem;
+    --rail-gap: 0.85rem;
+    --rail-gaps: 5;
+    --rail-visible: 5.5;
+  }
+  .recent-listening__skeleton {
+    display: grid;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+  .recent-listening__skeleton-cover {
+    aspect-ratio: 1;
+    border-radius: 0.375rem;
+    background: color-mix(in srgb, var(--c-text) 8%, var(--c-bg));
+    box-shadow: 0 4px 10px rgb(0 0 0 / 6%);
+  }
+  .recent-listening__skeleton-body {
+    display: grid;
+    gap: 0.35rem;
+  }
+  .recent-listening__skeleton-line {
+    display: block;
+    height: 0.85rem;
+    border-radius: 0.25rem;
+    background: color-mix(in srgb, var(--c-text) 8%, var(--c-bg));
+  }
+  .recent-listening__skeleton-line--meta {
+    width: 72%;
+    height: 0.7rem;
+  }
+  .recent-listening__skeleton-cover,
+  .recent-listening__skeleton-line {
+    animation: recent-listening-skeleton-pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes recent-listening-skeleton-pulse {
+    50% {
+      opacity: 0.55;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .recent-listening__skeleton-cover,
+    .recent-listening__skeleton-line {
+      animation: none;
+    }
   }
   .recent-listening:is([data-state='empty'], [data-state='error'])
     .recent-listening__body {
