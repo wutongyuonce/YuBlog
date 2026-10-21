@@ -6,6 +6,18 @@ order: 2
 
 ### 看过
 
+:::card{title="边境杀手" href="https://en.wikipedia.org/wiki/Sicario_(2015_film)" score="4" label="电影"}
+![边境杀手海报](./movie/sicario.png)
+
+一名 FBI 探员加入美墨边境的缉毒行动，逐渐发现任务背后另有规则。维伦纽瓦把荒漠、边境线和失控的暴力拍得冷峻压抑。
+:::
+
+:::card{title="边境杀手2：边境战士" href="https://en.wikipedia.org/wiki/Sicario:_Day_of_the_Soldado" score="3" label="电影"}
+![边境杀手2：边境战士海报](./movie/sicario-day-of-the-soldado.png)
+
+美墨边境的秘密行动继续，马特和亚历杭德罗试图用绑架挑起贩毒集团之间的冲突。任务失控后，两人围绕一名毒枭的女儿走向不同选择。
+:::
+
 :::card{title="生化危机：爆发夜" href="https://zh.wikipedia.org/wiki/恶灵古堡：爆发夜" score="3" label="电影"}
 ![生化危机：爆发夜海报](./movie/resident-evil.jpg)
 

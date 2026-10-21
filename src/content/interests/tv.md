@@ -4,14 +4,6 @@ description: 剧集与综艺
 order: 3
 ---
 
-### 正在看
-
-:::card{title="流人第六季" href="https://zh.wikipedia.org/wiki/流人" label="英剧"}
-![流人第六季海报](./tv/slow-horses-season-6.png)
-
-正在看。
-:::
-
 ### 准备看
 
 :::card{title="谜探路德维希" href="https://en.wikipedia.org/wiki/Ludwig_(2024_TV_series)" label="英剧"}
@@ -162,6 +154,12 @@ order: 3
 ![流人 1-5 季海报](./tv/slow-horses-seasons-1-5.png)
 
 一群被流放的情报员还在干活。兰姆的刻薄和每季的案子一样好看。
+:::
+
+:::card{title="流人第六季" href="https://zh.wikipedia.org/wiki/流人" score="4" date="2026-10-22" label="英剧"}
+![流人第六季海报](./tv/slow-horses-season-6.png)
+
+看兰姆的刻薄与温情，边缘人办案、挣扎生存。
 :::
 
 #### 德剧
