@@ -1,8 +1,8 @@
-# YuBlog 架构与实现
+# 架构与模块边界
 
-本文是开发导览，解释目录结构、模块权威、调用边界和运行链路，帮助定位修改应落在哪个文件。页面规则、视觉数值及验收义务以站点行为 SPEC 为准；本文说明它们如何实现。改文案和数据走内容 skill；改行为先看本文件的**权威**和 **seam**，再动对应模块。Astro 语法见 [Astro.md](./Astro.md)，SEO 见 [Canonical URL、Sitemap、RSS.md](./Canonical%20URL、Sitemap、RSS.md)。
+开发导览：从目录、模块属主和调用边界定位改动。页面行为与视觉约束见 [站点与页面](./site.md)，正文管线见 [正文与媒体](./content.md)，订阅见 [SEO 与全文订阅](./distribution.md)。本地运行、个性化及部署见 [开发与部署指南](../guides/development.md)。下文源码路径均相对仓库根目录。
 
-页面行为与模块职责见 [站点行为 SPEC](./站点行为%20SPEC.md)，变更记录见 [CHANGELOG](../CHANGELOG.md)。
+快速定位：[页面入口](#routes) · [模块属主](#ownership) · [实现边界](#boundaries) · [运行链路](#flow) · [目录](#structure) · [页面实现](#pages) · [工具接口](#utilities) · [扩展位置](#extension) · [验证](#verification)
 
 本文用这些词：
 
@@ -19,6 +19,8 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 线上：`https://www.wutongyu.site/`。
 
 构建：`pnpm build` → `dist/`（不进 git）→ `postbuild` 跑 Pagefind，再跑 `scripts/postbuild.mjs`（清理 Pagefind UI 文件）与 `scripts/check-content-rendered.mjs`（校验全站每个正文容器确实渲染出了内容，包括关于、拾趣，空正文让构建失败）。
+
+<a id="routes"></a>
 
 ## 2. 页面地图
 
@@ -54,6 +56,8 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 - `prefers-reduced-motion: reduce` 时只画一帧静态背景，不启动 RAF 循环，并在系统设置变化时启停。
 - `dot` 每帧按透明度分 6 档批量描边。布点规则在 `Dot.astro`：基础间距 15px；估算点数超过约 8000 时按面积放大间距。这是密度目标，边缘补点可能超过它，不是硬上限。
 
+<a id="ownership"></a>
+
 ## 3. 权威表（先看这里再改）
 
 一类事实只应有一个主人。调用方从界面读，不要复制一份。
@@ -65,7 +69,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 顶栏导航、顶栏 GitHub | `src/config.ts` `UI.internalNavs` / `UI.socialLinks` | 在 `NavBar` 里加死链接 |
 | 个人社交展示 | 首页 `config.ts` 的 `AUTHOR_LINKS`；关于页正文仅维护作者希望展示的联系方式 | 写入顶栏 `UI.socialLinks`，或在首页组件另写账号 |
 | TOC / 搜索开关 | `src/config.ts` `FEATURES` | 在 TOC 组件里另做一套开关语义 |
-| Oneko 像素猫开关与皮肤 | `src/config.ts` `FEATURES.oneko`；挂载见 `BaseLayout`，隐藏按钮见 `Footer`，说明见 [Oneko 像素猫](./Oneko%20像素猫.md) | 自托管脚本、在页面重复注入，或自写隐藏状态 |
+| Oneko 像素猫开关与皮肤 | `src/config.ts` `FEATURES.oneko`；挂载见 `BaseLayout`，隐藏按钮见 `Footer`，说明见 [Oneko 像素猫](./oneko.md) | 自托管脚本、在页面重复注入，或自写隐藏状态 |
 | 文章字段合不合法 | `src/content/schema.ts` `postSchema` | 在页面里重新约定字段 |
 | 已发布文章列表、排序、按年分组 | `src/utils/data.ts` | 在视图里 `getCollection` 再 filter 一遍 |
 | 原值分类的动态入口、URL 的分类 hash／兼容 query、精确筛选、标签、页码 | `src/utils/blog-browser.js` | 写固定分类允许表、合并别名或在 `ListView` 里手写 `URLSearchParams` |
@@ -81,8 +85,8 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 拾趣菜单可选图标 | `src/config.ts` 的 `INTEREST_ICONS`，键为文件名去掉扩展名；UnoCSS 自动加入 safelist | 为无图标分类补占位或重复维护图标 safelist |
 | 友链申请模板里的站名 / 链接 | `FriendsApplyPanel.astro` 里的 `friendInfo` | 在其他组件复制申请模板 |
 | 访问统计脚本 | `src/components/base/Head.astro` 的 Umami `<script is:inline>` | 放进页脚、再复制一份，或加 `data-astro-rerun` / 在 `astro:page-load` 手动 `track()` |
-| Markdown 卡片单封面／文字介绍、属性、链接安全、评分与连续分组 | `plugins/remark-media-card.ts`；展示只在 `prose.css` | 组件自行识别卡片或覆写网格；RSS 从 CSS 猜评分 |
-| Excalidraw 指令、渲染和交互 | `remark-excalidraw.ts` 生成宿主与源链接；`excalidraw-canvas.ts` 调官方 SVG exporter 并绑定控件／输入；`excalidraw-viewport.js` 唯一负责相机数学；`excalidraw-viewer.ts` 管加载／回退／dialog／清理；`prose.css` 管外观；`astro-media-sync` 镜像源文件和本地字体。详见 [设计依据](./excalidraw-reference-research.md) | 重挂 React 编辑器、复制元素渲染器或缩放公式、把临时 SVG URL 当源下载、给展开另写一套手势 |
+| Markdown 卡片单封面／文字介绍、属性、链接安全、评分、日期与连续分组 | `plugins/remark-media-card.ts`；展示只在 `prose.css` | 组件自行识别卡片或覆写网格；RSS 从 CSS 猜评分 |
+| Excalidraw 指令、渲染和交互 | `remark-excalidraw.ts` 生成宿主与源链接；`excalidraw-canvas.ts` 调官方 SVG exporter 并绑定控件／输入；`excalidraw-viewport.js` 唯一负责相机数学；`excalidraw-viewer.ts` 管加载／回退／dialog／清理；`prose.css` 管外观；`astro-media-sync` 镜像源文件和本地字体。详见 [设计依据](./content.md#excalidraw) | 重挂 React 编辑器、复制元素渲染器或缩放公式、把临时 SVG URL 当源下载、给展开另写一套手势 |
 | 博文链接卡 slug 解析与卡片结构 | `plugins/remark-blog-link.ts` + `plugins/blog-entry.ts`；样式在 `prose.css` | 客户端抓取元数据；自动反链；改全站圆形头像规则 |
 | gallery／figure 的属性、结构、嵌套与带位置失败；普通 Markdown 正文图的 image-view／原尺寸 template 包装 | `plugins/remark-image-layouts.ts`，在 `remarkMediaCard` 后执行 | 在组件、RSS 或浏览器再解析 Markdown，或手写大图产物 URL |
 | 全站输入方式与鼠标／键盘焦点提示 | `BaseLayout.astro` 捕获 pointerdown／keydown，`main.css` 统一抑制指针焦点外框 | 在各个图片／相册组件重复跟踪输入方式，或 blur 导致焦点恢复丢失 |
@@ -97,6 +101,8 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 点缀预设、默认与存储规则、强调色变量 | `src/utils/accent-palette.js`；`Head`／`AccentSwitch` 调用 | 在 CSS、首屏脚本和选项中复制调色板或默认值判断 |
 | 配色面板和焦点生命周期 | `AccentSwitch.astro` | 在 `NavBar` 重建配色状态；导航只读面板展开状态 |
 | 实际主题变化订阅与退订 | `src/utils/theme-observer.js`；Dot／Snow 只负责重绘 | 在背景中各写一份根元素 class 观察逻辑 |
+
+<a id="boundaries"></a>
 
 ## 4. Seam：该从哪切开
 
@@ -114,6 +120,19 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 实现：草稿过滤、日期排序、渲染 `minutesRead`、按年 reduce；邻接与随机候选不在组件内重排。
 
 首页、文稿、顶部分类预览、标签、归档、RSS、名片、近期笔墨都应穿过这里取文章集合。顶部分类菜单和开发／生产 RSS 均只读取 `getPublishedBlogPosts`；开发网页列表／正文仍可预览草稿，不属于菜单排除草稿的设计边界。写作热力只从这里取已发布文章，按日聚合篇数，并按上海自然年汇总字数，规则在 `blog-heatmap.js`（`test/blog-heatmap.test.mjs`）。字数格式测试见 `test/blog-stats.test.mjs`。
+
+#### 上下篇与随机入口的模块职责
+
+| 事实 | 权威模块 | 不要 |
+| --- | --- | --- |
+| 排序 | `getSortedPosts`（`src/utils/data.ts`） | 在组件内另写排序 |
+| 邻接与随机纯函数 | `src/utils/post-nav.ts` | 在 Astro 模板内手算下标 |
+| 详情 UI | `src/components/blog/PostNav.astro` | 把按钮散落进 `RenderPost` 模板 |
+| 列表顶行 | `src/components/blog/RandomBrowse.astro` + `ListView.astro` | 把随机行塞进分页 HTML |
+| 首页入口 | `RecentWriting.astro` 复用 `RandomBrowse` | 另写一套随机逻辑 |
+| 随机 `href` 重写 | `src/utils/post-nav-random.js` | 每页复制一份内联随机逻辑 |
+| 文稿 URL | 与列表一致：`redirect \|\| withBasePath(\`/blogs/${id}/\`)` | 自造路径编码 |
+
 
 ### 4.3 浏览器状态 seam
 
@@ -157,7 +176,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 #### 点缀配色 seam
 
-点缀行为以 SPEC S11 为准。`src/utils/accent-palette.js` 的 `ACCENT_PALETTES` 是唯一预设表，首项原粉色决定默认配色；浅色主色为原粉色 `#ad526c`、灰紫 `#665477`、深紫 `#3a1b74`、雾蓝 `#476d89`、鼠尾草绿 `#52735c`。每套都生成不同的浅色与深色强调色；`--accent-swatch` 始终是浅色主色。灰紫深色为 `#d0adf2`，深紫深色为 `#a987e8`，原粉色保留旧深色 `#e7a1b5`，雾蓝深色为 `#7fafd2`，鼠尾草绿深色为 `#7fd298`。未单独指定的深色仍按主色 45% 混入白色，未单独指定的浅色柔和色按主色 72% 混入白色。`main.css` 保留黑白基底，不另写点缀表。
+点缀行为以[页面配色契约](./site.md#appearance)为准。`src/utils/accent-palette.js` 的 `ACCENT_PALETTES` 是唯一预设表，首项原粉色决定默认配色；浅色主色为原粉色 `#ad526c`、灰紫 `#665477`、深紫 `#3a1b74`、雾蓝 `#476d89`、鼠尾草绿 `#52735c`。每套都生成不同的浅色与深色强调色；`--accent-swatch` 始终是浅色主色。灰紫深色为 `#d0adf2`，深紫深色为 `#a987e8`，原粉色保留旧深色 `#e7a1b5`，雾蓝深色为 `#7fafd2`，鼠尾草绿深色为 `#7fd298`。未单独指定的深色仍按主色 45% 混入白色，未单独指定的浅色柔和色按主色 72% 混入白色。`main.css` 保留黑白基底，不另写点缀表。
 
 `createAccentPreference(palettes)` 提供 `resolve`／`restore`／`select`，统一合法值、默认和 localStorage `accent-palette` 的异常语义。工厂自包含，`Head.astro` 将同一函数和配置序列化为内联初始化，并输出未依赖 JS 的配色变量；选择器模块直接调用同一工厂。在 `astro:before-swap` 对传入根元素恢复偏好，硬导航则由 Head 在首屏前恢复；无需新协议、状态缓存或主题观察器。配色写入根元素 `data-accent-palette`，与现有 `.dark` 独立，视图通过 CSS 变量立即更新。
 
@@ -169,7 +188,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 ### 4.5 布局 seam
 
-- `BaseLayout`：文档头、背景、悬浮导航、主槽、页脚。文档头由 `Head.astro` 输出，其中一份 Umami Cloud 脚本只负责访问统计，不渲染界面。脚本带 `is:inline` 和 `defer`；不要加 `data-astro-rerun`，也不要在 `astro:page-load` 再调用 `umami.track()`，避免换页重复计数。可选 Oneko 由 `FEATURES.oneko` 控制：布局用 `createOneko` 挂载；`ClientRouter` 换页可能移除 body 上的猫，故在 `astro:page-load` 缺失时重建；详见 [Oneko 像素猫](./Oneko%20像素猫.md)。
+- `BaseLayout`：文档头、背景、悬浮导航、主槽、页脚。文档头由 `Head.astro` 输出，其中一份 Umami Cloud 脚本只负责访问统计，不渲染界面。脚本带 `is:inline` 和 `defer`；不要加 `data-astro-rerun`，也不要在 `astro:page-load` 再调用 `umami.track()`，避免换页重复计数。可选 Oneko 由 `FEATURES.oneko` 控制：布局用 `createOneko` 挂载；`ClientRouter` 换页可能移除 body 上的猫，故在 `astro:page-load` 缺失时重建；详见 [Oneko 像素猫](./oneko.md)。
 - `BlogIndexLayout`：导航页面的居中单栏容器。
 - `StandardLayout`：文章标题、正文与普通内容排版。
 
@@ -193,7 +212,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 #### Last.fm 运行时接口 seam
 
-`src/utils/lastfm.mjs` 的 `fetchLastfmSnapshot` 集中拥有七天窗口、排行、统计、专辑匹配、封面及 API 错误，并派生用户主页地址；缺封面时每批最多三首并行补查，同一快照复用相同歌手／专辑的查询，排行不随完成顺序变化。`api/lastfm.js` 只决定缓存策略、状态码和错误码，`plugins/astro-listening-endpoint.ts` 把同一个处理函数挂到本地 dev。仓库不保存听歌快照，也没有定时工作流。`RecentListening` 输出空骨架、卡片模板和无脚本说明；`Head` 在 ClientRouter 前输出 `RecentListeningScript`，首页取数不等待其它模块的依赖，换页前取消请求、回到首页重新加载。`src/utils/recent-listening.js` 校验接口响应后写 DOM，复用 `prose.css` 的方卡，标记 `media-cards--auto` 接现有循环控制器；模板里的 Last.fm 300px 远程封面用定宽高懒加载图片，不进入作者 Markdown 图片管线，也不要求构建联网。`fullCover` 的原尺寸地址由 Last.fm 适配器统一映射，inert template 交给既有图片查看器，点击时才加载；小字用 `歌手 - 专辑名`。注入的卡片以 `content:added` 通知陈列架重算 `refresh(rail)`、通知图片查看器重新接管视图。无脚本或接口失败时保留骨架与说明，缺图用音符占位。配置、限额、失败语义与验收映射见 [Last.fm SPEC 与设计](./首页%20Last.fm%20SPEC%20与设计.md)。
+`src/utils/lastfm.mjs` 拥有查询、校验与快照；`api/lastfm.js` 拥有缓存、状态码及错误响应，dev 中间件复用同一处理函数。`RecentListening` 仅输出模板，客户端从接口校验后写入 DOM，以 `content:added` 通知现有陈列架与图片查看器接管。启动顺序、取消请求、资源上限与失败语义见 [Last.fm 设计](./listening.md)。
 
 ### 4.7 TOC seam
 
@@ -203,79 +222,15 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 当前章节由 `src/utils/toc-active.js` 的 `pickActiveHeadingIndex()` 决定：激活线取标题的 `scrollMarginTop`，到页面底部时最后一个标题胜出。`Toc` 唯一维护 `--post-anchor-offset`：导航隐藏时 20px，显示时为导航顶部位置加实际高度再加 12px。`nav-scroll.js` 唯一保存累计滚动状态，`NavBar` 用 `updateNavVisibility()` 更新它；点击前 `Toc` 用 `predictNavVisibility()` 从同一状态预测导航显隐，不消耗累计距离，原生锚点直接消费对应距离；滚动、导航显隐、缩放和字体加载后重新核对同一基准。保留正常 fragment 与历史记录行为，不补播第二次滚动。正文标题仅使用透明度入场，锚点位置不随入场动画变化；无脚本时保留导航可见所需的静态距离。
 
-正文 `:::card` 由 `plugins/remark-media-card.ts` 渲染，样式在 `prose.css`：右上角类别、左侧相对路径封面、右侧可外链标题、可选评分、可选日期和可滚动介绍；连续卡片组成自适应网格。日期由同一插件作为文本节点输出，展示与可选规则见 [站点行为 SPEC：S4](./站点行为%20SPEC.md#s4拾趣和关于)。评分以真实文本提供给读屏与 RSS，星星只是装饰；最多一张独立 Markdown 封面，介绍仅允许文字排版和链接；插件递归拒绝额外图片、HTML／静态 MDX 嵌入媒体及指令生成的媒体（按有效 `data.hName`／`data.hChildren` 检查），违规、非法分数或嵌套卡片均使构建失败，不删内容。普通 HTML 文字排版、注释和代码示例不误判为媒体；危险标题链接降级为纯文本。封面仍走图片管线。博客、拾趣、关于共用这条管线，所以这些页面的 Markdown 都能写。博客、拾趣、首页近期书影游和关于正文共用 `prose.css` 的 `.prose.markdown-content` 标题规则；h1／h2／h3／h4–h6 依次为 2.125rem／1.6rem／1.1875rem／1rem，其他正文排版仍按各自容器维护。`plugins/index.ts` 只给标题生成 ID 和在标题文字后追加单个 `#` 锚点（样式见 `markdown.css`，不向左悬出），不归一化标题深度；Markdown 中 `##` 即 h2，即使正文没有 h1 也保持 h2。博客目录按配置收录 h2–h4，不会把最高级章节改成 h1。
+桌面目录各级标题完整换行；当前项超出内部区域时，`Toc` 将其滚回可视范围。
 
-桌面目录各级标题在收窄后的栏宽内完整换行；当前项超出内部滚动区域时，`Toc` 将它滚回可视范围。
+### 4.8 正文与媒体边界
 
-#### 卡片陈列架的契约与设计
+卡片、gallery／figure、正文大图、HTML 与镜像媒体共用 Markdown 管线，规则与实现集中在 [正文与媒体](./content.md#pipeline)。该文维护插件先后、图片资源与 `|w`、原尺寸 template、Excalidraw、循环轨道、浏览器焦点及滚动锁释放职责；这里不再复制这些规则。
 
-`layout="portrait"` 与 `layout="square"` 是现有卡片的陈列架变体，省略 `layout` 或写 `horizontal` 保持横卡。插件为每条陈列架输出 `media-cards__track`，卡片留在轨道内，样式按竖排封面选择轨道内的卡片，不退回横卡的双列裁切。陈列架只含封面、标题和可选自由小字；必须有标题和一张独立 Markdown 封面，评分、日期、角标、介绍、未知布局、非法 `scroll` 或嵌套均报错，不隐藏作者内容。`scroll="auto"` 只是循环请求，横卡不能写；同一排每张都要写同样的值。标题／小字始终作为文本节点输出，危险 `href` 仍降级为文字。连续且布局与滚动模式都相同的卡片按源顺序分组，正文、布局或滚动模式变化会分组。首页与演示作品卡片的 `href` 由作者维护为对应 Wiki（《牧神记》使用萌娘百科，其余现有条目使用 Wikipedia）；插件只校验通用链接协议，不维护作品映射、不推断分类跳转。
+修改 Markdown 插件后，先确认服务属于当前 worktree，再用 `pnpm dev --force` 刷新内容缓存；构建命令已有 `--force`。网页与 RSS 消费同一个集合 `Content`，RSS endpoint 只编排，转换和序列化见 [订阅设计](./distribution.md#rss-design)。
 
-| 义务 | 唯一属主 | 接口与证据 |
-| --- | --- | --- |
-| 语法、三部分边界、图片装饰、链接安全、分组与轨道 | `plugins/remark-media-card.ts` | 竖／方卡栏固定包含 `media-cards__track`；请求循环的栏增加 `media-cards--auto`。脚本不得再搬动卡片 |
-| 竖封面四张半、方封面五张半、窄屏后续露出、小字限高与主题 | `src/styles/prose.css` | 样式选择轨道内的卡片，避免退回横卡的双列裁切。竖封面 `2:3`、方封面 `1:1`。自动滚动用两端渐变盖住边缘，不用会挡住封面绘制的 mask |
-| 是否循环与视觉副本 | `src/utils/card-rail-marquee.js` | 至少两张且作者内容宽于容器才在既有轨道里复制一组，并用 `--marquee-distance` 驱动 CSS 位移。按下和焦点暂停，单纯悬停不暂停。`test/card-rail-marquee.test.mjs` |
-| 封面资源与查看完整原图 | 既有 Astro 图片管线／`remark-image-layouts.ts`／`image-interactions.ts` | 保留 image 节点，默认资源宽度 480，显式 `|w` 优先。大图点击改为文档委托，因此滚动副本也能打开，但不给副本加 Tab 顺序 |
-| 卡片纵向滑块活动状态 | `src/components/widgets/CardScrollbars.astro` | 持久 document 捕获 scroll，仅处理小字与横卡评论；每区弱引用计时器，最后一次滚动 700ms 后移除状态；`prose.css` 仅切换滑块颜色，宽度不变；`test/card-scrollbars.test.mjs` 验证两区独立、重复滚动续期及收尾；真实 Astro 导航后新卡片另由浏览器验收 |
-| RSS 的图文链接顺序与资源 | 既有 `rss-content.js` | sanitizer 去样式、template 和控件，保留作者写的封面、标题及其链接、小字；不包含运行时副本 |
-
-手动栏使用浏览器原生滚动，触控／触控板／滚动条及聚焦后的方向键都可用。无 JS、减少动态效果或条目排得开时不循环，仍可横滑。静态 HTML 与图片资源随作者条目数量增长，副本只在浏览器里生成。CSS 仅消费卡片结构，不再解析 Markdown。修改插件后，开发内容层可能仍持有旧的已渲染 HTML；先确认服务 cwd，再用 `pnpm dev --force` 清内容缓存。缺失轨道时应核对编译产物，而不修改正确的 Markdown 或补一套 CSS。构建已有 `--force`；真实 Astro 轨道由 built Markdown 检查保护，书页的同类一排及听歌循环／大图由 `verify-card-rails.mjs` 检查。演示与可复制语法维护在 `image-layout-demo.md`。`:::excalidraw`／`:::blog-link` 的演示同在该文；Excalidraw 画布跳过普通大图交互，源／下载为 `/_media/…/*.excalidraw`。验证入口为卡片单测、循环单测、仓库 CI 检查及浏览器行为验收；此处记录验收契约，不代表尚未运行的检查已通过。
-
-### 4.8 图片 seam
-
-**界面**：内容里的相对图片路径（`./<目录>/文件.png`）、frontmatter 的 `titleImage: image()`、alt 尾部的宽度标记 `|w480`。  
-**实现**：`astro.config.ts` 显式使用 `@astrojs/markdown-remark` 的 `unified({ remarkPlugins, rehypePlugins })`；`plugins/index.ts` 是既有 Markdown/MDX 插件顺序的权威，不能依赖 Astro 7 默认的 Sätteri，否则宽度标记、阅读时间、标题锚点等不会按当前规则处理。其中代码围栏元数据适配器在 `rehype-raw` 前保留参数，`rehype-raw` 在所有消费 HTML 元素的插件之前解析手写 HTML；当前顺序为 `rehypeCodeMeta` → `rehypeRaw` → `rehypeImageSources` → `rehypeMediaAssets`，不要求 raw 与媒体插件相邻。Astro 图片管线转 WebP、生成 `srcset`、注入宽高与懒加载；宽度标记由 `plugins/remark-image-width.ts` 转成 `width` 后交给管线，`scripts/verify-markdown-pipeline.mjs` 在构建产物上验接线。
-
-代码围栏的文件名、行号、高亮和折叠参数经 `plugins/rehype-code-meta.ts` 传给 Expressive Code：raw 解析会重建元素并丢失 `data.meta`，适配器先写到 Expressive Code 原生支持的 `metastring` 属性，随后仍由原 `rehype-raw` 解析 HTML。代码渲染和资源仍归既有集成；元数据插件不另建 renderer。`scripts/verify-markdown-pipeline.mjs` 用演示页真实产物验证文件名、折叠和行号。RSS 的 `rss-content.js` 在代码行提取时跳过折叠摘要控件，保留隐藏源码；普通正文折叠摘要仍保留。现有 RSS 小夹具验证精确代码文字，真实 built 检查要求非终端代码与复制载荷精确相等，避免只检验有序子序列漏掉额外控件文字。
-
-**调用方**：Markdown 正文、`PostHero`、`ListItem`、`RenderPost`（生成 1200px 分享图）。文稿列表第一张封面用 `priority`（`eager` + `fetchpriority="high"`）；其余列表图、标签页未展示的图、友链头像保持懒加载。文章封面 `PostHero` 始终 `priority`。有封面文章先显示普通标题与简短阅读信息，再显示封面；封面中的重复标题使用段落，描述优先取 description、缺失取 subtitle，作者行仅展示头像、梧桐雨和日期。深浅主题都使用深色遮罩与白色封面文字；无封面文章直接展示独立标题及正文。
-
-内容图片按源文件位置解析，`./` 与 `../` 都能进管线；推荐图片与文章同目录，上层共享图也可直接引用。宽度用 alt 的 `|w` 标记表达，让 `width` 同时决定 `srcset` 与 `sizes`，完整作者约定以[Astro 图片管线指南](./Astro图片管线指南.md)为准。
-
-**作者显式像素宽度用 `|w` 标记，布局容器的响应式尺寸由 CSS 管理**：标记转成 `width` 参与 Astro 的 `srcset`／`sizes`，不能只用 CSS 代替作者限宽；gallery／figure 容器可以响应式收窄图片、保持宽高比，不因此改变标记语义或手写资源 URL。
-
-管线产物地址带内容哈希（`/_astro/...`），不可手写；`public/` 放站点级资源（favicon、avatar、PWA 图标、默认 OG 图、字体）和独立 HTML 演示，演示按文章分目录放在 `public/demos/`，引用与隔离规则见[正文 HTML 与媒体 SPEC](./正文%20HTML%20与媒体%20SPEC.md#本地-html-交互演示)。其中 `public/_media/` 是 `astro-media-sync` 生成的派生产物、已进 `.gitignore`，同样不可手写。`pnpm build` 使用 `--force` 刷新内容集合缓存，修改插件后直接重新构建即可。完整图片约定见[Astro 图片管线指南](./Astro图片管线指南.md)。
-
-### 4.9 图片布局与交互 seam
-
-语法、默认值和失败契约以 [站点行为 SPEC](./站点行为%20SPEC.md) S8／S9 为准；作者示例见 [图片管线指南](./Astro图片管线指南.md)。以下描述当前实现及对应验证接口。
-
-```text
-Markdown 相对源图 + |w + gallery／figure
-  → remarkDirective → remarkImageWidth → remarkMediaCard
-  → remarkImageLayouts：验证结构／属性，输出布局与 image-view
-      ├─ 可见图片节点：保留作者宽度
-      └─ inert template 图片节点：原尺寸，不沿用缩略图宽度
-  → rehypeRaw → 同模块 rehypeImageSources：使 template 内容可被 Astro 图片 visitor 访问
-      仅 Astro 已认领的图设置单资源输出，不重复判定路径类型
-  → rehypeMediaAssets：媒体引用改写与校验
-  → 同一 Astro 图片管线：解析资源；可见图保留响应式，大图仅产出原尺寸单版本
-  → Content
-      ├─ 网页：prose.css 静态排版；image-interactions.ts 渐进增强
-      └─ RSS：既有 rss-content.js sanitizer 去掉 template／样式／控件
-               → 可见图片与全部文字按源顺序保留
-```
-
-| 义务／状态／资源 | Authority | Interface／seam 与调用方 | 验证接口 |
-| --- | --- | --- | --- |
-| 指令属性默认值与白名单、直接图片结构、不能嵌套、非法输入带位置失败 | `plugins/remark-image-layouts.ts` | MDAST + VFile → 布局节点；figure 的图后正文必须有可见文字，注释、br、空 HTML 或只有媒体的内容不算；widths 在此验证 px／fr、数量与列数匹配并输出 --image-gallery-columns，CSS 只消费已验证轨道；`plugins/index.ts` 固定在 `remarkMediaCard` 后调用，错误由 VFile 携带位置，不由视图再判断 | `test/remark-image-layouts.test.mjs` |
-| 普通 Markdown 正文图的可见／原尺寸图配对，保留作者图片链接 | 同一 remark 插件及其 `rehypeImageSources` 出口 | 输出 image-view 与 inert template，仍是 Astro 可识别的图片节点；不手写 `<img src>` 或 `_astro` 文件名 | 上述单测及 `scripts/verify-image-layouts.mjs` 的 Astro 模板资源检查 |
-| 源路径解析、图片产物、原尺寸图资源 | Astro 图片管线；作者宽度由 `remark-image-width.ts` 解析 | 本地相对路径与图片节点 → 已解析 img；网页和 RSS 共用 Content | 真实构建检查资源存在、尺寸及无占位符 |
-| 660px 版心内网格／横滚 snap／绕排及 600px 响应式、静止不裁切、原边框内悬浮缩放、主题遮罩 | `src/styles/prose.css` | 只消费插件的 class／属性，沿用共享版心，无 JS 即可读图文和横滚 | 布局浏览器检查可读性、完整性与边界，不锁视觉像素 |
-| 箭头／圆点与实际滚动状态；dialog 开关与正文大图相册（同根 `.image-view`、陈列架源卡、clone 去重、索引／←→／边界）、焦点、滚动锁和监听生命周期 | `src/utils/image-interactions.ts` + `image-lightbox-gallery.js` | 消费生成的 DOM 和 template 内 Astro 资源；`src/components/widgets/ImageInteractions.astro` 在 BaseLayout 只注册／接线 | 同一浏览器脚本与 `test/image-lightbox-gallery.test.mjs`；契约见 `docs/正文图片大图相册 SPEC.md` |
-| RSS 顺序降级与清洗 | 既有 `src/utils/rss-content.js` | `toRssHtml(html, articleUrl)`；endpoint 不识别布局、不新增解析策略 | 既有 RSS／built 检查核对图片与文字的源顺序 |
-| 稿件落地（本地图片搬入文章目录、外链保持外链、按内容排版、生成卡片）与预览交接 | `blog-content-publisher-skill/SKILL.md` | 读文章正文判断是否需要预览（排版／卡片／媒体）；同 worktree dev 的 cwd、日志 Local 地址与文章 HTTP 成功后交付链接 | 作者操作核实；纯文字与普通单图不触发预览，代码块示例不触发，不增加正则检测脚本 |
-
-HAST 中 template 的 children／content 共享图节点：Astro 从 children 原位改写属性，最终 raw pass 从 content 序列化，两侧均不替换节点。仅对 Astro 已认领的图设置单资源输出，未被认领的公网／public 图不携带内部优化属性。
-
-浏览器只从 template 内已经解析的 img 取得原尺寸资源，打开 dialog 时才赋给展示图，不预加载。原生 dialog 提供模态及 Esc 基础行为，浏览器属主处理大图点击／遮罩／关闭按钮、焦点恢复与打开前滚动锁恢复；打开后同一 `.markdown-content` 根下可放大图组成相册（含陈列架源卡封面；`data-marquee-clone` 仅去重；Excalidraw 不进），控件行在图与说明下提供索引、上一张／下一张与关闭，←／→ 翻页且不循环；普通图本身获得可聚焦的 button 语义与 Enter／空格激活，不创建角落按钮。作者图片链接的点击不被劫持，链接外保留仅键盘焦点显露的大图入口。`prose.css` 在精细悬浮指针且无减少动态偏好时，轻微缩放图片并用原尺寸 frame 裁住边缘，移开复原；光标与灰白／暗色遮罩同样只由该样式属主管理。横滚相册的增强 wrapper 只承载图片边缘箭头与底部页码，少于两张时不生成 wrapper 或控件；当前索引由实际滚动位置决定，同时同步边界箭头、深色圆点及当前 frame 高度；圆点多于容器可见宽度时只滚动分页容器以露出当前点，不移动文章。ResizeObserver 监听 frame 的加载／尺寸变化，避免离屏竖图撑高横图区域；图片沿用原有限宽与比例，不增加另一套图片尺寸推断。组件 disconnect 用 AbortController 清理监听、断开 ResizeObserver，并释放 dialog 和页面资源，避免 ClientRouter 换页留下旧状态；不把焦点还给已断开的节点。页面滚动锁由既有 `misc.ts` 的 `lockScroll()` 统一锁定根节点、按实际稳定留白决定补偿并恢复先前样式，返回的 release 绑定当时 body，旧页释放不解锁新页；图片交互只持有并释放它，backdrop 同样消费该接口，不维护第二套 overflow 策略；其 release 按 backdrop 元素持有，ClientRouter 取消旧页退出动画不会把旧 body 的 release 复用到新页。
-
-取舍：所有相册图片静态存在，大图副本在构建期只生成单个原尺寸资源，不生成无法使用的响应式变体，也不在打开前下载；接受相册 HTML 和图资源随内容增长，不做虚拟化、自动播放、定时轮播或 `titleImage` 头图／文稿列表缩略图、头像放大；`:::card` 配图属于正文，仍可放大。不新增依赖、轮播库、第二个 Markdown 解析器、预览后台、preview manager 脚本或测试框架。RSS 不复刻页面布局，沿用 sanitizer 清洗后保留全部可见图文顺序。
-
-测试直接映射最终义务：remark 单测负责合法／非法语法、widths 单位与数量、列数推导／匹配、默认值、同段多图、嵌套失败与源位置；`scripts/verify-image-layouts.mjs` 负责浏览器用户行为（无 JS 横滚、比例／固定列宽与窄屏回退、图片边缘箭头／底部深色圆点／长分页当前点可见、混合横竖图的当前区域高度、作者链接、原框内悬浮与减少动态、主题遮罩、dialog 四种关闭、键盘激活、恢复和清理）与 Astro 模板大图资源检查（实际原尺寸、无占位符、打开前无请求），不绑定视觉像素。`test/scroll-lock.test.mjs` 在共享属主接口验证补偿、先前样式恢复与不污染替换页的 body。RSS 顺序和清洗在既有正文转换／真实产物接口验证，不创建新 RSS 解析器；最终门禁仍包括 check／test／build／built 检查，dev 预览不替代构建。
-
-### 4.10 评论 seam
+### 4.9 评论 seam
 
 `GiscusComments.astro` 提供可选的 `title`／`description`，调用方只负责挂载位置：`RenderPost` 通过 `BaseLayout` 的 `after-content` slot 放在正文和返回链接之后、`FriendsView` 的申请说明之后、`InterestsView` 有 `entry` 的分类正文之后。`BaseLayout` 只提供返回链接之后的通用 slot，不判断评论范围；返回链接由 `BackLink` 渲染为可点击的 `cd ..`（无左侧提示符）。评论组件自身以 `width: 100%`／`max-width: var(--blog-prose-width)` 复用正文版心，不能依赖外层恰好套有 `BlogIndexLayout`；否则文章标题／正文虽然受 `.prose` 限制，默认 slot 里的评论仍会铺满 `<main>`。
 
@@ -291,7 +246,9 @@ HAST 中 template 的 children／content 共享图节点：Astro 从 children �
 
 采用官方 Web Component 是为了复用认证、iframe 与事件清理，不直接反复注入长期注册全局监听的 `client.js`。成本是一个按需加载的 `giscus` 依赖及其 Lit 依赖。第三方请求和权限错误由 Giscus 呈现；模块下载失败显示备用入口提示。没有评论缓存、轮询、后端或自动友链写入。路径改变会改变讨论键，域名和临时查询参数不改变它；评论组件始终在 Markdown 正文外，RSS 不消费它。
 
-范围与关联义务由 `verify-blog-restructure.mjs` 在真实静态页面验证，加载／主题／导航／宽度由 `verify-giscus.mjs` 验证；真实 OAuth 与持久化通过账号在评论框发送留言并刷新验收。行为契约见站点 SPEC 的 S12。
+范围与关联义务由 `verify-blog-restructure.mjs` 在真实静态页面验证，加载／主题／导航／宽度由 `verify-giscus.mjs` 验证；真实 OAuth 与持久化通过账号在评论框发送留言并刷新验收。行为契约见[页面评论契约](./site.md#comments)。
+
+<a id="flow"></a>
 
 ## 5. 运行链路
 
@@ -312,6 +269,8 @@ shell.css + src/styles       壳层 + 正文
 ```
 
 `astro.config.ts` 通过 `cssCodeSplit: true` 按页面引用关系拆分样式，再由 `inlineStylesheets: 'always'` 写入该页 HTML；`Head.astro` 同时内联壳层样式。首屏契约和取舍见 §4.4。修改加载方式时，需验证硬刷新与 ClientRouter 跨页导航中的组件样式。
+
+<a id="structure"></a>
 
 ## 6. 目录（实现放哪）
 
@@ -334,12 +293,16 @@ src/
 public/shell.css
 public/                       站点级资源：favicon、icon-*.png、avatar.webp、og/default.png、fonts/
   demos/<文章短名>/            独立 HTML 交互演示；跨文章复用放 demos/shared/
-docs/项目解析.md            本文件
-docs/Astro.md
-docs/Canonical URL、Sitemap、RSS.md
+docs/
+  README.md                   按任务查找文档
+  guides/                     使用、配置、部署与验证
+  design/                     页面、架构、正文、订阅及外部服务设计
+  reference/                  框架学习资料
 test/
 plugins/
 ```
+
+<a id="pages"></a>
 
 ## 7. 各页实现要点
 
@@ -349,7 +312,7 @@ plugins/
 
 ### 文稿 `/blogs/`
 
-这里的 hash 指 URL 片段，即 `#` 后的分类标识，不是哈希计算。访问 `/blogs/#tech` 只向服务器请求 `/blogs/`；脚本读取片段并执行筛选。分类配色的哈希计算是另一项独立机制。
+这里的 hash 指 URL 片段，即 `#` 后的分类标识，不是哈希计算。访问 `/blogs/#tech` 只向服务器请求 `/blogs/`；脚本读取片段并执行筛选。归档分类配色由预设池分配并持久记录，见下方归档实现。
 
 首页、列表与归档直接读取 `data.category` 原值，不经过别名合并或固定分类映射；顶部分类菜单只统计已发布内容，分类名称与数量不作为文档快照维护。`ListView` 渲染全部文章节点并预置第一页导航；浏览器按 URL 精确筛选后分页，每页八篇。分类统一使用名称编码，如 `/blogs/#旅行`；旧 `#tech`、`#thought`、`#diary` 仅作为 URL 兼容别名，分别定位原值“技术”“思考”“日记”，不合并其他名称。兼容的 `?category=` 始终按原值精确匹配；任意合法分类 hash 优先于该 query，`categoryFromHash` 负责解码，英文原值 `tech`、`thought`、`diary` 用 `#category=tech` 等形式逃逸。畸形编码回退 query。`ListView` 将旧 query 转成等价 hash，保留其他 URL 参数。首屏内联脚本保守隐藏带非空 hash 的列表，最终分类判定由共享解析器完成，避免先显示未筛选文章。分页保留分类 hash 与标签，前进后退恢复状态；无 JS 时显示全部文章并说明筛选与分页不可用。列表项 `ListItem` 使用响应式图文布局。
 
@@ -409,6 +372,8 @@ Pagefind **按需加载**：面板打开时调 `window.ensurePagefind()`（打�
 
 页脚由 `Footer.astro` 用宋体显示版权、Astro 与“萌ICP备20269668号”；启用 Oneko 时另有「隐藏小猫」按钮（左侧装饰性 `🐾`）。宽屏段间用次要字色 `·` 分隔，窄屏纵向堆叠并隐藏分隔符。作者名、Astro 和备案都是带下划线的链接：作者名指向站点首页，Astro 指向 `https://astro.build`，备案指向 `https://icp.gov.moe/?keyword=20269668` 并在新标签页打开。悬停或键盘焦点时链接变为强调色。窄屏纵向排列，备案入口不隐藏。
 
+<a id="utilities"></a>
+
 ## 8. 工具模块
 
 | 模块 | 界面（调用方该用的） |
@@ -433,9 +398,10 @@ Pagefind **按需加载**：面板打开时调 `window.ensurePagefind()`（打�
 | `misc.ts` | `lockScroll()` 提供带滚动条补偿、恢复先前样式的 release；backdrop 和图片查看器复用 |
 | `image-interactions.ts` | `ImageInteractions` 自定义元素；唯一管理横滚控件、原生 dialog（含正文大图相册翻页）与连接／断开资源 |
 | `path.ts` | `withBasePath`、`resolvePath` |
-| `toc.ts` | 标题树 |
 
 数据与算法检查直接调用这些接口；导航事件、目录定位等 DOM 行为在其组件属主接口和真实浏览器中验证，不用纯函数通过来代替页面接线检查。
+
+<a id="extension"></a>
 
 ## 9. 后续怎么加功能（按 seam 选点）
 
@@ -445,40 +411,20 @@ Pagefind **按需加载**：面板打开时调 `window.ensurePagefind()`（打�
 | 新增／修改拾趣分区 | `src/content/interests/<id>.md`（或 `.mdx`），填写 `title`／`description`／`order`，重新构建 | 改导航数组、手写路由或在组件里复制文案 |
 | 为拾趣分类补图标 | `src/config.ts` 的 `INTEREST_ICONS`；不配置即纯文字菜单 | 给无图标分类补占位或手工复制 safelist |
 | 改顶栏链接或顶栏 GitHub | `src/config.ts` | `NavBar.astro` |
-| 开关或换装 Oneko 像素猫 | `src/config.ts` `FEATURES.oneko`；说明 [Oneko 像素猫](./Oneko%20像素猫.md) | 拷贝 CDN 进 `public/`，或在多处重复挂载 |
+| 开关或换装 Oneko 像素猫 | `src/config.ts` `FEATURES.oneko`；说明 [Oneko 像素猫](./oneko.md) | 拷贝 CDN 进 `public/`，或在多处重复挂载 |
 | 改个人社交名字或链接 | `src/config.ts` 的 `AUTHOR_LINKS`；若关于正文也展示同一联系方式，再同步该字段 | 改顶栏 `UI.socialLinks` |
 | 改分页大小 | `blog-browser.js`、`ListView.astro` 首屏 CSS、测试 | JS 常量与 `nth-child(n + 9)` 的镜像 |
 | 改写作热力的日期、年份或年度字数口径 | `src/utils/blog-heatmap.js` | 在 `WritingHeatmap.astro` 里重算日期或字数 |
 | 新增居中导航页面 | 新页套 `BlogIndexLayout` | 复制版心宽度 |
 | 增加或调整点缀配色 | `src/utils/accent-palette.js` 的 `ACCENT_PALETTES`；首项为默认 | 在组件或 CSS 复制配色表与默认判断 |
 | 改导航/布局样子 | `public/shell.css` | 只改组件 style |
-| 调整 gallery／figure 语法与结构 | `plugins/remark-image-layouts.ts`，同步 SPEC／指南及属主单测 | 让 widget／RSS 再判断结构，或改变原有 `|w` 语义 |
-| 调整正文图放大、大图相册翻页或横滚控件 | `src/utils/image-interactions.ts`，样式在 `prose.css`；契约见 `docs/正文图片大图相册 SPEC.md` | 在 `ImageInteractions.astro` 复制交互、另起 lightbox，或扩大到 `titleImage` 头图／文稿列表缩略图、头像 |
+| 调整 gallery／figure 语法与结构 | `plugins/remark-image-layouts.ts`，同步正文设计／示例及属主单测 | 让 widget／RSS 再判断结构，或改变原有 `|w` 语义 |
+| 调整正文图放大、大图相册翻页或横滚控件 | `src/utils/image-interactions.ts`，样式在 `prose.css`；契约见 `docs/design/content.md` | 在 `ImageInteractions.astro` 复制交互、另起 lightbox，或扩大到 `titleImage` 头图／文稿列表缩略图、头像 |
 | RSS 正文表达 | `rss-content.js`，endpoint 只编排 | 在 Head 拼 XML、解析第二次 Markdown 或抓网页 |
 | 新社交图标不显示 | `unocss.config.ts` `safelist` | 怪 `NavItem` |
 
+<a id="verification"></a>
+
 ## 10. 校验
 
-```bash
-pnpm format
-pnpm lint
-pnpm check
-pnpm test
-pnpm build # astro build --force 刷新内容缓存，避免 Markdown 插件更新仍沿用旧输出
-pnpm test:built-pagination # 读取 dist/blogs/index.html，必须在 build 后运行
-pnpm test:built-restructure # 页面结构、菜单、目录、友链与文章语义
-pnpm test:built-markdown # Markdown 插件、图片和 RSS 全文资源
-node --test test/remark-image-layouts.test.mjs # 布局属主接口、非法输入与源位置
-```
-
-浏览器检查均在本次 worktree 执行并复用现有 Ego TaskSpace，不自行管理服务。先确认服务进程 cwd 与该 worktree 一致（例如 `lsof -a -p <pid> -d cwd`），再从服务日志取真实 Local 地址（含 base、末尾 `/`），替换 `__BASE_URL__`；不假定端口为 4322。例如：
-
-```bash
-sed -e 's/__TASK_SPACE_ID__/<id>/g' -e 's|__BASE_URL__|<Local 地址>|g' scripts/verify-nav-dropdown.mjs | ego-browser nodejs
-```
-
-同样替换后运行 `verify-giscus.mjs`，验证评论按需加载、正式站回链、主题切换不重建 iframe、手机边界和全部拾趣子页的真实转场隔离；分类路径从当前入口获取，懒加载检查在页面初始化前临时增加评论上方留白，不依赖某个分类或真实正文长度，检查后清除夹具。它不发送评论。GitHub 登录、发表与刷新持久化单独验收。
-
-同样替换后运行 `verify-home-content.mjs`、`verify-toc-navigation.mjs`、`verify-theme-refresh.mjs`、`verify-accent-palette.mjs` 和 `verify-background-layering.mjs`，分别验证首页、目录、主题恢复、配色切换及背景层级。`verify-prose-overflow.mjs` 检查窄屏长行内代码、宽公式内容可访问及顶栏不偏移，仅本地／人工运行。`verify-image-layouts.mjs` 还须将 `__REPO_ROOT__` 替换为同一 worktree 绝对路径（可加 `-e "s|__REPO_ROOT__|$PWD|g"`）；它在该 dev 服务中创建并最终删除临时草稿与小型 SVG 夹具，不修改真实文章，检查浏览器用户行为与 Astro 模板大图资源，不绑定视觉像素。
-
-发内容：仓库内 `blog-content-publisher-skill/SKILL.md`（按页面改文案和数据）。
+仓库检查命令、构建产物检查和真实浏览器脚本用法统一见 [开发与部署指南](../guides/development.md#verification)。模块测试在自己的界面验证规则；纯函数通过不代表 DOM 接线、OAuth、CDN 缓存或真实阅读器已通过验收。正文与订阅的详细映射见各自设计文档。

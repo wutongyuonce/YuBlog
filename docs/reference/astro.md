@@ -1,4 +1,8 @@
-# Astro
+# Astro 学习笔记
+
+本文件是 Astro 组件、插槽和模板语法的学习参考，示例用于解释概念，不作为 YuBlog 当前路由、配置或编译输出的规范。项目现役入口见 [开发与部署指南](../guides/development.md) 与 [架构与模块边界](../design/architecture.md)。
+
+下方编译图用于说明概念。完整类型检查由独立的 `pnpm check` 执行，CI 在构建前运行它；`pnpm build` 进行转译和构建，不自动完成同等的类型检查。`set:html` 原样插入 HTML，不自动转义或清洗；不可信输入须先清洗，纯文本使用会转义内容的 `set:text`。
 
 ## astro 语法
 
@@ -42,7 +46,7 @@ const users = ['Alice', 'Bob', 'Charlie']
 </script>
 ```
 
-![PixPin\_2026-05-05\_04-13-48](img/PixPin_2026-05-05_04-13-48.png)
+![PixPin\_2026-05-05\_04-13-48](../img/PixPin_2026-05-05_04-13-48.png)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -96,14 +100,14 @@ const users = ['Alice', 'Bob', 'Charlie']
 │                                    │                                        │
 │                                    ▼                                        │
 │   ┌─────────────────────────────────────────────────────────────────────┐   │
-│   │ 步骤 2.2：类型检查                                                     │   │
+│   │ 可选检查：单独运行 pnpm check                                                     │   │
 │   │                                                                     │   │
 │   │   TypeScript 检查 interface 定义是否正确                               │   │
 │   │   • variant 类型是否匹配？                                            │   │
 │   │   • 导入的模块是否存在？                                               │   │
 │   │                                                                     │   │
 │   │   ✅ 通过 → 继续                                                     │   │
-│   │   ❌ 失败 → 报错，停止构建                                             │   │
+│   │   ❌ 失败 → 检查命令非零退出，CI 停止后续构建                                             │   │
 │   └─────────────────────────────────────────────────────────────────────┘   │
 │                                    │                                        │
 │                                    ▼                                        │
@@ -141,7 +145,7 @@ const users = ['Alice', 'Bob', 'Charlie']
 │   │                                                                      │  │
 │   │  A2. set:html / set:text                                            │  │
 │   │      <div set:html={htmlString} />                                  │  │
-│   │      → 验证 HTML 安全性                                             │  │
+│   │      → set:html 不自动转义或清洗，调用方负责可信内容                                             │  │
 │   │      → 直接插入 HTML 字符串                                         │  │
 │   │                                                                      │  │
 │   │  A3. client:*（客户端指令）                                         │  │
@@ -638,7 +642,7 @@ const { title } = Astro.props
 
 > **插槽 = 占位符，让父组件可以"注入"内容到子组件的指定位置**
 
-![PixPin\_2026-05-04\_00-43-21](img/PixPin_2026-05-04_00-43-21.png)
+![PixPin\_2026-05-04\_00-43-21](../img/PixPin_2026-05-04_00-43-21.png)
 
 ##### 1、默认插槽（任意内容）
 
@@ -731,7 +735,7 @@ const { title } = Astro.props
 
 > **模板指令 = 编译时的 DOM 操作标记，构建时转化为静态 HTML**
 >
-> ![PixPin\_2026-05-04\_00-52-57](img/PixPin_2026-05-04_00-52-57.png)
+> ![PixPin\_2026-05-04\_00-52-57](../img/PixPin_2026-05-04_00-52-57.png)
 
 Astro 指令最终都会被编译成**纯 HTML**（以及可选的客户端 JavaScript），这就是 Astro"零 JS 默认"的核心原理。这些指令是 **Astro 团队预先实现**的，就像 Vue 的 `v-if`、React 的 `className` 一样
 
@@ -771,48 +775,8 @@ const result = <div class:active={condition}>内容</div>
 
 > **布局 = 页面包装器，提供一致的页面结构**
 
-<img src="img/PixPin_2026-05-04_00-48-12.png" alt="PixPin_2026-05-04_00-48-12" style="zoom:50%;" />
+<img src="../img/PixPin_2026-05-04_00-48-12.png" alt="PixPin_2026-05-04_00-48-12" style="zoom:50%;" />
 
-## 对照 YuBlog 的开发流程
+## 在 YuBlog 中继续阅读
 
-上面是 Astro 通用语法，组件名与编译输出用于解释概念。本仓库使用 Astro 7，当前入口与开发流程如下。
-
-1. **内容结构**
-
-   首页 `/`、文稿 `/blogs/`、标签 `/tags/`、归档 `/archives/`、项目 `/projects/`、关于 `/about/`、友链 `/friends/`、拾趣 `/interests/`、拾趣详情 `/interests/<id>/`、文章 `/blogs/<slug>/`。
-
-2. **布局**
-
-   - `src/layouts/BaseLayout.astro`：Head、顶栏、背景、页脚
-   - `src/layouts/BlogIndexLayout.astro`：导航页面的居中单栏容器
-   - `src/layouts/StandardLayout.astro`：文章详情
-
-3. **Markdown 文章**
-
-   放在 `src/content/blogs/`，不是 `posts/`。
-
-   ```markdown
-   ---
-   title: 我的第一篇博客
-   pubDate: 2026-01-01
-   category: 技术向
-   tags: [Astro]
-   ---
-   这里是内容...
-   ```
-
-   正文加工集中注册在 `plugins/index.ts`；图片布局与代码围栏参数见 [图片管线指南](./Astro图片管线指南.md)，HTML 媒体与卡片写法见 [正文 HTML 与媒体 SPEC](./正文%20HTML%20与媒体%20SPEC.md)。
-
-4. **动态路由**
-
-   `src/pages/blogs/[...slug].astro` 读 `blogs` 集合并渲染。
-
-5. **构建**
-
-   ```bash
-   pnpm build    # 输出到 dist/，随后 Pagefind 建索引、整理产物并检查所有正文容器
-   ```
-
-   `dist/` 是构建产物，不进 git。
-
-站点级行为与模块边界见 [项目解析](./项目解析.md)。
+运行与配置见 [开发与部署指南](../guides/development.md)，路由、集合和模块职责见 [架构与模块边界](../design/architecture.md)，正文写法和管线见 [正文与媒体](../design/content.md)。实际版本和命令以根目录 `package.json` 为准。

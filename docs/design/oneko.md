@@ -21,7 +21,6 @@
 - 不自托管 `oneko.js` 或皮肤表。
 - 不开启声音（`meow`）或激光笔。
 - 不做 rehype 给每个 `pre` 自动打避让区（过重）；作者可自行加 `data-oneko-zone="avoid"`。
-- 不合并无关 WIP 分支，不自动合并本 PR。
 
 ### 权威表
 
@@ -75,17 +74,9 @@ oneko: [false, { skin: 'classic' }],
 
 不要对 CDN script 加 `data-astro-rerun`，也不要用「只注入一次」的全局 flag 阻止重建——换页后猫节点已不在，flag 仍为真会导致猫消失直到整页刷新。
 
-## 改动文件
+## 集成位置
 
-| 文件 | 作用 |
-| --- | --- |
-| `src/types.ts` | `OnekoConfig`、`Features.oneko` |
-| `src/config.ts` | 默认开启 classic |
-| `src/layouts/BaseLayout.astro` | 条件挂载 + VT 缺失时重建 |
-| `src/components/base/Footer.astro` | 隐藏按钮 |
-| `src/components/nav/NavBar.astro` | 导航避让 |
-| `docs/Oneko 像素猫.md` | 本说明 |
-| `docs/项目解析.md` / `docs/站点行为 SPEC.md` / `CHANGELOG.md` | 索引与未发布条目 |
+模块职责见上方权威表；站点其它配置和部署见 [开发与部署指南](../guides/development.md#personalization)。
 
 ## 访客隐藏
 

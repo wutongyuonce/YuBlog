@@ -1,6 +1,6 @@
 # YuBlog
 
-[中文](README.md) · [Changelog](CHANGELOG.md) · [Architecture](docs/项目解析.md) · [SEO](docs/Canonical%20URL、Sitemap、RSS.md) · [Astro](docs/Astro.md)
+[Live site](https://www.wutongyu.site/) · [中文](README.md) · [Documentation](docs/README.md) · [Development and deployment](docs/guides/development.md) · [Changelog](CHANGELOG.md)
 
 [![Astro](https://img.shields.io/badge/Astro-7-ff5a03?logo=astro&logoColor=white)](https://astro.build)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
@@ -8,127 +8,98 @@
 [![Pagefind](https://img.shields.io/badge/Pagefind-search-4b32c3)](https://pagefind.app)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-*WutongRain*’s personal site: Astro 7, static, black-and-white, built around article browsing, tag classification, unified archiving, project display, personal profile and friend link information.
+WutongRain’s personal blog, built with Astro 7, TypeScript and Markdown/MDX. It combines article reading with projects, interests, an author profile and friend links. Pages are generated as static HTML; Last.fm uses a runtime endpoint, and Giscus stores comments in GitHub Discussions.
 
-## Pages and content
+## Pages
 
-| Route | Purpose | Source |
-| :--- | :--- | :--- |
-| `/` | Author, RSS, socials, writing heatmap, five recent posts, recent media and Last.fm listening; no pager or personal sidebar | `BlogProfile`, `WritingHeatmap`, `RecentWriting`, `recent.md`, runtime `/api/lastfm` |
-| `/blogs/` | Full list, category/tag filtering, eight posts per page | `src/content/blogs/**/*.{md,mdx}` |
-| `/blogs/#技术`, `#旅行` | Exact category filtering from published content; `#tech/#thought/#diary` remain legacy fragment aliases and query URLs still work | `utils/blog-browser.js` |
-| `/tags/` | Sortable tag directory, multi-select AND, results after selection | Post tags |
-| `/archives/` | One timeline grouped by year with category badges | Post dates/categories |
-| `/interests/`, `/interests/<id>/` | Interest index and content-driven category pages | `src/content/interests/*.{md,mdx}` (excluding `intro.md` and `recent.md`) |
-| `/projects/` | Page heading and project groups | Projects JSON |
-| `/about/` | Author introduction, no tabs or animated background | `src/content/about/about.md` |
-| `/friends/` | Recommended and mutual links, exchange template | Friends JSON |
-| `/blogs/<slug>/` | Title, optional cover, content; persistent desktop TOC, mobile control | Post collection |
-| `/rss.xml` | Complete article HTML with stable identity and summaries | `src/pages/rss.xml.js` |
+| Page | Route | Purpose |
+| --- | --- | --- |
+| Home | `/` | Author, socials, writing heatmap, time progress, five recent posts, recent media and Last.fm seven-day Top 10 |
+| Blog | `/blogs/` | All posts, category/tag filters, eight posts per page and random browsing |
+| Tags | `/tags/` | Sortable tags with multi-select AND filtering |
+| Archives | `/archives/` | One yearly timeline with category badges and tag links |
+| Article | `/blogs/<slug>/` | Content, desktop/mobile TOC, adjacent/random posts and comments |
+| Interests | `/interests/`, `/interests/<id>/` | Categories generated from Markdown, including equipment, anime, films, games and books |
+| Projects | `/projects/` | Project groups from JSON |
+| About | `/about/` | One author-introduction Markdown file |
+| Friends | `/friends/` | Recommended/mutual links, exchange template and comments |
+| Feed | `/rss.xml` | Full content of all published blog posts |
 
-Publishing a post with a new `category` and rebuilding automatically adds its menu entry, count and up to four recent previews. New categories use name fragments such as `/blogs/#旅行` (URL-encoded). Archive badges claim unused colors from a 16-color preset pool without changing existing assignments. Opening archives locally or building updates `src/data/blog-category-colors.json`; commit it with new-category posts. Removed categories keep their colors reserved. Exhaustion fails explicitly until `palette` is extended. Legacy `?category=` links remain supported and normalize to equivalent fragment URLs when JavaScript is enabled. RSS continues to include all published blog posts. Blog filtering requires JavaScript; interest routes such as `/interests/movie/` are independent content pages.
+Blog categories use filtering URLs such as `/blogs/#技术`; interest categories are independent static routes. The album and traffic dashboard in More are external sites. See the [page contracts](docs/design/site.md).
 
-To add an interest category, place `<id>.md` (or `.mdx`) directly in `src/content/interests/` with a non-empty `title` and `description` and a non-negative integer `order`. Rebuilding automatically creates `/interests/<id>/` and adds the category to the index and navbar dropdown, sorted by `order`. Categories are not limited to the current equipment, anime, films, TV, games, books and Kpop; no route or navigation-array edits are needed. Icons are optional: configure `INTEREST_ICONS` in `src/config.ts` using the filename without its extension as the key. Unconfigured entries show text only, with no icon placeholder. Interests have no `draft` switch and are published in the next build. `intro.md` and `recent.md` are not categories.
+## Features
 
-The “梧桐雨の博客” brand returns home; navigation text uses the local serif font. Navigation contains manuscripts, tags, archives, interests, projects, about and More, followed by the repository GitHub link, search, accent palette and theme. Articles select manuscripts; interest subpages select interests. More contains Friends, Album at `https://photos.wutongyu.site/`, and Traffic Stats linking to the public Umami dashboard, configured in `MORE_LINKS`. Both external links are marked ↗ and open in a new tab. The footer uses the local serif font. The author name links home, and the Moe ICP link remains visible on desktop and mobile. Page views are collected by one Umami Cloud script in `Head.astro`; the page shows no counter or badge. Home socials use `AUTHOR_LINKS` independently of the About Markdown.
+- Dynamic categories, tag intersections, pagination/history restoration, archives, adjacent posts and random browsing.
+- Markdown/MDX, Expressive Code, KaTeX, callouts, blog-link cards, Excalidraw, HTML and audiovisual embeds.
+- Astro image optimization, grid/scroll/wrap layouts, image viewing and gallery navigation, horizontal cards with optional ratings/dates, portrait and square rails.
+- Light/dark themes, five accent palettes, responsive layouts, ClientRouter navigation and reduced-motion support. Fonts are served locally.
+- Pagefind search loaded when opened; full RSS with static, reader-friendly content conversion.
+- Writing heatmap, Last.fm, Giscus, Umami and an optional hosted Oneko cat.
 
-Content targets 660px. Navigation uses the same width variable and responsive constraints. The home avatar and author group is centered. Below it, social links occupy one centered row, followed by the centered motto on a separate row. The three time-progress columns sit below the writing heatmap and above recent posts. The writing-heatmap title aligns left with recent posts, and the year switch sits on that title's right. The TOC sits 16px outward from the center of the space between the reading column and viewport gutter, at most 208px wide and half a viewport high, with its center 32px above the viewport midpoint and internal scrolling. Tags, interests, projects and about share a serif heading; article titles use bold serif in lists and regular serif in archives; body text and internal Markdown headings use sans-serif. Interests and subpages use the dot background. About has no background; projects use rose.
+See the [custom-style article](src/content/blogs/image-layout-demo.md) for working examples and copyable syntax. Detailed design documents are currently maintained in Chinese.
 
-Covers use `titleImage`/`titleImageAlt` under `src/content/blogs/_title-images/`. Body images belong inside the article directory or a child directory, referenced relatively; shared images one level up may use `../`. Interest images live under `src/content/interests/<id>/`. The interests index note lives in `intro.md`; home media lives in `recent.md`. Neither creates a subpage or menu item. Both use the shared Markdown pipeline and `prose.css`. Default consecutive `:::card` entries form responsive grids (up to two columns at the current shell width). `:::card{layout="portrait"}` and `layout="square"` add rail covers, titles and optional metadata. Portrait covers stay 2:3 and are scaled down to about four and a half across the desktop shell; square covers are 1:1 and show about five and a half. `scroll="auto"` loops head-to-tail with faded edges only when the row overflows, and pauses while pressed or focused, not merely hovered. Narrow screens still reveal the next entry. Rails have no background panel; metadata scrolls vertically beyond two lines. Vertical thumbs in both metadata and horizontal-card reviews appear only while scrolling, without changing the bottom horizontal scrollbar. Card titles in home recent media and the custom-style demo link to the corresponding work’s verified Wiki, not an interest category. Authors maintain href in Markdown; the renderer does not infer works. Home recent media reuses its original comments; books are grouped by type under level-two headings, each with its own rail showing authors without ratings; headings separate groups and share `.markdown-content` typography. Author scores are optional regardless of watching/playing status; omitted scores are not invented. About content is maintained only in `src/content/about/about.md`.
+## Quick start
 
-Body images support `:::gallery` (a two-column grid by default, three columns, proportional tracks with `widths="1fr 2fr"`, fixed-plus-flexible tracks with `widths="240px 1fr"`, or `layout="scroll"` with edge arrows and bottom pagination dots, omitted for a single-image gallery) and `:::figure` (right-side text wrapping by default, optionally left). Ordinary Markdown body images subtly scale inside their frame on hover with a zoom-in cursor, without corner badges. Click or keyboard activation opens a theme-aware viewer; clicking the large image closes it with a zoom-out cursor. While open, images in the same article body form a gallery with previous/next (no wrap) and an index below the caption. Authored image links still navigate, with a separate zoom action visible only on keyboard focus. Images retain Astro processing and the existing `|w` marker. Layouts stay inside the 660px reading column without cropping; at 600px or below, grids become single-column and figures stack. Reading and horizontal scrolling work without JavaScript; RSS retains images and text in source order.
-
-See the [content skill](blog-content-publisher-skill/SKILL.md), [image pipeline](docs/Astro图片管线指南.md), [site behavior SPEC](docs/站点行为%20SPEC.md), [architecture](docs/项目解析.md) and [full-content RSS SPEC](docs/RSS%20全文支持%20SPEC.md).
-
-Site accents default to the original pink (light `#ad526c`, dark `#e7a1b5`). The navbar palette button offers the original pink, grey violet, deep purple, mist blue and sage green. Every preset uses its main color in light mode and a lighter same-hue accent in dark mode, including mist blue and sage green, so night accents stay identifiable rather than washing out; the menu swatch always shows the light color. Selection updates the heatmap, body accents, search highlights and friend-card glow immediately without reloading. Accent preferences are independent of light/dark mode, saved locally and restored before the first paint and client navigation. Without JavaScript, the default palette remains readable. Black-and-white surfaces, content images, category badges, syntax highlighting and semantic colors retain their existing rules. Presets have one source in `src/utils/accent-palette.js`.
-
-Home listening shows the past seven days’ Top 10 songs with album covers, artist and album names, plus weekly scrobbles, lifetime scrobbles and the top weekly artist. The square rail loops automatically and pauses while pressed or keyboard-focused; with reduced motion it scrolls manually. Metadata uses `artist - album`, and covers open original artwork in the shared image viewer. Data comes from the runtime endpoint `/api/lastfm`, cached for 30 minutes at the CDN: build output contains no listening data, and neither builds nor page rendering call Last.fm. The repository stores no snapshot and runs no scheduled sync workflow. Set `LASTFM_API_KEY` (and optionally `LASTFM_USER`) as Vercel project environment variables for Production and Preview; locally, set the same variable in the ignored `.env` and `pnpm dev` serves the same endpoint. Without scripting, or when the endpoint fails, the section keeps its skeleton and an explanation. See [Last.fm SPEC and design](docs/首页%20Last.fm%20SPEC%20与设计.md).
-
-Ordinary `.md` articles can embed HTML animations with `<iframe sandbox="allow-scripts">`. Store demos under `public/demos/<article-key>/` and reference `/demos/<article-key>/<file>.html`, with an explicit height and a plain link for RSS readers. HTML files next to article sources are not mirrored automatically. See the [custom-style demo article](src/content/blogs/image-layout-demo.md) and the [HTML and media specification](docs/正文%20HTML%20与媒体%20SPEC.md#本地-html-交互演示) for examples and resource rules.
-
-Blog articles, the friends page and every interest category page include Giscus comments. Readers sign in with GitHub; comments are stored in the repository’s Discussions. Friend requests can use the displayed template in a comment, with manual approval, or use the existing PR option. `GiscusComments.astro` owns the integration; `GISCUS` in `src/config.ts` holds the repository and category IDs. Enable Discussions in the public repository and install the Giscus App. Comments load near the section, follow the site theme and strictly match the canonical pathname. Local and production pages with the same path share a discussion. Renaming a slug or deployment base requires handling the old association. See [the specification](docs/站点行为%20SPEC.md#s12在正文下评论与申请友链) and [the design](docs/项目解析.md#410-评论-seam).
-
-## Stack
-
-- Astro 7 + TypeScript, Markdown / MDX Content Collections (using the unified Remark / Rehype plugin pipeline)
-- Content images go through Astro's image pipeline: relative paths plus a `|w` width marker, automatic WebP, `srcset`, dimensions and lazy loading; `public/` holds site assets and standalone HTML demos; body images stay in the content directories
-- Article title font is subset to the glyphs actually used (the glyph set changes with content)
-- Body font Inter and code font DM Mono are local Latin subsets in `public/fonts/`, not Google Fonts
-- KaTeX CSS and fonts are bundled locally (no CDN) and shipped as woff2 only
-- UnoCSS + `public/shell.css` (navigation, layout, home, archive and pagination — one owner for chrome styles)
-- Pagefind indexes blogs only, and loads only when search is opened
-- `astro-expressive-code`
-- Light / dark theme, ClientRouter
-- Backgrounds `dot` / `rose` / `snow` per page; about turns them off. The dot field batches strokes into 6 alpha buckets and widens spacing on large screens toward about 8000 points (edge padding can exceed that; it is not a hard cap). 1440×900 stays at 15px. Canvas backgrounds respect `prefers-reduced-motion` (shared gate in `src/utils/reduced-motion.js`)
-
-## Run
-
-Node.js `22.12+` (we recommend `24`, as used in CI), and `pnpm@12.9.1`.
+Use Node.js **22.12+** (recommended: **24**, matching CI) and **pnpm 12.9.1**. The full test suite also requires Python 3.
 
 ```bash
 pnpm install
-pnpm dev --open            # start the dev server and open the browser
+pnpm dev --open
 ```
 
-Use the actual `Local` URL reported in the log, not a fixed port such as 4321; never stop someone else's service to free a port. After writing or editing a blog containing image layouts or cards, the content skill starts or reuses `pnpm dev` in the **same worktree** by default, verifies the process cwd before reuse, and confirms a successful article HTTP response before sharing the preview link; plain-text posts and posts with only ordinary body images do not need a preview. If startup is prohibited or unavailable, report that no preview was performed. Drafts are readable in dev but excluded from RSS; dev preview does not replace a production build.
+Use the actual Local URL in the log. For production search and static output:
 
 ```bash
-pnpm check                 # Astro type and content checks
-pnpm build                 # production build (includes Pagefind)
-pnpm test:built-pagination # check manuscript pagination and the no-JS fallback
-pnpm test:built-restructure # check page structure, menus, friends and article semantics
-pnpm test:built-markdown   # check built images, headings, cards and complete RSS content
+pnpm build
 pnpm preview
-pnpm test                  # all unit tests
-pnpm test:blog-browser     # pagination and URLs
-pnpm test:blog-tags        # tag AND filtering
-pnpm test:blog-stats       # readable word counts and formatting
-node --test test/blog-heatmap.test.mjs # Shanghai calendar and yearly totals
-node --test test/remark-media-card.test.mjs # Markdown cards
-node --test test/remark-image-layouts.test.mjs # image layout syntax, structure and positioned errors
-pnpm test:recent-post-date # recent-post dates
-pnpm test:progress-stats   # day-of-year and progress
-pnpm test:cjk-emphasis     # emphasis next to CJK punctuation
-pnpm test:toc-active       # current-heading picker
-pnpm test:canvas-size      # canvas backing store & DPR cap
-pnpm test:reduced-motion   # reduced-motion gate
-pnpm lint
-pnpm format
 ```
 
-## Layout
+dev uses mock search results; preview serves the most recent build and does not provide `/api/lastfm`. The dev server provides the local listening endpoint. Drafts are visible in dev web pages, but remain excluded from RSS and production pages.
 
-```text
-src/
-  components/     nav, home, lists, interests, about, friends, TOC
-  content/        blogs / about / interests / projects / friends
-  layouts/        BaseLayout, BlogIndexLayout, StandardLayout
-  pages/          routes
-  styles/         prose and Markdown
-  utils/          lists, stats, filters, paths
-public/shell.css  one owner for chrome styles (nav, layout, home, archives, pagination)
-docs/             architecture, Astro notes, SEO tutorial
-```
+See [verification](docs/guides/development.md#verification) for format, lint, tests, type checks, builds and artifact checks, and [deployment](docs/guides/development.md#deployment) for hosting requirements.
+
+## Content
+
+| Content | Location |
+| --- | --- |
+| Posts and body assets | `src/content/blogs/`; assets next to the article or in a child directory |
+| Article covers | `src/content/blogs/_title-images/`, referenced with `titleImage`/`titleImageAlt` |
+| Interest categories and assets | `src/content/interests/<id>.md` or `.mdx`, with matching asset directories |
+| Interest-index note / home recent media | `src/content/interests/intro.md` / `recent.md` |
+| Author introduction | `src/content/about/about.md` |
+| Projects / friends | `src/content/projects/data.json` / `src/content/friends/data.json` |
+
+Fields are owned by `src/content/schema.ts`. New interest categories need `title`, `description` and `order`; routes and menus follow automatically. Content images use relative source paths and the Astro pipeline.
+
+Follow the [content guide](docs/guides/development.md#content), or install the complete [content-publisher skill package](blog-content-publisher-skill/SKILL.md) in your agent’s skills directory. It manages content and configuration; implementation changes belong in the design workflow.
 
 ## Making it yours
 
-1. Edit `SITE`, `UI` and `AUTHOR_LINKS` in `src/config.ts`. Brand copy is in `NavBar`; author/motto in `BlogProfile`. Maintain any contact details shown in About separately.
-2. Change posts, projects, about, interests and friends with the content skill. The field authority is `src/content/schema.ts`.
-3. Replace `public/avatar.webp`. Exchange-template values in `FriendsApplyPanel.friendInfo` are separate from `SITE`.
-4. Read the architecture before changing layout. Index pages use `BlogIndexLayout` without a sidebar. Keep shared styles centralized; check scope and cascade when applying component overrides.
-5. Content images use Astro; site assets stay in `public/`. Build after image changes, and run the required checks before preparing a PR.
+| Change | Entry point |
+| --- | --- |
+| Domain, title, navigation, socials and feature switches | `src/config.ts`: `SITE`, `UI`, `MORE_LINKS`, `AUTHOR_LINKS`, `FEATURES` |
+| Brand, author/motto, avatar and footer registration | `NavBar.astro`, `BlogProfile.astro`, `public/avatar.webp`, `Footer.astro` |
+| Page composition | `src/pages/`, `src/layouts/`, `src/components/views/` |
+| Shared chrome, theme and prose styles | `public/shell.css`, `src/styles/` |
+| Markdown and media processing | `plugins/index.ts` and the Remark/Rehype modules |
+| Comments, listening, analytics and Oneko | `GISCUS`, `api/lastfm.js`, `Head.astro`, `FEATURES.oneko` |
 
-## Documentation and changelog
+Replace demo accounts and registration details. Some displayed copy is independent of `SITE`; the [personalization table](docs/guides/development.md#personalization) lists those locations.
 
-README, specifications and guides describe the current implementation. Record meaningful webpage structure, interaction and code changes under **Unreleased** in [CHANGELOG.md](CHANGELOG.md). Do not record content-data edits such as posts, about, interests, projects or friend links. Consolidate related adjustments into their final outcome; assign a version and date only when released.
+Domain, base or slug changes affect permanent URLs, RSS identity and comment associations; review [address migration](docs/design/distribution.md#canonical). Vercel serves static output and the root `api/` function together. Static hosting of `dist/` alone cannot provide the listening API.
 
-## Using the content skill
+## Documentation
 
-The skill lives at `blog-content-publisher-skill/SKILL.md`.
+Start with [docs/README.md](docs/README.md), organized by task:
 
-- Put it in your agent’s skills directory.
-- Say which page to change, e.g. new post, edit equipment, add an interest category, add a category icon, add a friend link, change the navbar GitHub link, or edit About socials. The agent should match the page table first, then edit files.
-- It edits Markdown / JSON / site configuration in `src/config.ts`. New blog posts keep `draft: true` unless you asked to publish; this does not apply to interests. Do not commit, push or deploy without explicit authorization.
-- Lands the author's draft: local images are copied into the article image directory and their references rewritten (external links stay external), body images are arranged automatically (grid / scroll / wrap), book, film and TV entries become cards (links and covers may be filled in from the web), and a same-worktree dev preview is delivered when the post has layouts or cards. For layout implementation, CSS, or pagination logic, use `docs/项目解析.md`.
+| Document | Scope |
+| --- | --- |
+| [Development and deployment](docs/guides/development.md) | Local modes, configuration, content, services, deployment and verification |
+| [Site and pages](docs/design/site.md) | Page contracts, browsing, navigation, themes and comments |
+| [Architecture and module boundaries](docs/design/architecture.md) | Data flow, rule ownership, lifecycle and extension points |
+| [Content and media](docs/design/content.md) | Images, cards, galleries, HTML/media, drawings and blog links |
+| [SEO and full-content RSS](docs/design/distribution.md) | Canonical, sitemap, identity, sanitization and reader output |
+| [Last.fm](docs/design/listening.md) / [Oneko](docs/design/oneko.md) | Integration-specific configuration and design |
+| [Astro notes](docs/reference/astro.md) | Framework learning material, separate from the current project contract |
 
-[MIT](LICENSE)
+Current documents follow the implementation; history lives in [CHANGELOG.md](CHANGELOG.md). Licensed under [MIT](LICENSE); third-party assets retain their respective attribution and licensing requirements.

@@ -1,4 +1,6 @@
-# 首页 Last.fm：SPEC 与设计
+# Last.fm 听歌：运行时接口与展示
+
+配置入口见 [开发与部署指南](../guides/development.md#services)，通用卡片与图片交互见 [正文与媒体](./content.md)。
 
 ## 行为契约
 
@@ -66,7 +68,7 @@ Last.fm 缩略图是 300px 远程图片，模板用固定宽高与懒加载的 `
 
 Vercel 项目的 Framework Preset 必须是 Other：仓库根目录 `api/` 只在没有框架预设接管时才被收集为函数，用 Astro 预设时该地址返回 404。`vercel.json` 用 `"framework": null` 加 `buildCommand`、`outputDirectory` 固定这一点，静态产物仍是 `dist`，Pagefind 与构建后检查不受影响。
 
-Vercel 项目环境变量（Production 与 Preview 都需要）：`LASTFM_API_KEY`；可选 `LASTFM_USER` 覆盖默认账户。本地在被忽略的 `.env` 中设置同名变量，`pnpm dev` 会把它交给同一个处理函数：
+Vercel 项目环境变量（Production 与 Preview 都需要）：`LASTFM_API_KEY`；可选 `LASTFM_USER` 覆盖接口查询账户。本地在被忽略的 `.env` 中设置同名变量，`pnpm dev` 会把它交给同一个处理函数。首页标题及无脚本说明中的主页链接由 `RecentListening.astro` 从源码 `src/utils/lastfm.mjs` 的 `LASTFM_USER` 常量生成，环境变量不会改写这些静态链接；更换账户时需同步修改该常量并重新构建：
 
 ```dotenv
 LASTFM_API_KEY=你的_API_Key
@@ -94,4 +96,4 @@ node --test test/listening-endpoint.test.mjs test/lastfm.test.mjs test/recent-li
 | L7 首个模块与独立启动 | built 首页检查、`scripts/verify-listening-startup.mjs`（暂扣 ClientRouter 响应） | 确认页面不等无关模块就能请求并呈现听歌数据；正常恢复模块后继续检查站内往返 |
 | 完整仓库门禁 | format、lint、check、test、build、三项 built 检查 | 核对现有页面与内容回归 |
 
-线上已观察到 `GET /api/lastfm` 返回 200 和 `x-vercel-cache: HIT`，页面能渲染真实数据。仍未验证：真实冷缓存的回源耗时，以及 `stale-if-error`／`stale-while-revalidate` 的线上行为。固定载荷、模块阻滞和假上游的验证不代替真实冷请求测量。
+部署后需另行核实 `GET /api/lastfm` 的成功响应、CDN 命中、真实冷请求耗时，以及 `stale-if-error`／`stale-while-revalidate` 行为。固定载荷、模块阻滞和假上游测试不代表当前部署已经通过这些验证。

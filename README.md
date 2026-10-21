@@ -1,6 +1,6 @@
 # YuBlog
 
-[English](README_ENG.md) · [更新日志](CHANGELOG.md) · [项目解析](docs/项目解析.md) · [SEO](docs/Canonical%20URL、Sitemap、RSS.md) · [Astro](docs/Astro.md)
+[在线预览](https://www.wutongyu.site/) · [文档导航](docs/README.md) · [开发与部署](docs/guides/development.md) · [English](README_ENG.md) · [更新日志](CHANGELOG.md)
 
 [![Astro](https://img.shields.io/badge/Astro-7-ff5a03?logo=astro&logoColor=white)](https://astro.build)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
@@ -8,131 +8,119 @@
 [![Pagefind](https://img.shields.io/badge/Pagefind-search-4b32c3)](https://pagefind.app)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-*梧桐雨* 的个人站点：Astro 7 静态生成，黑白主题，文章浏览、标签分类、统一归档、项目展示、个人简介、友链信息。
+梧桐雨的个人博客，使用 Astro 7、TypeScript 和 Markdown／MDX 构建。以文章阅读为主，兼顾项目、书影游、个人介绍和友链；提供亮暗主题、可选点缀配色、全文搜索和全文 RSS。
 
-线上地址：[https://www.wutongyu.site/](https://www.wutongyu.site/)
+页面与文章在构建时生成静态 HTML，普通阅读不依赖后端。首页 Last.fm 排行通过运行时接口获取，评论由 GitHub Discussions／Giscus 提供。
 
-## 页面与内容
+[页面总览](#页面总览) · [主要功能](#主要功能) · [快速开始](#快速开始) · [维护内容](#维护内容) · [二次开发](#二次开发) · [详细文档](#详细文档)
 
-| 路由 | 说明 | 内容源 |
-| :--- | :--- | :--- |
-| `/` | 作者、RSS、社交、写作热力、最近五篇文稿、近期书影游与 Last.fm 听歌排行；无文章分页和个人侧栏 | `BlogProfile`、`WritingHeatmap`、`RecentWriting`、`recent.md`、运行时 `/api/lastfm` |
-| `/blogs/` | 完整文稿，分类／标签筛选，每页八篇 | `src/content/blogs/**/*.{md,mdx}` |
-| `/blogs/#tech`、`#thought`、`#diary` | 技术、思考、日记及自动发现的新分类（如 `#旅行`）；兼容旧 query | `src/utils/blog-browser.js` |
-| `/tags/` | 标签目录和排序，多选 AND；选择后展示列表 | 文章 `tags` |
-| `/archives/` | 单条按年时间线，带分类徽标 | 文章 `pubDate`／`category` |
-| `/interests/`、`/interests/<id>/` | 拾趣入口与按内容自动生成的分类子页 | `src/content/interests/*.{md,mdx}`（排除 `intro.md`、`recent.md`） |
-| `/projects/` | 项目页头与分类网格 | `src/content/projects/data.json` |
-| `/about/` | 作者介绍；无子页标签，背景关闭 | `src/content/about/about.md` |
-| `/friends/` | 推荐／双向两组友链和交换模板 | `src/content/friends/data.json` |
-| `/blogs/<slug>/` | 标题、可选封面、正文；桌面常驻目录，窄屏浮动入口 | 文章集合 |
-| `/rss.xml` | 完整正文 RSS，保留摘要和文章身份，独立于页面布局 | `src/pages/rss.xml.js` |
+## 页面总览
 
-发布带新 `category` 的文章后，重新构建会自动扩展文稿菜单、数量和最近四篇预览；新分类使用 `/blogs/#旅行` 这样的 URL 片段链接（`#` 后是分类标识，浏览器会编码中文），归档徽标从 16 色预设池自动领取不同的深浅主题颜色，已有分配不变。本地打开归档或构建后，将自动更新的 `src/data/blog-category-colors.json` 与新分类文章一起提交；删除分类不释放颜色，配色池用完时明确报错，补充 `palette` 后再构建。旧 `?category=` 链接仍可用，启用脚本后转换为等价的片段链接。RSS 仍订阅全部已发布博客。分类筛选依赖 JavaScript；拾趣的 `/interests/movie/` 是独立内容页，可直接阅读。
+| 页面 | 路由 | 可以做什么 |
+| --- | --- | --- |
+| 首页 | `/` | 作者与社交、写作热力、时间进度、最近五篇文稿、近期书影游、Last.fm 七日 Top 10 |
+| 文稿 | `/blogs/` | 浏览全部文章，按分类和标签筛选，每页八篇，随便逛逛 |
+| 标签 | `/tags/` | 按名称或数量排序，多选标签取交集 |
+| 归档 | `/archives/` | 按年浏览文章时间线，查看分类和标签 |
+| 文章 | `/blogs/<slug>/` | 阅读正文、桌面／手机目录、上下篇、随机文章和评论 |
+| 拾趣 | `/interests/`、`/interests/<id>/` | 设备、动漫、电影、游戏、书等内容；分类随 Markdown 文件自动生成 |
+| 项目 | `/projects/` | 按分类展示项目卡片 |
+| 关于 | `/about/` | 作者介绍，维护一份 Markdown |
+| 友链 | `/friends/` | 推荐／双向友链、交换模板、留言申请 |
+| 订阅 | `/rss.xml` | 订阅所有已发布博客的完整正文 |
 
-新增拾趣分类：在 `src/content/interests/` 直接添加 `<id>.md`（也支持 `.mdx`），填写非空 `title`、`description` 和非负整数 `order`。重新构建后自动生成 `/interests/<id>/`，并按 `order` 加入拾趣入口和顶部下拉菜单；分类不限于当前的设备、动漫、电影、电视剧、游戏、书、Kpop。无需修改路由或导航数组。图标可选，在 `src/config.ts` 的 `INTEREST_ICONS` 中以不含扩展名的文件名为键配置；未配置时菜单显示纯文字，不留图标占位。拾趣没有 `draft` 开关，新增分类随下一次构建发布；`intro.md`、`recent.md` 不作为分类。
+顶栏提供文稿分类预览、拾趣分类菜单和“更多”入口。相册与访问统计看板是配置的外部站点。博客分类使用 `/blogs/#技术` 这样的筛选地址，拾趣分类使用独立静态子页；两者不共用路由机制。完整行为见 [站点与页面](docs/design/site.md)。
 
-顶部品牌“梧桐雨の博客”返回首页，顶栏文字统一使用宋体。导航依次为文稿、标签、归档、拾趣、项目、关于、更多，工具为本仓库 GitHub、搜索、配色、主题。“更多”下拉包含友链、相册和访问统计，友链指向 `/friends/`，相册指向 `https://photos.wutongyu.site/`，访问统计指向 Umami 公开分享看板；两个外链均带 ↗ 并在新标签页打开，菜单数据在 `MORE_LINKS`。页脚使用宋体，作者名指向首页，电脑和手机上均显示萌 ICP 链接。访问统计由 `Head.astro` 加载 Umami Cloud 脚本，页面不显示计数或徽章。文章属于文稿，拾趣子页属于拾趣；导航准备、取消和历史返回共用父级定位。首页个人社交来自 `AUTHOR_LINKS`，不依赖关于 Markdown 是否包含社交链接。
+## 主要功能
 
-全站内容以 660px 版心居中，顶栏引用同一版心宽度并同步响应式收窄。首页头像与作者信息作为一组居中，下方依次为一行居中的社交链接和独立一行居中的名言；三列时间进度位于写作热力下方、近期笔墨上方。写作热力标题与近期笔墨左对齐，年份在标题右侧。目录在版心右侧留白中线基础上向右移 16px，最大宽 208px、高度最多半屏，中心比视口中线高 32px。标签、拾趣、项目、关于共用宋体页头，文稿列表文章标题使用宋体加粗，归档文章标题使用常规字重宋体，正文与 Markdown 内部标题使用普通字体。首页、标签、归档、文稿、拾趣及其子页使用点阵背景，项目使用 rose，关于关闭背景。
+- **文章浏览**：动态分类、标签 AND 筛选、分页与历史恢复、归档时间线、上下篇和随机阅读。草稿可在 dev 预览，生产与 RSS 排除草稿。
+- **正文写作**：Markdown／MDX、代码高亮与折叠、KaTeX、提示框、博文链接卡、HTML 与音视频嵌入。
+- **图片与书影游**：Astro 图片优化，网格／横滑／绕排、点击大图与相册翻页，横卡可选评分和日期，竖卡／方卡可横滑或按条件循环。
+- **阅读体验**：桌面常驻目录与手机浮动目录、站内转场、亮暗主题、五套点缀配色、响应式版心和减少动态效果支持。正文、代码与标题字体在本地加载。
+- **搜索与订阅**：Pagefind 构建全文索引，打开搜索时才加载；RSS 保留全文图文与代码，复杂组件转换为阅读器可用的基础内容。
+- **个人站点功能**：写作热力、近期书影游、Last.fm 七日排行、Giscus 评论、Umami 统计及可选 Oneko 像素猫。
 
-封面用 `titleImage`／`titleImageAlt`，源图位于 `src/content/blogs/_title-images/`；正文图位于文章所在目录或子目录，以相对路径引用；上层共享图也可以用 `../` 引用。拾趣图片位于 `src/content/interests/<id>/`。入口说明只维护 `intro.md`，首页近期书影游只维护 `recent.md`；二者不生成拾趣子页或菜单项。`:::card` 与标题都使用共享 Markdown 管线和 `prose.css`：默认连续卡片按容器宽度自动分列，当前版心最多两列，标题将卡片分组。`:::card{layout="portrait"}` 竖卡与 `layout="square"` 方卡都是封面、标题、可选小字的横滑陈列架。竖封面保持 2:3 并同比例缩小，桌面版心大约四张半；方封面为 1:1，大约五张半。`scroll="auto"` 在排不开一屏时头尾相接并淡出两端，按下或聚焦暂停；不写则仍手动横滑。窄屏露出后续条目；横滑栏直接嵌入背景；小字最多两行高度，超出后可上下滚动；小字区与旧横卡评论区的纵向滚动条默认隐藏，滚动时短暂显示，底部横向滚动条不变。首页和自定义样式演示卡片的标题链接指向对应作品 Wiki（Wikipedia 或其他已核实的作品 Wiki），不跳转到拾趣分类；链接由内容 `href` 维护，渲染器不推断作品。首页近期书影游用原评论作小字，书页按类型用二级标题分组，每类独立一排竖卡，小字用作者且不显示评分；完整示例见 Markdown 自定义样式演示文章。正文标题共用 `.markdown-content`。评分由作者按需填写，与观看／游玩状态无关；未填写时不生成评分。横卡还支持可选日期 `date="2026.10.18"`，用法与展示边界见 [站点行为 SPEC：S4](./docs/站点行为%20SPEC.md#s4拾趣和关于)。关于内容只维护 `src/content/about/about.md`。
+功能参数、资源边界与实现细节集中在 [docs](docs/README.md)。[正文样式指南文章](src/content/blogs/image-layout-demo.md) 提供可运行效果与可复制写法。
 
-正文图片支持 `:::gallery`（默认两列网格，可选三列、`widths="1fr 2fr"` 比例列宽、`widths="240px 1fr"` 固定列＋剩余列，或 `layout="scroll"` 横滚；横滚配图片边缘箭头与底部深色当前位置小点，单图相册不生成控件）和 `:::figure`（默认右侧绕排，可选左侧）。普通 Markdown 正文图可直接点击放大，悬浮时在原边框内轻微缩放；大图可点击收回，同正文多图可上一张／下一张浏览（不循环），遮罩跟随深浅主题。作者图片链接仍保留跳转，另有仅键盘焦点时显示的大图入口；图片继续走 Astro 和原有 `|w` 标记。布局不超出 660px 版心、不裁切；600px 及以下网格单列、绕排上下，无 JS 仍可阅读和横滚，RSS 按源顺序保留图片与文字。
+## 快速开始
 
-HTML 交互动画可在普通 `.md` 里用 `<iframe sandbox="allow-scripts">` 嵌入。演示文件放在 `public/demos/<文章短名>/`，用 `/demos/<文章短名>/<文件>.html` 引用，手动指定高度；HTML 不会从文章目录自动镜像。可运行例子见 [Markdown 自定义样式文章](src/content/blogs/image-layout-demo.md) 的「HTML 交互动画」，目录与资源规则见 [正文 HTML 与媒体 SPEC](docs/正文%20HTML%20与媒体%20SPEC.md#本地-html-交互演示)。
-
-公式写法见 [作者公式契约](blog-content-publisher-skill/SKILL.md#公式与代码标记)。作者操作见 [内容发布 skill](blog-content-publisher-skill/SKILL.md)，图片写法见 [图片管线指南](docs/Astro图片管线指南.md)。页面行为契约见 [站点行为 SPEC](docs/站点行为%20SPEC.md)，模块权威与边界见 [项目解析](docs/项目解析.md)，全文订阅见 [RSS SPEC](docs/RSS%20全文支持%20SPEC.md)。
-
-全站点缀默认使用原粉色（浅色 `#ad526c`、深色 `#e7a1b5`），顶部调色盘可选择原粉色、灰紫、深紫、雾蓝和鼠尾草绿。每套浅色与深色强调色不同：浅色使用主色，深色使用同色相更亮且仍能辨认的颜色，色点始终显示浅色主色。选择后立即作用于热力图、正文强调、搜索高亮、友链柔光等界面，不刷新页面。配色与亮暗主题独立，浏览器记住选择并在首屏及站内跳转前恢复；无脚本保留默认原粉色。黑白基底、内容图片、分类徽标、代码高亮与独立语义色保持原规则。预设统一维护在 `src/utils/accent-palette.js`。
-
-首页「最近在听 Top10」展示过去七天 Top 10 歌曲、专辑封面、歌手与专辑名，以及七天听歌次数、累计记录与常听歌手。单行方卡自动头尾滚动，按下或键盘聚焦暂停，减少动态效果时仍可手动横滑；小字用 `歌手 - 专辑名`，封面可点击查看原尺寸，标题链接到 Last.fm。数据在访问时由 `/api/lastfm` 取得并缓存 30 分钟，构建产物不含听歌数据，构建与页面渲染都不调用 Last.fm API；仓库不保存快照，也没有定时同步工作流。Vercel 项目环境变量（Production 与 Preview）使用 `LASTFM_API_KEY`，可选 `LASTFM_USER`；本地在被忽略的 `.env` 中设置同名变量后，`pnpm dev` 会提供同一接口。无脚本或接口失败时区块保留骨架与说明。详细契约、资料缺失与操作见 [Last.fm SPEC 与设计](docs/首页%20Last.fm%20SPEC%20与设计.md)。
-
-博客正文、友链页底部和全部拾趣分类子页支持 Giscus 评论，使用 GitHub 登录，评论保存在 `wutongyuonce/YuBlog` 的 Discussions。友链可按页面模板留言申请，审核后添加，也可提交 PR。共享组件为 `GiscusComments.astro`，仓库和分类配置集中在 `src/config.ts` 的 `GISCUS`；须在公开仓库启用 Discussions 并安装 Giscus App。评论按规范 pathname 严格关联，接近底部才加载，明暗随站点同步；本地与正式站的同一路径共用讨论，修改 slug／base 前需处理旧关联。详细行为和边界见 [站点 SPEC S12](docs/站点行为%20SPEC.md#s12在正文下评论与申请友链)，实现见 [评论 seam](docs/项目解析.md#410-评论-seam)。
-
-## 技术
-
-- Astro 7 + TypeScript，Markdown / MDX Content Collections（使用 unified 的 Remark / Rehype 插件管线）
-- 内容图片走 Astro 图片管线：相对路径 + `|w` 宽度标记，自动 WebP、`srcset`、宽高与懒加载；`public/` 放站点资源和独立 HTML 演示，正文配图仍放内容目录
-- 文章标题字体构子集：只下载实际用到的字形（实际字形集合随内容更新）
-- 正文 Inter、代码 DM Mono 使用 `public/fonts/` 里的拉丁子集，不请求 Google Fonts
-- KaTeX 样式与字体本地打包（不依赖 CDN），产物只留 woff2
-- UnoCSS + `public/shell.css`（导航、版心、首页、归档、分页等壳层样式集中一个属主）
-- Pagefind 只索引博客，且仅在打开搜索时加载
-- `astro-expressive-code` 代码块
-- 明暗主题、ClientRouter 转场
-- 背景：`dot` / `rose` / `snow`，按页配置；关于页关闭。点阵按透明度分 6 档描边；大屏间距按约 8000 点放大（边缘补点会略超，不是硬上限），1440×900 仍是 15px。canvas 背景响应 `prefers-reduced-motion`（闸门在 `src/utils/reduced-motion.js`）
-
-## 本地运行
-
-需要 Node.js `22.12+`（推荐与 CI 一致的 `24`），以及 `pnpm@12.9.1`。
+需要 Node.js **22.12+**（推荐 CI 使用的 **24**）和 **pnpm 12.9.1**；完整测试还需要 Python 3。
 
 ```bash
 pnpm install
-pnpm dev --open            # 启动开发服务器并打开浏览器
+pnpm dev --open
 ```
 
-修改 Markdown 插件后若 dev 仍出现旧结构，先确认当前服务属于本 worktree，再用 `pnpm dev --force` 刷新内容缓存；普通重载页面不会重编译已缓存的 Markdown。构建已有 `--force`。
-
-以日志里的真实 `Local` 地址为准，端口占用时不假定是 4321，也不终止别人的服务。含图片排版或卡片的博客写完或改完后，内容 skill 默认启动或复用**同一 worktree** 的 `pnpm dev`（复用前确认进程 cwd），文章 HTTP 请求成功后再给预览链接；纯文字或只有普通正文图时不必预览。用户禁止启动或环境受限时注明未预览。草稿在 dev 可读、RSS 排除；dev 预览不替代生产构建。
+使用日志中的实际 Local 地址。生产预览：
 
 ```bash
-pnpm check                 # Astro 类型与内容检查
-pnpm build                 # 生产构建（含 Pagefind）
-pnpm test:built-pagination # 检查文稿分页与无 JS 回退
-pnpm test:built-restructure # 检查页面结构、菜单、友链与文章语义
-pnpm test:built-markdown   # 检查构建后图片、标题、卡片与 RSS 全文
+pnpm build
 pnpm preview
-pnpm test                  # 运行全部单元测试
-pnpm test:blog-browser     # 分页与 URL
-pnpm test:blog-tags        # 标签 AND 筛选
-pnpm test:blog-stats       # 字数统计与格式
-node --test test/blog-heatmap.test.mjs # 上海日历与年度汇总
-node --test test/remark-media-card.test.mjs # Markdown 卡片
-node --test test/remark-image-layouts.test.mjs # 图片布局语法、结构与带位置失败
-pnpm test:recent-post-date # 近期文章日期
-pnpm test:progress-stats   # 年积日与进度
-pnpm test:cjk-emphasis     # CJK 旁强调语法
-pnpm test:toc-active       # 当前章节判定
-pnpm test:canvas-size      # canvas 后备存储尺寸与 DPR 上限
-pnpm test:reduced-motion   # 减少动效闸门
-pnpm lint
-pnpm format
 ```
 
-## 结构
+dev 搜索使用模拟数据，真实 Pagefind 搜索需先构建再预览。`pnpm preview` 只服务静态产物，不提供 Last.fm 接口；本地接口由 dev 提供。
+
+准备部署或修改功能时，按 [检查与验收](docs/guides/development.md#verification) 运行格式、lint、单测、类型与构建检查。环境变量、Vercel 和其它平台的差异见 [部署指南](docs/guides/development.md#deployment)。
+
+## 维护内容
+
+| 想修改 | 文件／目录 |
+| --- | --- |
+| 博客与正文资源 | `src/content/blogs/`；文章配图放同目录或子目录 |
+| 文章封面 | `src/content/blogs/_title-images/`，用 `titleImage`／`titleImageAlt` 引用 |
+| 拾趣分类与配图 | `src/content/interests/<id>.md` 或 `.mdx`，配图放对应子目录 |
+| 拾趣入口说明／首页近期书影游 | `src/content/interests/intro.md`／`recent.md` |
+| 作者介绍 | `src/content/about/about.md` |
+| 项目／友链 | `src/content/projects/data.json`／`src/content/friends/data.json` |
+
+文章字段以 `src/content/schema.ts` 为准；新增拾趣分类填写 `title`、`description` 和 `order` 即可，不改导航数组或路由。内容图用相对路径交给 Astro，不手写构建后的资源地址。
+
+详细操作见 [内容维护指南](docs/guides/development.md#content)。使用 AI Agent 时，可安装整个 [内容发布 skill 包](blog-content-publisher-skill/SKILL.md)，直接提出发文章、换封面、加拾趣或友链等任务；它维护内容和配置，布局与交互开发走设计文档。
+
+## 二次开发
+
+先把站点变成自己的，再调整功能和布局：
+
+| 任务 | 修改入口 | 说明 |
+| --- | --- | --- |
+| 域名、标题、导航、社交与开关 | `src/config.ts` | `SITE`、`UI`、`MORE_LINKS`、`AUTHOR_LINKS`、`FEATURES` |
+| 品牌、首页作者／名言、头像与页脚 | `NavBar.astro`、`BlogProfile.astro`、`public/avatar.webp`、`Footer.astro` | 这些文案与备案不全部由 `SITE` 自动同步 |
+| 页面结构 | `src/pages/`、`src/layouts/`、`src/components/views/` | 先查 [架构与模块边界](docs/design/architecture.md) |
+| 壳层、主题与正文样式 | `public/shell.css`、`src/styles/` | 共享变量、壳层与正文各有属主，见 [样式边界](docs/design/architecture.md#boundaries) |
+| Markdown 语法与媒体处理 | `plugins/index.ts`、各 Remark／Rehype 插件 | 见 [正文与媒体](docs/design/content.md#pipeline) |
+| 评论、听歌、统计与像素猫 | `GISCUS`、`api/lastfm.js`、`Head.astro`、`FEATURES.oneko` | 先替换演示账号，见 [外部服务配置](docs/guides/development.md#services) |
+
+更换域名、base 或文章 slug 会影响永久地址、RSS 去重及评论关联，需要单独核对迁移，见 [SEO 与全文订阅](docs/design/distribution.md#canonical)。Vercel 配置同时服务静态页面与根目录 API；仅把 `dist/` 放到静态托管不能提供听歌接口。
+
+目录速查：
 
 ```text
-src/
-  components/     导航、首页、列表、拾趣、关于、友链、TOC
-  content/        blogs / about / interests / projects / friends
-  layouts/        BaseLayout、BlogIndexLayout、StandardLayout
-  pages/          路由
-  styles/         正文与 Markdown
-  utils/          列表、统计、筛选、路径
-public/shell.css  跨页保留的壳层样式
-docs/             项目解析（架构）、图片管线指南、Astro 语法、SEO 教程
+src/config.ts       站点身份、导航、功能开关
+src/content/        Markdown／MDX／JSON 内容与 schema
+src/pages/          路由与 RSS 入口
+src/layouts/        通用页面壳与正文布局
+src/components/     页面拼装、导航、目录与控件
+src/utils/          集合、筛选、状态与交互逻辑
+src/styles/         全局变量、正文与 Markdown 样式
+plugins/            正文管线、媒体镜像、构建集成
+api/                Last.fm 运行时接口
+public/             站点资源、独立 HTML 演示、shell.css
+docs/               使用指南、设计与学习参考
+test/、scripts/     单元测试、构建产物与浏览器检查
 ```
 
-## 个人二次开发
+## 详细文档
 
-1. 修改 `src/config.ts` 的 `SITE`、`UI`、`AUTHOR_LINKS`；品牌文字在 `NavBar`，作者名称和名言在 `BlogProfile`，关于正文中的联系方式按作者实际内容维护。
-2. 按 [内容发布 skill](blog-content-publisher-skill/SKILL.md) 修改文章、项目、关于、拾趣或友链。字段以 `src/content/schema.ts` 为准，不先改页面结构。
-3. 更换 `public/avatar.webp`。交换模板信息在 `FriendsApplyPanel` 的 `friendInfo`，不随 `SITE` 自动同步。
-4. 调整页面结构前读 [项目解析](docs/项目解析.md)。索引页面复用 `BlogIndexLayout` 内容壳，不复制侧栏；共享样式集中维护；需要局部覆盖时检查作用域和层叠效果。
-5. 内容图片走 Astro 管线，站点资源留在 `public/`。新增或改图片必须构建校验；准备 PR 时运行全部必需检查和构建产物检查。
+完整索引见 [docs/README.md](docs/README.md)，也可直接按主题进入：
 
-## 文档与更新日志
+| 文档 | 内容 |
+| --- | --- |
+| [开发与部署](docs/guides/development.md) | 本地模式、个性化、内容维护、外部服务、部署与验收 |
+| [站点与页面](docs/design/site.md) | 页面契约、导航／筛选／上下篇、目录、配色与评论 |
+| [架构与模块边界](docs/design/architecture.md) | 调用链路、模块属主、共享样式及扩展位置 |
+| [正文与媒体](docs/design/content.md) | 图片、卡片日期、相册、HTML／音视频、Excalidraw 与博文链接卡 |
+| [SEO 与全文订阅](docs/design/distribution.md) | canonical、sitemap、RSS 身份与内容降级 |
+| [Last.fm](docs/design/listening.md)／[Oneko](docs/design/oneko.md) | 两个可选集成的配置与设计 |
+| [Astro 学习笔记](docs/reference/astro.md) | 框架组件、插槽与模板语法；不作为项目现行规范 |
 
-README、SPEC 和操作指南描述当前实现。网页结构、交互和代码的有效变化记入 [CHANGELOG.md](CHANGELOG.md) 的「未发布」；文章、关于、拾趣、项目、友链等内容数据不记入。同一功能的相关调整合并为最终结果，发布时再填写实际版本与发布日期。
-
-## Skill 怎么用
-
-仓库里是 `blog-content-publisher-skill/SKILL.md`。
-
-- 放到 Agent 的 skills 目录
-- 直接说要改哪一页即可，例如：发博客、改设备、新增拾趣分类、给分类补图标、加友链、改顶栏 GitHub、改关于页社交。Agent 应先对表再动文件。
-- 它会改 Markdown / JSON / `src/config.ts` 里的站点信息；新博客文章在用户没说发布时保持 `draft: true`（不适用于拾趣）；没有明确授权就不要 commit、push 或部署。
-- 会替作者把稿子落地：本地图片复制进文章配图目录并改写引用（外链保持外链）、按内容自动排版（grid／横滚／绕排）、把书影视条目生成卡片（可联网补链接与封面），含排版或卡片时默认给同 worktree 的 dev 预览；改布局实现、CSS、分页算法时不要走这个 skill，用 `docs/项目解析.md`。
-
-[MIT](LICENSE)
+当前行为与设计随代码维护；历史变化见 [CHANGELOG](CHANGELOG.md)。项目采用 [MIT](LICENSE) 许可，第三方资源另遵循各自署名与许可。

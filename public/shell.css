@@ -1,7 +1,7 @@
 /* Shell chrome (nav, layouts, archives, pagination), inlined by Head.astro.
    Astro also inlines the bundled stylesheet; neither sheet needs a separate
    request before first paint. Keep shared rules here and verify intentional
-   component overrides in the browser. See docs/项目解析.md §4.4. */
+   component overrides in the browser. See docs/design/architecture.md §4.4. */
 
 /* Title subsets are generated after Vite builds CSS; keep these font URLs in
    the static sheet so Vite does not try to resolve files that do not exist yet. */

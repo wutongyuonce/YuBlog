@@ -569,8 +569,8 @@ export interface Features {
   /**
    * Whether to enable the hosted Oneko pixel cat (oneko.dhrv.pw).
    *
-   * Mounts once from BaseLayout; Footer exposes a visitor hide toggle.
-   * See `docs/Oneko 像素猫.md`.
+   * Mounted by BaseLayout and restored after client navigation when needed.
+   * Footer exposes a visitor hide toggle. See `docs/design/oneko.md`.
    */
   oneko: FeatureConfig<OnekoConfig>
 }
