@@ -103,31 +103,16 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
 
 <style>
   .recent-listening {
-    /* Two title lines, two metadata lines, and their shared gap. */
-    --listening-copy-height: calc(3rem + 0.35rem + 2.625rem);
     margin-top: 3rem;
   }
   .recent-listening__stats {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem 1.25rem;
     margin-top: 1rem;
     font-size: 0.75rem;
     line-height: 1.7;
     color: color-mix(in srgb, var(--c-text) 65%, var(--c-bg));
-  }
-  .recent-listening__stats > span {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  @media (max-width: 360px) {
-    .recent-listening__stats {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .recent-listening__stats > :last-child {
-      grid-column: 1 / -1;
-    }
   }
   .recent-listening__stats strong {
     color: var(--c-text);
@@ -145,18 +130,6 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
   }
   .recent-listening__body .media-cards {
     margin: 0;
-    scrollbar-width: none;
-  }
-  .recent-listening__body .media-cards::-webkit-scrollbar {
-    display: none;
-  }
-  .recent-listening__body .media-card__body,
-  .recent-listening__skeleton-body {
-    height: var(--listening-copy-height);
-  }
-  .recent-listening__body .media-card__body {
-    padding: 0;
-    gap: 0.35rem;
   }
   .recent-listening__body .media-card__title {
     display: -webkit-box;
@@ -169,7 +142,6 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
     --rail-gap: 0.85rem;
     --rail-gaps: 5;
     --rail-visible: 5.5;
-    overflow: hidden;
   }
   .recent-listening__skeleton {
     display: grid;
@@ -184,7 +156,6 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
   }
   .recent-listening__skeleton-body {
     display: grid;
-    align-content: start;
     gap: 0.35rem;
   }
   .recent-listening__skeleton-line {

@@ -42,106 +42,15 @@ await page.cdp('Page.addScriptToEvaluateOnNewDocument', {
                 : payload
             ),
           }
-    const response = new Response(body.text, {
-      status: body.status,
-      headers: { 'content-type': 'application/json' },
-    })
-    if (new URL(location.href).searchParams.has('listening-layout')) {
-      return new Promise(resolve => {
-        window.__releaseListening = payload => {
-          resolve(payload ? new Response(JSON.stringify(payload), {
-            status: 200,
-            headers: { 'content-type': 'application/json' },
-          }) : response)
-        }
+    return Promise.resolve(
+      new Response(body.text, {
+        status: body.status,
+        headers: { 'content-type': 'application/json' },
       })
-    }
-    return Promise.resolve(response)
+    )
   }
 })()`,
 })
-
-// Hold the API until fonts settle, then measure the real loading → ready path.
-// Both short content and two-line content must fit the same reserved space.
-for (const motion of ['no-preference', 'reduce']) {
-  await page.cdp('Emulation.setEmulatedMedia', {
-    features: [{ name: 'prefers-reduced-motion', value: motion }],
-  })
-  for (const width of [1440, 390, 320]) {
-    await page.cdp('Emulation.setDeviceMetricsOverride', {
-      width,
-      height: 900,
-      deviceScaleFactor: 1,
-      mobile: false,
-    })
-    for (const long of [false, true]) {
-      await page.goto(new URL('?listening-layout', base).href)
-      await page.waitForFunction(() => !!window.__releaseListening)
-      await page.evaluate(async () => {
-        await document.fonts.ready
-        window.__listeningLayout = () => {
-          const root = document.querySelector('[data-listening]')
-          const top = root.getBoundingClientRect().top
-          return [
-            root.getBoundingClientRect().height,
-            ...[
-              '.recent-listening__stats',
-              '.media-cards',
-              '.recent-listening__updated',
-            ].map(
-              (selector) =>
-                root.querySelector(selector).getBoundingClientRect().top - top
-            ),
-          ]
-        }
-      })
-      const before = await page.evaluate(() => window.__listeningLayout())
-      const payload = {
-        ...listening,
-        weeklyScrobbles: long ? 1234567 : 0,
-        totalScrobbles: long ? 123456789 : 1,
-        topArtist: long
-          ? 'A very long artist name that must remain accessible'
-          : 'A',
-        tracks: Array.from({ length: long ? 10 : 1 }, (_, index) => ({
-          ...listening.tracks[index % listening.tracks.length],
-          name: long ? 'A long song title spanning more than two lines' : 'A',
-          album: long
-            ? 'A long album description spanning more than two lines'
-            : null,
-        })),
-      }
-      await page.evaluate(
-        (payload) => window.__releaseListening(payload),
-        payload
-      )
-      await page.waitForFunction(
-        () =>
-          document.querySelector('[data-listening]')?.dataset.state === 'ready'
-      )
-      await page.evaluate(
-        () =>
-          new Promise((resolve) =>
-            requestAnimationFrame(() => requestAnimationFrame(resolve))
-          )
-      )
-      const after = await page.evaluate(() => window.__listeningLayout())
-      for (let index = 0; index < before.length; index++) {
-        assert.ok(
-          Math.abs(after[index] - before[index]) <= 1,
-          `${width}px/${motion}/${long ? 'long' : 'short'}: listening height and row positions remain stable (${before} → ${after})`
-        )
-      }
-      assert.equal(
-        await page.evaluate(
-          () => document.documentElement.scrollWidth <= innerWidth
-        ),
-        true
-      )
-    }
-  }
-}
-await page.cdp('Emulation.setEmulatedMedia', { features: [] })
 
 await page.goto(new URL('interests/book/', base).href)
 await page.waitForSelector('.media-cards--rail')
