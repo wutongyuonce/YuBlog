@@ -232,7 +232,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 ### 4.9 评论 seam
 
-`GiscusComments.astro` 提供可选的 `title`／`description`，调用方只负责挂载位置：`RenderPost` 通过 `BaseLayout` 的 `after-content` slot 放在正文和返回链接之后、`FriendsView` 的申请说明之后、`InterestsView` 有 `entry` 的分类正文之后。`BaseLayout` 只提供返回链接之后的通用 slot，不判断评论范围；返回链接由 `BackLink` 渲染为可点击的 `cd ..`（无左侧提示符）。评论组件自身以 `width: 100%`／`max-width: var(--blog-prose-width)` 复用正文版心，不能依赖外层恰好套有 `BlogIndexLayout`；否则文章标题／正文虽然受 `.prose` 限制，默认 slot 里的评论仍会铺满 `<main>`。
+`GiscusComments.astro` 提供可选的 `title`／`description`，调用方只负责挂载位置：`RenderPost` 通过 `BaseLayout` 的 `after-content` slot 放在正文和 `PostNav` 之后、`FriendsView` 的申请说明之后、`InterestsView` 有 `entry` 的分类正文之后。`BaseLayout` 只提供正文之后的通用 slot，不判断评论范围。评论组件自身以 `width: 100%`／`max-width: var(--blog-prose-width)` 复用正文版心，不能依赖外层恰好套有 `BlogIndexLayout`；否则文章标题／正文虽然受 `.prose` 限制，默认 slot 里的评论仍会铺满 `<main>`。
 
 | 规则／状态 | Authority | Interface／调用方 | 证据 |
 | --- | --- | --- | --- |

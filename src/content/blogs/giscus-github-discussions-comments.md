@@ -61,7 +61,7 @@ App 获得目标仓库 Discussions 的读写权限；读者授权则允许 Giscu
 
 拾趣入口负责展示分类和说明，不再放一个总评论区。首页、文稿列表、标签、归档、项目和关于也不加评论。
 
-文章页从上到下依次是正文、`cd ..` 返回链接、评论区。评论区复用正文的 `--blog-prose-width`，与站点整体保持相同版心，桌面不铺满整个窗口，手机随视口收窄。
+文章页从上到下依次是正文、上下篇／随便逛逛、评论区。评论区复用正文的 `--blog-prose-width`，与站点整体保持相同版心，桌面不铺满整个窗口，手机随视口收窄。
 
 这些入口最终都调用同一个 `GiscusComments.astro`。文章页由 `RenderPost.astro` 接入，友链页由 `FriendsView.astro` 接入，拾趣由 `InterestsView.astro` 在有分类内容时接入。以后新增拾趣分类，它会自动经过同一条渲染路径，不需要再维护一个“需要评论的分类名单”。
 
@@ -173,10 +173,10 @@ Astro 的 ClientRouter 会交换页面内容。共享组件在断开时停止可
 
 这次已经在本地页面完成了 GitHub 登录、发送测试留言和刷新读取。留言保存在 [本站对应的 Discussion](https://github.com/wutongyuonce/YuBlog/discussions/113#discussioncomment-18945026)，分类为 Announcements，讨论标题就是文章路径，正文回链指向正式站。浏览器检查还覆盖了明暗主题、站内转场，以及桌面和手机下正文与评论区的对齐。
 
-下面两张截图来自本站同一个评论区，分别为浅色与深色；可以看到返回链接位于正文和评论之间，评论宽度与正文保持一致。
+下面两张截图展示同一个评论区的浅色与深色局部，评论宽度与正文保持一致。
 
 :::gallery
-![本站浅色评论区：正文之后是 cd ..，下方评论与正文同宽](./giscus-img/blog-comments-light.png)
+![本站浅色评论区：评论与正文同宽](./giscus-img/blog-comments-light.png)
 
 ![本站深色评论区：同一讨论与测试留言随主题切换](./giscus-img/blog-comments-dark.png)
 :::

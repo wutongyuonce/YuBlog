@@ -251,9 +251,8 @@ for (const width of [1440, 390, 320]) {
       const comments = document
         .querySelector('.comments')
         .getBoundingClientRect()
-      const back = document
-        .querySelector('main > footer.prose')
-        .getBoundingClientRect()
+      const nav = document.querySelector('.post-nav')?.getBoundingClientRect()
+      const hasContentFooter = Boolean(document.querySelector('main > footer'))
       const frame = document
         .querySelector('giscus-widget')
         .iframeRef.getBoundingClientRect()
@@ -262,7 +261,10 @@ for (const width of [1440, 390, 320]) {
           Math.abs(body.left - comments.left) < 1 &&
           Math.abs(body.width - comments.width) < 1,
         frameFits: Math.abs(frame.width - comments.width) < 1,
-        order: body.bottom <= back.top && back.bottom < comments.top,
+        order:
+          !hasContentFooter &&
+          body.bottom <= (nav?.top ?? comments.top) &&
+          (nav?.bottom ?? body.bottom) < comments.top,
         noOverflow: document.documentElement.scrollWidth <= innerWidth,
       }
     })
@@ -271,7 +273,7 @@ for (const width of [1440, 390, 320]) {
       { aligned: true, frameFits: true, order: true, noOverflow: true },
       '' +
         width +
-        'px: body → cd .. → comments share the site column in both themes'
+        'px: body → navigation → comments share the site column in both themes'
     )
   }
 }

@@ -270,18 +270,32 @@ test('only articles, friends and every interest category have isolated comments 
     }
     if (articles.includes(page)) {
       const body = elements(page, (node) => hasClass(node, 'post-content'))[0]
-      const back = elements(
-        page,
-        (node) => node.tagName === 'footer' && hasClass(node, 'prose')
-      )[0]
-      assert.ok(
-        body.position.end.offset < back.position.start.offset,
-        'The return link follows the article'
+      const nav = elements(page, (node) => hasClass(node, 'post-nav'))[0]
+      const main = elements(page, (node) => node.tagName === 'main')[0]
+      assert.equal(
+        main.children.some((node) => node.tagName === 'footer'),
+        false,
+        'Article content flows directly into navigation and comments'
       )
       assert.ok(
-        back.position.end.offset < root.position.start.offset,
-        'The return link separates article and comments'
+        body.position.end.offset < root.position.start.offset,
+        'Comments follow the article'
       )
+      if (nav) {
+        assert.ok(
+          body.position.end.offset < nav.position.start.offset &&
+            nav.position.end.offset < root.position.start.offset,
+          'Article navigation sits between body and comments'
+        )
+        for (const link of elements(nav, (node) =>
+          hasClass(node, 'post-nav__link')
+        )) {
+          assert.match(
+            textOf(link).replace(/\s+/g, ''),
+            /^(\.\.上一篇|下一篇\.\.)$/
+          )
+        }
+      }
     }
   }
 })
