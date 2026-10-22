@@ -96,6 +96,14 @@ for (const motion of ['no-preference', 'reduce']) {
         }
       })
       const before = await page.evaluate(() => window.__listeningLayout())
+      const checkBottomAnchor =
+        motion === 'no-preference' && width === 1440 && long
+      if (checkBottomAnchor) {
+        await page.evaluate(() => {
+          document.documentElement.style.scrollBehavior = 'auto'
+          window.scrollTo(0, document.documentElement.scrollHeight)
+        })
+      }
       const checkCoverSurface =
         motion === 'no-preference' && width === 1440 && !long
       const loadingCoverBackground = checkCoverSurface
@@ -136,6 +144,16 @@ for (const motion of ['no-preference', 'reduce']) {
           )
       )
       const after = await page.evaluate(() => window.__listeningLayout())
+      if (checkBottomAnchor) {
+        assert.equal(
+          await page.evaluate(() => {
+            const root = document.querySelector('[data-listening]')
+            return root.getBoundingClientRect().bottom <= window.innerHeight + 1
+          }),
+          true,
+          'replacing the skeleton at the bottom keeps the cards in view'
+        )
+      }
       if (motion === 'no-preference' && width === 1440 && long) {
         assert.equal(
           await page.evaluate(() => {

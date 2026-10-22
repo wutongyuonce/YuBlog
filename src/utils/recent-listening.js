@@ -144,9 +144,17 @@ export function renderListening(root, snapshot) {
 
   const track = root.querySelector('[data-listening-track]')
   const template = root.querySelector('template[data-listening-card]')
-  track?.replaceChildren()
-  if (snapshot && track && template)
-    track.append(...snapshot.tracks.map((item) => createCard(item, template)))
+  const cards =
+    snapshot?.tracks.length && track && template
+      ? snapshot.tracks.map((item) => createCard(item, template))
+      : []
+  // 先清空再插入会让轨道在两次改动之间塌掉。人已经滚到底部时，Safari 会立刻把滚动
+  // 位置抬到变短后的页尾，新卡片就落在视口下面。先钉住轨道高度，再一次换上新卡片。
+  const rail = cards.length ? track.closest?.('.media-cards') : null
+  if (rail?.style && rail.getBoundingClientRect)
+    rail.style.minHeight = `${rail.getBoundingClientRect().height}px`
+  track?.replaceChildren(...cards)
+  rail?.style?.removeProperty('min-height')
 
   const time = root.querySelector('[data-listening-time]')
   if (time) {
