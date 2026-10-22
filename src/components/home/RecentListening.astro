@@ -109,7 +109,7 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
   }
   .recent-listening__stats {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: max-content max-content minmax(0, 1fr);
     gap: 0.5rem 1.25rem;
     margin-top: 1rem;
     font-size: 0.75rem;
@@ -121,9 +121,9 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
     white-space: nowrap;
     text-overflow: ellipsis;
   }
-  @media (max-width: 360px) {
+  @media (max-width: 600px) {
     .recent-listening__stats {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
     }
     .recent-listening__stats > :last-child {
       grid-column: 1 / -1;

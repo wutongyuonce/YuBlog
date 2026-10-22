@@ -126,6 +126,27 @@ for (const motion of ['no-preference', 'reduce']) {
           )
       )
       const after = await page.evaluate(() => window.__listeningLayout())
+      if (width === 1440) {
+        const spacing = await page.evaluate(() => {
+          const stats = document.querySelector('.recent-listening__stats')
+          const textBoxes = [...stats.children].map((item) => {
+            const range = document.createRange()
+            range.selectNodeContents(item)
+            const { left, right } = range.getBoundingClientRect()
+            return { left, right }
+          })
+          return {
+            gap: parseFloat(getComputedStyle(stats).columnGap),
+            gaps: textBoxes
+              .slice(1)
+              .map((box, index) => box.left - textBoxes[index].right),
+          }
+        })
+        assert.ok(
+          spacing.gaps.every((gap) => Math.abs(gap - spacing.gap) <= 1),
+          'listening statistics stay one gap apart instead of filling equal columns'
+        )
+      }
       for (let index = 0; index < before.length; index++) {
         assert.ok(
           Math.abs(after[index] - before[index]) <= 1,
