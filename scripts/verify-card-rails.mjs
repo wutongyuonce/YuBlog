@@ -102,6 +102,7 @@ for (const motion of ['no-preference', 'reduce']) {
         await page.evaluate(() => {
           document.documentElement.style.scrollBehavior = 'auto'
           window.scrollTo(0, document.documentElement.scrollHeight)
+          window.__listeningBottomY = window.scrollY
         })
       }
       const checkCoverSurface =
@@ -148,7 +149,10 @@ for (const motion of ['no-preference', 'reduce']) {
         assert.equal(
           await page.evaluate(() => {
             const root = document.querySelector('[data-listening]')
-            return root.getBoundingClientRect().bottom <= window.innerHeight + 1
+            return (
+              Math.abs(window.scrollY - window.__listeningBottomY) <= 1 &&
+              root.getBoundingClientRect().bottom <= window.innerHeight + 1
+            )
           }),
           true,
           'replacing the skeleton at the bottom keeps the cards in view'

@@ -396,7 +396,7 @@ function listeningRoot({ skeletons = 10 } = {}) {
   return { root, track }
 }
 
-test('renderListening clears loading skeletons before writing real cards', () => {
+test('renderListening replaces loading skeletons with real cards', () => {
   const snapshot = parseListeningPayload(
     payload({
       tracks: [

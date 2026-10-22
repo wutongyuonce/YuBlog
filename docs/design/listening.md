@@ -8,7 +8,7 @@
 
 区块只有四种状态：加载中（十张不可聚焦的方卡形骨架占位，轻量脉冲；`prefers-reduced-motion: reduce` 时静止；统计与时间显示占位 `—`）、就绪（统计、卡片、更新时间；骨架被清空）、真实空数据（`过去 7 天还没有听歌记录。`，隐藏卡片区）、失败（`暂时无法获取听歌数据。`，隐藏卡片区）。无脚本时保留骨架卡并显示说明文字，指向 Last.fm 主页。封面仍按既有 `img` 懒加载，不为图片另做第二套骨架；真实卡片的封面容器延续骨架底色，避免接口就绪后、远程图片尚未下载时露出透明空框。
 
-听歌轨道不使用正文陈列架的横向滚动条，加载、就绪、减少动态和无脚本都保持裁切，因此数据就绪不会先出现滚动条再关掉。统计项按内容宽度紧凑排列，600px 及以下为两列且歌手独占第二行；每项保持单行，过长内容省略显示，原值保留在正文及悬停提示中。加载到非空数据就绪时，区块高度、统计行、卡片轨道与更新时间的位置保持稳定；已经滚到底部时，先放入新卡片再移除骨架，轨道不能先变短，否则 Safari 会把整页向上抬，卡片落到视口下面。真实空数据和失败仍收起卡片区。
+听歌轨道不使用正文陈列架的横向滚动条，加载、就绪、减少动态和无脚本都保持裁切，因此数据就绪不会先出现滚动条再关掉。统计项按内容宽度紧凑排列，600px 及以下为两列且歌手独占第二行；每项保持单行，过长内容省略显示，原值保留在正文及悬停提示中。加载到非空数据就绪时，区块高度、统计行、卡片轨道与更新时间的位置保持稳定；已经滚到底部时，先插入新卡片，通过一次 `offsetHeight` 读取完成布局，再移除骨架，保持页尾滚动位置不变。真实空数据和失败仍收起卡片区。
 
 听歌接口只接受不带查询参数的 `GET /api/lastfm`；其它方法返回 405（`Allow: GET`），带查询参数返回 400。成功响应由 CDN 缓存 30 分钟，过期后 5 分钟内先返回旧数据并在后台刷新，上游出错时最多再沿用一天旧数据。失败响应一律不缓存。 仓库用 GitHub Actions（`.github/workflows/warm-lastfm-cdn.yml`）约每 25 分钟（UTC）请求一次正式站该地址以暖 CDN，也可手动触发；这不替代按需回源，也不把听歌数据写进仓库。
 
@@ -53,7 +53,7 @@ API 多次查询期间用户仍可听歌，不提供跨接口事务一致性；�
 | L4 部署前提：根目录 `api/` 被收集为函数 | `vercel.json`（`framework: null`、`buildCommand`、`outputDirectory`） | 平台按 Other 预设构建，静态产物仍是 `dist` | Vercel 部署 | 预览部署的接口响应 |
 | 本地 dev 提供同一接口 | `plugins/astro-listening-endpoint.ts` | 在 `/api/lastfm` 调用同一处理函数；密钥取环境变量或 `.env` | `pnpm dev` | 本地 `curl` 检查 |
 | L7、请求启动顺序与导航取消 | `src/components/home/RecentListeningScript.astro` | `Head.astro` 在 ClientRouter 前输出；`astro:page-load` 加载、`astro:before-swap` 取消 | 首页与站内导航 | 产物脚本顺序检查、阻滞其它模块的浏览器检查 |
-| 响应形状校验、统计文案、卡片渲染、清空骨架 | `src/utils/recent-listening.js` | `parseListeningPayload`、`listeningStats`、`listeningUpdatedLabel`、`renderListening`（先放入新卡片，再移除骨架） | `RecentListeningScript.astro` | `test/recent-listening.test.mjs`、`verify-card-rails.mjs` |
+| 响应形状校验、统计文案、卡片渲染、清空骨架 | `src/utils/recent-listening.js` | `parseListeningPayload`、`listeningStats`、`listeningUpdatedLabel`、`renderListening`（先放入新卡片并提交布局，再移除骨架） | `RecentListeningScript.astro` | `test/recent-listening.test.mjs`、`verify-card-rails.mjs` |
 | L5、加载态骨架卡、空／失败状态、无脚本说明与切换高度 | `src/components/home/RecentListening.astro` | 复用方卡尺寸与 `.media-cards--auto` 循环；轨道溢出由听歌区自己裁切，不使用正文滚动条；骨架不参与循环；预留相同文字高度并稳定统计行 | `index.astro` | built 首页检查、`verify-card-rails.mjs` |
 | 方卡尺寸、循环与文字排版 | 既有 `prose.css` | 复用 `.media-cards--rail` / `.media-card--square` 的尺寸和循环；首页不复用其横向滚动 | 首页、Markdown 卡片 | 浏览器检查 |
 | 循环条件、副本与清理 | 既有 `src/utils/card-rail-marquee.js` | `refresh(rail)`：内容被替换后清掉旧副本再重算 | 首页听歌排、Markdown 卡片 | 既有单测与新增 `refresh` 用例 |
@@ -94,8 +94,11 @@ node --test test/listening-endpoint.test.mjs test/lastfm.test.mjs test/recent-li
 | 接口输出能被页面校验接受 | 端点单测调用 `parseListeningPayload` | 接口与页面是跨模块 seam，形状漂移会立刻失败 |
 | L5 与加载态骨架结构 | `test:built-restructure` 的首页契约检查 | 覆盖生成 HTML：十张骨架卡、模板、无脚本说明 |
 | L5 与运行时接线、加载到就绪的布局稳定 | `verify-card-rails.mjs`（真实浏览器，固定载荷） | 暂扣响应，在 1440／390／320px、正常／减少动态模式下比较短文案单卡与长文案十卡切换前后的高度及行位置；并覆盖卡片、统计、占位封面、循环与副本、焦点、大图、失败与空状态、无 JS |
+| L5 Safari 页尾位置稳定 | `scripts/verify-listening-safari.mjs`（macOS Safari，固定载荷） | 骨架时滚到底部后放行数据，断言页高、滚动位置和完整卡片可见 |
 | L3 并行上限、同专辑复用与排行顺序 | 属主单测，以 Promise 闸门控制响应 | 不以真实耗时断言并发，验证每批至多三首且没有重复专辑查询 |
 | L7 首个模块与独立启动 | built 首页检查、`scripts/verify-listening-startup.mjs`（暂扣 ClientRouter 响应） | 确认页面不等无关模块就能请求并呈现听歌数据；正常恢复模块后继续检查站内往返 |
 | 完整仓库门禁 | format、lint、check、test、build、三项 built 检查 | 核对现有页面与内容回归 |
+
+Safari 回归需先启动本地开发服务，再运行 `node scripts/verify-listening-safari.mjs http://127.0.0.1:4322/`（地址改为实际服务地址）。脚本通过临时本地代理注入固定数据，在 Safari 新窗口中验证骨架换成卡片后页高和滚动位置不变、完整卡片仍可见，完成后关闭该窗口。
 
 部署后需另行核实 `GET /api/lastfm` 的成功响应、CDN 命中、真实冷请求耗时，以及 `stale-if-error`／`stale-while-revalidate` 行为。固定载荷、模块阻滞和假上游测试不代表当前部署已经通过这些验证。

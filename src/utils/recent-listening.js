@@ -3,7 +3,7 @@
  *
  * 服务端输出加载态骨架卡和一张卡片模板，数据来自运行时接口，所以响应形状属于信任边界
  * 之外：先校验再写 DOM，并且不使用 `innerHTML`，避免把上游字段当标记插入页面。
- * `renderListening` 会清空轨道（含骨架）再写入真实卡片。
+ * `renderListening` 先插入真实卡片并提交布局，再移除骨架，避免页尾滚动位置被截断。
  */
 
 /** 卡片区最多呈现十张，避免异常响应撑破布局；顺序由适配器决定。 */
@@ -148,11 +148,12 @@ export function renderListening(root, snapshot) {
     snapshot?.tracks.length && track && template
       ? snapshot.tracks.map((item) => createCard(item, template))
       : []
-  // 先清空再插入会让轨道中间变空。已经滚到底部时，Safari 会把滚动位置抬高。
-  // 新卡片先进入轨道，再移除骨架，轨道不会先变短。
+  // 先插入新卡片并提交布局，再移除骨架。WebKit 尚未布局新节点时就移除旧节点，
+  // 会把滚到底部的位置向上截断，即使替换前后的轨道高度相同。
   if (cards.length && track) {
     const skeletons = [...track.children]
     track.append(...cards)
+    void track.offsetHeight
     for (const node of skeletons) node.remove()
   } else track?.replaceChildren()
 
