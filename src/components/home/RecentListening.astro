@@ -1,5 +1,5 @@
 ---
-/* eslint-disable astro/jsx-a11y/no-noninteractive-tabindex -- Scroll areas need focus for native keyboard scrolling. */
+/* eslint-disable astro/jsx-a11y/no-noninteractive-tabindex -- 轨道本身不是滚动容器；聚焦它是为了暂停循环。 */
 /* eslint-disable astro/jsx-a11y/anchor-has-content, astro/jsx-a11y/anchor-is-valid -- 卡片模板的文字与链接由脚本按接口数据填入。 */
 import { LASTFM_USER, lastfmProfileUrl } from '~/utils/lastfm.mjs'
 
@@ -42,7 +42,7 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
       class="media-cards media-cards--rail media-cards--auto"
       tabindex="0"
       role="region"
-      aria-label="过去 7 天常听歌曲 TOP 10，可左右滚动"
+      aria-label="过去 7 天常听歌曲 TOP 10"
     >
       <div class="media-cards__track" role="list" data-listening-track>
         {Array.from({ length: 10 }, () => (
@@ -145,10 +145,8 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
   }
   .recent-listening__body .media-cards {
     margin: 0;
-    scrollbar-width: none;
-  }
-  .recent-listening__body .media-cards::-webkit-scrollbar {
-    display: none;
+    overflow: hidden;
+    scroll-snap-type: none;
   }
   /* 远程封面尚未下载时延续骨架底色，避免就绪首帧露出透明空框。 */
   .recent-listening__body .media-card > .image-view {
@@ -173,7 +171,6 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
     --rail-gap: 0.85rem;
     --rail-gaps: 5;
     --rail-visible: 5.5;
-    overflow: hidden;
   }
   .recent-listening__skeleton {
     display: grid;

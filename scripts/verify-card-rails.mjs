@@ -136,6 +136,19 @@ for (const motion of ['no-preference', 'reduce']) {
           )
       )
       const after = await page.evaluate(() => window.__listeningLayout())
+      if (motion === 'no-preference' && width === 1440 && long) {
+        assert.equal(
+          await page.evaluate(() => {
+            const rail = document.querySelector(
+              '.recent-listening .media-cards--rail'
+            )
+            rail.removeAttribute('data-marquee')
+            return getComputedStyle(rail).overflowX
+          }),
+          'hidden',
+          'the listening rail stays clipped without waiting for the marquee'
+        )
+      }
       if (checkCoverSurface) {
         assert.equal(
           await page.evaluate(
@@ -357,7 +370,9 @@ await page.waitForFunction(
 assert.equal(
   await page.evaluate(() => {
     const rail = document.querySelector('.recent-listening .media-cards--rail')
-    return rail.scrollWidth > rail.clientWidth && !rail.dataset.marquee
+    return (
+      !rail.dataset.marquee && getComputedStyle(rail).overflowX === 'hidden'
+    )
   }),
   true
 )
