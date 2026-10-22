@@ -214,13 +214,14 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 | ID | 内容 |
 | :--- | :--- |
-| `device` | 日常设备与软件（原 Use） |
+| `device` | 日常设备、配件与订阅 |
 | `anime` | 动漫，含国漫 |
 | `movie` | 电影，含动画电影 |
 | `tv` | 电视剧与综艺 |
 | `game` | 游戏 |
 | `book` | 书 |
 | `kpop` | 喜欢的团体与 idle |
+| `software` | Mac 与手机软件 |
 
 读取同目录样例后修改。frontmatter 的 `title`、`description` 必须为非空字符串，`order` 必须为非负整数；三者供入口、子页和顶部下拉共同使用，`order` 越小越靠前。子页标题直接是分类名，不加“拾趣-”。
 

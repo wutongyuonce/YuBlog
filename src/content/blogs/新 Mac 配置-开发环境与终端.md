@@ -40,7 +40,7 @@ eval "$(/opt/homebrew/bin/brew shellenv)"
 
 ### 1. 编辑器、终端与图形开发工具
 
-带界面的应用可通过 cask 或官网安装。应用选择与 AI/Agent 插件搭配统一见 [Mac 应用清单](/interests/device/#我的-mac-软件)；这里列出对应的开发应用安装入口：
+带界面的应用可通过 cask 或官网安装。应用选择与 AI/Agent 插件搭配统一见 [Mac 应用清单](/interests/software/#我的-mac-软件)；这里列出对应的开发应用安装入口：
 
 | 工具 | 用途 | 安装命令或入口 |
 | --- | --- | --- |
