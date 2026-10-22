@@ -29,13 +29,13 @@ order: 4
 ### 玩过
 
 :::card{title="无畏契约" href="https://zh.wikipedia.org/wiki/无畏契约" score="4.5" label="游戏"}
-![无畏契约海报](./game/valorant.png)
+![无畏契约海报](./game/valorant.jpg)
 
 两三个赛季没打了，铂钻。
 :::
 
 :::card{title="反恐精英：全球攻势" href="https://zh.wikipedia.org/wiki/反恐精英：全球攻势" score="4.5" label="游戏"}
-![反恐精英：全球攻势海报](./game/csgo.jpg)
+![反恐精英：全球攻势海报](./game/csgo.png)
 
 爱看点绿龙 Spirit。
 :::
@@ -119,7 +119,7 @@ order: 4
 :::
 
 :::card{title="双人成行" href="https://zh.wikipedia.org/wiki/双人成行" score="4" label="游戏"}
-![双人成行海报](./game/it-takes-two.png)
+![双人成行海报](./game/it-takes-two.jpg)
 
 做的还是很有意思的。
 :::

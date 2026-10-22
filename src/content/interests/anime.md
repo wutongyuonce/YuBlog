@@ -141,7 +141,7 @@ order: 1
 :::
 
 :::card{title="青春猪头少年不会梦到兔女郎学姐" href="https://zh.wikipedia.org/wiki/青春猪头少年不会梦到兔女郎学姐" score="5" label="日漫"}
-![青春猪头少年不会梦到兔女郎学姐海报](./anime/bunny-girl.png)
+![青春猪头少年不会梦到兔女郎学姐海报](./anime/bunny-girl.jpg)
 
 我的入门番。青春期症候群把心事变成看得见的异常，樱岛学姐那条线很完整。
 :::
@@ -237,7 +237,7 @@ order: 1
 :::
 
 :::card{title="转生成蜘蛛又怎样" href="https://zh.wikipedia.org/wiki/轉生成蜘蛛又怎樣！" score="4" label="日漫"}
-![转生成蜘蛛又怎样海报](./anime/spider.png)
+![转生成蜘蛛又怎样海报](./anime/spider.jpg)
 
 转生成迷宫里的蜘蛛，先活下来再说。升级和吐槽比剧情好用。
 :::
@@ -335,7 +335,7 @@ order: 1
 :::
 
 :::card{title="罗小黑战记" href="https://zh.wikipedia.org/wiki/罗小黑战记" score="5" label="国漫"}
-![罗小黑战记海报](./anime/luoxiaohei.png)
+![罗小黑战记海报](./anime/luoxiaohei.jpg)
 
 妖精、人类和那只黑猫。电影和番都安静，冲突却是真的。
 :::
@@ -427,7 +427,7 @@ order: 1
 :::
 
 :::card{title="八仙" href="https://zh.wikipedia.org/wiki/八仙！" score="4" label="动画电影"}
-![八仙海报](./anime/baxian.png)
+![八仙海报](./anime/baxian.jpg)
 
 把八仙做成公路片。神仙也会吵架、也会把事情搞砸。
 :::

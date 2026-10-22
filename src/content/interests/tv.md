@@ -65,7 +65,7 @@ order: 3
 :::
 
 :::card{title="风骚律师" href="https://zh.wikipedia.org/wiki/风骚律师" score="5" label="美剧"}
-![风骚律师海报](./tv/better-call-saul.png)
+![风骚律师海报](./tv/better-call-saul.jpg)
 
 绝命毒师的前传。吉米怎么变成索尔，看得比案件本身更清楚。
 :::
@@ -107,7 +107,7 @@ order: 3
 :::
 
 :::card{title="爱死机" href="https://zh.wikipedia.org/wiki/愛x死x機器人" score="5" label="美剧"}
-![爱死机海报](./tv/love-death-robots.png)
+![爱死机海报](./tv/love-death-robots.jpg)
 
 每集一个短篇，科幻、恐怖和冷笑话换着来。有几集会留下来，有几集看完就走。
 :::
@@ -173,7 +173,7 @@ order: 3
 #### 韩剧
 
 :::card{title="我的大叔" href="https://zh.wikipedia.org/wiki/我的大叔" score="5" label="韩剧"}
-![我的大叔海报](./tv/my-mister.png)
+![我的大叔海报](./tv/my-mister.jpg)
 
 IU 和三个叔叔的生活剧。很静，欠债、加班和一句关心都有重量。
 :::
@@ -185,13 +185,13 @@ IU 和三个叔叔的生活剧。很静，欠债、加班和一句关心都有�
 :::
 
 :::card{title="德鲁纳酒店" href="https://zh.wikipedia.org/wiki/德魯納酒店" score="4" label="韩剧"}
-![德鲁纳酒店海报](./tv/hotel-del-luna.png)
+![德鲁纳酒店海报](./tv/hotel-del-luna.jpg)
 
 酒店里住着鬼，老板是月神。奇幻壳子，感情线很直。
 :::
 
 :::card{title="21世纪大君夫人" href="https://zh.wikipedia.org/wiki/21世紀大君夫人" score="4" label="韩剧"}
-![21世纪大君夫人主演合影](./tv/perfect-crown.png)
+![21世纪大君夫人海报](./tv/perfect-crown.jpg)
 
 设定在实行君主立宪制的现代韩国，财阀继承人与王室大君的爱情故事。
 :::
@@ -253,7 +253,7 @@ IU 和三个叔叔的生活剧。很静，欠债、加班和一句关心都有�
 :::
 
 :::card{title="隐秘的角落" href="https://zh.wikipedia.org/wiki/隐秘的角落" score="4" label="国产剧"}
-![隐秘的角落海报](./tv/bad-kids.PNG)
+![隐秘的角落海报](./tv/bad-kids.jpg)
 
 三个孩子撞见一件不该看见的事。海边小镇的悬疑收得很紧。
 :::
@@ -277,7 +277,7 @@ IU 和三个叔叔的生活剧。很静，欠债、加班和一句关心都有�
 :::
 
 :::card{title="梦华录" href="https://zh.wikipedia.org/wiki/梦华录" score="4" label="国产剧"}
-![梦华录海报](./tv/dream-splendor.png)
+![梦华录海报](./tv/dream-splendor.jpg)
 
 三个女人在东京开茶坊。市井和案子并行，人比朝堂好看。
 :::

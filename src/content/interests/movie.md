@@ -31,7 +31,7 @@ order: 2
 :::
 
 :::card{title="给阿嬷的情书" href="https://zh.wikipedia.org/wiki/给阿嬷的情书" score="5" label="电影"}
-![给阿嬷的情书海报](./movie/dear-you.png)
+![给阿嬷的情书海报](./movie/dear-you.jpg)
 
 蓝鸿春 2026 年的电影，讲潮汕侨批和一封写给阿嬷的信，素人主演，拍的是下南洋那一代人留下的家书。
 :::
