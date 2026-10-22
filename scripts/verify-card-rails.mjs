@@ -96,6 +96,16 @@ for (const motion of ['no-preference', 'reduce']) {
         }
       })
       const before = await page.evaluate(() => window.__listeningLayout())
+      const checkCoverSurface =
+        motion === 'no-preference' && width === 1440 && !long
+      const loadingCoverBackground = checkCoverSurface
+        ? await page.evaluate(
+            () =>
+              getComputedStyle(
+                document.querySelector('.recent-listening__skeleton-cover')
+              ).backgroundColor
+          )
+        : ''
       const payload = {
         ...listening,
         weeklyScrobbles: long ? 1234567 : 0,
@@ -126,6 +136,20 @@ for (const motion of ['no-preference', 'reduce']) {
           )
       )
       const after = await page.evaluate(() => window.__listeningLayout())
+      if (checkCoverSurface) {
+        assert.equal(
+          await page.evaluate(
+            () =>
+              getComputedStyle(
+                document.querySelector(
+                  '[data-listening] .media-card .image-view'
+                )
+              ).backgroundColor
+          ),
+          loadingCoverBackground,
+          'a rendered cover frame keeps the skeleton surface'
+        )
+      }
       if (width === 1440) {
         const spacing = await page.evaluate(() => {
           const stats = document.querySelector('.recent-listening__stats')

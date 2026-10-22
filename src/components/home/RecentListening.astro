@@ -150,6 +150,10 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
   .recent-listening__body .media-cards::-webkit-scrollbar {
     display: none;
   }
+  /* 远程封面尚未下载时延续骨架底色，避免就绪首帧露出透明空框。 */
+  .recent-listening__body .media-card > .image-view {
+    background: color-mix(in srgb, var(--c-text) 8%, var(--c-bg));
+  }
   .recent-listening__body .media-card__body,
   .recent-listening__skeleton-body {
     height: var(--listening-copy-height);
