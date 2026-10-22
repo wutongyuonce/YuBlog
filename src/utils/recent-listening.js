@@ -148,13 +148,13 @@ export function renderListening(root, snapshot) {
     snapshot?.tracks.length && track && template
       ? snapshot.tracks.map((item) => createCard(item, template))
       : []
-  // 先清空再插入会让轨道在两次改动之间塌掉。人已经滚到底部时，Safari 会立刻把滚动
-  // 位置抬到变短后的页尾，新卡片就落在视口下面。先钉住轨道高度，再一次换上新卡片。
-  const rail = cards.length ? track.closest?.('.media-cards') : null
-  if (rail?.style && rail.getBoundingClientRect)
-    rail.style.minHeight = `${rail.getBoundingClientRect().height}px`
-  track?.replaceChildren(...cards)
-  rail?.style?.removeProperty('min-height')
+  // 先清空再插入会让轨道中间变空。已经滚到底部时，Safari 会把滚动位置抬高。
+  // 新卡片先进入轨道，再移除骨架，轨道不会先变短。
+  if (cards.length && track) {
+    const skeletons = [...track.children]
+    track.append(...cards)
+    for (const node of skeletons) node.remove()
+  } else track?.replaceChildren()
 
   const time = root.querySelector('[data-listening-time]')
   if (time) {
