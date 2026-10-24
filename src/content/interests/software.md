@@ -45,7 +45,6 @@ order: 7
 | 社交工作 | [腾讯会议](https://meeting.tencent.com/) | |
 | 邮箱 | [网易邮箱大师](https://dashi.163.com/) | |
 | 媒体、信息 | [Folo](https://folo.is/) + [PaperRSS](https://github.com/ohmyangboy/PaperRss) | RSS 订阅器 |
-| 媒体、信息 | [Readest](https://readest.com/) | 阅读器 |
 | 媒体、信息 | [OBS](https://obsproject.com/) | |
 | 媒体、信息 | [剪映专业版](https://www.capcut.cn/) | 剪辑 |
 | 媒体、信息 | [ArcTime Pro](https://arctime.cn/arctime-pro.html) | 字幕 |
@@ -86,7 +85,7 @@ order: 7
 | 邮箱 | qq邮箱、gmail、网易邮箱 |
 | 游戏 | steam、小黑盒 |
 | 梯子 | clash verge |
-| 统计、日程管理 | 滴答清单、时间日志 |
+| 统计、日程管理 | 滴答清单、时间日志、icost |
 | 支付金融 | 中国/建设/招商/鄞州银行、跨境购、数字人民币、云闪付、同花顺 |
 | 运动健康 | Sigma、米家 |
 | 交通 | 美团、哈啰、小遛、滴滴、曹操、高德地图、腾讯地图、googlemap、12306、12123 |
