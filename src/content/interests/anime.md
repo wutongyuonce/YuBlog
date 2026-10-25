@@ -1,7 +1,7 @@
 ---
 title: 动漫
 description: 追过的番与国漫
-order: 1
+order: 2
 ---
 
 [我的b站追番/追剧](https://space.bilibili.com/521627597/bangumi)

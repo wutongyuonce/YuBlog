@@ -295,10 +295,7 @@ export class ImageInteractions extends HTMLElement {
             : nearest,
         0
       )
-      // Match the active frame, not the tallest off-screen portrait.
-      const frame = items[current].querySelector<HTMLElement>('.image-view')
-      if (frame)
-        gallery.style.height = `${frame.getBoundingClientRect().height}px`
+      // The stage height is fixed in CSS, so paging only moves the indicator.
       previous.disabled = current === 0
       next.disabled = current === items.length - 1
       dots.forEach((dot, index) => {
@@ -343,15 +340,6 @@ export class ImageInteractions extends HTMLElement {
       { signal }
     )
     gallery.addEventListener('scroll', update, { signal })
-    window.addEventListener('resize', update, { signal })
-    const observer = new ResizeObserver(update)
-    for (const item of items) {
-      const frame = item.querySelector('.image-view')
-      if (frame) observer.observe(frame)
-    }
-    signal.addEventListener('abort', () => observer.disconnect(), {
-      once: true,
-    })
     update()
   }
 
