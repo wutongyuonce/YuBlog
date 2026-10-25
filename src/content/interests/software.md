@@ -14,7 +14,9 @@ order: 7
 | AI&Agent | [Magpie](https://usemagpie.ai/) | 模型路由 |
 | AI&Agent | [Nowdex](https://nowdex.app/) | token 额度统计 |
 | AI&Agent | [Trajex](https://github.com/wutongyuonce/Trajex) | |
-| AI&Agent | [cockpit tools](https://github.com/jlcodes99/cockpit-tools) | |
+| AI&Agent | [cockpit tools](https://github.com/jlcodes99/cockpit-tools) | gpt 账号多开 |
+| AI&Agent | [AudioSmith](https://github.com/hehehai/AudioSmith) | 语音合成、配音工作台 |
+| AI&Agent | [Voxt](https://voxt.actnow.dev) | 本地语音工具 |
 | 代码 | [Zed](https://zed.dev/) | 编辑器 |
 | 代码 | [VS Code](https://code.visualstudio.com/) | 编辑器 |
 | 代码 | [Navicat](https://www.navicat.com/) | 数据库 |
@@ -27,10 +29,11 @@ order: 7
 | 代码 | [Docker](https://www.docker.com/) | |
 | 代码 | [WhatThePort](https://whattheport.dev/) | 端口查看器 |
 | 笔记、日程管理 | [Typora](https://typora.io/) | |
-| 笔记、日程管理 | [飞书](https://www.feishu.cn/) | |
-| 笔记、日程管理 | [语雀](https://www.yuque.com/) | |
-| 笔记、日程管理 | [滴答清单](https://dida365.com/) | |
 | 笔记、日程管理 | [Obsidian](https://obsidian.md/) | 插件：Git、Excalidraw、Advanced Tables、Adjustable Media |
+| 笔记、日程管理 | [markdown-preview](https://github.com/pluk-inc/markdown-preview) | markdown 预览 |
+| 笔记、日程管理 | [飞书](https://www.feishu.cn/) | |
+| 笔记、日程管理 | [滴答清单](https://dida365.com/) | |
+| 笔记、日程管理 | [Itsycal](https://github.com/sfsam/Itsycal) | 日历小组件 |
 | 浏览器 | [Safari](https://www.apple.com/safari/) | |
 | 浏览器 | [ego lite](https://lite.ego.app/) | |
 | 浏览器 | [Chrome](https://www.google.com/chrome/) | |
@@ -44,7 +47,7 @@ order: 7
 | 社交工作 | [钉钉](https://www.dingtalk.com/) | |
 | 社交工作 | [腾讯会议](https://meeting.tencent.com/) | |
 | 邮箱 | [网易邮箱大师](https://dashi.163.com/) | |
-| 媒体、信息 | [Folo](https://folo.is/) + [PaperRSS](https://github.com/ohmyangboy/PaperRss) | RSS 订阅器 |
+| 媒体、信息 | ~~[Folo](https://folo.is/)~~ [PaperRSS](https://github.com/ohmyangboy/PaperRss) | RSS 订阅器 |
 | 媒体、信息 | [OBS](https://obsproject.com/) | |
 | 媒体、信息 | [剪映专业版](https://www.capcut.cn/) | 剪辑 |
 | 媒体、信息 | [ArcTime Pro](https://arctime.cn/arctime-pro.html) | 字幕 |
