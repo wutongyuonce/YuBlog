@@ -651,11 +651,15 @@ main:has(.post-content) > footer.prose :is(a, span) {
 .prose .image-gallery__item .image-view {
   margin: 0 auto;
 }
+/* One fixed stage for every slide. Mixed portrait and landscape pages
+   used to jump by the active image's height and clip the taller neighbour;
+   the stage now stays put and each image scales inside it, uncropped. */
 .prose .image-gallery--scroll {
+  height: min(520px, 56vh, 100%);
   grid-auto-flow: column;
   grid-auto-columns: 94%;
   grid-template-rows: minmax(0, 1fr);
-  align-items: start;
+  align-items: center;
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior-x: contain;
@@ -666,7 +670,22 @@ main:has(.post-content) > footer.prose :is(a, span) {
   display: none;
 }
 .image-gallery--scroll .image-gallery__item {
+  display: grid;
+  height: 100%;
+  place-items: center;
   scroll-snap-align: start;
+}
+.prose .image-gallery--scroll .image-view {
+  display: grid;
+  place-items: center;
+  max-width: 100%;
+  max-height: 100%;
+}
+.prose .image-gallery--scroll .image-view img {
+  width: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 .image-gallery__viewport {
   position: relative;

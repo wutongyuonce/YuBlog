@@ -14,6 +14,9 @@ await page.goto('about:blank')
 const directory = await mkdtemp(
   path.join(root, 'src/content/blogs/image-layout-check-')
 )
+// Astro's content loader slugs each path segment with github-slugger, which
+// lowercases it. mkdtemp appends mixed-case characters, so the raw directory
+// name is not the route.
 const url = new URL(
   `blogs/${path.basename(directory).toLowerCase()}/demo/`,
   base
@@ -178,10 +181,25 @@ ${longGallery}
                 .gridTemplateColumns.split(' ')
                 .map(parseFloat)
             ),
-          galleryHeight: scroll.getBoundingClientRect().height,
-          frameHeight: first
-            .querySelector('.image-view')
-            .getBoundingClientRect().height,
+          stageHeight: scroll.getBoundingClientRect().height,
+          slideHeights: [...scroll.children].map(
+            (slide) => slide.getBoundingClientRect().height
+          ),
+          // A portrait neighbour must stay whole inside the fixed stage, not
+          // get clipped to whatever height the active landscape happens to be.
+          portrait: (() => {
+            const image = [...scroll.querySelectorAll('img')].find(
+              (img) => img.alt === '\u7ad6\u56fe'
+            )
+            const box = image.getBoundingClientRect()
+            const stage = scroll.getBoundingClientRect()
+            return {
+              ratio: image.naturalWidth / image.naturalHeight,
+              shown: box.width / box.height,
+              inside:
+                box.top >= stage.top - 1 && box.bottom <= stage.bottom + 1,
+            }
+          })(),
           arrow: (() => {
             const rect = scroll.parentElement
               .querySelector('.image-gallery__arrow--next')
@@ -265,8 +283,15 @@ ${longGallery}
         )
       }
       assert.ok(
-        Math.abs(state.galleryHeight - state.frameHeight) < 1,
-        `${width}/${dark}: active gallery ${state.galleryHeight}px, frame ${state.frameHeight}px`
+        state.slideHeights.every(
+          (height) => Math.abs(height - state.stageHeight) < 1
+        ),
+        `${width}/${dark}: every slide fills the fixed stage ${state.stageHeight}px, got ${state.slideHeights}`
+      )
+      assert.ok(
+        state.portrait.inside &&
+          Math.abs(state.portrait.shown - state.portrait.ratio) < 0.02,
+        `${width}/${dark}: the portrait stays whole and uncropped inside the stage`
       )
       assert.ok(
         Math.abs(state.arrow.middle - state.arrow.stageMiddle) < 1,
@@ -331,6 +356,8 @@ ${longGallery}
     deviceScaleFactor: 1,
     mobile: false,
   })
+  await page.goto(url)
+  await scrollTo('.image-view:has(> img[alt="缩略图"])')
   await page.hover('.image-view:has(> img[alt="缩略图"])')
   await page.evaluate(() =>
     document.querySelector('img[alt="缩略图"]').decode()
@@ -436,7 +463,7 @@ ${longGallery}
   })
   assert.ok(
     Math.abs(activeSlide.height - activeSlide.frameHeight) < 1,
-    'switching to a portrait shows its complete frame'
+    'paging keeps the stage height instead of jumping to the new image'
   )
   assert.ok(
     activeSlide.activeAlpha > activeSlide.inactiveAlpha,
