@@ -1,7 +1,7 @@
 ---
 title: 软件
 description: Mac 和手机上在用的软件
-order: 7
+order: 1
 ---
 
 ### 我的 Mac 软件
