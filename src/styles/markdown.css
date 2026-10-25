@@ -235,8 +235,13 @@ html:not(.dark) .img-dark {
   margin: 5rem 0;
 
   transform: scale(1.2, 1.2) !important;
+}
 
-  --uno: 'lt-lg:(mx-4 scale-0)';
+@media (max-width: 1023px) {
+  .rds-video {
+    margin: 1rem 0;
+    transform: none !important;
+  }
 }
 
 .rds-video.no-scale {

@@ -340,6 +340,7 @@ export class ImageInteractions extends HTMLElement {
       { signal }
     )
     gallery.addEventListener('scroll', update, { signal })
+    window.addEventListener('resize', update, { signal })
     update()
   }
 

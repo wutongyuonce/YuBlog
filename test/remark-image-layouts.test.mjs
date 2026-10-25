@@ -184,6 +184,8 @@ test('ordinary images keep authored thumbnail width and a separate full-size Ast
   assert.equal(views.length, 2)
   const visible = nodes(code, (node) => node.tagName === 'img')
   assert.equal(visible[0].properties.width, 220)
+  assert.equal(views[0].properties.style, '--image-width: 220px')
+  assert.equal(views[1].properties.style, undefined)
   assert.equal(visible[0].properties.alt, '截图')
   const full = views[0].children.find((node) => node.tagName === 'template')
     .content.children[0]

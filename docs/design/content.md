@@ -130,9 +130,8 @@ gallery／figure 保持 660px 版心，不 breakout，静止时完整显示、�
 scroll 不接受 columns／widths，全部图片静态存在，原生横滚与 scroll snap 无 JS 也能用，不自动播放。
 启用 JS 且至少两张时，白色圆形箭头贴图片区域两侧，首尾隐藏不可用方向；图片底部叠加一图一点的页码，当前点为深色。
 没有底部工具条和可见滚动条。圆点过多时只滚动分页容器以露出当前点，不移动文章。
-当前位置跟随实际滚动。相册区域高度固定为 `min(520px, 56vh)` 且不超过容器宽度，翻页与窗口尺寸变化都不改变，不随当前图片高度跳动。
-每张图按原比例缩放到宽、高都不超过区域，完整显示不裁切；横图上下留白、竖图左右留白并居中。
-相册按区域高度排图，不保留 `|w` 的显示宽度；`|w` 在这里只决定 Astro 的 `srcset`／`sizes`。
+当前位置跟随实际滚动。相册区域高度为 `min(520px, 56svh)`，随视口调整，翻页不随图片高度跳动。
+图片居中、按原比例完整缩入区域；`|w` 仍是显示宽度上限，区域宽高不足时继续等比缩小。
 单张 scroll 不生成增强 wrapper、箭头或页码；无 JS 不显示失效控件，全部图文仍可读。
 
 <a id="cards"></a>
@@ -248,7 +247,7 @@ poster 不走图片优化也不镜像，允许合法 HTTP(S)／协议相对外�
 `public/_media/` 是派生产物、已 gitignore，由 `astro-media-sync` 在 config:setup、Astro 拷贝 public 前镜像，确保本次构建带资源。
 按 mtime + 大小跳过未变文件，删除源文件后清理旧产物；dev 不监听媒体变化，增删／替换后重启 dev。
 
-外部平台可用 iframe，B 站指令在 `plugins/index.ts` 统一 autoplay=0，YouTube 指令沿用平台非自动播放默认值；手写 B 站 iframe 要自行加 autoplay=0。
+正文 audio／iframe 不超过容器宽度；平台视频在 1024px 以下取消额外放大。外部平台可用 iframe，B 站指令在 `plugins/index.ts` 统一 autoplay=0，YouTube 指令沿用平台非自动播放默认值；手写 B 站 iframe 要自行加 autoplay=0。
 本地 video／audio 不由插件添加 autoplay，是否播放由作者属性及浏览器决定。
 正文聚焦时空格／Shift+空格保持浏览器翻页，不设置全局视频快捷键；播放器先获得焦点再处理内部按键，跨域 iframe 事件不由父页接管。
 RSS 删除嵌入控件及子树，作者应在控件外紧邻补说明和普通媒体链接，详见 [RSS 全文表达](./distribution.md#rss-content)。
@@ -412,7 +411,7 @@ CSS 仅消费插件已验证的 class、轨道与属性，不再解析 Markdown�
 | `plugins/rehype-media-assets.ts` | 元素分派、改写与带位置报错，不另推路径 |
 | `plugins/astro-media-sync.ts` | 按共享 MIRROR_EXTENSIONS 镜像和清理；复制 exporter 字体，不另推 URL |
 | `src/utils/image-lightbox-gallery.js` | 集合过滤、src 键、副本对齐与索引夹取，不在组件再扫一套 DOM |
-| `src/utils/image-interactions.ts` | 横滚索引、箭头／点、高度；大图状态、键盘、dialog、焦点与监听生命周期 |
+| `src/utils/image-interactions.ts` | 横滚索引、箭头／点；大图状态、键盘、dialog、焦点与监听生命周期 |
 | `src/utils/card-rail-marquee.js` | 判断循环、生成／清理视觉副本；位移动画由 CSS 完成 |
 | `src/components/widgets/CardScrollbars.astro` | document 捕获 scroll，仅处理小字／评论；每区弱引用计时器，滚动续期并清理 |
 | `plugins/remark-excalidraw.ts` | 指令、预览、源链接和源位置错误 |
@@ -426,8 +425,8 @@ CSS 仅消费插件已验证的 class、轨道与属性，不再解析 Markdown�
 HAST template 的 children／content 共享图片节点：Astro 从 children 原位改属性，最终 raw 从 content 序列化，两侧不替换节点。
 仅 Astro 已认领的图片设置单资源输出；未认领的公网／public 图不附内部优化属性，页面可见图仍保留响应式资源。
 ImageInteractions widget 在 BaseLayout 只注册接线，不再维护第二套 lightbox 或轮播状态。
-横滚增强用 ResizeObserver 跟踪 frame 加载和尺寸，按实际滚动同步当前索引、边界、点及高度，不另推图片尺寸。
-disconnect 用 AbortController 清监听、断开 ResizeObserver、释放 dialog 和页面资源；Excalidraw 同时断开 IntersectionObserver、中止 fetch、销毁 view／SVG URL。
+横滚增强在 scroll／resize 时同步索引、边界与页码；区域高度和图片缩放由 CSS 管理。
+disconnect 用 AbortController 清监听、释放 dialog 和页面资源；Excalidraw 同时断开 IntersectionObserver、中止 fetch、销毁 view／SVG URL。
 滚动锁统一调用 `src/utils/misc.ts` 的 lockScroll() 并持有 release：根节点锁定、按实际稳定留白补偿并恢复旧样式，release 绑定当时 body，旧页释放不得解锁新页。
 图片／画布只释放自己持有的锁，不写第二套 overflow 策略；backdrop 按元素持有同一接口的 release，ClientRouter 取消旧页退出动画也不得将它复用到新页。
 不向已断开触发节点恢复焦点；循环副本与活动状态换页清理，不让旧监听或旧资源影响新页。

@@ -107,4 +107,36 @@ assert.equal(
 )
 assert.ok(checkedCode, '真实文章必须覆盖长行内代码')
 assert.ok(checkedWideMath, '真实文章必须覆盖超宽公式，避免空检查通过')
+// Native controls and embed dimensions must fit their actual prose container.
+for (const width of [600, 390, 320]) {
+  await page.cdp('Emulation.setDeviceMetricsOverride', {
+    width,
+    height: 900,
+    deviceScaleFactor: 1,
+    mobile: false,
+  })
+  const media = await page.evaluate(() => {
+    const container = document.createElement('blockquote')
+    container.innerHTML =
+      '<audio controls></audio><iframe width="560" height="315" src="about:blank"></iframe><iframe class="rds-video" src="about:blank"></iframe>'
+    document.querySelector('.post-content').append(container)
+    const bounds = container.getBoundingClientRect()
+    const fits = [...container.querySelectorAll('audio, iframe')].every(
+      (node) => {
+        const rect = node.getBoundingClientRect()
+        return (
+          rect.width > 0 &&
+          rect.left >= bounds.left - 1 &&
+          rect.right <= bounds.right + 1
+        )
+      }
+    )
+    container.remove()
+    return fits
+  })
+  assert.ok(
+    media,
+    `${width}px: native audio and embedded frames stay inside prose`
+  )
+}
 console.log('窄屏正文防撑宽与内容可访问检查通过')

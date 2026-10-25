@@ -232,6 +232,9 @@
 .prose figure img {
   margin-block: 0;
 }
+.prose :is(audio, iframe) {
+  max-width: 100%;
+}
 .prose video {
   margin-top: 2em;
   margin-bottom: 2em;
@@ -651,11 +654,10 @@ main:has(.post-content) > footer.prose :is(a, span) {
 .prose .image-gallery__item .image-view {
   margin: 0 auto;
 }
-/* One fixed stage for every slide. Mixed portrait and landscape pages
-   used to jump by the active image's height and clip the taller neighbour;
-   the stage now stays put and each image scales inside it, uncropped. */
+/* Keep the stage independent of image size and mobile browser chrome. */
 .prose .image-gallery--scroll {
-  height: min(520px, 56vh, 100%);
+  --image-gallery-height: min(520px, 56svh);
+  height: var(--image-gallery-height);
   grid-auto-flow: column;
   grid-auto-columns: 94%;
   grid-template-rows: minmax(0, 1fr);
@@ -676,15 +678,16 @@ main:has(.post-content) > footer.prose :is(a, span) {
   scroll-snap-align: start;
 }
 .prose .image-gallery--scroll .image-view {
-  display: grid;
-  place-items: center;
-  max-width: 100%;
-  max-height: 100%;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
 }
 .prose .image-gallery--scroll .image-view img {
   width: auto;
-  max-width: 100%;
-  max-height: 100%;
+  height: auto;
+  max-width: min(100%, var(--image-width, 100%));
+  max-height: var(--image-gallery-height);
   object-fit: contain;
 }
 .image-gallery__viewport {

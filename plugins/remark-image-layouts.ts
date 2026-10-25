@@ -200,10 +200,17 @@ export default function remarkImageLayouts() {
         ...image,
         data: undefined,
       }
-      return element('span', 'image-view', [
-        visible,
-        element('template', 'image-view__source', [full]),
-      ])
+      const width = (
+        image.data as { hProperties?: { width?: unknown } } | undefined
+      )?.hProperties?.width
+      return element(
+        'span',
+        'image-view',
+        [visible, element('template', 'image-view__source', [full])],
+        typeof width === 'number' && Number.isFinite(width) && width > 0
+          ? { style: `--image-width: ${width}px` }
+          : {}
+      )
     }
     const classList = (value: unknown) =>
       Array.isArray(value) ? value.map(String) : value ? [String(value)] : []

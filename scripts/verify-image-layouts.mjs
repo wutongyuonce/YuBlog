@@ -70,7 +70,7 @@ ${image}
 ## 横向
 
 :::gallery{layout="scroll"}
-${image}
+![横图|w220](./images/landscape.svg)
 ${portrait}
 ${image}
 :::
@@ -136,7 +136,7 @@ ${longGallery}
     features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
   })
 
-  for (const width of [1440, 390, 320]) {
+  for (const width of [1440, 601, 600, 390, 320]) {
     await page.goto(url)
     await page.cdp('Emulation.setDeviceMetricsOverride', {
       width,
@@ -152,6 +152,14 @@ ${longGallery}
         )
     )
     await page.waitForSelector('img[role="button"]')
+    await page.evaluate(async () => {
+      await Promise.all(
+        [...document.querySelectorAll('.post-content img')].map((image) => {
+          image.loading = 'eager'
+          return image.decode()
+        })
+      )
+    })
     for (const dark of [false, true]) {
       await page.evaluate(
         (dark) => document.documentElement.classList.toggle('dark', dark),
@@ -182,6 +190,18 @@ ${longGallery}
                 .map(parseFloat)
             ),
           stageHeight: scroll.getBoundingClientRect().height,
+          scrollImages: [...scroll.querySelectorAll('img')].map((image) => {
+            const rect = image.getBoundingClientRect()
+            const stage = scroll.getBoundingClientRect()
+            return {
+              width: rect.width,
+              height: rect.height,
+              ratio: image.naturalWidth / image.naturalHeight,
+              top: rect.top - stage.top,
+              bottom: stage.bottom - rect.bottom,
+              maxWidth: image.closest('.image-gallery__item').clientWidth,
+            }
+          }),
           slideHeights: [...scroll.children].map(
             (slide) => slide.getBoundingClientRect().height
           ),
@@ -282,6 +302,20 @@ ${longGallery}
           'fixed first track must leave the rest to the flexible track'
         )
       }
+      assert.ok(
+        state.stageHeight > 0 && state.stageHeight <= 520,
+        'the gallery must reserve a visible stage before and after image loading'
+      )
+      for (const image of state.scrollImages) {
+        assert.ok(image.width > 0 && image.height > 0)
+        assert.ok(image.width <= image.maxWidth + 1)
+        assert.ok(image.top >= -1 && image.bottom >= -1)
+        assert.ok(Math.abs(image.width / image.height - image.ratio) < 0.02)
+      }
+      assert.ok(
+        state.scrollImages[0].width <= 220,
+        '|w remains a display limit'
+      )
       assert.ok(
         state.slideHeights.every(
           (height) => Math.abs(height - state.stageHeight) < 1
@@ -431,6 +465,9 @@ ${longGallery}
   // The long-gallery fixture repeats these controls, so target the first
   // gallery explicitly; scrolling to it first keeps the click deterministic.
   await scrollTo('.image-gallery--scroll')
+  const initialStageHeight = await page.evaluate(
+    () => document.querySelector('.image-gallery--scroll').clientHeight
+  )
   await page.click('.image-gallery__arrow[aria-label="下一张图片"] >> nth=0')
   await page.waitForFunction(
     () =>
@@ -454,15 +491,12 @@ ${longGallery}
     }
     return {
       height: gallery.getBoundingClientRect().height,
-      frameHeight: gallery.children[1]
-        .querySelector('.image-view')
-        .getBoundingClientRect().height,
       activeAlpha: alpha(dots[1]),
       inactiveAlpha: alpha(dots[0]),
     }
   })
   assert.ok(
-    Math.abs(activeSlide.height - activeSlide.frameHeight) < 1,
+    Math.abs(activeSlide.height - initialStageHeight) < 1,
     'paging keeps the stage height instead of jumping to the new image'
   )
   assert.ok(
@@ -743,12 +777,15 @@ ${longGallery}
       controls: document.querySelectorAll(
         'img[role="button"], .image-view__linked-zoom, .image-gallery__arrow, .image-gallery__dot'
       ).length,
+      stageHeight: document.querySelector('.image-gallery--scroll')
+        .clientHeight,
       scrollable:
         document.querySelector('.image-gallery--scroll').scrollWidth >
         document.querySelector('.image-gallery--scroll').clientWidth,
     }))
     assert.equal(state.images, 27, 'all authored images survive without JS')
     assert.equal(state.controls, 0)
+    assert.ok(state.stageHeight > 0, 'the stage remains visible without JS')
     assert.equal(state.scrollable, true)
   } finally {
     await page.cdp('Emulation.setScriptExecutionDisabled', { value: false })
