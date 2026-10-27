@@ -1,6 +1,6 @@
 {
   "timeZone": "Asia/Shanghai",
-  "updatedAt": "2026-10-27T16:50:00.360Z",
+  "updatedAt": "2026-10-27T18:50:05.571Z",
   "days": [
     {
       "date": "2026-10-22",
@@ -127,47 +127,67 @@
     },
     {
       "date": "2026-10-28",
-      "seconds": 2996,
+      "seconds": 6996,
       "apps": [
         {
           "name": "Ghostty",
-          "seconds": 1004.543
+          "seconds": 2938.67
+        },
+        {
+          "name": "Safari浏览器",
+          "seconds": 1074.648
+        },
+        {
+          "name": "Typora",
+          "seconds": 698.176
         },
         {
           "name": "LM Studio",
           "seconds": 596.352
         },
         {
-          "name": "Safari浏览器",
-          "seconds": 419.94
-        },
-        {
           "name": "magpie",
           "seconds": 403.496
         },
         {
-          "name": "Typora",
-          "seconds": 229.499
-        },
-        {
-          "name": "QQ音乐",
-          "seconds": 204.454
+          "name": "Zed",
+          "seconds": 333.457
         },
         {
           "name": "RepoMirror",
-          "seconds": 70.988
+          "seconds": 223.58
+        },
+        {
+          "name": "QQ音乐",
+          "seconds": 211.143
+        },
+        {
+          "name": "Grok Bot",
+          "seconds": 181.644
+        },
+        {
+          "name": "PaperRss",
+          "seconds": 127.344
         },
         {
           "name": "访达",
-          "seconds": 24.02
+          "seconds": 64.304
         },
         {
-          "name": "Deck",
-          "seconds": 17.621
+          "name": "ego lite",
+          "seconds": 57.985
         },
         {
           "name": "Obsidian",
-          "seconds": 14.078
+          "seconds": 39.184
+        },
+        {
+          "name": "Deck",
+          "seconds": 19.943
+        },
+        {
+          "name": "百变小樱",
+          "seconds": 13.444
         },
         {
           "name": "MyGo 云音乐",
@@ -175,7 +195,7 @@
         },
         {
           "name": "SecurityAgent",
-          "seconds": 2.45
+          "seconds": 3.212
         }
       ]
     }
