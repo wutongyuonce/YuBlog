@@ -654,12 +654,17 @@ main:has(.post-content) > footer.prose :is(a, span) {
 .prose .image-gallery__item .image-view {
   margin: 0 auto;
 }
-/* Keep the stage independent of image size and mobile browser chrome. */
+/* Fixed stage height; slide width follows each image; snap to center. */
 .prose .image-gallery--scroll {
   --image-gallery-height: min(520px, 56svh);
+  /* End space so a full-height 3:4 portrait can still center. */
+  --image-gallery-end-space: max(
+    0.75rem,
+    calc((100% - min(100%, 0.75 * min(520px, 56svh))) / 2)
+  );
   height: var(--image-gallery-height);
   grid-auto-flow: column;
-  grid-auto-columns: 94%;
+  grid-auto-columns: max-content;
   grid-template-rows: minmax(0, 1fr);
   align-items: center;
   overflow-x: auto;
@@ -667,21 +672,27 @@ main:has(.post-content) > footer.prose :is(a, span) {
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
+  padding-inline: var(--image-gallery-end-space);
+  scroll-padding-inline: var(--image-gallery-end-space);
 }
 .image-gallery--scroll::-webkit-scrollbar {
   display: none;
 }
 .image-gallery--scroll .image-gallery__item {
   display: grid;
+  width: max-content;
   height: 100%;
   place-items: center;
-  scroll-snap-align: start;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
 }
 .prose .image-gallery--scroll .image-view {
   display: flex;
   align-items: center;
-  width: 100%;
+  width: fit-content;
+  max-width: 100%;
   height: 100%;
+  margin: 0;
 }
 .prose .image-gallery--scroll .image-view img {
   width: auto;
@@ -693,6 +704,13 @@ main:has(.post-content) > footer.prose :is(a, span) {
 .image-gallery__viewport {
   position: relative;
   margin-block: 1.5rem;
+}
+/* Cap to the visible stage (viewport), not the padded scroll content box. */
+.image-gallery__viewport:has(.image-gallery--scroll) {
+  container-type: inline-size;
+}
+.image-gallery__viewport .image-gallery--scroll .image-view img {
+  max-width: min(100cqw, var(--image-width, 100cqw));
 }
 .prose .image-gallery__viewport > .image-gallery--scroll {
   margin: 0;

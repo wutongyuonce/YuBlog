@@ -130,8 +130,10 @@ gallery／figure 保持 660px 版心，不 breakout，静止时完整显示、�
 scroll 不接受 columns／widths，全部图片静态存在，原生横滚与 scroll snap 无 JS 也能用，不自动播放。
 启用 JS 且至少两张时，白色圆形箭头贴图片区域两侧，首尾隐藏不可用方向；图片底部叠加一图一点的页码，当前点为深色。
 没有底部工具条和可见滚动条。圆点过多时只滚动分页容器以露出当前点，不移动文章。
-当前位置跟随实际滚动。相册区域高度为 `min(520px, 56svh)`，随视口调整，翻页不随图片高度跳动。
-图片居中、按原比例完整缩入区域；`|w` 仍是显示宽度上限，区域宽高不足时继续等比缩小。
+当前位置跟随实际滚动，按幻灯片中心对齐；箭头与圆点也按中心翻页。
+相册区域高度为 `min(520px, 56svh)`，随视口调整，翻页不随图片高度跳动。
+每张幻灯片宽度跟随该图渲染宽度，两端留白使首尾也能居中；桌面两侧常露出相邻图，窄屏主图常铺满舞台。
+图片按原比例完整缩入区域；`|w` 仍是显示宽度上限，区域宽高不足时继续等比缩小。
 单张 scroll 不生成增强 wrapper、箭头或页码；无 JS 不显示失效控件，全部图文仍可读。
 
 <a id="cards"></a>
@@ -411,7 +413,7 @@ CSS 仅消费插件已验证的 class、轨道与属性，不再解析 Markdown�
 | `plugins/rehype-media-assets.ts` | 元素分派、改写与带位置报错，不另推路径 |
 | `plugins/astro-media-sync.ts` | 按共享 MIRROR_EXTENSIONS 镜像和清理；复制 exporter 字体，不另推 URL |
 | `src/utils/image-lightbox-gallery.js` | 集合过滤、src 键、副本对齐与索引夹取，不在组件再扫一套 DOM |
-| `src/utils/image-interactions.ts` | 横滚索引、箭头／点；大图状态、键盘、dialog、焦点与监听生命周期 |
+| `src/utils/image-interactions.ts` | 横滚中心索引／箭头／点；大图状态、键盘、dialog、焦点与监听生命周期 |
 | `src/utils/card-rail-marquee.js` | 判断循环、生成／清理视觉副本；位移动画由 CSS 完成 |
 | `src/components/widgets/CardScrollbars.astro` | document 捕获 scroll，仅处理小字／评论；每区弱引用计时器，滚动续期并清理 |
 | `plugins/remark-excalidraw.ts` | 指令、预览、源链接和源位置错误 |
@@ -425,7 +427,7 @@ CSS 仅消费插件已验证的 class、轨道与属性，不再解析 Markdown�
 HAST template 的 children／content 共享图片节点：Astro 从 children 原位改属性，最终 raw 从 content 序列化，两侧不替换节点。
 仅 Astro 已认领的图片设置单资源输出；未认领的公网／public 图不附内部优化属性，页面可见图仍保留响应式资源。
 ImageInteractions widget 在 BaseLayout 只注册接线，不再维护第二套 lightbox 或轮播状态。
-横滚增强在 scroll／resize 时同步索引、边界与页码；区域高度和图片缩放由 CSS 管理。
+横滚增强在 scroll／resize 时按幻灯片中心同步索引、边界与页码；区域高度与幻灯片宽度由 CSS 管理。
 disconnect 用 AbortController 清监听、释放 dialog 和页面资源；Excalidraw 同时断开 IntersectionObserver、中止 fetch、销毁 view／SVG URL。
 滚动锁统一调用 `src/utils/misc.ts` 的 lockScroll() 并持有 release：根节点锁定、按实际稳定留白补偿并恢复旧样式，release 绑定当时 body，旧页释放不得解锁新页。
 图片／画布只释放自己持有的锁，不写第二套 overflow 策略；backdrop 按元素持有同一接口的 release，ClientRouter 取消旧页退出动画也不得将它复用到新页。

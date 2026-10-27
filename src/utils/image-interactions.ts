@@ -285,12 +285,17 @@ export class ImageInteractions extends HTMLElement {
     gallery.setAttribute('role', 'region')
     gallery.setAttribute('aria-label', '横向图片相册')
     let current = 0
+    // Snap/index use slide centers so mixed aspect ratios share one axis.
+    const centerX = (el: Element) => {
+      const rect = el.getBoundingClientRect()
+      return rect.left + rect.width / 2
+    }
     const update = () => {
-      const left = gallery.getBoundingClientRect().left
+      const view = centerX(gallery)
       current = items.reduce(
         (nearest, item, index) =>
-          Math.abs(item.getBoundingClientRect().left - left) <
-          Math.abs(items[nearest].getBoundingClientRect().left - left)
+          Math.abs(centerX(item) - view) <
+          Math.abs(centerX(items[nearest]) - view)
             ? index
             : nearest,
         0
@@ -313,9 +318,7 @@ export class ImageInteractions extends HTMLElement {
     const go = (index: number) => {
       const item = items[Math.max(0, Math.min(items.length - 1, index))]
       gallery.scrollBy({
-        left:
-          item.getBoundingClientRect().left -
-          gallery.getBoundingClientRect().left,
+        left: centerX(item) - centerX(gallery),
         behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
           ? 'instant'
           : 'smooth',
@@ -341,7 +344,19 @@ export class ImageInteractions extends HTMLElement {
     )
     gallery.addEventListener('scroll', update, { signal })
     window.addEventListener('resize', update, { signal })
-    update()
+    // Lazy images start at 0×0; nearest-center then picks the wrong slide and
+    // disables Next. Boot only after a slide has real width.
+    let booted = false
+    const tryBoot = () => {
+      if (booted || items[0].getBoundingClientRect().width < 2) return
+      booted = true
+      go(0)
+      update()
+    }
+    const ro = new ResizeObserver(tryBoot)
+    for (const item of items) ro.observe(item)
+    signal.addEventListener('abort', () => ro.disconnect(), { once: true })
+    tryBoot()
   }
 
   private restore() {
