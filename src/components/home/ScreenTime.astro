@@ -1,0 +1,187 @@
+---
+import rawSnapshot from '../../../public/data/screen-time.json'
+import {
+  formatScreenTime,
+  parseScreenTime,
+  SCREEN_TIME_ZONE,
+} from '~/utils/screen-time.js'
+
+const snapshot = parseScreenTime(rawSnapshot)
+const latest = snapshot.days.at(-1)!
+const scale = Math.max(
+  3600,
+  Math.ceil(Math.max(...snapshot.days.map((day) => day.seconds ?? 0)) / 3600) *
+    3600
+)
+const dayLabel = (date: string) =>
+  `${Number(date.slice(5, 7))}/${Number(date.slice(8))}`
+const hours = (seconds: number | null) =>
+  seconds === null
+    ? '—'
+    : seconds > 0 && seconds < 360
+      ? '<0.1'
+      : (seconds / 3600).toFixed(1)
+const updated = new Intl.DateTimeFormat('zh-CN', {
+  timeZone: SCREEN_TIME_ZONE,
+  month: 'numeric',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+}).format(new Date(snapshot.updatedAt))
+---
+
+<section class="screen-time" aria-labelledby="screen-time-title">
+  <header class="home-section-header">
+    <h2 id="screen-time-title">屏幕时间</h2>
+    <a
+      href="https://activitywatch.net/"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      ActivityWatch ↗
+    </a>
+  </header>
+  <div class="screen-time__body">
+    <div class="screen-time__summary">
+      <p class="screen-time__label" data-screen-time-day={latest.date}>
+        {Number(latest.date.slice(5, 7))} 月 {Number(latest.date.slice(8))}{' '}
+        日活跃
+      </p>
+      <p class="screen-time__value">{formatScreenTime(latest.seconds)}</p>
+      <p class="screen-time__note">仅统计电脑前的活跃时间</p>
+    </div>
+    <div class="screen-time__week">
+      <p class="screen-time__label">近 7 天（小时）</p>
+      <ol class="screen-time__chart" aria-label="最近七天每日活跃时长">
+        {snapshot.days.map(({ date, seconds }, index) => (
+          <li
+            class:list={[
+              'screen-time__day',
+              { 'screen-time__day--latest': index === 6 },
+            ]}
+            aria-label={`${date}，${formatScreenTime(seconds)}`}
+            title={`${date}：${formatScreenTime(seconds)}`}
+          >
+            <span class="screen-time__hours" aria-hidden="true">
+              {hours(seconds)}
+            </span>
+            <span class="screen-time__column" aria-hidden="true">
+              <span
+                class="screen-time__bar"
+                style={{ height: `${((seconds ?? 0) / scale) * 100}%` }}
+              />
+            </span>
+            <time datetime={date} aria-hidden="true">
+              {dayLabel(date)}
+            </time>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </div>
+  <p class="screen-time__updated">
+    更新于 <time datetime={snapshot.updatedAt}>{updated}</time>（北京时间）；—
+    表示暂无记录
+  </p>
+</section>
+
+<style>
+  .screen-time {
+    margin-top: 3rem;
+  }
+  .screen-time__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+    align-items: center;
+    gap: 2rem;
+    margin-top: 1.5rem;
+  }
+  .screen-time p {
+    margin: 0;
+  }
+  .screen-time__label,
+  .screen-time__note,
+  .screen-time__updated {
+    color: color-mix(in srgb, var(--c-text) 65%, var(--c-bg));
+    font-size: 0.75rem;
+  }
+  .screen-time .screen-time__value {
+    margin: 0.5rem 0 0.75rem;
+    font-family: var(--font-heading);
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.4;
+  }
+  .screen-time__chart {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .screen-time__day {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .screen-time__column {
+    display: flex;
+    align-items: end;
+    justify-content: center;
+    width: 100%;
+    height: 5rem;
+    background: color-mix(in srgb, var(--c-text) 4%, var(--c-bg));
+  }
+  .screen-time__bar {
+    width: 100%;
+    background: color-mix(in srgb, var(--accent) 50%, var(--c-bg));
+  }
+  .screen-time__day--latest .screen-time__bar {
+    background: var(--accent);
+  }
+  .screen-time__day time {
+    color: color-mix(in srgb, var(--c-text) 65%, var(--c-bg));
+  }
+  .screen-time .screen-time__updated {
+    margin-top: 1rem;
+    line-height: 1.8;
+  }
+  @media (max-width: 540px) {
+    .screen-time__body {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.5rem;
+    }
+    .screen-time__chart {
+      font-size: 0.75rem;
+    }
+  }
+</style>
+
+<script>
+  import { screenTimeDayLabel } from '~/utils/screen-time.js'
+
+  const updateDay = () => {
+    document
+      .querySelectorAll<HTMLElement>('[data-screen-time-day]')
+      .forEach((label) => {
+        label.textContent = screenTimeDayLabel(label.dataset.screenTimeDay!)
+      })
+  }
+  let timer: ReturnType<typeof setInterval> | undefined
+  const bindDay = () => {
+    clearInterval(timer)
+    updateDay()
+    if (document.querySelector('[data-screen-time-day]'))
+      timer = setInterval(updateDay, 60_000)
+  }
+  document.addEventListener('astro:page-load', bindDay)
+  document.addEventListener('astro:before-swap', () => clearInterval(timer))
+  document.addEventListener('visibilitychange', updateDay)
+  bindDay()
+</script>

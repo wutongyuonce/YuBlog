@@ -14,6 +14,7 @@
 | 修改导航、分类筛选、分页或上下篇 | [页面契约](./design/site.md#browsing) | [上下篇与随便逛逛](./design/site.md#post-navigation)、[实现边界](./design/architecture.md#boundaries) |
 | 改样式、目录、主题、搜索或评论 | [架构与模块边界](./design/architecture.md) | [视觉约束](./design/site.md#visuals)、[评论](./design/site.md#comments) |
 | 确认 RSS 会显示什么、换域名有什么影响 | [SEO 与全文订阅](./design/distribution.md) | [RSS 内容表达](./design/distribution.md#rss-content)、[验证](./design/distribution.md#verification) |
+| 配置首页屏幕时间与本机每日同步 | [ActivityWatch 屏幕时间](./design/screen-time.md) | 本机脚本、公开数据边界与 launchd 任务 |
 | 接入或排查首页听歌接口 | [Last.fm 运行时接口与展示](./design/listening.md) | [环境变量与部署](./guides/development.md#services) |
 | 开关像素猫、改皮肤或访客隐藏 | [Oneko 像素猫](./design/oneko.md) | [全站功能配置](./guides/development.md#personalization) |
 | 跑检查、准备交付 | [检查与验收](./guides/development.md#verification) | 对应设计文档末尾的验证映射 |

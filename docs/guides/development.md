@@ -105,6 +105,10 @@ LASTFM_USER=你的_Lastfm_用户名
 
 缺密钥时接口返回 503，页面显示失败说明；不影响静态博客的构建。接口缓存、扫描上限、空数据与取消请求语义见 [Last.fm 设计](../design/listening.md)。密钥只在服务端使用，不写入源码或公开配置。
 
+### ActivityWatch 屏幕时间
+
+首页读取随仓库发布的 `public/data/screen-time.json`，展示当天电脑活跃时长和近七天柱状图。安装并运行 ActivityWatch 后，执行 `node scripts/sync-screen-time.mjs` 生成本地快照；加 `--publish` 会只提交并推送该文件。macOS 用 `node scripts/install-screen-time-launchd.mjs` 安装每日 23:50 同步任务。公开数据只有日期和聚合时长；离线或同步失败保留上次数据。统计口径、Git 边界、日志与卸载命令见 [屏幕时间设计](../design/screen-time.md)。
+
 ### Giscus 评论
 
 在自己的公开 GitHub 仓库启用 Discussions 并安装 Giscus App，用生成的仓库和分类信息替换 `src/config.ts` 的 `GISCUS`。评论出现在博客文章、友链页和全部拾趣分类子页，访客用 GitHub 登录后留言。

@@ -26,7 +26,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 
 | 路由 | 人看到的 | 入口 | 数据权威 |
 | :--- | :--- | :--- | :--- |
-| `/` | 作者介绍、写作热力、近期五篇笔墨、近期书影游与 Last.fm 听歌排行 | `src/pages/index.astro` | 已发布 `blogs`、`interests/recent.md`、运行时 `/api/lastfm` |
+| `/` | 作者介绍、写作热力、屏幕时间、近期五篇笔墨、近期书影游与 Last.fm 听歌排行 | `src/pages/index.astro` | 已发布 `blogs`、`interests/recent.md`、`public/data/screen-time.json`、运行时 `/api/lastfm` |
 | `/blogs/` | 完整文稿列表，八篇分页，原始分类共用 URL 片段精确筛选 | `src/pages/blogs/index.astro` | `blogs` 集合 |
 | `/interests/`、`/interests/<id>/` | 分类入口与按内容自动生成的独立页面 | `src/pages/interests.astro`、`src/pages/interests/[id].astro` | `interests` 集合：顶层 `*.{md,mdx}`，排除 `recent.md` |
 | `/tags/` | 标签芯片；多选 AND；未选不列出文章 | `src/pages/tags.astro` | 同上，标签从文章 frontmatter 汇总 |
@@ -92,6 +92,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 全站输入方式与鼠标／键盘焦点提示 | `BaseLayout.astro` 捕获 pointerdown／keydown，`main.css` 统一抑制指针焦点外框 | 在各个图片／相册组件重复跟踪输入方式，或 blur 导致焦点恢复丢失 |
 | 相册箭头／圆点状态、dialog 放大与正文大图相册翻页、焦点与滚动锁 release 生命周期、监听清理 | `src/utils/image-interactions.ts` | 把交互再放进 Astro widget；widget 在 BaseLayout 只接线；另起第二套 lightbox |
 | 共享 Markdown 标题排版 | `prose.css` 的 `.prose.markdown-content` | 为首页、拾趣、关于各写标题字号 |
+| 屏幕时间日期、公开形状与缺失值 | `src/utils/screen-time.js`；本机 API、写入与发布在 `scripts/sync-screen-time.mjs`，详见 [设计](./screen-time.md) | 在组件内推断活跃状态或连接本机 API |
 | Last.fm 查询、统计、专辑匹配、资料缺失与请求上限 | `src/utils/lastfm.mjs`；缓存与失败语义在 `api/lastfm.js` | 在视图中重新调用 API 或推断排行／周总数 |
 | 写作热力统计与失败语义 | `blog-heatmap.js` | 在组件重算年度字数、将缺失字数当 0 |
 | 热力提示交互与页面清理 | `WritingHeatmap.astro` | 用旧根节点的定时器关闭新页面的提示层 |
@@ -192,7 +193,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 - `BlogIndexLayout`：导航页面的居中单栏容器。
 - `StandardLayout`：文章标题、正文与普通内容排版。
 
-全站没有个人右侧栏；`BlogProfile` 只在首页出现，其下依次是 `WritingHeatmap`、`ProgressStats`、`RecentWriting`、`RecentMedia`、`RecentListening`。导航页统一通过 `BlogIndexLayout` 限制宽度。文章详情使用 `StandardLayout`，TOC 独立放在正文外侧。
+全站没有个人右侧栏；`BlogProfile` 只在首页出现，其下依次是 `WritingHeatmap`、`ProgressStats`、`ScreenTime`、`RecentWriting`、`RecentMedia`、`RecentListening`。导航页统一通过 `BlogIndexLayout` 限制宽度。文章详情使用 `StandardLayout`，TOC 独立放在正文外侧。
 
 顶栏的 `--site-nav-width` 引用 `--blog-shell-width`，与内容版心共用 660px 目标；更多右侧保留剩余空白。内容宽度同时受 `100vw - 两侧外边距` 限制；1200px 及以上再减去 32rem，避免加宽正文时把目录从 208px 挤窄。顶栏与正文同步收窄，小屏两排导航仍受响应式外边距 `--site-gutter` 约束。`--blog-prose-width` 引用版心宽度，标题、正文与返回链接对齐；目录读取同一个 `--blog-prose-width`，在正文边缘与视口外边距之间的留白中线基础上向外移 16px，最大 208px、受视口剩余空间约束。文稿列表卡片的封面列固定为无图 222px、有图 250px，版心宽度变化只进入左侧文字；768px 及以上封面垂直居中，更窄时改为单列并隐藏空封面列。目录与正文读取同一版心宽度。小屏由可用视口宽度约束。
 
@@ -208,7 +209,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 文稿菜单由 `NavDropdown` 保存当前预览分类，只在实际分类链接的 pointerenter／focusin 时切换，鼠标走过行间隙时保留选择；无脚本的 hover／focus 降级仅应用于未绑定脚本的菜单。Escape 的文档级监听关闭已展开菜单，包括鼠标悬停展开但焦点仍在菜单外的情况；只有焦点原本在该菜单内才返回触发链接。浏览器回归脚本为 `scripts/verify-nav-dropdown.mjs`。
 
-顶部分类菜单只读取 `getPublishedBlogPosts`，由 `blog-browser.js` 的 `getCategoryPreviews` 按 `data.category` 原值统计分类，保留每类最多四篇已发布文章预览，发布日期顺序不变；入口按篇数降序，同数按名称的 `zh-Hans-CN` 排序。`draft` 不参与入口、计数或最近文章，是明确的设计决策边界：仅含草稿的分类消失，删除最后一篇已发布文章后对应入口消失；已发布集合为空时类别为空，仅保留“查看全部文稿”链接，不保留固定类别。开发网页列表与正文预览不属于此边界，行为不变。菜单 URL 通过共享 `serializeBlogQuery` 生成。桌面左列与右列各占一格：左列固定间距自上而下，右列只显示当前预览；面板高度取较高的一列，未选中预览不占高度，所以切换分类不移动左列。右列在面板滚动时保持可见，小屏仍逐类排列。写作热力的上海日历与年度汇总在 `blog-heatmap.js`；进度数字在 `progress-stats.js`；近期五篇在 `getRecentBlogPosts`（与列表筛选无关）。近期五篇仅在首页显示。四块首页板块标题共用 `shell.css` 的 `.home-section-header`，各自内容样式留在组件或共享正文样式；热力提示层的焦点、滚动限高、定时器与监听清理由 `WritingHeatmap` 唯一持有，页面交换前清理。
+顶部分类菜单只读取 `getPublishedBlogPosts`，由 `blog-browser.js` 的 `getCategoryPreviews` 按 `data.category` 原值统计分类，保留每类最多四篇已发布文章预览，发布日期顺序不变；入口按篇数降序，同数按名称的 `zh-Hans-CN` 排序。`draft` 不参与入口、计数或最近文章，是明确的设计决策边界：仅含草稿的分类消失，删除最后一篇已发布文章后对应入口消失；已发布集合为空时类别为空，仅保留“查看全部文稿”链接，不保留固定类别。开发网页列表与正文预览不属于此边界，行为不变。菜单 URL 通过共享 `serializeBlogQuery` 生成。桌面左列与右列各占一格：左列固定间距自上而下，右列只显示当前预览；面板高度取较高的一列，未选中预览不占高度，所以切换分类不移动左列。右列在面板滚动时保持可见，小屏仍逐类排列。写作热力的上海日历与年度汇总在 `blog-heatmap.js`；进度数字在 `progress-stats.js`；近期五篇在 `getRecentBlogPosts`（与列表筛选无关）。近期五篇仅在首页显示。首页板块标题共用 `shell.css` 的 `.home-section-header`，各自内容样式留在组件或共享正文样式；热力提示层的焦点、滚动限高、定时器与监听清理由 `WritingHeatmap` 唯一持有，页面交换前清理。
 
 #### Last.fm 运行时接口 seam
 
@@ -308,7 +309,7 @@ plugins/
 
 ### 首页 `/`
 
-`BlogProfile` 无卡片背景：头像与作者信息作为一组居中，头像右侧的名字与 INTJ 上下两行排列，INTJ 在名字下方，字号为 13px；RSS 居右；下方依次是一行居中的六个 15px 社交图标和独立一行居中的斜体名言「我与我周旋久，宁做我」。图标横向间距为桌面 15px／窄屏 9px，名言较长时在版心内自动换行，没有全站总数。社交入口由 `config.ts` 的 `AUTHOR_LINKS` 维护，名称保留给读屏器和悬停提示。窄屏仍保持作者组居中、RSS 靠右同一行，社交仍为单行、名言在其下方，缩小图标间隔；时间进度标签和数字上下排列。`WritingHeatmap` 放在名片下方，首页随后呈现独立的 `ProgressStats` 三列细时间进度，再显示近期笔墨。标题与近期笔墨左对齐，年份在标题右侧以自定义下拉选择（多一年时；列表在触发器下方展开）；日历按上海时区自然年、周一起始，只计已发布文章。每年摘要显示篇数、字数和有文章的天数。单篇格子是链接，多篇在脚本启用后从提示层进入。`RecentWriting` 在其下显示最近五篇已发布文稿，无卡片底色，标题大小接近正文。`RecentMedia` 再往下渲染 `src/content/interests/recent.md`，不另画边框，宽度跟首页版心走。正文标题和卡片仅使用共享 `prose.css`，没有首页专用覆盖；近期条目使用连续 `:::card{layout="portrait"}` 组成一排，原封面、标题和顺序保留，原评论精简后放入 `meta`，不显示评分或类别角标，作品标题 `href` 直接指向对应 Wiki；不写 `scroll="auto"`，仅手动横滑。标题右侧「全部拾趣」进入拾趣入口。Markdown 标题按原层级分段并保留锚点。该文件排除出拾趣集合，不生成子页。`RecentListening` 接在近期书影游下方展示 Last.fm 听歌排行。首页不显示文章分页或个人侧栏。首页带 `?page=`、`?category=`、`?tag=` 的兼容书签在客户端转到 `/blogs/`。
+`BlogProfile` 无卡片背景：头像与作者信息作为一组居中，头像右侧的名字与 INTJ 上下两行排列，INTJ 在名字下方，字号为 13px；RSS 居右；下方依次是一行居中的六个 15px 社交图标和独立一行居中的斜体名言「我与我周旋久，宁做我」。图标横向间距为桌面 15px／窄屏 9px，名言较长时在版心内自动换行，没有全站总数。社交入口由 `config.ts` 的 `AUTHOR_LINKS` 维护，名称保留给读屏器和悬停提示。窄屏仍保持作者组居中、RSS 靠右同一行，社交仍为单行、名言在其下方，缩小图标间隔；时间进度标签和数字上下排列。`WritingHeatmap` 放在名片下方，首页随后呈现独立的 `ProgressStats` 三列细时间进度，再显示屏幕时间和近期笔墨。屏幕时间读取已提交的七日聚合快照，数据边界与本机同步见 [设计](./screen-time.md)。标题与近期笔墨左对齐，年份在标题右侧以自定义下拉选择（多一年时；列表在触发器下方展开）；日历按上海时区自然年、周一起始，只计已发布文章。每年摘要显示篇数、字数和有文章的天数。单篇格子是链接，多篇在脚本启用后从提示层进入。`RecentWriting` 在其下显示最近五篇已发布文稿，无卡片底色，标题大小接近正文。`RecentMedia` 再往下渲染 `src/content/interests/recent.md`，不另画边框，宽度跟首页版心走。正文标题和卡片仅使用共享 `prose.css`，没有首页专用覆盖；近期条目使用连续 `:::card{layout="portrait"}` 组成一排，原封面、标题和顺序保留，原评论精简后放入 `meta`，不显示评分或类别角标，作品标题 `href` 直接指向对应 Wiki；不写 `scroll="auto"`，仅手动横滑。标题右侧「全部拾趣」进入拾趣入口。Markdown 标题按原层级分段并保留锚点。该文件排除出拾趣集合，不生成子页。`RecentListening` 接在近期书影游下方展示 Last.fm 听歌排行。首页不显示文章分页或个人侧栏。首页带 `?page=`、`?category=`、`?tag=` 的兼容书签在客户端转到 `/blogs/`。
 
 ### 文稿 `/blogs/`
 
