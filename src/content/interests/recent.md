@@ -2,7 +2,7 @@
 ![赛博朋克边缘行者 2 海报](./anime/edgerunners-2.png)
 :::
 
-:::card{layout="portrait" title="葬送的芙莉莲 2" href="https://zh.wikipedia.org/wiki/葬送的芙莉莲" meta="正在看。"}
+:::card{layout="portrait" title="葬送的芙莉莲 2" href="https://zh.wikipedia.org/wiki/葬送的芙莉莲" meta="作为过渡的一季，还是很好看"}
 ![葬送的芙莉莲 2 海报](./anime/frieren-2.jpg)
 :::
 

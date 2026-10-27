@@ -20,12 +20,6 @@ order: 2
 正在看。
 :::
 
-:::card{title="葬送的芙莉莲 2" href="https://zh.wikipedia.org/wiki/葬送的芙莉莲" score="4" label="日漫"}
-![葬送的芙莉莲 2 海报](./anime/frieren-2.jpg)
-
-正在看。
-:::
-
 ### 准备看
 
 :::card{title="进击的巨人" href="https://zh.wikipedia.org/wiki/進擊的巨人" label="日漫"}
@@ -97,6 +91,12 @@ order: 2
 ### 看过
 
 #### 日漫
+
+:::card{title="葬送的芙莉莲 2" href="https://zh.wikipedia.org/wiki/葬送的芙莉莲" score="4.5" date="2026-10-25" label="日漫"}
+![葬送的芙莉莲 2 海报](./anime/frieren-2.jpg)
+
+作为过渡的一季，还是很好看
+:::
 
 :::card{title="葬送的芙莉莲" href="https://zh.wikipedia.org/wiki/葬送的芙莉莲" score="5" date="2026-10-18" label="日漫"}
 ![葬送的芙莉莲海报](./anime/frieren.jpg)
