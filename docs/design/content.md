@@ -427,7 +427,7 @@ CSS 仅消费插件已验证的 class、轨道与属性，不再解析 Markdown�
 HAST template 的 children／content 共享图片节点：Astro 从 children 原位改属性，最终 raw 从 content 序列化，两侧不替换节点。
 仅 Astro 已认领的图片设置单资源输出；未认领的公网／public 图不附内部优化属性，页面可见图仍保留响应式资源。
 ImageInteractions widget 在 BaseLayout 只注册接线，不再维护第二套 lightbox 或轮播状态。
-横滚增强在 scroll／resize 时按幻灯片中心同步索引、边界与页码；区域高度与幻灯片宽度由 CSS 管理。
+横滚增强在 scroll／resize 时按幻灯片中心同步索引、边界与页码；箭头／圆点／键盘按同一中心几何绝对滚到目标张，与原生 snap 共用端留白。区域高度与幻灯片宽度由 CSS 管理。
 disconnect 用 AbortController 清监听、释放 dialog 和页面资源；Excalidraw 同时断开 IntersectionObserver、中止 fetch、销毁 view／SVG URL。
 滚动锁统一调用 `src/utils/misc.ts` 的 lockScroll() 并持有 release：根节点锁定、按实际稳定留白补偿并恢复旧样式，release 绑定当时 body，旧页释放不得解锁新页。
 图片／画布只释放自己持有的锁，不写第二套 overflow 策略；backdrop 按元素持有同一接口的 release，ClientRouter 取消旧页退出动画也不得将它复用到新页。

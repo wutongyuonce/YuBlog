@@ -285,10 +285,19 @@ export class ImageInteractions extends HTMLElement {
     gallery.setAttribute('role', 'region')
     gallery.setAttribute('aria-label', '横向图片相册')
     let current = 0
+    // Programmed page index: arrows/keys advance this so rapid clicks skip
+    // correctly while smooth scrolling. Fling/snap syncs it back in update().
+    let target = 0
     // Snap/index use slide centers so mixed aspect ratios share one axis.
     const centerX = (el: Element) => {
       const rect = el.getBoundingClientRect()
       return rect.left + rect.width / 2
+    }
+    // Absolute scrollLeft that centers a slide — same geometry CSS snap uses
+    // once scroll-padding is not double-counting end space.
+    const idealLeft = (index: number) => {
+      const item = items[Math.max(0, Math.min(items.length - 1, index))]
+      return item.offsetLeft + item.offsetWidth / 2 - gallery.clientWidth / 2
     }
     const update = () => {
       const view = centerX(gallery)
@@ -300,6 +309,10 @@ export class ImageInteractions extends HTMLElement {
             : nearest,
         0
       )
+      // User fling/trackpad settled on a slide: keep target aligned so the next
+      // arrow click steps from the visible slide, not a stale programmed index.
+      if (Math.abs(gallery.scrollLeft - idealLeft(current)) < 2)
+        target = current
       // The stage height is fixed in CSS, so paging only moves the indicator.
       previous.disabled = current === 0
       next.disabled = current === items.length - 1
@@ -315,17 +328,20 @@ export class ImageInteractions extends HTMLElement {
       else if (right > controls.scrollLeft + controls.clientWidth)
         controls.scrollLeft = right - controls.clientWidth
     }
-    const go = (index: number) => {
-      const item = items[Math.max(0, Math.min(items.length - 1, index))]
-      gallery.scrollBy({
-        left: centerX(item) - centerX(gallery),
-        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
-          ? 'instant'
-          : 'smooth',
+    const go = (index: number, behavior?: ScrollBehavior) => {
+      target = Math.max(0, Math.min(items.length - 1, index))
+      const reduced = window.matchMedia(
+        '(prefers-reduced-motion: reduce)'
+      ).matches
+      gallery.scrollTo({
+        left: idealLeft(target),
+        // Relative scrollBy + smooth + mandatory snap can chain to the next
+        // snap point (boot was advancing past slide 0; skip-dot stopped mid-way).
+        behavior: behavior ?? (reduced ? 'instant' : 'smooth'),
       })
     }
-    previous.addEventListener('click', () => go(current - 1), { signal })
-    next.addEventListener('click', () => go(current + 1), { signal })
+    previous.addEventListener('click', () => go(target - 1), { signal })
+    next.addEventListener('click', () => go(target + 1), { signal })
     dots.forEach((dot, index) =>
       dot.addEventListener('click', () => go(index), { signal })
     )
@@ -338,7 +354,7 @@ export class ImageInteractions extends HTMLElement {
         )
           return
         event.preventDefault()
-        go(current + (event.key === 'ArrowLeft' ? -1 : 1))
+        go(target + (event.key === 'ArrowLeft' ? -1 : 1))
       },
       { signal }
     )
@@ -350,7 +366,8 @@ export class ImageInteractions extends HTMLElement {
     const tryBoot = () => {
       if (booted || items[0].getBoundingClientRect().width < 2) return
       booted = true
-      go(0)
+      // Instant: a smooth scrollBy(≈0) was enough for snap to walk to slide 1.
+      go(0, 'instant')
       update()
     }
     const ro = new ResizeObserver(tryBoot)

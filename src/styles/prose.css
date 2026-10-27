@@ -673,7 +673,6 @@ main:has(.post-content) > footer.prose :is(a, span) {
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   padding-inline: var(--image-gallery-end-space);
-  scroll-padding-inline: var(--image-gallery-end-space);
 }
 .image-gallery--scroll::-webkit-scrollbar {
   display: none;
