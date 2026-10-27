@@ -12,6 +12,7 @@ order: 1
 | AI&Agent | [Grok Bot](https://x.ai/news/introducing-grok-bot) | |
 | AI&Agent | [Ghostty](https://ghostty.org/) + [herdr](https://github.com/herdrdev/herdr) + [pi](https://github.com/earendil-works/pi) | herdr 插件 [herdr-sidebar](https://github.com/alexarthurs/herdr-sidebar)；pi 插件 [我的 pi-extensions](https://github.com/wutongyuonce/pi-extensions) |
 | AI&Agent | [Magpie](https://usemagpie.ai/) | 模型路由 |
+| AI&Agent | [LM Studio](https://lmstudio.ai/) | 本地运行大模型 |
 | AI&Agent | [Nowdex](https://nowdex.app/) | token 额度统计 |
 | AI&Agent | [Trajex](https://github.com/wutongyuonce/Trajex) | |
 | AI&Agent | [cockpit tools](https://github.com/jlcodes99/cockpit-tools) | gpt 账号多开 |
@@ -28,12 +29,13 @@ order: 1
 | 代码 | [Postman](https://www.postman.com/) | |
 | 代码 | [Docker](https://www.docker.com/) | |
 | 代码 | [WhatThePort](https://whattheport.dev/) | 端口查看器 |
-| 笔记、日程管理 | [Typora](https://typora.io/) | |
-| 笔记、日程管理 | [Obsidian](https://obsidian.md/) | 插件：Git、Excalidraw、Advanced Tables、Adjustable Media |
-| 笔记、日程管理 | [markdown-preview](https://github.com/pluk-inc/markdown-preview) | markdown 预览 |
-| 笔记、日程管理 | [飞书](https://www.feishu.cn/) | |
-| 笔记、日程管理 | [滴答清单](https://dida365.com/) | |
-| 笔记、日程管理 | [Itsycal](https://github.com/sfsam/Itsycal) | 日历小组件 |
+| 笔记 | [Typora](https://typora.io/) | |
+| 笔记 | [Obsidian](https://obsidian.md/) | 插件：Git、Excalidraw、Advanced Tables、Adjustable Media |
+| 笔记 | [markdown-preview](https://github.com/pluk-inc/markdown-preview) | markdown 预览 |
+| 笔记 | [飞书](https://www.feishu.cn/) | |
+| 日程管理 | [滴答清单](https://dida365.com/) | |
+| 日程管理 | [Itsycal](https://github.com/sfsam/Itsycal) | 日历小组件 |
+| 日程管理 | [ActivityWatch](https://activitywatch.net/) | 自动时间追踪 |
 | 浏览器 | [Safari](https://www.apple.com/safari/) | |
 | 浏览器 | [ego lite](https://lite.ego.app/) | |
 | 浏览器 | [Chrome](https://www.google.com/chrome/) | |
@@ -67,6 +69,7 @@ order: 1
 | 其他工具 | [Mos](https://mos.caldis.me/) | 鼠标 |
 | 其他工具 | [Bob](https://bobtranslate.com/) | 翻译 |
 | 其他工具 | [Loop](https://github.com/mrkai77/Loop) | 最丝滑的分屏软件 |
+| 其他工具 | [Muro](https://github.com/MrRockySL/Muro) | Mac 动态壁纸 |
 | 游戏 | [Steam](https://store.steampowered.com/) | |
 | 游戏 | [CrossOver](https://www.codeweavers.com/crossover) | |
 
