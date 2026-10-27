@@ -1,6 +1,6 @@
 {
   "timeZone": "Asia/Shanghai",
-  "updatedAt": "2026-10-27T15:25:16.245Z",
+  "updatedAt": "2026-10-27T15:26:32.038Z",
   "days": [
     {
       "date": "2026-10-21",
@@ -34,11 +34,11 @@
     },
     {
       "date": "2026-10-27",
-      "seconds": 8232,
+      "seconds": 8312,
       "apps": [
         {
           "name": "Ghostty",
-          "seconds": 4023.94
+          "seconds": 4076.948
         },
         {
           "name": "Safari浏览器",
@@ -65,12 +65,12 @@
           "seconds": 188.884
         },
         {
-          "name": "Typora",
-          "seconds": 102.912
+          "name": "RepoMirror",
+          "seconds": 128.378
         },
         {
-          "name": "RepoMirror",
-          "seconds": 101.328
+          "name": "Typora",
+          "seconds": 102.912
         },
         {
           "name": "百变小樱",
