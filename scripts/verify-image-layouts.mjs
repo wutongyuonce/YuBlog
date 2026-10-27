@@ -345,8 +345,14 @@ ${longGallery}
       assert.equal(state.columns, width > 600 ? 3 : 1)
       assert.equal(state.float, width > 600 ? 'right' : 'none')
       assert.ok(
-        state.scrollable && state.slideWidth > 0.85,
-        'slides must not be squeezed into one row'
+        state.scrollable,
+        'scroll gallery must overflow its stage so paging is possible'
+      )
+      // Slides are max-content (image width), not a fixed ~94% track; |w can
+      // make the first slide much narrower than the stage.
+      assert.ok(
+        state.slideWidth > 0.2,
+        'first slide should keep a usable width: ' + state.slideWidth
       )
       assert.equal(state.thumbnailWidth, 220)
       assert.equal(
@@ -462,6 +468,61 @@ ${longGallery}
     'none'
   )
 
+  // Shared read of the enhanced first scroll gallery: active index, dots, and
+  // how far the active image center sits from the stage center.
+  const readScroll = () =>
+    page.evaluate(() => {
+      const gallery = document.querySelector('.image-gallery--scroll')
+      const viewport = gallery.closest('.image-gallery__viewport')
+      const items = [
+        ...gallery.querySelectorAll(':scope > .image-gallery__item'),
+      ]
+      const gRect = gallery.getBoundingClientRect()
+      const view = gRect.left + gRect.width / 2
+      const center = (el) => {
+        const r = el.getBoundingClientRect()
+        return r.left + r.width / 2
+      }
+      const active = items.reduce(
+        (nearest, item, index) =>
+          Math.abs(center(item) - view) <
+          Math.abs(center(items[nearest]) - view)
+            ? index
+            : nearest,
+        0
+      )
+      const img = items[active].querySelector('img').getBoundingClientRect()
+      const ideal =
+        items[active].offsetLeft +
+        items[active].offsetWidth / 2 -
+        gallery.clientWidth / 2
+      return {
+        active,
+        n: items.length,
+        prevDisabled: viewport.querySelector(
+          '.image-gallery__arrow--previous'
+        ).disabled,
+        nextDisabled: viewport.querySelector('.image-gallery__arrow--next')
+          .disabled,
+        currentDot: viewport
+          .querySelector('.image-gallery__dot[aria-current="true"]')
+          ?.getAttribute('aria-label'),
+        imgVsGal: img.left + img.width / 2 - view,
+        scrollLeft: gallery.scrollLeft,
+        ideal,
+        maxScroll: gallery.scrollWidth - gallery.clientWidth,
+      }
+    })
+  // Ideal may be unreachable for a narrow |w first/last slide; then the
+  // browser clamps to an edge and center error equals the clamped gap.
+  const assertCentered = (state, label) => {
+    const gap = Math.max(0, -state.ideal, state.ideal - state.maxScroll)
+    assert.ok(
+      Math.abs(state.imgVsGal) < gap + 3,
+      `${label} (imgVsGal=${state.imgVsGal}, gap=${gap})`
+    )
+  }
+
   // The long-gallery fixture repeats these controls, so target the first
   // gallery explicitly; scrolling to it first keeps the click deterministic.
   await scrollTo('.image-gallery--scroll')
@@ -474,87 +535,43 @@ ${longGallery}
     const items = [...gallery.querySelectorAll(':scope > .image-gallery__item')]
     return items[0]?.getBoundingClientRect().width > 2
   })
-  const boot = await page.evaluate(() => {
-    const gallery = document.querySelector('.image-gallery--scroll')
-    const viewport = gallery.closest('.image-gallery__viewport')
-    const items = [...gallery.querySelectorAll(':scope > .image-gallery__item')]
-    const gRect = gallery.getBoundingClientRect()
-    const view = gRect.left + gRect.width / 2
-    const center = (el) => {
-      const r = el.getBoundingClientRect()
-      return r.left + r.width / 2
-    }
-    const active = items.reduce(
-      (nearest, item, index) =>
-        Math.abs(center(item) - view) < Math.abs(center(items[nearest]) - view)
-          ? index
-          : nearest,
-      0
-    )
-    const img = items[active].querySelector('img').getBoundingClientRect()
-    return {
-      active,
-      prevDisabled: viewport.querySelector('.image-gallery__arrow--previous')
-        .disabled,
-      currentDot: viewport
-        .querySelector('.image-gallery__dot[aria-current="true"]')
-        ?.getAttribute('aria-label'),
-      imgVsGal: img.left + img.width / 2 - view,
-    }
-  })
+  const boot = await readScroll()
   assert.equal(boot.active, 0, 'scroll gallery boots on the first slide')
   assert.equal(boot.prevDisabled, true, 'previous arrow hidden on first slide')
   assert.equal(boot.currentDot, '显示第 1 张图片')
-  assert.ok(
-    Math.abs(boot.imgVsGal) < 3,
-    `boot centers the first slide (imgVsGal=${boot.imgVsGal})`
-  )
+  assertCentered(boot, 'boot centers the first slide when reachable')
 
   // Skip from first to last via dot — absolute scrollTo must not stop mid-way
-  // under scroll-snap-stop: always.
+  // under scroll-snap-stop: always. Wait for the last image to actually sit
+  // on the stage center (next.disabled alone only means nearest===last).
   await page.click(
     '.image-gallery__controls button[aria-label="显示第 3 张图片"] >> nth=0'
   )
-  await page.waitForFunction(
-    () => document.querySelector('.image-gallery__arrow--next').disabled
-  )
-  const skipped = await page.evaluate(() => {
+  await page.waitForFunction(() => {
     const gallery = document.querySelector('.image-gallery--scroll')
-    const viewport = gallery.closest('.image-gallery__viewport')
     const items = [...gallery.querySelectorAll(':scope > .image-gallery__item')]
-    const gRect = gallery.getBoundingClientRect()
-    const view = gRect.left + gRect.width / 2
-    const center = (el) => {
-      const r = el.getBoundingClientRect()
-      return r.left + r.width / 2
-    }
-    const active = items.reduce(
-      (nearest, item, index) =>
-        Math.abs(center(item) - view) < Math.abs(center(items[nearest]) - view)
-          ? index
-          : nearest,
-      0
+    const last = items[items.length - 1]
+    if (!last) return false
+    const g = gallery.getBoundingClientRect()
+    const view = g.left + g.width / 2
+    const img = last.querySelector('img').getBoundingClientRect()
+    const ideal =
+      last.offsetLeft + last.offsetWidth / 2 - gallery.clientWidth / 2
+    const gap = Math.max(
+      0,
+      -ideal,
+      ideal - (gallery.scrollWidth - gallery.clientWidth)
     )
-    const img = items[active].querySelector('img').getBoundingClientRect()
-    return {
-      active,
-      n: items.length,
-      currentDot: viewport
-        .querySelector('.image-gallery__dot[aria-current="true"]')
-        ?.getAttribute('aria-label'),
-      imgVsGal: img.left + img.width / 2 - view,
-    }
+    return Math.abs(img.left + img.width / 2 - view) < gap + 3
   })
+  const skipped = await readScroll()
   assert.equal(skipped.active, skipped.n - 1, 'dot skip reaches the last slide')
   assert.equal(
     skipped.currentDot,
     `显示第 ${skipped.n} 张图片`,
     'active dot matches the centered slide after skip'
   )
-  assert.ok(
-    Math.abs(skipped.imgVsGal) < 3,
-    `last slide centered after dot skip (imgVsGal=${skipped.imgVsGal})`
-  )
+  assertCentered(skipped, 'last slide centered after dot skip')
   // Return to first for the existing adjacent-arrow assertions below.
   await page.click(
     '.image-gallery__controls button[aria-label="显示第 1 张图片"] >> nth=0'

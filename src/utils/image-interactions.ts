@@ -286,15 +286,14 @@ export class ImageInteractions extends HTMLElement {
     gallery.setAttribute('aria-label', '横向图片相册')
     let current = 0
     // Programmed page index: arrows/keys advance this so rapid clicks skip
-    // correctly while smooth scrolling. Fling/snap syncs it back in update().
+    // correctly while smooth scrolling. Fling/snap syncs it back on settle.
     let target = 0
     // Snap/index use slide centers so mixed aspect ratios share one axis.
     const centerX = (el: Element) => {
       const rect = el.getBoundingClientRect()
       return rect.left + rect.width / 2
     }
-    // Absolute scrollLeft that centers a slide — same geometry CSS snap uses
-    // once scroll-padding is not double-counting end space.
+    // Absolute scrollLeft that centers a slide (CSS snap uses the same axis).
     const idealLeft = (index: number) => {
       const item = items[Math.max(0, Math.min(items.length - 1, index))]
       return item.offsetLeft + item.offsetWidth / 2 - gallery.clientWidth / 2
@@ -309,10 +308,6 @@ export class ImageInteractions extends HTMLElement {
             : nearest,
         0
       )
-      // User fling/trackpad settled on a slide: keep target aligned so the next
-      // arrow click steps from the visible slide, not a stale programmed index.
-      if (Math.abs(gallery.scrollLeft - idealLeft(current)) < 2)
-        target = current
       // The stage height is fixed in CSS, so paging only moves the indicator.
       previous.disabled = current === 0
       next.disabled = current === items.length - 1
@@ -327,6 +322,23 @@ export class ImageInteractions extends HTMLElement {
         controls.scrollLeft = dot.offsetLeft
       else if (right > controls.scrollLeft + controls.clientWidth)
         controls.scrollLeft = right - controls.clientWidth
+    }
+    // Sync target only after scrolling settles. Matching idealLeft during
+    // scroll events also fires while a smooth go() passes intermediate
+    // centers, which overwrote target and broke rapid next/prev.
+    let settleTimer: ReturnType<typeof setTimeout> | undefined
+    const syncTarget = () => {
+      target = current
+    }
+    const onScroll = () => {
+      update()
+      clearTimeout(settleTimer)
+      settleTimer = setTimeout(syncTarget, 80)
+    }
+    const onScrollEnd = () => {
+      clearTimeout(settleTimer)
+      update()
+      syncTarget()
     }
     const go = (index: number, behavior?: ScrollBehavior) => {
       target = Math.max(0, Math.min(items.length - 1, index))
@@ -358,22 +370,45 @@ export class ImageInteractions extends HTMLElement {
       },
       { signal }
     )
-    gallery.addEventListener('scroll', update, { signal })
-    window.addEventListener('resize', update, { signal })
+    gallery.addEventListener('scroll', onScroll, { signal })
+    gallery.addEventListener('scrollend', onScrollEnd, { signal })
+    window.addEventListener(
+      'resize',
+      () => {
+        update()
+        syncTarget()
+      },
+      { signal }
+    )
     // Lazy images start at 0×0; nearest-center then picks the wrong slide and
-    // disables Next. Boot only after a slide has real width.
+    // disables Next. Boot only after the first slide has real width.
     let booted = false
-    const tryBoot = () => {
+    const ro = new ResizeObserver(() => {
       if (booted || items[0].getBoundingClientRect().width < 2) return
       booted = true
+      ro.disconnect()
       // Instant: a smooth scrollBy(≈0) was enough for snap to walk to slide 1.
       go(0, 'instant')
       update()
+      syncTarget()
+    })
+    ro.observe(items[0])
+    signal.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(settleTimer)
+        ro.disconnect()
+      },
+      { once: true }
+    )
+    // Synchronous path when the first slide is already measured.
+    if (items[0].getBoundingClientRect().width >= 2) {
+      booted = true
+      ro.disconnect()
+      go(0, 'instant')
+      update()
+      syncTarget()
     }
-    const ro = new ResizeObserver(tryBoot)
-    for (const item of items) ro.observe(item)
-    signal.addEventListener('abort', () => ro.disconnect(), { once: true })
-    tryBoot()
   }
 
   private restore() {
