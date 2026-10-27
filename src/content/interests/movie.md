@@ -6,6 +6,12 @@ order: 3
 
 ### 看过
 
+:::card{title="星球大战：曼达洛人与古古" href="https://zh.wikipedia.org/wiki/曼达洛人与古古" score="3.5" date="2026-10-27" label="电影"}
+![星球大战：曼达洛人与古古海报](./movie/mandalorian-and-grogu.jpg)
+
+速刷，没咋看过星球大战的前片背景，不过还算能看得进去
+:::
+
 :::card{title="边境杀手" href="https://en.wikipedia.org/wiki/Sicario_(2015_film)" score="4" label="电影"}
 ![边境杀手海报](./movie/sicario.png)
 
