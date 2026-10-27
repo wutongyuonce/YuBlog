@@ -1,6 +1,6 @@
 {
   "timeZone": "Asia/Shanghai",
-  "updatedAt": "2026-10-27T15:26:32.038Z",
+  "updatedAt": "2026-10-27T15:50:04.452Z",
   "days": [
     {
       "date": "2026-10-21",
@@ -34,19 +34,19 @@
     },
     {
       "date": "2026-10-27",
-      "seconds": 8312,
+      "seconds": 9021,
       "apps": [
         {
           "name": "Ghostty",
-          "seconds": 4076.948
+          "seconds": 4257.95
         },
         {
           "name": "Safari浏览器",
-          "seconds": 1840.939
+          "seconds": 2356.766
         },
         {
           "name": "LM Studio",
-          "seconds": 686.403
+          "seconds": 691.47
         },
         {
           "name": "ego lite",
@@ -66,7 +66,7 @@
         },
         {
           "name": "RepoMirror",
-          "seconds": 128.378
+          "seconds": 130.422
         },
         {
           "name": "Typora",
@@ -109,16 +109,16 @@
           "seconds": 12.53
         },
         {
+          "name": "Obsidian",
+          "seconds": 10.897
+        },
+        {
           "name": "WhatThePort",
           "seconds": 10.394
         },
         {
           "name": "Lyrimuse",
           "seconds": 7.725
-        },
-        {
-          "name": "Obsidian",
-          "seconds": 5.534
         },
         {
           "name": "CoreServicesUIAgent",
