@@ -4,8 +4,8 @@ description: 从双击打开看进程：对比 MyGo 与 Electron 的进程结构
 pubDate: 2026-10-28
 category: 技术
 tags: [MyGo, Electron, 框架]
-titleImage: ./_title-images/mygo-electron-framework.png
-titleImageAlt: 深色封面图，对比桌面应用框架本质与 MyGo、Electron 字样
+titleImage: ./_title-images/mygo-ogp.png
+titleImageAlt: BanG Dream! It's MyGO!!!!! 官方夜景宣传图，五人站在城市斑马线上
 ---
 
 > MyGo 与 Electron：从双击打开看进程  
