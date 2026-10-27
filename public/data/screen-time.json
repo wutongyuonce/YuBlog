@@ -1,34 +1,134 @@
 {
   "timeZone": "Asia/Shanghai",
-  "updatedAt": "2026-10-27T13:00:14.373Z",
+  "updatedAt": "2026-10-27T15:25:16.245Z",
   "days": [
     {
       "date": "2026-10-21",
-      "seconds": null
+      "seconds": null,
+      "apps": null
     },
     {
       "date": "2026-10-22",
-      "seconds": null
+      "seconds": null,
+      "apps": null
     },
     {
       "date": "2026-10-23",
-      "seconds": null
+      "seconds": null,
+      "apps": null
     },
     {
       "date": "2026-10-24",
-      "seconds": null
+      "seconds": null,
+      "apps": null
     },
     {
       "date": "2026-10-25",
-      "seconds": null
+      "seconds": null,
+      "apps": null
     },
     {
       "date": "2026-10-26",
-      "seconds": null
+      "seconds": null,
+      "apps": null
     },
     {
       "date": "2026-10-27",
-      "seconds": 2521
+      "seconds": 8232,
+      "apps": [
+        {
+          "name": "Ghostty",
+          "seconds": 4023.94
+        },
+        {
+          "name": "Safari浏览器",
+          "seconds": 1840.939
+        },
+        {
+          "name": "LM Studio",
+          "seconds": 686.403
+        },
+        {
+          "name": "ego lite",
+          "seconds": 468.343
+        },
+        {
+          "name": "MyGo 云音乐",
+          "seconds": 207.737
+        },
+        {
+          "name": "访达",
+          "seconds": 194.551
+        },
+        {
+          "name": "Zed",
+          "seconds": 188.884
+        },
+        {
+          "name": "Typora",
+          "seconds": 102.912
+        },
+        {
+          "name": "RepoMirror",
+          "seconds": 101.328
+        },
+        {
+          "name": "百变小樱",
+          "seconds": 72.638
+        },
+        {
+          "name": "PixPin",
+          "seconds": 66.253
+        },
+        {
+          "name": "Tailscale",
+          "seconds": 62.32
+        },
+        {
+          "name": "ChatGPT",
+          "seconds": 60.117
+        },
+        {
+          "name": "活动监视器",
+          "seconds": 41.105
+        },
+        {
+          "name": "系统设置",
+          "seconds": 33.845
+        },
+        {
+          "name": "Deck",
+          "seconds": 22.492
+        },
+        {
+          "name": "Grok Bot",
+          "seconds": 17.773
+        },
+        {
+          "name": "magpie",
+          "seconds": 12.53
+        },
+        {
+          "name": "WhatThePort",
+          "seconds": 10.394
+        },
+        {
+          "name": "Lyrimuse",
+          "seconds": 7.725
+        },
+        {
+          "name": "Obsidian",
+          "seconds": 5.534
+        },
+        {
+          "name": "CoreServicesUIAgent",
+          "seconds": 2.387
+        },
+        {
+          "name": "SecurityAgent",
+          "seconds": 1.385
+        }
+      ]
     }
   ]
 }

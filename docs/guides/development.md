@@ -107,7 +107,7 @@ LASTFM_USER=你的_Lastfm_用户名
 
 ### ActivityWatch 屏幕时间
 
-首页读取随仓库发布的 `public/data/screen-time.json`，展示当天电脑活跃时长和近七天柱状图。安装并运行 ActivityWatch 后，执行 `node scripts/sync-screen-time.mjs` 生成本地快照；加 `--publish` 会只提交并推送该文件。macOS 用 `node scripts/install-screen-time-launchd.mjs` 安装每日 23:50 同步任务。公开数据只有日期和聚合时长；离线或同步失败保留上次数据。统计口径、Git 边界、日志与卸载命令见 [屏幕时间设计](../design/screen-time.md)。
+首页屏幕时间读取本机生成、随仓库发布的聚合快照，包含日期、总时长、应用名与应用时长。首次同步、macOS 每小时任务的服务文件和日志位置、发布边界及卸载步骤统一见 [屏幕时间设计](../design/screen-time.md)。
 
 ### Giscus 评论
 

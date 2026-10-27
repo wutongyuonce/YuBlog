@@ -1,6 +1,6 @@
-/** 本机运行：只让 ActivityWatch 返回按日汇总数字，原始窗口信息不离开本机。 */
+/** 本机运行：读取 ActivityWatch 按日／应用聚合结果，不输出原始窗口信息。 */
 import { execFileSync } from 'node:child_process'
-import { mkdir, rename, rm, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { hostname } from 'node:os'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -66,7 +66,7 @@ export async function fetchScreenTime({
       `afk = query_bucket(${afkBucket});`,
       `win = query_bucket(${windowBucket});`,
       'active = filter_period_intersect(win, filter_keyvals(afk, "status", ["not-afk"]));',
-      'RETURN = [sum_durations(active), sum_durations(win), sum_durations(afk)];',
+      'RETURN = [sum_durations(active), sum_durations(win), sum_durations(afk), merge_events_by_keys(active, ["app"])];',
     ],
   })
   if (!Array.isArray(results) || results.length !== periods.length)
@@ -75,13 +75,16 @@ export async function fetchScreenTime({
     const row = results[index]
     if (
       !Array.isArray(row) ||
-      row.length !== 3 ||
-      row.some(
-        (seconds) =>
-          typeof seconds !== 'number' ||
-          !Number.isFinite(seconds) ||
-          seconds < 0
-      ) ||
+      row.length !== 4 ||
+      !Array.isArray(row[3]) ||
+      row
+        .slice(0, 3)
+        .some(
+          (seconds) =>
+            typeof seconds !== 'number' ||
+            !Number.isFinite(seconds) ||
+            seconds < 0
+        ) ||
       row[0] >
         Math.min(row[1], row[2], (Date.parse(end) - Date.parse(start)) / 1000) +
           1
@@ -89,14 +92,27 @@ export async function fetchScreenTime({
       throw new Error('Screen time: invalid ActivityWatch duration')
     return {
       date,
-      seconds: row[1] > 0 && row[2] > 0 ? Math.round(row[0]) : null,
+      seconds: Math.round(row[0]),
+      apps: row[3]
+        .filter((event) => event.duration !== 0)
+        .map((event) => ({ name: event.data?.app, seconds: event.duration })),
     }
   })
-  return parseScreenTime({
+  // 先校验应用条目，再判断是否缺采集，避免空态吞掉畸形数据并覆盖旧快照。
+  const snapshot = parseScreenTime({
     timeZone: SCREEN_TIME_ZONE,
     updatedAt: now.toISOString(),
     days,
   })
+  snapshot.days.forEach((day, index) => {
+    if (results[index][1] === 0 || results[index][2] === 0) {
+      if (results[index][0] !== 0 || day.apps.length)
+        throw new Error('Screen time: activity without collection')
+      day.seconds = null
+      day.apps = null
+    }
+  })
+  return snapshot
 }
 
 const git = (root, args) =>
@@ -129,6 +145,9 @@ function checkPublish(root) {
     throw new Error('Screen time: resolve Git conflicts before publishing')
 }
 
+/** 只看七天数据；同一份数据不重复提交，updatedAt 只随真实变化前进。 */
+const sameDays = (a, b) => JSON.stringify(a) === JSON.stringify(b)
+
 export async function syncScreenTime({
   root = ROOT,
   publish = false,
@@ -142,12 +161,18 @@ export async function syncScreenTime({
   const temporary = `${target}.tmp`
   try {
     const snapshot = await fetchScreenTime(options)
+    // 数据没变就不重写也不发布：周期性同步只在实际使用后产生提交与部署。
+    const previous = await readFile(target, 'utf8')
+      .then((contents) => parseScreenTime(JSON.parse(contents)))
+      .catch(() => null)
+    if (previous && sameDays(previous.days, snapshot.days))
+      return { snapshot: previous, changed: false }
     if (publish) checkPublish(root)
     await mkdir(dirname(target), { recursive: true })
     await writeFile(temporary, `${JSON.stringify(snapshot, null, 2)}\n`)
     await rename(temporary, target)
     if (publish) {
-      // --only 保留用户已暂存的其它文件，不把它们夹带进每日提交。
+      // --only 保留用户已暂存的其它文件，不把它们夹带进每次提交。
       if (!git(root, ['ls-files', '--', SNAPSHOT_PATH]))
         git(root, ['add', '--', SNAPSHOT_PATH])
       if (git(root, ['status', '--porcelain', '--', SNAPSHOT_PATH]))
@@ -161,7 +186,7 @@ export async function syncScreenTime({
         ])
       git(root, ['push', 'origin', 'HEAD:main'])
     }
-    return snapshot
+    return { snapshot, changed: true }
   } finally {
     await rm(temporary, { force: true })
     await rm(lock, { recursive: true, force: true })
@@ -178,13 +203,15 @@ if (
     process.exitCode = 1
   } else {
     try {
-      const snapshot = await syncScreenTime({
+      const { snapshot, changed } = await syncScreenTime({
         publish: args.includes('--publish'),
         apiUrl: process.env.AW_URL,
         host: process.env.AW_HOSTNAME,
       })
       console.log(
-        `Screen time: synced ${snapshot.days.at(-1).date} (${snapshot.updatedAt})`
+        changed
+          ? `Screen time: synced ${snapshot.days.at(-1).date} (${snapshot.updatedAt})`
+          : `Screen time: unchanged since ${snapshot.updatedAt}`
       )
     } catch (error) {
       console.error(

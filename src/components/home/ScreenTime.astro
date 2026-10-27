@@ -1,12 +1,16 @@
 ---
+/* eslint-disable astro/jsx-a11y/no-noninteractive-tabindex -- 明细是可滚动的 region，需显式聚焦以支持键盘浏览。 */
 import rawSnapshot from '../../../public/data/screen-time.json'
 import {
+  buildScreenTimeChart,
   formatScreenTime,
+  formatScreenTimeExact,
   parseScreenTime,
   SCREEN_TIME_ZONE,
 } from '~/utils/screen-time.js'
 
 const snapshot = parseScreenTime(rawSnapshot)
+const chart = buildScreenTimeChart(snapshot)
 const latest = snapshot.days.at(-1)!
 const scale = Math.max(
   3600,
@@ -21,6 +25,8 @@ const hours = (seconds: number | null) =>
     : seconds > 0 && seconds < 360
       ? '<0.1'
       : (seconds / 3600).toFixed(1)
+const percent = (value: number) =>
+  value < 0.1 ? '<0.1%' : `${value.toFixed(1)}%`
 const updated = new Intl.DateTimeFormat('zh-CN', {
   timeZone: SCREEN_TIME_ZONE,
   month: 'numeric',
@@ -31,7 +37,11 @@ const updated = new Intl.DateTimeFormat('zh-CN', {
 }).format(new Date(snapshot.updatedAt))
 ---
 
-<section class="screen-time" aria-labelledby="screen-time-title">
+<section
+  class="screen-time"
+  aria-labelledby="screen-time-title"
+  data-screen-time
+>
   <header class="home-section-header">
     <h2 id="screen-time-title">屏幕时间</h2>
     <a
@@ -54,30 +64,94 @@ const updated = new Intl.DateTimeFormat('zh-CN', {
     <div class="screen-time__week">
       <p class="screen-time__label">近 7 天（小时）</p>
       <ol class="screen-time__chart" aria-label="最近七天每日活跃时长">
-        {snapshot.days.map(({ date, seconds }, index) => (
-          <li
-            class:list={[
-              'screen-time__day',
-              { 'screen-time__day--latest': index === 6 },
-            ]}
-            aria-label={`${date}，${formatScreenTime(seconds)}`}
-            title={`${date}：${formatScreenTime(seconds)}`}
-          >
-            <span class="screen-time__hours" aria-hidden="true">
-              {hours(seconds)}
-            </span>
-            <span class="screen-time__column" aria-hidden="true">
-              <span
-                class="screen-time__bar"
-                style={{ height: `${((seconds ?? 0) / scale) * 100}%` }}
-              />
-            </span>
-            <time datetime={date} aria-hidden="true">
-              {dayLabel(date)}
-            </time>
+        {chart.days.map((day) => (
+          <li>
+            <details class="screen-time__day" data-screen-day>
+              <summary
+                aria-label={`${day.date}，${formatScreenTime(day.seconds)}，查看应用明细`}
+              >
+                <span class="screen-time__hours" aria-hidden="true">
+                  {hours(day.seconds)}
+                </span>
+                <span class="screen-time__column" aria-hidden="true">
+                  <span
+                    class="screen-time__bar"
+                    style={{ height: `${((day.seconds ?? 0) / scale) * 100}%` }}
+                  >
+                    {day.segments.map((segment) => (
+                      <span
+                        class="screen-time__segment"
+                        data-screen-slot={segment.slot}
+                        style={{
+                          'height': `${segment.percent}%`,
+                          '--app-color': `var(--screen-app-${segment.slot})`,
+                        }}
+                      />
+                    ))}
+                  </span>
+                </span>
+                <time datetime={day.date} aria-hidden="true">
+                  {dayLabel(day.date)}
+                </time>
+              </summary>
+              <div
+                class="screen-time__detail"
+                role="region"
+                tabindex="0"
+                aria-label={`${day.date}应用明细`}
+              >
+                <h3>{dayLabel(day.date)} 的应用时间</h3>
+                <p class="screen-time__detail-total">
+                  活跃总时长
+                  {day.seconds === null
+                    ? '暂无记录'
+                    : formatScreenTimeExact(day.seconds)}
+                </p>
+                {day.details.length ? (
+                  <ul class="screen-time__apps">
+                    {day.details.map((app) => (
+                      <li
+                        data-screen-app={app.slot}
+                        style={{
+                          '--app-color': `var(--screen-app-${app.slot})`,
+                        }}
+                      >
+                        <span class="screen-time__swatch" aria-hidden="true" />
+                        <span class="screen-time__app-name">{app.name}</span>
+                        <span>{formatScreenTimeExact(app.seconds)}</span>
+                        <span class="screen-time__percent">
+                          {percent(app.percent)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p class="screen-time__empty">
+                    {day.seconds === null
+                      ? '这一天还没有采集记录。'
+                      : day.apps === null
+                        ? '这份记录尚未包含应用明细。'
+                        : '这一天没有活跃的应用记录。'}
+                  </p>
+                )}
+              </div>
+            </details>
           </li>
         ))}
       </ol>
+      {chart.legend.length > 0 && (
+        <ul class="screen-time__legend" aria-label="应用颜色图例">
+          {chart.legend.map(({ name, slot }) => (
+            <li
+              style={{ '--app-color': `var(--screen-app-${slot})` }}
+              title={name}
+            >
+              <span class="screen-time__swatch" aria-hidden="true" />
+              <span>{name}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   </div>
   <p class="screen-time__updated">
@@ -88,7 +162,21 @@ const updated = new Intl.DateTimeFormat('zh-CN', {
 
 <style>
   .screen-time {
+    --screen-app-0: var(--accent);
+    --screen-app-1: #567f9c;
+    --screen-app-2: #6a8860;
+    --screen-app-3: #b58a48;
+    --screen-app-4: #548e8a;
+    --screen-app-5: #858585;
+    --screen-app-6: color-mix(in srgb, var(--c-text) 20%, var(--c-bg));
     margin-top: 3rem;
+  }
+  :global(.dark) .screen-time {
+    --screen-app-1: #8aadc5;
+    --screen-app-2: #9ab58e;
+    --screen-app-3: #d9b47b;
+    --screen-app-4: #8dbdb9;
+    --screen-app-5: #aaa;
   }
   .screen-time__body {
     display: grid;
@@ -102,7 +190,8 @@ const updated = new Intl.DateTimeFormat('zh-CN', {
   }
   .screen-time__label,
   .screen-time__note,
-  .screen-time__updated {
+  .screen-time__updated,
+  .screen-time__percent {
     color: color-mix(in srgb, var(--c-text) 65%, var(--c-bg));
     font-size: 0.75rem;
   }
@@ -112,6 +201,10 @@ const updated = new Intl.DateTimeFormat('zh-CN', {
     font-size: clamp(1.5rem, 3vw, 2rem);
     font-variant-numeric: tabular-nums;
     line-height: 1.4;
+  }
+  .screen-time__week {
+    position: relative;
+    min-width: 0;
   }
   .screen-time__chart {
     display: grid;
@@ -123,30 +216,123 @@ const updated = new Intl.DateTimeFormat('zh-CN', {
     font-size: 0.6875rem;
     font-variant-numeric: tabular-nums;
   }
-  .screen-time__day {
+  .screen-time__day summary {
     display: flex;
     min-width: 0;
     flex-direction: column;
     align-items: center;
     gap: 0.4rem;
+    list-style: none;
+    cursor: pointer;
+  }
+  .screen-time__day summary::-webkit-details-marker {
+    display: none;
   }
   .screen-time__column {
     display: flex;
     align-items: end;
-    justify-content: center;
     width: 100%;
-    height: 5rem;
+    height: 7rem;
     background: color-mix(in srgb, var(--c-text) 4%, var(--c-bg));
   }
   .screen-time__bar {
+    display: flex;
+    flex-direction: column-reverse;
     width: 100%;
-    background: color-mix(in srgb, var(--accent) 50%, var(--c-bg));
   }
-  .screen-time__day--latest .screen-time__bar {
-    background: var(--accent);
+  .screen-time__segment {
+    display: block;
+    flex: none;
+    width: 100%;
+    background: var(--app-color);
+  }
+  .screen-time__day:is([open], :hover) .screen-time__column {
+    outline: 1px solid color-mix(in srgb, var(--c-text) 35%, var(--c-bg));
+    outline-offset: 3px;
   }
   .screen-time__day time {
     color: color-mix(in srgb, var(--c-text) 65%, var(--c-bg));
+  }
+  .screen-time__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.85rem;
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.6875rem;
+  }
+  .screen-time__legend li {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .screen-time__legend li > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .screen-time__swatch {
+    display: inline-block;
+    flex: none;
+    width: 0.45rem;
+    height: 0.45rem;
+    background: var(--app-color);
+  }
+  .screen-time__detail {
+    position: absolute;
+    z-index: 100;
+    bottom: calc(100% + 12px);
+    left: 0;
+    width: min(350px, calc(100vw - 32px));
+    max-height: min(360px, calc(100dvh - 32px));
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 1rem;
+    border: 1px solid color-mix(in srgb, var(--c-text) 12%, var(--c-bg));
+    background: var(--c-bg);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--c-text) 8%, transparent);
+    color: var(--c-text);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+  [data-screen-bound] .screen-time__detail {
+    position: fixed;
+    bottom: auto;
+  }
+  .screen-time__detail h3 {
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 400;
+  }
+  .screen-time .screen-time__detail-total {
+    margin: 0.4rem 0 0.85rem;
+    color: color-mix(in srgb, var(--c-text) 65%, var(--c-bg));
+  }
+  .screen-time__apps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .screen-time__apps li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto 3.25rem;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.25rem;
+  }
+  .screen-time__app-name {
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+  }
+  .screen-time__percent {
+    text-align: right;
+  }
+  .screen-time__apps li[data-highlight] {
+    background: color-mix(in srgb, var(--app-color) 14%, var(--c-bg));
   }
   .screen-time .screen-time__updated {
     margin-top: 1rem;
@@ -166,6 +352,180 @@ const updated = new Intl.DateTimeFormat('zh-CN', {
 <script>
   import { screenTimeDayLabel } from '~/utils/screen-time.js'
 
+  const bindChart = (root: HTMLElement) => {
+    if (root.hasAttribute('data-screen-bound')) return
+    root.setAttribute('data-screen-bound', '')
+    const controller = new AbortController()
+    const { signal } = controller
+    const days = [
+      ...root.querySelectorAll<HTMLDetailsElement>('[data-screen-day]'),
+    ]
+    let hideTimer = 0
+    const cancelHide = () => window.clearTimeout(hideTimer)
+    const close = () => {
+      cancelHide()
+      days.forEach((day) => {
+        day.open = false
+      })
+    }
+    const place = (day: HTMLDetailsElement) => {
+      const panel = day.querySelector<HTMLElement>('.screen-time__detail')!
+      panel.style.left = '16px'
+      panel.style.top = '16px'
+      const anchor = day.querySelector('summary')!.getBoundingClientRect()
+      const box = panel.getBoundingClientRect()
+      const left = Math.max(
+        16,
+        Math.min(
+          anchor.left + anchor.width / 2 - box.width / 2,
+          innerWidth - box.width - 16
+        )
+      )
+      const top = anchor.top - box.height - 12
+      panel.style.left = `${left}px`
+      panel.style.top = `${Math.max(16, Math.min(top >= 16 ? top : anchor.bottom + 12, innerHeight - box.height - 16))}px`
+    }
+    const open = (day: HTMLDetailsElement) => {
+      cancelHide()
+      days.forEach((other) => {
+        other.open = other === day
+      })
+      place(day)
+    }
+    for (const day of days) {
+      day.querySelector('summary')!.addEventListener(
+        'click',
+        (event) => {
+          event.preventDefault()
+          if (day.open) day.open = false
+          else open(day)
+        },
+        { signal }
+      )
+      day.addEventListener(
+        'toggle',
+        () => {
+          if (day.open) open(day)
+        },
+        { signal }
+      )
+      day.addEventListener(
+        'pointerenter',
+        (event) => {
+          if (event.pointerType === 'mouse') open(day)
+        },
+        { signal }
+      )
+      day.addEventListener(
+        'pointerleave',
+        () => {
+          cancelHide()
+          hideTimer = window.setTimeout(() => {
+            if (!day.contains(document.activeElement)) day.open = false
+          }, 250)
+        },
+        { signal }
+      )
+      day.addEventListener(
+        'focusin',
+        () => {
+          if (day.querySelector('summary')!.matches(':focus-visible')) open(day)
+        },
+        { signal }
+      )
+      day.addEventListener(
+        'focusout',
+        (event) => {
+          if (
+            !(event.relatedTarget instanceof Node) ||
+            !day.contains(event.relatedTarget)
+          )
+            day.open = false
+        },
+        { signal }
+      )
+      day.querySelector('summary')!.addEventListener(
+        'pointermove',
+        (event) => {
+          const slot =
+            event.target instanceof Element
+              ? event.target.closest<HTMLElement>('[data-screen-slot]')?.dataset
+                  .screenSlot
+              : undefined
+          day
+            .querySelectorAll<HTMLElement>('[data-screen-app]')
+            .forEach((row) =>
+              row.toggleAttribute(
+                'data-highlight',
+                slot !== undefined && row.dataset.screenApp === slot
+              )
+            )
+        },
+        { signal }
+      )
+    }
+    document.addEventListener(
+      'pointerdown',
+      (event) => {
+        if (
+          event.target instanceof Node &&
+          !days.some((day) => day.open && day.contains(event.target as Node))
+        )
+          close()
+      },
+      { signal }
+    )
+    document.addEventListener(
+      'keydown',
+      (event) => {
+        if (event.key !== 'Escape') return
+        const focused = days.find((day) =>
+          day
+            .querySelector('.screen-time__detail')
+            ?.contains(document.activeElement)
+        )
+        focused?.querySelector('summary')?.focus({ preventScroll: true })
+        close()
+      },
+      { signal }
+    )
+    window.addEventListener(
+      'scroll',
+      (event) => {
+        if (
+          event.target instanceof Element &&
+          event.target.closest('.screen-time__detail')
+        )
+          return
+        const focused = days.find(
+          (day) => day.open && day.contains(document.activeElement)
+        )
+        if (focused) {
+          const rect = focused.getBoundingClientRect()
+          if (rect.bottom > 0 && rect.top < innerHeight) {
+            place(focused)
+            return
+          }
+        }
+        close()
+      },
+      { signal, capture: true }
+    )
+    window.addEventListener(
+      'resize',
+      () => days.filter((day) => day.open).forEach(place),
+      { signal }
+    )
+    document.addEventListener(
+      'astro:before-swap',
+      () => {
+        close()
+        controller.abort()
+      },
+      { once: true, signal }
+    )
+  }
+
   const updateDay = () => {
     document
       .querySelectorAll<HTMLElement>('[data-screen-time-day]')
@@ -177,6 +537,9 @@ const updated = new Intl.DateTimeFormat('zh-CN', {
   const bindDay = () => {
     clearInterval(timer)
     updateDay()
+    document
+      .querySelectorAll<HTMLElement>('[data-screen-time]')
+      .forEach(bindChart)
     if (document.querySelector('[data-screen-time-day]'))
       timer = setInterval(updateDay, 60_000)
   }

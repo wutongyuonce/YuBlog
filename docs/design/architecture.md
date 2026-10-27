@@ -26,7 +26,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 
 | 路由 | 人看到的 | 入口 | 数据权威 |
 | :--- | :--- | :--- | :--- |
-| `/` | 作者介绍、写作热力、屏幕时间、近期五篇笔墨、近期书影游与 Last.fm 听歌排行 | `src/pages/index.astro` | 已发布 `blogs`、`interests/recent.md`、`public/data/screen-time.json`、运行时 `/api/lastfm` |
+| `/` | 作者介绍、写作热力、近期五篇笔墨、屏幕时间、近期书影游与 Last.fm 听歌排行 | `src/pages/index.astro` | 已发布 `blogs`、`interests/recent.md`、`public/data/screen-time.json`、运行时 `/api/lastfm` |
 | `/blogs/` | 完整文稿列表，八篇分页，原始分类共用 URL 片段精确筛选 | `src/pages/blogs/index.astro` | `blogs` 集合 |
 | `/interests/`、`/interests/<id>/` | 分类入口与按内容自动生成的独立页面 | `src/pages/interests.astro`、`src/pages/interests/[id].astro` | `interests` 集合：顶层 `*.{md,mdx}`，排除 `recent.md` |
 | `/tags/` | 标签芯片；多选 AND；未选不列出文章 | `src/pages/tags.astro` | 同上，标签从文章 frontmatter 汇总 |
@@ -193,7 +193,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 - `BlogIndexLayout`：导航页面的居中单栏容器。
 - `StandardLayout`：文章标题、正文与普通内容排版。
 
-全站没有个人右侧栏；`BlogProfile` 只在首页出现，其下依次是 `WritingHeatmap`、`ProgressStats`、`ScreenTime`、`RecentWriting`、`RecentMedia`、`RecentListening`。导航页统一通过 `BlogIndexLayout` 限制宽度。文章详情使用 `StandardLayout`，TOC 独立放在正文外侧。
+全站没有个人右侧栏；`BlogProfile` 只在首页出现，其下依次是 `WritingHeatmap`、`ProgressStats`、`RecentWriting`、`ScreenTime`、`RecentMedia`、`RecentListening`。导航页统一通过 `BlogIndexLayout` 限制宽度。文章详情使用 `StandardLayout`，TOC 独立放在正文外侧。
 
 顶栏的 `--site-nav-width` 引用 `--blog-shell-width`，与内容版心共用 660px 目标；更多右侧保留剩余空白。内容宽度同时受 `100vw - 两侧外边距` 限制；1200px 及以上再减去 32rem，避免加宽正文时把目录从 208px 挤窄。顶栏与正文同步收窄，小屏两排导航仍受响应式外边距 `--site-gutter` 约束。`--blog-prose-width` 引用版心宽度，标题、正文与返回链接对齐；目录读取同一个 `--blog-prose-width`，在正文边缘与视口外边距之间的留白中线基础上向外移 16px，最大 208px、受视口剩余空间约束。文稿列表卡片的封面列固定为无图 222px、有图 250px，版心宽度变化只进入左侧文字；768px 及以上封面垂直居中，更窄时改为单列并隐藏空封面列。目录与正文读取同一版心宽度。小屏由可用视口宽度约束。
 
@@ -284,7 +284,7 @@ src/
   components/
     nav/          顶栏
     blog/         首页作者介绍
-    home/         写作热力、近期笔墨、近期书影游、最近在听
+    home/         写作热力、近期笔墨、屏幕时间、近期书影游、最近在听
     views/        列表、标签、归档、拾趣、关于、友链、项目
     toc/
     widgets/      搜索、主题、进度
@@ -309,7 +309,7 @@ plugins/
 
 ### 首页 `/`
 
-`BlogProfile` 无卡片背景：头像与作者信息作为一组居中，头像右侧的名字与 INTJ 上下两行排列，INTJ 在名字下方，字号为 13px；RSS 居右；下方依次是一行居中的六个 15px 社交图标和独立一行居中的斜体名言「我与我周旋久，宁做我」。图标横向间距为桌面 15px／窄屏 9px，名言较长时在版心内自动换行，没有全站总数。社交入口由 `config.ts` 的 `AUTHOR_LINKS` 维护，名称保留给读屏器和悬停提示。窄屏仍保持作者组居中、RSS 靠右同一行，社交仍为单行、名言在其下方，缩小图标间隔；时间进度标签和数字上下排列。`WritingHeatmap` 放在名片下方，首页随后呈现独立的 `ProgressStats` 三列细时间进度，再显示屏幕时间和近期笔墨。屏幕时间读取已提交的七日聚合快照，数据边界与本机同步见 [设计](./screen-time.md)。标题与近期笔墨左对齐，年份在标题右侧以自定义下拉选择（多一年时；列表在触发器下方展开）；日历按上海时区自然年、周一起始，只计已发布文章。每年摘要显示篇数、字数和有文章的天数。单篇格子是链接，多篇在脚本启用后从提示层进入。`RecentWriting` 在其下显示最近五篇已发布文稿，无卡片底色，标题大小接近正文。`RecentMedia` 再往下渲染 `src/content/interests/recent.md`，不另画边框，宽度跟首页版心走。正文标题和卡片仅使用共享 `prose.css`，没有首页专用覆盖；近期条目使用连续 `:::card{layout="portrait"}` 组成一排，原封面、标题和顺序保留，原评论精简后放入 `meta`，不显示评分或类别角标，作品标题 `href` 直接指向对应 Wiki；不写 `scroll="auto"`，仅手动横滑。标题右侧「全部拾趣」进入拾趣入口。Markdown 标题按原层级分段并保留锚点。该文件排除出拾趣集合，不生成子页。`RecentListening` 接在近期书影游下方展示 Last.fm 听歌排行。首页不显示文章分页或个人侧栏。首页带 `?page=`、`?category=`、`?tag=` 的兼容书签在客户端转到 `/blogs/`。
+`BlogProfile` 无卡片背景：头像与作者信息作为一组居中，头像右侧的名字与 INTJ 上下两行排列，INTJ 在名字下方，字号为 13px；RSS 居右；下方依次是一行居中的六个 15px 社交图标和独立一行居中的斜体名言「我与我周旋久，宁做我」。图标横向间距为桌面 15px／窄屏 9px，名言较长时在版心内自动换行，没有全站总数。社交入口由 `config.ts` 的 `AUTHOR_LINKS` 维护，名称保留给读屏器和悬停提示。窄屏仍保持作者组居中、RSS 靠右同一行，社交仍为单行、名言在其下方，缩小图标间隔；时间进度标签和数字上下排列。`WritingHeatmap` 放在名片下方，首页随后呈现独立的 `ProgressStats` 三列细时间进度，再显示近期笔墨和屏幕时间。屏幕时间读取已提交的七日聚合快照，数据边界与本机同步见 [设计](./screen-time.md)。标题与近期笔墨左对齐，年份在标题右侧以自定义下拉选择（多一年时；列表在触发器下方展开）；日历按上海时区自然年、周一起始，只计已发布文章。每年摘要显示篇数、字数和有文章的天数。单篇格子是链接，多篇在脚本启用后从提示层进入。`RecentWriting` 在其下显示最近五篇已发布文稿，无卡片底色，标题大小接近正文。`RecentMedia` 再往下渲染 `src/content/interests/recent.md`，不另画边框，宽度跟首页版心走。正文标题和卡片仅使用共享 `prose.css`，没有首页专用覆盖；近期条目使用连续 `:::card{layout="portrait"}` 组成一排，原封面、标题和顺序保留，原评论精简后放入 `meta`，不显示评分或类别角标，作品标题 `href` 直接指向对应 Wiki；不写 `scroll="auto"`，仅手动横滑。标题右侧「全部拾趣」进入拾趣入口。Markdown 标题按原层级分段并保留锚点。该文件排除出拾趣集合，不生成子页。`RecentListening` 接在近期书影游下方展示 Last.fm 听歌排行。首页不显示文章分页或个人侧栏。首页带 `?page=`、`?category=`、`?tag=` 的兼容书签在客户端转到 `/blogs/`。
 
 ### 文稿 `/blogs/`
 
