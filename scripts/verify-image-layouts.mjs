@@ -499,9 +499,8 @@ ${longGallery}
       return {
         active,
         n: items.length,
-        prevDisabled: viewport.querySelector(
-          '.image-gallery__arrow--previous'
-        ).disabled,
+        prevDisabled: viewport.querySelector('.image-gallery__arrow--previous')
+          .disabled,
         nextDisabled: viewport.querySelector('.image-gallery__arrow--next')
           .disabled,
         currentDot: viewport
