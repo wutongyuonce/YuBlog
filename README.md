@@ -69,6 +69,7 @@ dev 搜索使用模拟数据，真实 Pagefind 搜索需先构建再预览。`pn
 | 博客与正文资源 | `src/content/blogs/`；文章配图放同目录或子目录 |
 | 文章封面 | `src/content/blogs/_title-images/`，用 `titleImage`／`titleImageAlt` 引用 |
 | 拾趣分类与配图 | `src/content/interests/<id>.md` 或 `.mdx`，配图放对应子目录 |
+| 歌单 | `src/data/playlists.json`，封面放 `src/content/interests/playlists/` |
 | 首页近期书影游 | `src/content/interests/recent.md` |
 | 作者介绍 | `src/content/about/about.md` |
 | 项目／友链 | `src/content/projects/data.json`／`src/content/friends/data.json` |

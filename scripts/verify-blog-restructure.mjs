@@ -724,13 +724,25 @@ test('playlist page ships fixed config and noscript links', async () => {
   const panel = elements(page, (node) => node.tagName === 'playlist-panel')[0]
   assert.ok(panel)
   assert.equal(panel.properties.dataState, 'loading')
+  const config = JSON.parse(panel.properties.dataConfig)
   assert.deepEqual(
-    JSON.parse(panel.properties.dataConfig),
-    playlists.map((entry) => ({
-      ...entry,
-      cover: sitePath(entry.cover),
-    }))
+    config,
+    playlists.map(({ cover, ...entry }) => entry),
+    'runtime config carries identity and link fields only'
   )
+  const covers = elements(
+    panel,
+    (node) => node.tagName === 'img' && node.properties.dataCover !== undefined
+  )
+  const declared = playlists.map((entry) => entry.cover)
+  const sources = covers.map((node) => node.properties.src)
+  assert.equal(sources.length, declared.length, 'each card ships its cover')
+  assert.equal(new Set(sources).size, sources.length, 'covers stay distinct')
+  for (const [index, src] of sources.entries()) {
+    const stem = declared[index].replace(/\.[^.]+$/, '')
+    assert.ok(src.includes(stem), `${stem}: cover is the declared file`)
+    await access(new URL(`../dist${src}`, import.meta.url))
+  }
   const playLinks = elements(panel, (node) =>
     hasClass(node, 'playlists-panel__play')
   )
@@ -746,8 +758,6 @@ test('playlist page ships fixed config and noscript links', async () => {
     links.map((node) => node.properties.href),
     playlists.map((entry) => entry.url)
   )
-  for (const entry of playlists)
-    await access(new URL(`../public${entry.cover}`, import.meta.url))
 })
 
 test('about TOC follows body headings, never the standalone page title', () => {

@@ -43,7 +43,6 @@ export function parsePlaylistsPayload(payload, config) {
     updatedAt: payload.updatedAt,
     playlists: config.map((entry) => ({
       ...payload.playlists.find((playlist) => playlist.id === entry.id),
-      cover: entry.cover,
       url: entry.url,
     })),
   }

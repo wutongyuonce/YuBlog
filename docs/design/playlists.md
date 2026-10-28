@@ -12,7 +12,9 @@
 
 ## 配置与资料
 
-唯一配置是 `src/data/playlists.json`：`id` 是稳定站内标识，`platform` 当前为 `qq`（预留 `netease`），`sourceId` 是平台歌单 ID，`title` 是可选后备名称，`cover` 是 `public/` 下的固定站内路径，`url` 是原平台桌面链接。**API 的非空 `dissname` 优先于配置 `title`**；配置名称仅用于加载前、失败、无脚本和上游未提供标题时。组件通过 `withBasePath` 为封面加入站点 base，不使用上游远程封面。
+唯一配置是 `src/data/playlists.json`：`id` 是稳定站内标识，`platform` 当前为 `qq`（预留 `netease`），`sourceId` 是平台歌单 ID，`title` 是可选后备名称，`cover` 是 `src/content/interests/playlists/` 内的文件名（如 `qq-9798567837.jpg`），`url` 是原平台桌面链接。**API 的非空 `dissname` 优先于配置 `title`**；配置名称仅用于加载前、失败、无脚本和上游未提供标题时。
+
+封面与其他拾趣页一样走 Astro 图片管线：组件在构建期把 `cover` 解析为打包后的资源地址并加站点 base，文件缺失或文件名写错时构建报错，不静默留空图，也不使用上游远程封面。运行时 `data-config` 与 `/api/playlists` 都不携带封面，封面只由构建期配置决定。
 
 `src/utils/qq-playlist.mjs` 负责 JSONP／JSON 解析、形状校验和字段归一化：歌曲取 `title`／`name`、`singer[].name`（用 ` / ` 连接）、`album.title`／`album.name`；歌单取 `dissname`、`nickname`、可选 `desc` 与 `songnum`。缺失歌手／专辑保留空字符串，导出时对应字段留空。数量使用上游 `songnum`；若有效歌曲少于标称数量，对应卡片明确提示当前可导出数量，导出仅含实际返回的歌曲。非空歌单返回空列表视为上游失败。
 
@@ -37,7 +39,7 @@ QQ 使用非官方公共接口，可能变更、限流或不可用；不能保�
 
 ## 添加第二份歌单
 
-1. 将固定封面放入 `public/playlists/`。
+1. 将封面放进 `src/content/interests/playlists/`，文件名自定（建议 `<id>.jpg`），不压缩、不改格式。
 2. 向 `src/data/playlists.json` 追加唯一 `id`、`platform`、`sourceId`、`cover`、`url`，可选后备 `title`。
 3. 若平台不是 QQ，在 `src/utils/playlists.mjs` 接入对应适配器并补充测试；QQ 可直接复用。
 4. 重新构建并部署。卡片、各自的导出按钮与无脚本链接自动生成，暖缓存请求自动取得新的全量快照，不需要增加工作流请求或提交歌曲数组。

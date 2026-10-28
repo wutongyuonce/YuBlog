@@ -2,15 +2,33 @@
 import playlists from '~/data/playlists.json'
 import { withBasePath } from '~/utils/path'
 
+const coverModules = import.meta.glob<string>(
+  '/src/content/interests/playlists/*.{jpg,jpeg,png,webp,avif}',
+  { eager: true, query: '?url', import: 'default' }
+)
+
+/** `cover` 写封面文件夹内的文件名；缺失时构建失败，不静默给空图。 */
+const coverPath = (file: string): string => {
+  const url = coverModules[`/src/content/interests/playlists/${file}`]
+  if (!url)
+    throw new Error(
+      `Playlist: 找不到封面 src/content/interests/playlists/${file}`
+    )
+  return withBasePath(url)
+}
+
 const config = playlists.map((entry) => ({
   ...entry,
-  cover: withBasePath(entry.cover),
+  cover: coverPath(entry.cover),
 }))
+
+/** 运行时只需要身份字段与链接；封面由构建期决定，不进接口契约。 */
+const runtimeConfig = config.map(({ cover, ...entry }) => entry)
 ---
 
 <playlist-panel
   class="playlists-panel"
-  data-config={JSON.stringify(config)}
+  data-config={JSON.stringify(runtimeConfig)}
   data-state="loading"
   role="region"
   aria-label="歌单收藏"

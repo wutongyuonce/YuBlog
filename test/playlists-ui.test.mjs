@@ -16,7 +16,6 @@ const config = [
     id: 'qq-test',
     platform: 'qq',
     sourceId: '123',
-    cover: '/base/playlists/local.jpg',
     url: 'https://y.qq.com/n/ryqq/playlist/123',
   },
 ]
@@ -45,12 +44,10 @@ test('exports exactly one plain-text line per track, including missing albums', 
   assert.equal(playlistText([]), '')
 })
 
-test('validates the whole response and trusts only static cover/link metadata', () => {
+test('validates the whole response and keeps only configured links', () => {
   const data = structuredClone(payload)
-  data.playlists[0].cover = 'https://remote.example/cover.jpg'
   data.playlists[0].url = 'javascript:alert(1)'
   const parsed = parsePlaylistsPayload(data, config)
-  assert.equal(parsed.playlists[0].cover, config[0].cover)
   assert.equal(parsed.playlists[0].url, config[0].url)
   for (const invalid of [
     null,
@@ -78,7 +75,6 @@ test('matches multiple playlists by id in config order and exports each original
     ...config[0],
     id: 'qq-second',
     sourceId: '456',
-    cover: '/base/playlists/second.jpg',
     url: 'https://y.qq.com/n/ryqq/playlist/456',
   }
   const secondPlaylist = {
