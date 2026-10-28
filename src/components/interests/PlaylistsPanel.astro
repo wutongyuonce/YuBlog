@@ -24,6 +24,25 @@ const config = playlists.map((entry) => ({
           data-playlist-id={entry.id}
           aria-labelledby={`playlist-title-${entry.id}`}
         >
+          <button type="button" data-export disabled>
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 3v12m-4-4 4 4 4-4M4 16v5h16v-5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            导出文本
+          </button>
+
           <div data-details hidden>
             <div class="playlists-panel__header">
               <img
@@ -55,9 +74,9 @@ const config = playlists.map((entry) => ({
                   </span>
                   <span class="playlists-panel__count" data-count />
                 </p>
-                <p class="playlists-panel__description" data-description hidden />
               </div>
             </div>
+            <p class="playlists-panel__description" data-description hidden />
           </div>
 
           <div data-skeleton aria-hidden="true">
@@ -67,33 +86,15 @@ const config = playlists.map((entry) => ({
                 <span class="playlists-panel__bone" />
                 <span class="playlists-panel__bone" />
                 <span class="playlists-panel__bone" />
-                <span class="playlists-panel__bone playlists-panel__skeleton-desc" />
-                <span class="playlists-panel__bone playlists-panel__skeleton-desc" />
               </div>
+            </div>
+            <div class="playlists-panel__skeleton-description">
+              <span class="playlists-panel__bone" />
+              <span class="playlists-panel__bone" />
             </div>
           </div>
 
-          <div class="playlists-panel__actions">
-            <p class="playlists-panel__note" data-note hidden />
-            <button type="button" data-export disabled>
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                aria-hidden="true"
-              >
-                <path
-                  d="M12 3v12m-4-4 4 4 4-4M4 16v5h16v-5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-              导出文本
-            </button>
-          </div>
+          <p class="playlists-panel__note" data-note hidden />
         </article>
       ))}
     </div>
@@ -161,6 +162,7 @@ const config = playlists.map((entry) => ({
     gap: 0;
   }
   .playlists-panel__card {
+    position: relative;
     min-width: 0;
     padding: 1.5rem 0;
     border: 0;
@@ -206,6 +208,7 @@ const config = playlists.map((entry) => ({
   .playlists-panel__info {
     min-width: 0;
     padding-top: 0.125rem;
+    padding-right: 6.5rem;
   }
   .playlists-panel__source {
     display: block;
@@ -260,22 +263,18 @@ const config = playlists.map((entry) => ({
     white-space: nowrap;
   }
   .playlists-panel__description {
-    margin: 0.85rem 0 0;
+    margin: 1.15rem 0 0;
     color: var(--playlist-muted);
     font-size: 0.875rem;
     line-height: 1.8;
     overflow-wrap: anywhere;
     white-space: pre-line;
   }
-  .playlists-panel__actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 0.75rem 1rem;
-    margin-top: 0.85rem;
-  }
-  button {
+  button[data-export] {
+    position: absolute;
+    top: 1.5rem;
+    right: 0;
+    z-index: 1;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -295,6 +294,9 @@ const config = playlists.map((entry) => ({
       border-color 160ms ease,
       background-color 160ms ease;
   }
+  .playlists-panel__card:first-child button[data-export] {
+    top: 0;
+  }
   button:enabled {
     cursor: pointer;
   }
@@ -307,8 +309,7 @@ const config = playlists.map((entry) => ({
     opacity: 0.45;
   }
   .playlists-panel__note {
-    flex: 1 1 12rem;
-    margin: 0 auto 0 0;
+    margin: 0.75rem 0 0;
     color: var(--playlist-muted);
     font-size: 0.75rem;
     line-height: 1.8;
@@ -373,14 +374,17 @@ const config = playlists.map((entry) => ({
     width: 55%;
     margin-top: 0.85rem;
   }
-  .playlists-panel__skeleton-info .playlists-panel__skeleton-desc {
-    width: 92%;
-    height: 0.75rem;
-    margin-top: 0.65rem;
+  .playlists-panel__skeleton-description {
+    display: grid;
+    gap: 0.55rem;
+    margin-top: 1.15rem;
   }
-  .playlists-panel__skeleton-info .playlists-panel__skeleton-desc:last-child {
+  .playlists-panel__skeleton-description span {
+    height: 0.75rem;
+    width: 92%;
+  }
+  .playlists-panel__skeleton-description span:last-child {
     width: 68%;
-    margin-top: 0.45rem;
   }
   @keyframes playlist-pulse {
     50% {
@@ -416,9 +420,18 @@ const config = playlists.map((entry) => ({
       margin-top: 0.65rem;
       font-size: 0.75rem;
     }
+    .playlists-panel__info {
+      padding-right: 0;
+    }
     .playlists-panel__description {
-      margin-top: 0.65rem;
+      margin-top: 1rem;
       font-size: 0.8125rem;
+    }
+    button[data-export] {
+      top: 1.15rem;
+    }
+    .playlists-panel__card:first-child button[data-export] {
+      top: 0;
     }
   }
   @media (max-width: 360px) {
