@@ -1,6 +1,6 @@
 ---
 title: 设备
-description: 日常在用的设备、配件和订阅
+description: 日常在用的设备和配件
 order: 0
 ---
 
@@ -49,19 +49,3 @@ order: 0
 
 ![elephant](./device/elephant.jpg)
 :::
-
-### 我的订阅服务
-
-| 类型 | 名称 | 时间 | 价格 | 描述 |
-| --- | --- | --- | --- | --- |
-| AI | [GPT Plus](https://chatgpt.com) | 2026.7.12-至今 | 120 ¥/月 | 专门办了个招行万事达的卡来开通 |
-| AI | [Supergrok](https://accounts.x.ai/) | 2026.9.4-2026.12.4 | 230¥ 3个月 | |
-| AI | [Deepseek API](https://platform.deepseek.com/usage) | | 270¥+ | |
-| 代码 | [阿里云云服务2核2GB](https://ecs.console.aliyun.com/) | 2027.10.25 到期 | 大学生 300 元优惠劵 | |
-| 音乐 | qq 音乐 | 2027.11.13 到期 | | 移动电话卡每月能领一个月的会员 |
-| 音乐 | ~~apple music~~（已停） | | | |
-| 视频 | b 站年会 | 2027.1.6 到期 | 80¥ | |
-| 网络 | vpn | 2026.10.22-2027.10.22 | 188¥/年 | |
-| 视频 | ~~netflix~~（已停） | | | |
-
-[![Tokens Stats](https://tokens.ci/api/embed/wutongyuonce/svg?theme=light&template=graph&tokens=compact&cost=compact)](https://tokens.ci/u/wutongyuonce)
