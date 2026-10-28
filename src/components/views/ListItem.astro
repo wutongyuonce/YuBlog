@@ -136,9 +136,10 @@ const href = data.redirect || withBasePath(`/blogs/${id}/`)
       color 160ms ease,
       border-color 160ms ease;
   }
-  .post-preview h2 :global(a:hover) {
-    color: var(--c-text);
-    border-bottom-color: color-mix(in srgb, var(--c-text) 38%, transparent);
+  .post-preview h2 :global(a:hover),
+  .post-preview h2 :global(a:focus-visible) {
+    color: var(--accent);
+    border-bottom-color: currentColor;
   }
   .post-preview p {
     margin: 0;
