@@ -57,7 +57,7 @@ export default defineConfig({
       },
       fontFamily: {
         ...current.fontFamily,
-        sans: 'Inter, ui-sans-serif, system-ui, sans-serif',
+        sans: 'Inter, "LXGW WenKai", ui-sans-serif, system-ui, sans-serif',
         mono: '"Maple Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
         condensed: 'ui-sans-serif, system-ui, sans-serif',
       },
