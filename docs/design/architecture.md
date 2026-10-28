@@ -80,6 +80,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 路径是否带 `base`、是否补尾斜杠 | `src/utils/path.ts` | 字符串拼接 `/tags` |
 | 顶栏、布局、归档线、分页的跨页 CSS | `public/shell.css` | 复制共享规则；需要局部覆盖时不检查作用域和层叠效果 |
 | 索引版心与文章阅读宽度 | `src/styles/main.css` 的 `--blog-shell-width` / `--blog-prose-width` | 在页面或目录组件另写宽度值 |
+| 链接常驻下划色的强度与交互色 | `src/styles/main.css` 的 `--link-underline`；标题族与正文族的分工见 [视觉不变量](./site.md#visuals) | 在组件里另写灰色下划线常量，或给导航、卡片、筛选芯片加文字下划线 |
 | 文稿列表封面列宽 | `ListItem.astro` 的 250px／222px | 在 `main.css` 或列表页再写一份列宽 |
 | 拾趣分区与菜单名称、说明、顺序 | `src/content/interests/*.{md,mdx}` 的 `title`/`description`/`order`；集合范围在 `src/content.config.ts` | 在导航与页面各写一份或限制分类 ID／数量 |
 | 拾趣菜单可选图标 | `src/config.ts` 的 `INTEREST_ICONS`，键为文件名去掉扩展名；UnoCSS 自动加入 safelist | 为无图标分类补占位或重复维护图标 safelist |

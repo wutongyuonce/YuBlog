@@ -121,16 +121,19 @@ const randomCandidates: PostNavItem[] = getSortedPosts(
     font-size: 1rem;
     line-height: 1.65;
     text-decoration: none;
-    border-bottom: 1px solid transparent;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.16em;
     transition:
       color 160ms ease,
-      border-color 160ms ease;
+      text-decoration-color 160ms ease;
     overflow-wrap: anywhere;
   }
+  /* 标题族：无常驻下划线，悬浮或键盘聚焦时字色与下划线一起变强调色。 */
   .recent-writing__link:hover,
   .recent-writing__link:focus-visible {
     color: var(--accent);
-    border-bottom-color: currentColor;
+    text-decoration-line: underline;
+    text-decoration-color: var(--accent);
   }
   .recent-writing__item:first-child .recent-writing__link {
     font-size: 1.0625rem;

@@ -81,8 +81,16 @@ const tags = buildTagSummary(
     background: transparent;
     font: inherit;
     text-decoration: underline;
+    text-decoration-color: var(--link-underline);
     text-underline-offset: 0.2em;
     cursor: pointer;
+    transition:
+      color 160ms ease,
+      text-decoration-color 160ms ease;
+  }
+  .tags-selected button:is(:hover, :focus-visible) {
+    color: var(--accent);
+    text-decoration-color: var(--accent);
   }
   .tags-sort {
     position: relative;

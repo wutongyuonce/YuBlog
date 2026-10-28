@@ -66,8 +66,16 @@ const { Content, headings } = entry
     color: inherit;
     text-decoration: none;
   }
-  .interests-page__index a:hover {
+  .interests-page__index a:hover,
+  .interests-page__index a:focus-visible {
     color: var(--accent);
+  }
+  /* 整行是链接，但下划线只画在标题上，与归档时间线一致。 */
+  .interests-page__index a:is(:hover, :focus-visible) span {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--accent);
+    text-underline-offset: 0.16em;
   }
   .interests-page__index span {
     min-width: 4.5rem;
