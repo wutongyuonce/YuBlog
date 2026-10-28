@@ -57,6 +57,14 @@ export function resolveBlogEntry(slug: string): BlogEntryMeta | null {
   })) {
     if (!entry.isFile() || !/\.(md|mdx)$/i.test(entry.name)) continue
     const filePath = path.join(entry.parentPath, entry.name)
+    // 与 Astro 内容集合一致：下划线开头的文件与目录不是文章。
+    if (
+      path
+        .relative(BLOGS_ROOT, filePath)
+        .split(path.sep)
+        .some((segment) => segment.startsWith('_'))
+    )
+      continue
     const stem = path
       .relative(BLOGS_ROOT, filePath)
       .replace(/\.(md|mdx)$/i, '')

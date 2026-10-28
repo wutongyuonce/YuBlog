@@ -43,10 +43,13 @@ test(':::excalidraw works with src only when same-basename preview exists', asyn
 })
 
 test(':::excalidraw allows src-only without any preview image', async () => {
+  // 插件要求资源在 src/ 下，所以仍放在内容目录；但用带随机后缀的目录名，
+  // 并在其它测试扫描 src/content/blogs/ 之前就写好、之后才删，避免它们读到半截状态。
   const dir = path.dirname(fileURLToPath(import.meta.url))
-  const fixtureDir = path.join(dir, '../src/content/blogs/_excalidraw-fixture')
-  const { mkdirSync, writeFileSync, rmSync } = await import('node:fs')
-  mkdirSync(fixtureDir, { recursive: true })
+  const { mkdtempSync, writeFileSync, rmSync } = await import('node:fs')
+  const fixtureDir = mkdtempSync(
+    path.join(dir, '../src/content/blogs/_excalidraw-fixture-')
+  )
   const scene = path.join(fixtureDir, 'solo.excalidraw')
   writeFileSync(
     scene,
