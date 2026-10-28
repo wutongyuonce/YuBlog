@@ -1,6 +1,6 @@
 # 拾趣歌单
 
-`/interests/playlists/` 按配置顺序纵向展示歌单，每份歌单是一张横向卡片，不使用选择器、曲目列表或排序控件。封面与文字直接铺在页面上，卡间用轻分隔线，不加填充底色与描边底板。左侧为约 9rem 的固定站内圆角封面（细描边与轻阴影，悬停微抬，尊重减少动态偏好），右侧信息栏依次为平台名、链接标题、`by 作者` 与强调色「N 首」。介绍文案在封面与右侧信息整行下方、自左铺开。轻量幽灵「导出文本」按钮固定在卡片右上角。手机缩小封面和间距，介绍仍整行可读。
+`/interests/playlists/` 按配置顺序纵向展示歌单，每份歌单是一张带内边距的横向玻璃卡片，不使用选择器、曲目列表或排序控件。卡间用 gap 分隔，不再依赖硬分隔线；卡片半透明底色、轻微 blur 与细边框／高光，色调跟站内固定封面主色协调（canvas 同源采样写入 `--playlist-tint`／`--playlist-tint-soft`，加载前用中性玻璃底，失败保持中性，尊重减少动态偏好）。左侧为约 9rem 的固定站内圆角封面（细描边与轻阴影，悬停微抬）。右侧信息栏顶行同一行：左侧平台名，右侧 `by 作者 ·` 强调色「N 首」；其下为链接标题，再下为介绍文案（均在信息栏内，不再整行铺在封面＋信息块下方）。骨架描述骨放在信息栏标题骨下。轻量幽灵「导出文本」按钮固定在卡片右上角。手机缩小封面和间距，信息栏仍可读。
 
 标题直接链接原平台，移除外链箭头；悬浮与键盘聚焦与首页近期笔墨标题一致：强调色文字与同色下划线。按钮和文字沿用主题变量，适配深浅主题。
 
@@ -40,10 +40,10 @@ QQ 使用非官方公共接口，可能变更、限流或不可用；不能保�
 
 ## 验证
 
-`test/qq-playlist.test.mjs` 用两首歌的夹具覆盖字段回退、JSONP、空值、非法数据、净化错误及超时；`test/playlists-endpoint.test.mjs` 覆盖全量快照、标题优先级、静态封面、缓存、失败和方法／查询边界；`test/playlists-ui.test.mjs` 覆盖响应校验、静态封面与链接、多歌单配置顺序及各自原顺序逐行导出。
+`test/qq-playlist.test.mjs` 用两首歌的夹具覆盖字段回退、JSONP、空值、非法数据、净化错误及超时；`test/playlists-endpoint.test.mjs` 覆盖全量快照、标题优先级、静态封面、缓存、失败和方法／查询边界；`test/playlists-ui.test.mjs` 覆盖响应校验、静态封面与链接、多歌单配置顺序及各自原顺序逐行导出；`test/playlist-cover-tint.test.mjs` 覆盖封面 RGBA 取色与空缓冲回退。
 
 ```bash
-node --test test/qq-playlist.test.mjs test/playlists-endpoint.test.mjs test/playlists-ui.test.mjs
+node --test test/qq-playlist.test.mjs test/playlists-endpoint.test.mjs test/playlists-ui.test.mjs test/playlist-cover-tint.test.mjs
 pnpm check
 pnpm build
 pnpm test:built-restructure
