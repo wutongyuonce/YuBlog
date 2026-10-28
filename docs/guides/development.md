@@ -107,7 +107,15 @@ LASTFM_USER=你的_Lastfm_用户名
 
 ### ActivityWatch 屏幕时间
 
-首页屏幕时间读取本机生成、随仓库发布的聚合快照，包含日期、总时长、应用名与应用时长。首次同步、macOS 每小时任务的服务文件和日志位置、发布边界及卸载步骤统一见 [屏幕时间设计](../design/screen-time.md)。
+首页屏幕时间在访问时从 `/api/screen-time` 获取，仓库不存快照。数据由本机脚本每小时读取 ActivityWatch 的七日聚合结果，覆盖写入 Vercel Blob 的一个固定对象。Vercel 项目需连接一个 **Public** 的 Blob 存储：连接后平台自动注入 `BLOB_STORE_ID`（读取用，不涉密）与 `BLOB_READ_WRITE_TOKEN`（写入用），接口不需要额外配置。访问模式创建后不能修改，建成 Private 时接口会一直返回 502。
+
+本机只需要 `BLOB_READ_WRITE_TOKEN`，把它放在被忽略的 `.env`：`node scripts/sync-screen-time.mjs --publish` 先读环境变量，再读该文件。
+
+```dotenv
+BLOB_READ_WRITE_TOKEN=vercel_blob_rw_...
+```
+
+缺少它时同步失败并且不改本地副本，下一个整点重试；未连接存储（缺 `BLOB_STORE_ID`）时接口返回 503、页面显示失败说明。两者都不影响静态博客的构建。快照边界、缓存策略、每小时任务的服务文件与卸载步骤统一见 [屏幕时间设计](../design/screen-time.md)。
 
 ### Giscus 评论
 
@@ -129,13 +137,13 @@ Oneko 使用外部托管脚本，开关与皮肤配置在 `FEATURES.oneko`。页
 
 ### Vercel
 
-仓库的 `vercel.json` 使用 `framework: null`（Other）、`buildCommand: pnpm build`、`outputDirectory: dist`，以同时提供静态页面和根目录 `api/lastfm.js` 函数。保留这套配置；直接改用 Astro 框架预设可能导致根 `api/` 不被收集、听歌接口返回 404。
+仓库的 `vercel.json` 使用 `framework: null`（Other）、`buildCommand: pnpm build`、`outputDirectory: dist`，以同时提供静态页面和根目录的 `api/lastfm.js`、`api/screen-time.js` 函数。保留这套配置；直接改用 Astro 框架预设可能导致根 `api/` 不被收集、两个接口都返回 404。屏幕时间还需要在项目的 Storage 中连接一个 Blob 存储。
 
 部署前核实 `SITE.website`／`SITE.base`、Giscus、统计及 Last.fm 账户。不要把 `/blogs/` 重定向到首页，它承载文章列表和分类筛选。
 
 ### 其它静态平台
 
-静态页面可从 `dist/` 托管；`/api/lastfm` 需要自行适配平台函数或独立服务，单独托管静态文件不能提供它。子路径部署先配置 `SITE.base` 并验证文章、资源、canonical、RSS 和评论路径；手写 `/demos/` 等根路径引用时也需包含实际 base。
+静态页面可从 `dist/` 托管；`/api/lastfm` 与 `/api/screen-time` 需要自行适配平台函数或独立服务，单独托管静态文件不能提供它们。子路径部署先配置 `SITE.base` 并验证文章、资源、canonical、RSS 和评论路径；手写 `/demos/` 等根路径引用时也需包含实际 base。
 
 发布后核实页面、搜索、RSS、评论和所启用的外部服务。构建通过不能说明 DNS、Giscus OAuth、CDN 缓存或线上 API 已验证。
 
@@ -167,6 +175,7 @@ pnpm test:built-markdown
 | RSS／canonical／sitemap | [订阅验证映射](../design/distribution.md#verification)，真实阅读器另验 |
 | 布局、导航、主题、搜索、评论 | 对应真实浏览器脚本、深浅主题及 1440／390／320px 可读性与横向溢出；字体声明或 CSS 拆分改动另跑 `scripts/verify-navigation-fonts.mjs`，检查切页时已加载字体不回退 |
 | Last.fm 接口 | 属主和端点单测、固定载荷浏览器检查，部署后再验真实凭据与缓存 |
+| 屏幕时间接口与区块 | 属主、端点、渲染单测，骨架／就绪与失败的真实浏览器检查，部署后再验 Blob 写入与缓存 |
 
 ```bash
 python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog src/content/blogs/slug.md

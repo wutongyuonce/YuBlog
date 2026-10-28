@@ -11,6 +11,7 @@ import { subsetTitleFontsIntegration } from './plugins/astro-subset-title-fonts'
 import { mediaSyncIntegration } from './plugins/astro-media-sync' // 把 src/ 下的视频/音频镜像到 public/_media/
 import { listeningEndpointIntegration } from './plugins/astro-listening-endpoint' // dev 下挂载听歌数据接口，与线上同一实现
 import { playlistsEndpointIntegration } from './plugins/astro-playlists-endpoint'
+import { screenTimeEndpointIntegration } from './plugins/astro-screen-time-endpoint' // dev 下挂载屏幕时间接口，与线上同一实现
 import { SITE } from './src/config' // 导入站点配置（从 config.ts 导入）
 
 /**
@@ -44,6 +45,7 @@ export default defineConfig({
     mediaSyncIntegration(), // 先于 Astro 拷贝 public/，把视频/音频准备好
     listeningEndpointIntegration(), // 本地 dev 提供听歌数据接口，线上由 Vercel 函数提供
     playlistsEndpointIntegration(),
+    screenTimeEndpointIntegration(), // 本地 dev 提供屏幕时间接口，线上由 Vercel 函数提供
   ],
 
   // ==================== Markdown 配置 ====================
