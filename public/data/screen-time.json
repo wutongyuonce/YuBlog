@@ -1,6 +1,6 @@
 {
   "timeZone": "Asia/Shanghai",
-  "updatedAt": "2026-10-28T10:50:04.952Z",
+  "updatedAt": "2026-10-28T11:50:05.942Z",
   "days": [
     {
       "date": "2026-10-22",
@@ -127,23 +127,27 @@
     },
     {
       "date": "2026-10-28",
-      "seconds": 16517,
+      "seconds": 19340,
       "apps": [
         {
           "name": "Safari浏览器",
-          "seconds": 5325.51
+          "seconds": 6252.279
         },
         {
           "name": "Ghostty",
-          "seconds": 4661.038
+          "seconds": 5191.421
+        },
+        {
+          "name": "ChatGPT",
+          "seconds": 1263.326
+        },
+        {
+          "name": "Typora",
+          "seconds": 912.523
         },
         {
           "name": "Tangentry",
           "seconds": 861.235
-        },
-        {
-          "name": "Typora",
-          "seconds": 698.176
         },
         {
           "name": "LM Studio",
@@ -159,23 +163,19 @@
         },
         {
           "name": "magpie",
-          "seconds": 437.764
+          "seconds": 495.916
+        },
+        {
+          "name": "访达",
+          "seconds": 477.141
         },
         {
           "name": "Grok Bot",
           "seconds": 426.724
         },
         {
-          "name": "ChatGPT",
-          "seconds": 412.393
-        },
-        {
-          "name": "访达",
-          "seconds": 403.335
-        },
-        {
           "name": "ego lite",
-          "seconds": 391.448
+          "seconds": 414.546
         },
         {
           "name": "夸克",
@@ -192,6 +192,10 @@
         {
           "name": "PaperRss",
           "seconds": 148.985
+        },
+        {
+          "name": "Slidepad",
+          "seconds": 130.793
         },
         {
           "name": "Mac Sai",
@@ -222,6 +226,10 @@
           "seconds": 21.138
         },
         {
+          "name": "GameOverlayUI",
+          "seconds": 13.564
+        },
+        {
           "name": "小宇宙",
           "seconds": 9.58
         },
@@ -239,7 +247,7 @@
         },
         {
           "name": "超级右键",
-          "seconds": 1.666
+          "seconds": 3.178
         },
         {
           "name": "PixPin",
