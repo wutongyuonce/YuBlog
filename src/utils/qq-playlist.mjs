@@ -72,10 +72,7 @@ export function parseQqResponse(body) {
   }
 }
 
-export async function fetchQqPlaylist(
-  sourceId,
-  { fetchImpl = fetch, now = new Date() } = {}
-) {
+export async function fetchQqPlaylist(sourceId, { fetchImpl = fetch } = {}) {
   if (typeof sourceId !== 'string' || !/^\d+$/.test(sourceId))
     throw new Error('QQ playlist: invalid_source_id')
   const url = new URL(API_URL)
@@ -97,7 +94,6 @@ export async function fetchQqPlaylist(
     if (!response.ok) throw new Error('upstream_unavailable')
     return {
       ...parseQqResponse(await response.text()),
-      updatedAt: now.toISOString(),
     }
   } catch {
     // 网络错误、JSON 解析错误及超时均不泄露上游响应或异常原文。

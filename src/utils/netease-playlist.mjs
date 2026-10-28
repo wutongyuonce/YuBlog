@@ -57,7 +57,7 @@ function normalizeNeteasePayload(payload) {
 
 export async function fetchNeteasePlaylist(
   sourceId,
-  { fetchImpl = fetch, now = new Date() } = {}
+  { fetchImpl = fetch } = {}
 ) {
   if (typeof sourceId !== 'string' || !/^\d+$/.test(sourceId))
     throw new Error('Netease playlist: invalid_source_id')
@@ -80,7 +80,6 @@ export async function fetchNeteasePlaylist(
     if (!response.ok) throw invalid()
     return {
       ...normalizeNeteasePayload(JSON.parse(await response.text())),
-      updatedAt: now.toISOString(),
     }
   } catch {
     throw new Error('Netease playlist: upstream_unavailable')

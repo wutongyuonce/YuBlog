@@ -76,10 +76,8 @@ test('empty playlists and missing optional metadata are distinct from invalid da
     assert.throws(() => normalizeQqPayload(value), /invalid_payload/)
 })
 
-test('fetch uses the QQ endpoint, fixed Referer and a deterministic timestamp', async () => {
-  const now = new Date('2026-10-28T02:00:00Z')
+test('fetch uses the QQ endpoint and the fixed Referer', async () => {
   const data = await fetchQqPlaylist('12345', {
-    now,
     fetchImpl: async (url, options) => {
       assert.equal(url.origin, 'https://c.y.qq.com')
       assert.equal(url.searchParams.get('disstid'), '12345')
@@ -90,7 +88,6 @@ test('fetch uses the QQ endpoint, fixed Referer and a deterministic timestamp', 
       return new Response(`jsonCallback(${JSON.stringify(fixture)})`)
     },
   })
-  assert.equal(data.updatedAt, now.toISOString())
   assert.deepEqual(data.songs, normalizeQqPayload(item).songs)
 })
 

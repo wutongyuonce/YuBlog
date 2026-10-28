@@ -18,10 +18,8 @@ const response = (value = result) =>
   new Response(JSON.stringify({ code: 200, result: value }))
 
 test('fetch normalizes metadata and songs in their original order in one request', async () => {
-  const now = new Date('2026-10-28T02:00:00Z')
   let calls = 0
   const data = await fetchNeteasePlaylist('3778678', {
-    now,
     fetchImpl: async (url, options) => {
       calls++
       assert.equal(url.origin, 'https://music.163.com')
@@ -42,7 +40,6 @@ test('fetch normalizes metadata and songs in their original order in one request
       { title: '玻璃', artist: 'Gareth.T / 另一位歌手', album: '玻璃' },
       { title: '无专辑', artist: '', album: '' },
     ],
-    updatedAt: now.toISOString(),
   })
 })
 

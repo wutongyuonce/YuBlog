@@ -20,7 +20,6 @@ export async function fetchPlaylistsSnapshot({
         throw new Error('Playlist: not_implemented')
       const data = await ADAPTERS[entry.platform](entry.sourceId, {
         fetchImpl,
-        now,
       })
       return {
         ...entry,
