@@ -4,6 +4,7 @@ import { withBasePath } from '~/utils/path'
 import PageHeading from '~/components/base/PageHeading.astro'
 import GiscusComments from '~/components/base/GiscusComments.astro'
 import Toc from '~/components/toc/Toc.astro'
+import PlaylistsPanel from '~/components/interests/PlaylistsPanel.astro'
 import type { CollectionEntry } from 'astro:content'
 
 interface Props {
@@ -27,7 +28,11 @@ const { Content, headings } = entry
       entry ? entry.data.description : '日常在用的东西，与闲暇时喜欢的故事。'
     }
   />
-  {entry && Content ? (
+  {entry?.id === 'playlists' ? (
+    <div data-interest={entry.id}>
+      <PlaylistsPanel />
+    </div>
+  ) : entry && Content ? (
     <article
       class="prose markdown-content interests-page__content"
       data-interest={entry.id}

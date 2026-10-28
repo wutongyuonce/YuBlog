@@ -15,6 +15,7 @@ import {
 } from '../src/config.ts'
 import { parseBlogQuery } from '../src/utils/blog-browser.js'
 import { getBlogCategoryColors } from '../src/utils/blog-category-colors.js'
+import playlists from '../src/data/playlists.json' with { type: 'json' }
 
 const siteBase = new URL(
   SITE.base.endsWith('/') ? SITE.base : `${SITE.base}/`,
@@ -682,7 +683,20 @@ test('interest menu and index agree and their links resolve to content pages', a
     const content = elements(page, (node) => 'dataInterest' in node.properties)
     assert.equal(content.length, 1)
     assert.equal(content[0].properties.dataInterest, id)
-    assertBodyToc(page, content[0], id)
+    if (id === 'playlists') {
+      assert.equal(
+        elements(content[0], (node) => node.tagName === 'playlist-panel')
+          .length,
+        1
+      )
+      assert.equal(
+        elements(page, (node) => node.tagName === 'table-of-contents').length,
+        0,
+        'runtime playlist titles do not enter the Markdown directory'
+      )
+    } else {
+      assertBodyToc(page, content[0], id)
+    }
     assert.equal(
       elements(page, (node) => hasClass(node, 'recent-media')).length,
       0,
@@ -703,6 +717,31 @@ test('interest menu and index agree and their links resolve to content pages', a
       1
     )
   }
+})
+
+test('playlist page ships fixed metadata and noscript links without song data', async () => {
+  const page = await load('interests/playlists/index.html')
+  const panel = elements(page, (node) => node.tagName === 'playlist-panel')[0]
+  assert.ok(panel)
+  assert.equal(panel.properties.dataState, 'loading')
+  assert.deepEqual(
+    JSON.parse(panel.properties.dataConfig),
+    playlists.map((entry) => ({
+      ...entry,
+      cover: sitePath(entry.cover),
+    }))
+  )
+  const body = elements(panel, (node) => node.tagName === 'tbody')[0]
+  assert.equal(elements(body, (node) => node.tagName === 'tr').length, 0)
+  const noscript = elements(panel, (node) => node.tagName === 'noscript')[0]
+  assert.ok(noscript)
+  const links = elements(noscript, (node) => node.tagName === 'a')
+  assert.deepEqual(
+    links.map((node) => node.properties.href),
+    playlists.map((entry) => entry.url)
+  )
+  for (const entry of playlists)
+    await access(new URL(`../public${entry.cover}`, import.meta.url))
 })
 
 test('about TOC follows body headings, never the standalone page title', () => {

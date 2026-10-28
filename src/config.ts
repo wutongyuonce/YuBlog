@@ -180,4 +180,5 @@ export const INTEREST_ICONS: Record<string, string> = {
   game: 'i-ri-gamepad-line',
   book: 'i-ri-book-open-line',
   kpop: 'i-ri-music-2-line',
+  playlists: 'i-ri-play-list-line',
 }

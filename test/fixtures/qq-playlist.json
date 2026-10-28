@@ -1,0 +1,25 @@
+{
+  "code": 0,
+  "cdlist": [
+    {
+      "dissname": "夜间随听",
+      "nickname": "测试作者",
+      "desc": "安静的夜晚。",
+      "songnum": 2,
+      "logo": "https://upstream.example/unused.jpg",
+      "songlist": [
+        {
+          "title": "玻璃",
+          "name": "备用歌名",
+          "singer": [{ "name": "Gareth.T" }, { "name": "另一位歌手" }],
+          "album": { "title": "玻璃", "name": "备用专辑名" }
+        },
+        {
+          "name": "Monday",
+          "singer": [{ "name": "窦靖童" }],
+          "album": { "name": "春游" }
+        }
+      ]
+    }
+  ]
+}

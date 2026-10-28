@@ -222,6 +222,9 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 | `book` | 书 |
 | `kpop` | 喜欢的团体与 idle |
 | `software` | Mac 与手机软件 |
+| `playlists` | 固定歌单的运行时列表；资料配置在 `src/data/playlists.json`，封面在 `public/playlists/` |
+
+「歌单」的 `playlists.md` 只维护页面标题、说明和顺序；曲目由运行时接口取得，不把完整歌曲数组写进仓库。新增固定歌单时追加配置与本地封面，不把它改为手写 Markdown 曲目表。
 
 读取同目录样例后修改。frontmatter 的 `title`、`description` 必须为非空字符串，`order` 必须为非负整数；三者供入口、子页和顶部下拉共同使用，`order` 越小越靠前。子页标题直接是分类名，不加“拾趣-”。
 

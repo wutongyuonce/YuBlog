@@ -1,0 +1,568 @@
+---
+/* eslint-disable astro/jsx-a11y/no-noninteractive-tabindex -- 可滚动的歌曲区域需要键盘焦点，供方向键和 PageDown 浏览。 */
+import playlists from '~/data/playlists.json'
+import { withBasePath } from '~/utils/path'
+
+const config = playlists.map((entry) => ({
+  ...entry,
+  cover: withBasePath(entry.cover),
+}))
+---
+
+<playlist-panel
+  class="playlists-panel"
+  data-config={JSON.stringify(config)}
+  data-state="loading"
+  role="region"
+  aria-label="歌单收藏"
+  aria-busy="true"
+>
+  <div class="playlists-panel__interactive">
+    <label class="playlists-panel__switcher">
+      <span>选择歌单</span>
+      <select data-switcher disabled>
+        {config.map((entry) => (
+          <option value={entry.id}>{entry.title || entry.id}</option>
+        ))}
+      </select>
+    </label>
+
+    <div class="playlists-panel__header" data-details hidden>
+      <img
+        class="playlists-panel__cover"
+        data-cover
+        src={config[0]?.cover}
+        width="144"
+        height="144"
+        alt=""
+      />
+      <div class="playlists-panel__info">
+        <span class="playlists-panel__source" data-source>
+          QQ 音乐
+        </span>
+        <h2>
+          <a
+            data-title
+            href={config[0]?.url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {config[0]?.title}
+          </a>
+          <span class="playlists-panel__external" aria-hidden="true">
+            ↗
+          </span>
+        </h2>
+        <p class="playlists-panel__meta">
+          <span>
+            <span class="sr-only">作者：</span>
+            <span data-author></span>
+          </span>
+          <span class="playlists-panel__count" data-count></span>
+        </p>
+        <p class="playlists-panel__description" data-description hidden></p>
+      </div>
+    </div>
+
+    <div data-skeleton aria-hidden="true">
+      <div class="playlists-panel__header">
+        <div class="playlists-panel__cover playlists-panel__bone"></div>
+        <div class="playlists-panel__info playlists-panel__skeleton-info">
+          <span class="playlists-panel__bone"></span>
+          <span class="playlists-panel__bone"></span>
+          <span class="playlists-panel__bone"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="playlists-panel__toolbar">
+      <label>
+        <span>排序</span>
+        <select data-sort disabled>
+          <option value="original">原顺序</option>
+          <option value="title">歌名</option>
+          <option value="artist">歌手</option>
+          <option value="album">专辑</option>
+        </select>
+      </label>
+      <button type="button" data-export disabled>
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          aria-hidden="true"
+        >
+          <path
+            d="M12 3v12m-4-4 4 4 4-4M4 16v5h16v-5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        导出文本
+      </button>
+    </div>
+
+    <div
+      class="playlists-panel__skeleton-list"
+      data-skeleton
+      aria-hidden="true"
+    >
+      {Array.from({ length: 8 }, () => (
+        <div class="playlists-panel__skeleton-row">
+          <span class="playlists-panel__bone"></span>
+          <span class="playlists-panel__bone"></span>
+          <span class="playlists-panel__bone"></span>
+        </div>
+      ))}
+    </div>
+    <div
+      class="playlists-panel__tracks"
+      data-tracks
+      tabindex="0"
+      role="region"
+      aria-label="歌曲列表，可上下滚动"
+      hidden
+    >
+      <table>
+        <caption class="sr-only">歌单曲目</caption>
+        <thead>
+          <tr>
+            <th scope="col">序号</th>
+            <th scope="col">歌名</th>
+            <th scope="col">歌手</th>
+            <th scope="col">专辑</th>
+          </tr>
+        </thead>
+        <tbody data-song-list></tbody>
+      </table>
+    </div>
+    <p class="playlists-panel__empty" data-empty hidden>
+      歌单里还没有歌曲。
+    </p>
+    <p class="playlists-panel__note" data-partial hidden></p>
+    <div class="playlists-panel__footer">
+      <p
+        class="playlists-panel__status"
+        data-status
+        role="status"
+        aria-live="polite"
+      >
+        正在获取歌单…
+      </p>
+      <time data-updated hidden></time>
+    </div>
+    <p class="playlists-panel__fallback" data-fallback hidden>
+      前往原歌单：
+      {config.map((entry) => (
+        <a href={entry.url} target="_blank" rel="noopener noreferrer">
+          {entry.title || entry.id} ↗
+        </a>
+      ))}
+    </p>
+  </div>
+
+  <noscript>
+    <style>
+      .playlists-panel__interactive {
+        display: none;
+      }
+    </style>
+    <p class="playlists-panel__fallback">
+      歌单列表需要启用 JavaScript。也可以前往原歌单查看：
+      {config.map((entry) => (
+        <a href={entry.url} target="_blank" rel="noopener noreferrer">
+          {entry.title || entry.id} ↗
+        </a>
+      ))}
+    </p>
+  </noscript>
+
+  <template data-song-template>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </template>
+</playlist-panel>
+
+<script>
+  import { mountPlaylists } from '~/utils/playlists-ui'
+
+  class PlaylistPanel extends HTMLElement {
+    private cleanup?: () => void
+    connectedCallback() {
+      this.cleanup = mountPlaylists(this)
+    }
+    disconnectedCallback() {
+      this.cleanup?.()
+    }
+  }
+  if (!customElements.get('playlist-panel'))
+    customElements.define('playlist-panel', PlaylistPanel)
+</script>
+
+<style>
+  .playlists-panel {
+    --playlist-muted: color-mix(in srgb, var(--c-text) 62%, var(--c-bg));
+    --playlist-line: color-mix(in srgb, var(--c-text) 12%, var(--c-bg));
+    display: block;
+    min-width: 0;
+    margin-top: 2rem;
+    font-size: 0.875rem;
+  }
+  [hidden] {
+    display: none !important;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  label {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-width: 0;
+  }
+  label > span {
+    flex-shrink: 0;
+    color: var(--playlist-muted);
+    font-size: 0.75rem;
+  }
+  select,
+  button {
+    min-width: 0;
+    min-height: 2.5rem;
+    padding: 0.45rem 0.65rem;
+    border: 1px solid var(--playlist-line);
+    border-radius: 0.375rem;
+    color: var(--c-text);
+    background: var(--c-bg);
+    font: inherit;
+    font-size: 0.8125rem;
+  }
+  select {
+    max-width: 100%;
+    text-overflow: ellipsis;
+  }
+  select:enabled,
+  button:enabled {
+    cursor: pointer;
+  }
+  button:disabled,
+  select:disabled {
+    opacity: 0.5;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  a:hover,
+  button:enabled:hover {
+    color: var(--accent);
+  }
+  a:focus-visible,
+  select:focus-visible,
+  button:focus-visible,
+  .playlists-panel__tracks:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  .playlists-panel__switcher {
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--playlist-line);
+  }
+  .playlists-panel__switcher select {
+    flex: 1;
+    max-width: 22rem;
+  }
+  .playlists-panel__header {
+    display: grid;
+    grid-template-columns: 9rem minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+    margin: 1.5rem 0;
+  }
+  .playlists-panel__cover {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    background: color-mix(in srgb, var(--c-text) 6%, var(--c-bg));
+  }
+  .playlists-panel__source {
+    color: var(--playlist-muted);
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+  }
+  h2 {
+    margin: 0.4rem 0 0.65rem;
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    font-weight: 400;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  .playlists-panel__external {
+    color: var(--playlist-muted);
+    font-family: sans-serif;
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+  .playlists-panel__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.8rem;
+    margin: 0;
+    color: var(--playlist-muted);
+    font-size: 0.75rem;
+  }
+  .playlists-panel__count {
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .playlists-panel__description {
+    margin: 0.75rem 0 0;
+    color: var(--playlist-muted);
+    font-size: 0.8125rem;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+    white-space: pre-line;
+  }
+  .playlists-panel__toolbar {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.75rem 0;
+  }
+  .playlists-panel__toolbar button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+  }
+  .playlists-panel__tracks {
+    height: 28rem;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-gutter: stable;
+    border-top: 1px solid var(--playlist-line);
+    border-bottom: 1px solid var(--playlist-line);
+  }
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+    font-size: 0.8125rem;
+  }
+  th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--c-bg);
+    color: var(--playlist-muted);
+    text-align: left;
+    font-size: 0.6875rem;
+    font-weight: 400;
+    border-bottom: 1px solid var(--playlist-line);
+  }
+  th,
+  td {
+    padding: 0.85rem 0.6rem;
+  }
+  th:first-child,
+  td:first-child {
+    width: 2.75rem;
+    padding-left: 0.4rem;
+    color: var(--playlist-muted);
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+  }
+  th:nth-child(2) {
+    width: 38%;
+  }
+  th:nth-child(3) {
+    width: 25%;
+  }
+  td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-bottom: 1px solid color-mix(in srgb, var(--c-text) 6%, var(--c-bg));
+  }
+  td:nth-child(n + 3) {
+    color: var(--playlist-muted);
+    font-size: 0.75rem;
+  }
+  tbody tr:hover {
+    background: color-mix(in srgb, var(--accent) 5%, var(--c-bg));
+  }
+  .playlists-panel__footer {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 0.75rem;
+    color: var(--playlist-muted);
+    font-size: 0.6875rem;
+  }
+  .playlists-panel__status {
+    margin: 0;
+  }
+  [data-state='ready'] .playlists-panel__status,
+  [data-state='empty'] .playlists-panel__status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .playlists-panel__empty {
+    padding: 3rem 0;
+    margin: 0;
+    border-block: 1px solid var(--playlist-line);
+    text-align: center;
+    color: var(--playlist-muted);
+  }
+  .playlists-panel__fallback,
+  .playlists-panel__note {
+    color: var(--playlist-muted);
+    line-height: 1.8;
+    font-size: 0.8125rem;
+  }
+  .playlists-panel__fallback a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .playlists-panel__bone {
+    display: block;
+    border-radius: 0.2rem;
+    background: color-mix(in srgb, var(--c-text) 7%, var(--c-bg));
+    animation: playlist-pulse 1.8s ease-in-out infinite;
+  }
+  .playlists-panel__skeleton-info {
+    display: grid;
+    gap: 1rem;
+    padding-top: 0.75rem;
+  }
+  .playlists-panel__skeleton-info span {
+    height: 0.85rem;
+    width: 80%;
+  }
+  .playlists-panel__skeleton-info span:first-child {
+    height: 1.5rem;
+    width: 90%;
+  }
+  .playlists-panel__skeleton-info span:last-child {
+    width: 55%;
+  }
+  .playlists-panel__skeleton-list {
+    height: 28rem;
+    overflow: hidden;
+  }
+  .playlists-panel__skeleton-row {
+    display: grid;
+    grid-template-columns: 1.75rem 1fr 25%;
+    gap: 1rem;
+    align-items: center;
+    height: 3.3rem;
+    border-top: 1px solid var(--playlist-line);
+  }
+  .playlists-panel__skeleton-row span {
+    height: 0.7rem;
+  }
+  @keyframes playlist-pulse {
+    50% {
+      opacity: 0.4;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .playlists-panel__bone {
+      animation: none;
+    }
+  }
+  @media (max-width: 600px) {
+    .playlists-panel__header {
+      grid-template-columns: 7rem minmax(0, 1fr);
+      gap: 1rem;
+    }
+    h2 {
+      font-size: 1.1rem;
+    }
+    .playlists-panel__tracks {
+      height: 26rem;
+    }
+    .playlists-panel__skeleton-list {
+      height: 26rem;
+    }
+    [data-details] .playlists-panel__info {
+      display: contents;
+    }
+    [data-details] .playlists-panel__cover {
+      grid-row: 1 / 4;
+    }
+    .playlists-panel__source,
+    h2,
+    .playlists-panel__meta {
+      grid-column: 2;
+    }
+    h2 {
+      margin: 0;
+    }
+    .playlists-panel__description {
+      grid-column: 1 / -1;
+      margin: 0;
+    }
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    tbody tr {
+      display: grid;
+      grid-template-columns: 1.75rem minmax(0, 1fr);
+      gap: 0.25rem 0.5rem;
+      padding: 0.85rem 0.4rem;
+      border-bottom: 1px solid color-mix(in srgb, var(--c-text) 8%, var(--c-bg));
+    }
+    td {
+      padding: 0;
+      border: 0;
+    }
+    td:first-child {
+      width: auto;
+      grid-row: 1 / 4;
+      padding: 0.15rem 0 0;
+    }
+    td:nth-child(n + 2) {
+      grid-column: 2;
+    }
+    td:nth-child(2) {
+      white-space: normal;
+      overflow-wrap: anywhere;
+      font-size: 0.875rem;
+    }
+    td:nth-child(4)::before {
+      content: '专辑 · ';
+    }
+  }
+  @media (max-width: 360px) {
+    .playlists-panel__header {
+      grid-template-columns: 5.5rem minmax(0, 1fr);
+    }
+  }
+</style>

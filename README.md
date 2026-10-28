@@ -10,7 +10,7 @@
 
 梧桐雨的个人博客，使用 Astro 7、TypeScript 和 Markdown／MDX 构建。以文章阅读为主，兼顾项目、书影游、个人介绍和友链；提供亮暗主题、可选点缀配色、全文搜索和全文 RSS。
 
-页面与文章在构建时生成静态 HTML，普通阅读不依赖后端。首页 Last.fm 排行通过运行时接口获取，评论由 GitHub Discussions／Giscus 提供。
+页面与文章在构建时生成静态 HTML，普通阅读不依赖后端。首页 Last.fm 排行与[拾趣歌单](docs/design/playlists.md)通过运行时接口获取，评论由 GitHub Discussions／Giscus 提供。
 
 [页面总览](#页面总览) · [主要功能](#主要功能) · [快速开始](#快速开始) · [维护内容](#维护内容) · [二次开发](#二次开发) · [详细文档](#详细文档)
 
