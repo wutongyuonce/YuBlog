@@ -12,7 +12,7 @@
 
 唯一配置是 `src/data/playlists.json`：`id` 是稳定站内标识，`platform` 目前支持 `qq` 与 `netease`，`sourceId` 是平台歌单 ID，`title` 是可选后备名称，`cover` 是 `src/content/interests/playlists/` 内的文件名（如 `qq-9799762491.jpg`），`url` 是原平台桌面链接。**API 的非空 `dissname`（网易云为 `name`）优先于配置 `title`**；配置名称仅用于加载前、失败、无脚本和上游未提供标题时。
 
-封面在构建期通过 Vite 的资源导入解析为带哈希的原图地址；文件缺失或文件名写错时构建报错，不从上游热链图片。这一步负责资源打包，不执行其它拾趣 Markdown 图片的 WebP／响应式优化。`data-config` 与 `/api/playlists` 都不携带封面，图片只由构建期配置决定。
+封面在构建期通过 Vite 的资源导入解析为带哈希的原图地址；文件缺失或文件名写错时构建报错，不从上游热链图片。这一步负责资源打包，不执行其它拾趣 Markdown 图片的 WebP／响应式优化。`data-config` 与 `/api/playlists` 都不携带封面，图片只由构建期配置决定。封面按 1200×1200 存放：单列时封面宽达整列，3x 手机需要约 1074px 位图，300×300 的原图会被放大两三倍而明显发虚。卡片仍固定声明 1200×1200，前两张 `loading="eager"`、其余 `lazy`，首屏清晰度与总下载量兼顾。
 
 `src/utils/qq-playlist.mjs` 负责 JSONP／JSON 解析、形状校验和字段归一化：歌曲取 `title`／`name`、`singer[].name`（用 ` / ` 连接）、`album.title`／`album.name`；歌单取 `dissname`、`nickname`、可选 `desc` 与 `songnum`。缺失歌手／专辑保留空字符串，导出时对应字段留空。数量使用上游 `songnum`；若有效歌曲少于标称数量，对应卡片明确提示当前可导出数量，导出仅含实际返回的歌曲。非空歌单返回空列表视为上游失败。
 
@@ -39,7 +39,7 @@ QQ 和网易云都使用非官方公共接口，可能变更、限流或不可�
 
 ## 添加歌单
 
-1. 将封面放进 `src/content/interests/playlists/`，文件名自定（建议 `<id>.jpg`），不压缩、不改格式。
+1. 将封面放进 `src/content/interests/playlists/`，文件名自定（建议 `<id>.jpg`），边长至少 1200px，不压缩、不改格式。
 2. 向 `src/data/playlists.json` 追加唯一 `id`、`platform`、`sourceId`、`cover`、`url`，可选后备 `title`。
 3. `platform` 写 `qq` 或 `netease`，两者都有适配器；其它平台需先在 `src/utils/playlists.mjs` 的 `ADAPTERS` 注册并补测试。
 4. 重新构建并部署。卡片、各自的导出按钮与无脚本链接自动生成，暖缓存请求自动取得新的全量快照，不需要增加工作流请求或提交歌曲数组。

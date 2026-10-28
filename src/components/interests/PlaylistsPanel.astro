@@ -36,7 +36,7 @@ const runtimeConfig = config.map(({ cover, ...entry }) => entry)
 >
   <div class="playlists-panel__interactive">
     <div class="playlists-panel__cards">
-      {config.map((entry) => (
+      {config.map((entry, index) => (
         <article
           class="playlists-panel__card"
           data-playlist-id={entry.id}
@@ -47,10 +47,10 @@ const runtimeConfig = config.map(({ cover, ...entry }) => entry)
               class="playlists-panel__cover"
               data-cover
               src={entry.cover}
-              width="300"
-              height="300"
+              width="1200"
+              height="1200"
               alt=""
-              loading="eager"
+              loading={index < 2 ? 'eager' : 'lazy'}
             />
             <span class="playlists-panel__blend" aria-hidden="true" />
           </div>

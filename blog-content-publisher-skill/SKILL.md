@@ -295,7 +295,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 1. 从链接取三个值：路径或查询里的歌单 ID 即 `sourceId`（QQ 形如 `https://y.qq.com/n/ryqq/playlist/<id>`，网易云形如 `https://music.163.com/playlist?id=<id>`）；`url` 用去掉跟踪参数的桌面地址；`id` 用 `<platform>-<sourceId>`，一旦发布不要改。
 2. 从原平台页面或对应适配器核对标题、作者与简介；`title` 写歌单现名作为后备，运行时以上游非空标题为准（QQ 的 `dissname`／网易云的 `name`）。不要编造作者或简介。
-3. 封面：优先用歌单页的正式封面图（QQ 可从 `og:image` 或页面封面大图取），下载后放进 `src/content/interests/playlists/`，文件名用短 ASCII（建议 `<id>.jpg`），扩展名与真实格式一致；保留原图，不压缩、不缩放、不转格式，不热链平台图片，也不放进 `public/`。
+3. 封面：从歌单页或专辑取图，下载后放进 `src/content/interests/playlists/`，文件名用短 ASCII（建议 `<id>.jpg`），扩展名与真实格式一致；保留原图，不压缩、不缩放、不转格式，不热链平台图片，也不放进 `public/`。QQ 的 `y.gtimg.cn/music/photo_new/T002R<边长>x<边长>M000<album_mid>.jpg` 可取 300／500／800／1200／1500 多档，取 1200 以保证 3x 手机不模糊；要换高分辨率时先用像素比对确认与现有封面是同一张图，不要换成另一张专辑封面。
 4. 在 `src/data/playlists.json` 追加一条，`cover` 不能省：
 
    ```json
