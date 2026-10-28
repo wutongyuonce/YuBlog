@@ -1380,24 +1380,18 @@ header.nav-bar .nav-dropdown--more .nav-dropdown__panel {
   justify-content: flex-end;
   gap: 0.85rem;
 }
-/* 元信息行里的次级链接与正文族一致：常驻弱下划线，交互时字色与下划线一起变强调色。 */
+/* 首页板块次级入口：无下划线，悬停／聚焦仅字色变强调色；字号与站点根正文一致。 */
 .home-section-header > a,
 .home-section-header__aside > a {
   color: color-mix(in srgb, var(--c-text) 60%, var(--c-bg));
-  font-size: 0.75rem;
-  text-decoration: underline;
-  text-decoration-color: var(--link-underline);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.2em;
+  font-size: 1rem;
+  text-decoration: none;
   white-space: nowrap;
-  transition:
-    color 160ms ease,
-    text-decoration-color 160ms ease;
+  transition: color 160ms ease;
 }
 .home-section-header > a:is(:hover, :focus-visible),
 .home-section-header__aside > a:is(:hover, :focus-visible) {
   color: var(--accent);
-  text-decoration-color: var(--accent);
 }
 @media (prefers-reduced-motion: reduce) {
   .home-section-header > a,

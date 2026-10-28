@@ -9,7 +9,7 @@ interface Props {
   label?: string
   /** When false, render a plain wrapper (for nesting inside another nav). */
   landmark?: boolean
-  /** Smaller muted text for home section headers. */
+  /** Muted text matching home section secondary entries. */
   compact?: boolean
   class?: string
 }
@@ -71,7 +71,9 @@ const Tag = landmark ? 'nav' : 'div'
     line-height: 1.5;
     text-decoration: none;
     border-bottom: 1px solid var(--link-underline);
-    transition: border-bottom-color 0.3s ease-in-out;
+    transition:
+      color 0.3s ease-in-out,
+      border-bottom-color 0.3s ease-in-out;
   }
 
   .random-browse__link:hover,
@@ -84,15 +86,15 @@ const Tag = landmark ? 'nav' : 'div'
     font-weight: 400;
   }
 
+  /* 与首页板块次级入口一致：无常驻下划线，悬停只变字色，字号 1rem。 */
   .random-browse--compact .random-browse__link {
     color: color-mix(in srgb, var(--c-text) 60%, var(--c-bg));
-    font-size: 0.75rem;
-    border-bottom-color: var(--link-underline);
+    font-size: 1rem;
+    border-bottom: none;
   }
 
   .random-browse--compact .random-browse__link:is(:hover, :focus-visible) {
     color: var(--accent);
-    border-bottom-color: var(--accent);
   }
 
   .random-browse--compact .random-browse__wave {

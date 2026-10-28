@@ -500,8 +500,10 @@ main:has(.post-content) > footer.prose :is(a, span) {
 :root.dark .prose .media-card__date-value {
   color: #b7d0ae;
 }
-.prose a.media-card__title:is(:hover, :focus-visible) {
+.prose a.media-card__title:is(:hover, :focus-visible),
+.prose .media-cards--rail a.media-card__title:is(:hover, :focus-visible) {
   border-bottom: 0;
+  color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 0.16em;
 }
