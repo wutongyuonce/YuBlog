@@ -1,7 +1,7 @@
 ---
 title: Kpop
 description: 喜欢的团体与idle
-order: 6
+order: 7
 ---
 
 ### 本命
