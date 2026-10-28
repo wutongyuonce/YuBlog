@@ -4,6 +4,14 @@ description: 剧集与综艺
 order: 4
 ---
 
+### 正在看
+
+:::card{title="Doctor X：白色黑手党时代" href="https://zh.wikipedia.org/wiki/Doctor_X：白色黑手黨時代" label="韩剧"}
+![Doctor X：白色黑手党时代海报](./tv/doctor-x.jpg)
+
+正在看。
+:::
+
 ### 准备看
 
 :::card{title="谜探路德维希" href="https://en.wikipedia.org/wiki/Ludwig_(2024_TV_series)" label="英剧"}
@@ -28,6 +36,36 @@ order: 4
 ![匹兹堡医护前线海报](./tv/the-pitt.jpg)
 
 准备看前两季。
+:::
+
+:::card{title="黑钱胜地" href="https://zh.wikipedia.org/wiki/黑钱胜地" label="美剧"}
+![黑钱胜地海报](./tv/ozark.jpg)
+
+准备看第一季。
+:::
+
+:::card{title="终极名单" href="https://zh.wikipedia.org/wiki/終極名單" label="美剧"}
+![终极名单海报](./tv/terminal-list.jpg)
+
+准备看第一季。
+:::
+
+:::card{title="昭雪" href="https://zh.wikipedia.org/wiki/矯正人生" label="美剧"}
+![昭雪海报](./tv/rectify.jpg)
+
+准备看第一季。
+:::
+
+:::card{title="德里罪案" href="https://en.wikipedia.org/wiki/Delhi_Crime" label="印度剧"}
+![德里罪案海报](./tv/delhi-crime.jpg)
+
+准备看第一季。
+:::
+
+:::card{title="安娜" href="https://zh.wikipedia.org/wiki/安娜_(電視劇)" label="韩剧"}
+![安娜海报](./tv/anna.jpg)
+
+准备看。
 :::
 
 ### 看过
