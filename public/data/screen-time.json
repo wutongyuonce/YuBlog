@@ -1,6 +1,6 @@
 {
   "timeZone": "Asia/Shanghai",
-  "updatedAt": "2026-10-28T08:50:05.534Z",
+  "updatedAt": "2026-10-28T10:50:04.952Z",
   "days": [
     {
       "date": "2026-10-22",
@@ -127,15 +127,15 @@
     },
     {
       "date": "2026-10-28",
-      "seconds": 11310,
+      "seconds": 16517,
       "apps": [
         {
-          "name": "Ghostty",
-          "seconds": 3504.988
+          "name": "Safari浏览器",
+          "seconds": 5325.51
         },
         {
-          "name": "Safari浏览器",
-          "seconds": 2495.892
+          "name": "Ghostty",
+          "seconds": 4661.038
         },
         {
           "name": "Tangentry",
@@ -158,20 +158,32 @@
           "seconds": 561.547
         },
         {
+          "name": "magpie",
+          "seconds": 437.764
+        },
+        {
           "name": "Grok Bot",
           "seconds": 426.724
         },
         {
-          "name": "magpie",
-          "seconds": 421.031
+          "name": "ChatGPT",
+          "seconds": 412.393
         },
         {
           "name": "访达",
-          "seconds": 234.169
+          "seconds": 403.335
+        },
+        {
+          "name": "ego lite",
+          "seconds": 391.448
+        },
+        {
+          "name": "夸克",
+          "seconds": 249.242
         },
         {
           "name": "QQ音乐",
-          "seconds": 224.915
+          "seconds": 234.148
         },
         {
           "name": "RepoMirror",
@@ -186,20 +198,16 @@
           "seconds": 90.373
         },
         {
-          "name": "ego lite",
-          "seconds": 57.985
-        },
-        {
           "name": "Obsidian",
-          "seconds": 43.709
-        },
-        {
-          "name": "系统设置",
-          "seconds": 29.71
+          "seconds": 44.289
         },
         {
           "name": "百变小樱",
-          "seconds": 28.378
+          "seconds": 41.244
+        },
+        {
+          "name": "系统设置",
+          "seconds": 38.092
         },
         {
           "name": "SecurityAgent",
@@ -207,15 +215,19 @@
         },
         {
           "name": "Deck",
-          "seconds": 19.943
+          "seconds": 22.472
         },
         {
           "name": "App Store",
-          "seconds": 19.643
+          "seconds": 21.138
         },
         {
           "name": "小宇宙",
           "seconds": 9.58
+        },
+        {
+          "name": "CoreServicesUIAgent",
+          "seconds": 9.441
         },
         {
           "name": "UserNotificationCenter",
@@ -226,8 +238,12 @@
           "seconds": 8.996
         },
         {
-          "name": "CoreServicesUIAgent",
-          "seconds": 8.388
+          "name": "超级右键",
+          "seconds": 1.666
+        },
+        {
+          "name": "PixPin",
+          "seconds": 1.621
         },
         {
           "name": "loginwindow",
