@@ -1,5 +1,5 @@
 ---
-title: 桌面应用框架的本质
+title: 桌面应用框架的本质—Electron&MyGo
 description: 从双击打开看进程：对比 MyGo 与 Electron 的进程结构、安装包组成与 IPC 桥。
 pubDate: 2026-10-28
 category: 技术
