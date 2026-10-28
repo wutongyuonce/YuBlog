@@ -14,13 +14,13 @@
 
 唯一配置是 `src/data/playlists.json`：`id` 是稳定站内标识，`platform` 目前支持 `qq` 与 `netease`，`sourceId` 是平台歌单 ID，`title` 是可选后备名称，`cover` 是 `src/content/interests/playlists/` 内的文件名（如 `qq-9798567837.jpg`），`url` 是原平台桌面链接。**API 的非空 `dissname`（网易云为 `name`）优先于配置 `title`**；配置名称仅用于加载前、失败、无脚本和上游未提供标题时。
 
-封面与其他拾趣页一样走 Astro 图片管线：组件在构建期把 `cover` 解析为打包后的资源地址并加站点 base，文件缺失或文件名写错时构建报错，不静默留空图，也不使用上游远程封面。运行时 `data-config` 与 `/api/playlists` 都不携带封面，封面只由构建期配置决定。
+封面在构建期通过 Vite 的资源导入解析为带哈希的原图地址；文件缺失或文件名写错时构建报错，不从上游热链图片。这一步负责资源打包，不执行其它拾趣 Markdown 图片的 WebP／响应式优化。`data-config` 与 `/api/playlists` 都不携带封面，图片只由构建期配置决定。
 
 `src/utils/qq-playlist.mjs` 负责 JSONP／JSON 解析、形状校验和字段归一化：歌曲取 `title`／`name`、`singer[].name`（用 ` / ` 连接）、`album.title`／`album.name`；歌单取 `dissname`、`nickname`、可选 `desc` 与 `songnum`。缺失歌手／专辑保留空字符串，导出时对应字段留空。数量使用上游 `songnum`；若有效歌曲少于标称数量，对应卡片明确提示当前可导出数量，导出仅含实际返回的歌曲。非空歌单返回空列表视为上游失败。
 
-`src/utils/netease-playlist.mjs` 是结构对称的网易云适配器：一个接口取 `api/playlist/detail` 的资料与曲目（`name`、`creator.nickname`、`description`、`trackCount`），歌曲取 `name`、`artists[].name`／`ar[].name`（同样用 ` / ` 连接）、`album.name`／`al.name`。该接口对长歌单会只回前若干首；当返回曲目少于 `trackCount` 时，适配器按 `trackIds` 逐批（每批 200 个 id）调 `api/v3/song/detail` 整份重取，保证顺序与歌单一致，总量封顶 5000 首。两者都是非官方公共接口，可能变更、限流或不可用。
+`src/utils/netease-playlist.mjs` 调用一次 `api/playlist/detail`，校验 HTTP 状态、业务码 `200` 与响应形状，并归一化 `name`、`creator.nickname`、`description`、`trackCount` 及歌曲的 `name`、`artists[].name`、`album.name`。请求数量和实际导出前缀均最多 5000 首；返回歌曲保持接口中的原顺序，标称总数不截断。上游只提供部分曲目时，沿用同一条部分导出规则：页面显示实际可导出数与标称总数，不再追加其它接口请求；标称非空却没有任何可导出曲目时失败。
 
-QQ 请求携带固定 Referer `https://y.qq.com/`，网易云携带 `https://music.163.com/` 与固定 UA；两者都给整次抓取 15 秒预算（网易云补齐多批时共用同一计时），不重试，错误不泄露上游原文。不需要密钥、登录或 Cookie。`src/utils/playlists.mjs` 一次读取全部配置，按 `platform` 从 `ADAPTERS` 分派到对应适配器；未注册的平台抛 `not_implemented`。任何一份失败则整次快照失败，避免缓存部分歌单。
+QQ 请求携带固定 Referer `https://y.qq.com/`，网易云携带 `https://music.163.com/` 与固定 UA；每份歌单从发出请求到读取响应体共用 15 秒超时，不重试，错误不泄露上游原文。公开歌单抓取无需密钥、登录或 Cookie。`src/utils/playlists.mjs` 只按 `ADAPTERS` 自身注册的 `platform` 分派，保留配置顺序、标题回退与统一快照时间；未注册平台抛 `not_implemented`。`api/playlists.js` 统一拥有 HTTP 与缓存语义，任何一份失败则整次快照失败，避免缓存部分歌单。
 
 ## 运行时接口与缓存
 
@@ -31,13 +31,13 @@ PlaylistsPanel.astro：按配置静态生成 N 张卡片、骨架、无脚本链
   → playlists.mjs（按 platform 分派）→ qq-playlist.mjs／netease-playlist.mjs
 ```
 
-只接受无查询参数的 `GET /api/playlists`，响应为 `{ updatedAt, playlists: [{ id, platform, sourceId, title, author, description, songCount, cover, url, songs: [{ title, artist, album }] }] }`。`updatedAt` 是本次抓取时间。其它方法返回 405 和 `Allow: GET`；包括 `?id=` 在内的查询参数返回 400，不访问上游。它不是任意 URL 转换器或开放代理。
+只接受无查询参数的 `GET /api/playlists`，响应为 `{ updatedAt, playlists: [{ id, platform, sourceId, title, author, description, songCount, url, songs: [{ title, artist, album }] }] }`。`updatedAt` 是本次抓取时间。其它方法返回 405 和 `Allow: GET`；包括 `?id=` 在内的查询参数返回 400，不访问上游。它不是任意 URL 转换器或开放代理。
 
 成功返回 200，缓存头与 [首页听歌](./listening.md) 相同：`public, max-age=0, s-maxage=1800, stale-while-revalidate=300, stale-if-error=86400`。上游失败返回 502、`{ error: 'upstream_unavailable' }`；所有错误均为 `no-store`。没有跨请求进程缓存，旧数据由 CDN 管理。`.github/workflows/warm-playlists-cdn.yml` 约每 25 分钟（UTC）请求正式站无查询参数地址，检查 200 与响应形状，不提交数据。
 
 Vercel 沿用现有 `vercel.json` 的 Other 预设收集根目录 `api/` 函数。`pnpm dev` 通过 `plugins/astro-playlists-endpoint.ts` 调用同一处理函数；`pnpm preview` 只服务静态文件。接口固定在 `/api/playlists`，不随站点 base 改变。页面元素断开时取消请求和事件监听，旧页面请求不能覆盖新页面。
 
-QQ 使用非官方公共接口，可能变更、限流或不可用；网易云同样如此，且长歌单会多一次或多次补齐请求。两者都不能保证第三方接口持续可用。部署后仍需核实正式环境的函数路由、成功响应和 CDN 命中。
+QQ 和网易云都使用非官方公共接口，可能变更、限流或不可用；私有歌单或需要登录的曲目不在公开抓取范围内。部署后仍需核实正式环境的函数路由、成功响应和 CDN 命中。
 
 ## 添加第二份歌单
 
@@ -48,7 +48,7 @@ QQ 使用非官方公共接口，可能变更、限流或不可用；网易云�
 
 ## 验证
 
-`test/qq-playlist.test.mjs` 用两首歌的夹具覆盖字段回退、JSONP、空值、非法数据、净化错误及超时；`test/netease-playlist.test.mjs` 覆盖两种字段形状、详情截断后按 id 补齐、空单失败、净化错误及超时；`test/playlists-endpoint.test.mjs` 覆盖全量快照、标题优先级、静态封面、缓存、失败和方法／查询边界；`test/playlists-ui.test.mjs` 覆盖响应校验、静态链接、多歌单配置顺序及各自原顺序逐行导出。
+`test/qq-playlist.test.mjs` 覆盖 QQ 字段回退与 JSONP；`test/netease-playlist.test.mjs` 在公开抓取接口验证字段归一化、原顺序、空／部分歌单、5000 首前缀上限、业务错误净化及包含响应体的超时；`test/playlists-endpoint.test.mjs` 验证混合平台分派、未注册平台拒绝、整次失败、标题回退和 HTTP／缓存边界；`test/playlists-ui.test.mjs` 验证客户端快照校验与原顺序逐行导出。
 
 ```bash
 node --test test/qq-playlist.test.mjs test/netease-playlist.test.mjs test/playlists-endpoint.test.mjs test/playlists-ui.test.mjs

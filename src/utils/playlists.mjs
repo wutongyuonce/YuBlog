@@ -14,11 +14,14 @@ export async function fetchPlaylistsSnapshot({
   now = new Date(),
 } = {}) {
   const playlists = await Promise.all(
-    config.map(async (entry) => {
-      // 未注册的平台明确失败，不转为任意 URL 代理。
-      const adapter = ADAPTERS[entry.platform]
-      if (!adapter) throw new Error('Playlist: not_implemented')
-      const data = await adapter(entry.sourceId, { fetchImpl, now })
+    config.map(async ({ cover, ...entry }) => {
+      // 只接受注册表自身的项，不把 Object 原型上的方法当成适配器。
+      if (!Object.hasOwn(ADAPTERS, entry.platform))
+        throw new Error('Playlist: not_implemented')
+      const data = await ADAPTERS[entry.platform](entry.sourceId, {
+        fetchImpl,
+        now,
+      })
       return {
         ...entry,
         title: data.title || entry.title || entry.id,

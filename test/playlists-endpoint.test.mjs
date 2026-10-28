@@ -41,11 +41,7 @@ test('a plain GET returns all fixed playlists with the listening CDN window', as
       fixture.cdlist[0].dissname,
       'API title overrides fallback'
     )
-    assert.equal(
-      playlist.cover,
-      config[index].cover,
-      'remote logo is never displayed'
-    )
+    assert.ok(!('cover' in playlist), 'cover resolution belongs to the build')
     assert.equal(playlist.url, config[index].url)
     assert.equal(playlist.songs.length, 2)
     assert.equal(playlist.songCount, 2)
@@ -85,6 +81,77 @@ test('upstream HTTP, network and shape failures return a sanitized uncached 502'
     assert.equal(response.status, 502)
     assert.equal(response.headers.get('cache-control'), 'no-store')
     assert.deepEqual(await response.json(), { error: 'upstream_unavailable' })
+  }
+})
+
+test('mixed platforms dispatch in config order, reject unregistered names and fail atomically', async () => {
+  const saved = [...config]
+  const qq = { ...saved[0], id: 'qq-test', platform: 'qq', sourceId: '123' }
+  const netease = {
+    ...qq,
+    id: 'netease-test',
+    platform: 'netease',
+    sourceId: '456',
+    url: 'https://music.163.com/playlist?id=456',
+  }
+  const fetchImpl = async (url) => {
+    if (url.origin === 'https://c.y.qq.com')
+      return new Response(JSON.stringify(fixture))
+    assert.equal(url.origin, 'https://music.163.com')
+    assert.equal(url.searchParams.get('id'), '456')
+    return new Response(
+      JSON.stringify({
+        code: 200,
+        result: {
+          name: '网易歌单',
+          trackCount: 1,
+          tracks: [{ name: '网易歌曲', artists: [], album: null }],
+        },
+      })
+    )
+  }
+  try {
+    config.splice(0, config.length, netease, qq)
+    const ok = await call({ fetchImpl })
+    assert.equal(ok.status, 200)
+    const data = await ok.json()
+    assert.deepEqual(
+      data.playlists.map(({ id }) => id),
+      [netease.id, qq.id]
+    )
+    assert.deepEqual(
+      data.playlists.map(({ songs }) => songs[0].title),
+      ['网易歌曲', fixture.cdlist[0].songlist[0].title]
+    )
+    assert.ok(parsePlaylistsPayload(data, config))
+    const failed = await call({
+      fetchImpl: async (url) =>
+        url.origin === 'https://music.163.com'
+          ? new Response('private failure', { status: 503 })
+          : fetchImpl(url),
+    })
+    assert.equal(failed.status, 502)
+    assert.equal(failed.headers.get('cache-control'), 'no-store')
+    assert.deepEqual(await failed.json(), { error: 'upstream_unavailable' })
+    for (const platform of [
+      'unknown',
+      'constructor',
+      '__proto__',
+      'toString',
+    ]) {
+      config.splice(0, config.length, { ...qq, platform })
+      let calls = 0
+      const failed = await call({
+        fetchImpl: async () => {
+          calls++
+          return new Response(JSON.stringify(fixture))
+        },
+      })
+      assert.equal(failed.status, 502)
+      assert.equal(calls, 0, 'unregistered platforms never fetch')
+    }
+  } finally {
+    config.splice(0, config.length, ...saved)
   }
 })
 

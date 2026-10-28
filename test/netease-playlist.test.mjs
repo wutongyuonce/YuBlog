@@ -1,191 +1,159 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import {
-  fetchNeteasePlaylist,
-  normalizeNeteaseTrack,
-  parseNeteaseDetail,
-  parseNeteaseTracks,
-} from '../src/utils/netease-playlist.mjs'
+import { fetchNeteasePlaylist } from '../src/utils/netease-playlist.mjs'
 
-const detail = {
-  result: {
-    name: '夜间随听',
-    description: '安静的夜晚。',
-    creator: { nickname: '测试作者' },
-    trackCount: 2,
-    trackIds: [{ id: 11 }, { id: 22 }],
-    tracks: [
-      {
-        name: '玻璃',
-        artists: [{ name: 'Gareth.T' }, { name: '另一位歌手' }],
-        album: { name: '玻璃' },
-      },
-      {
-        name: 'Monday',
-        artists: [{ name: '窦靖童' }],
-        album: { name: '春游' },
-      },
-    ],
-  },
+const first = {
+  name: '玻璃',
+  artists: [{ name: 'Gareth.T' }, { name: '另一位歌手' }],
+  album: { name: '玻璃' },
 }
+const result = {
+  name: '夜间随听',
+  description: '安静的夜晚。',
+  creator: { nickname: '测试作者' },
+  trackCount: 2,
+  tracks: [first, { name: '无专辑', artists: [], album: null }],
+}
+const response = (value = result) =>
+  new Response(JSON.stringify({ code: 200, result: value }))
 
-test('normalization accepts both detail and song shapes and keeps missing albums empty', () => {
-  assert.deepEqual(
-    normalizeNeteaseTrack({
-      name: '晴天',
-      ar: [{ name: '周杰伦' }],
-      al: { name: '叶惠美' },
-    }),
-    { title: '晴天', artist: '周杰伦', album: '叶惠美' }
-  )
-  assert.deepEqual(
-    normalizeNeteaseTrack({ name: '无专辑', artists: [], album: null }),
-    { title: '无专辑', artist: '', album: '' }
-  )
-  for (const value of [
-    null,
-    [],
-    { name: '' },
-    { name: '歌', artists: {} },
-    { name: '歌', artists: [{}] },
-    { name: '歌', artists: [{ name: 1 }] },
-    { name: '歌', artists: [], album: [] },
-  ])
-    assert.throws(() => normalizeNeteaseTrack(value), /invalid_payload/)
-})
-
-test('detail parsing keeps metadata, declared count and track ids', () => {
-  const parsed = parseNeteaseDetail(JSON.stringify(detail))
-  assert.equal(parsed.title, '夜间随听')
-  assert.equal(parsed.author, '测试作者')
-  assert.equal(parsed.description, '安静的夜晚。')
-  assert.equal(parsed.songCount, 2)
-  assert.deepEqual(parsed.trackIds, [11, 22])
-  assert.deepEqual(
-    parsed.songs.map(({ title }) => title),
-    ['玻璃', 'Monday']
-  )
-  for (const body of [
-    'not json',
-    JSON.stringify({ code: 404, msg: 'no resource' }),
-    JSON.stringify({ result: { ...detail.result, trackCount: -1 } }),
-    JSON.stringify({ result: { ...detail.result, trackCount: 1 } }),
-    JSON.stringify({ result: { ...detail.result, tracks: {} } }),
-    JSON.stringify({ result: { ...detail.result, trackIds: [{}] } }),
-    JSON.stringify({ result: { ...detail.result, creator: { nickname: 1 } } }),
-  ])
-    assert.throws(() => parseNeteaseDetail(body), /invalid_payload/)
-})
-
-test('batch parsing keeps upstream order and rejects malformed envelopes', () => {
-  assert.deepEqual(
-    parseNeteaseTracks(
-      JSON.stringify({
-        songs: [{ name: '甲', ar: [{ name: 'A' }], al: { name: 'X' } }],
-      })
-    ),
-    [{ title: '甲', artist: 'A', album: 'X' }]
-  )
-  for (const body of ['', 'not json', JSON.stringify({ songs: {} })])
-    assert.throws(() => parseNeteaseTracks(body), /invalid_payload/)
-})
-
-test('fetch reads the detail endpoint once for a complete playlist', async () => {
+test('fetch normalizes metadata and songs in their original order in one request', async () => {
   const now = new Date('2026-10-28T02:00:00Z')
-  const calls = []
+  let calls = 0
   const data = await fetchNeteasePlaylist('3778678', {
     now,
     fetchImpl: async (url, options) => {
-      calls.push(String(url))
+      calls++
       assert.equal(url.origin, 'https://music.163.com')
       assert.equal(url.pathname, '/api/playlist/detail')
       assert.equal(url.searchParams.get('id'), '3778678')
-      assert.equal(url.searchParams.get('s'), '0')
       assert.equal(options.headers.referer, 'https://music.163.com/')
       assert.ok(options.signal instanceof AbortSignal)
-      return new Response(JSON.stringify(detail))
+      return response()
     },
   })
-  assert.equal(calls.length, 1)
-  assert.equal(data.updatedAt, now.toISOString())
-  assert.equal(data.songCount, 2)
-  assert.deepEqual(
-    data.songs.map(({ title }) => title),
-    ['玻璃', 'Monday']
-  )
+  assert.equal(calls, 1)
+  assert.deepEqual(data, {
+    title: '夜间随听',
+    author: '测试作者',
+    description: '安静的夜晚。',
+    songCount: 2,
+    songs: [
+      { title: '玻璃', artist: 'Gareth.T / 另一位歌手', album: '玻璃' },
+      { title: '无专辑', artist: '', album: '' },
+    ],
+    updatedAt: now.toISOString(),
+  })
 })
 
-test('fetch refills a truncated detail by track ids in playlist order', async () => {
-  const truncated = {
-    result: { ...detail.result, tracks: detail.result.tracks.slice(0, 1) },
-  }
-  const calls = []
-  const data = await fetchNeteasePlaylist('3778678', {
-    fetchImpl: async (url) => {
-      calls.push(url.pathname)
-      if (url.pathname === '/api/playlist/detail')
-        return new Response(JSON.stringify(truncated))
-      assert.equal(url.pathname, '/api/v3/song/detail')
-      assert.deepEqual(JSON.parse(url.searchParams.get('c')), [
-        { id: 11 },
-        { id: 22 },
-      ])
-      return new Response(
-        JSON.stringify({
-          songs: [
-            { name: '玻璃', ar: [{ name: 'Gareth.T' }], al: { name: '玻璃' } },
-            { name: 'Monday', ar: [{ name: '窦靖童' }], al: { name: '春游' } },
-          ],
-        })
+test('true empty and partial playlists remain successful without inventing metadata or refetching', async () => {
+  const empty = await fetchNeteasePlaylist('123', {
+    fetchImpl: async () => response({ trackCount: 0, tracks: [] }),
+  })
+  assert.equal(empty.title, '')
+  assert.equal(empty.author, '')
+  assert.equal(empty.description, '')
+  assert.deepEqual(empty.songs, [])
+  let calls = 0
+  const partial = await fetchNeteasePlaylist('123', {
+    fetchImpl: async () => {
+      assert.equal(
+        ++calls,
+        1,
+        'available tracks must not depend on a second endpoint'
       )
+      return response({ ...result, tracks: [first] })
     },
   })
-  assert.deepEqual(calls, ['/api/playlist/detail', '/api/v3/song/detail'])
-  assert.equal(data.songs.length, 2)
+  assert.equal(partial.songCount, 2)
+  assert.deepEqual(partial.songs, [
+    { title: '玻璃', artist: 'Gareth.T / 另一位歌手', album: '玻璃' },
+  ])
 })
 
-test('network, HTTP and malformed payload errors never expose upstream text', async () => {
+test('an oversized response exports only the bounded original prefix and retains the declared total', async () => {
+  const tracks = Array(5000).fill(first)
+  tracks.push({ ...first, name: '超出上限' })
+  const data = await fetchNeteasePlaylist('123', {
+    fetchImpl: async () => response({ ...result, trackCount: 5001, tracks }),
+  })
+  assert.equal(data.songCount, 5001)
+  assert.equal(data.songs.length, 5000)
+  assert.equal(data.songs.at(-1).title, '玻璃')
+})
+
+test('business errors and malformed data fail with the adapter error, never upstream content', async () => {
+  const bodies = [
+    'private upstream dump',
+    JSON.stringify({ code: 403, result }),
+    JSON.stringify({ result }),
+    JSON.stringify({ code: 200, result: null }),
+    ...[
+      { ...result, trackCount: -1 },
+      { ...result, trackCount: 1 },
+      { ...result, trackCount: '2' },
+      { ...result, tracks: {} },
+      { ...result, tracks: [] },
+      { ...result, creator: [] },
+      { ...result, creator: { nickname: 1 } },
+      { ...result, tracks: [{ ...first, name: '' }] },
+      { ...result, tracks: [{ ...first, artists: {} }] },
+      { ...result, tracks: [{ ...first, artists: [{}] }] },
+      { ...result, tracks: [{ ...first, album: [] }] },
+    ].map((value) => JSON.stringify({ code: 200, result: value })),
+  ]
+  for (const body of bodies)
+    await assert.rejects(
+      fetchNeteasePlaylist('123', {
+        fetchImpl: async () => new Response(body),
+      }),
+      { message: 'Netease playlist: upstream_unavailable' }
+    )
+})
+
+test('invalid ids never fetch, and transport failures expose no upstream details', async () => {
+  await assert.rejects(
+    fetchNeteasePlaylist('https://example.com', {
+      fetchImpl: async () => assert.fail('must not fetch arbitrary input'),
+    }),
+    /invalid_source_id/
+  )
   for (const fetchImpl of [
     async () => {
       throw new Error('private upstream dump')
     },
     async () => new Response('private upstream dump', { status: 503 }),
-    async () => new Response('private upstream dump'),
   ])
     await assert.rejects(fetchNeteasePlaylist('123', { fetchImpl }), {
       message: 'Netease playlist: upstream_unavailable',
     })
-  await assert.rejects(
-    fetchNeteasePlaylist('https://example.com'),
-    /invalid_source_id/
-  )
 })
 
-test('an empty but non-empty-declared playlist is treated as upstream failure', async () => {
-  await assert.rejects(
-    fetchNeteasePlaylist('123', {
-      fetchImpl: async () =>
-        new Response(
-          JSON.stringify({ result: { ...detail.result, tracks: [] } })
-        ),
-    }),
-    { message: 'Netease playlist: upstream_unavailable' }
-  )
-})
-
-test('the upstream request is aborted after 15 seconds', async (t) => {
+test('the single request shares a 15-second budget including its body', async (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] })
   let signal
-  const request = fetchNeteasePlaylist('123', {
-    fetchImpl: (_url, options) =>
-      new Promise((_resolve, reject) => {
-        signal = options.signal
-        signal.addEventListener('abort', () => reject(new Error('timeout')), {
-          once: true,
-        })
-      }),
+  let reading
+  const bodyStarted = new Promise((resolve) => {
+    reading = resolve
   })
-  assert.equal(signal.aborted, false)
+  const request = fetchNeteasePlaylist('123', {
+    fetchImpl: async (_url, options) => {
+      signal = options.signal
+      return {
+        ok: true,
+        text: () =>
+          new Promise((_resolve, reject) => {
+            signal.addEventListener(
+              'abort',
+              () => reject(new Error('timeout')),
+              { once: true }
+            )
+            reading()
+          }),
+      }
+    },
+  })
+  await bodyStarted
   t.mock.timers.tick(15_000)
   assert.equal(signal.aborted, true)
   await assert.rejects(request, /upstream_unavailable/)

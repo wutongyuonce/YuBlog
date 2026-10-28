@@ -294,7 +294,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 **用户只给一个歌单链接就够**，其余由你查证后写入；用户也可以指定封面。歌单页的标题、作者、简介、曲目数量和曲目列表来自运行时接口，但**平台、歌单 ID、封面和链接是构建期配置**，必须显式写清。
 
 1. 从链接取三个值：路径或查询里的歌单 ID 即 `sourceId`（QQ 形如 `https://y.qq.com/n/ryqq/playlist/<id>`，网易云形如 `https://music.163.com/playlist?id=<id>`）；`url` 用去掉跟踪参数的桌面地址；`id` 用 `<platform>-<sourceId>`，一旦发布不要改。
-2. 打开歌单页确认当前标题、作者与简介，和接口返回一致；`title` 写成歌单现名作为后备（接口 `dissname` 非空时以接口为准）。不要编造作者或简介。
+2. 从原平台页面或对应适配器核对标题、作者与简介；`title` 写歌单现名作为后备，运行时以上游非空标题为准（QQ 的 `dissname`／网易云的 `name`）。不要编造作者或简介。
 3. 封面：优先用歌单页的正式封面图（QQ 可从 `og:image` 或页面封面大图取），下载后放进 `src/content/interests/playlists/`，文件名用短 ASCII（建议 `<id>.jpg`），扩展名与真实格式一致；保留原图，不压缩、不缩放、不转格式，不热链平台图片，也不放进 `public/`。
 4. 在 `src/data/playlists.json` 追加一条，`cover` 不能省：
 
@@ -309,9 +309,9 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
    }
    ```
 
-   `cover` 写的是**该目录内的文件名**，构建时由图片管线解析；文件名写错或文件缺失会直接构建失败，不会静默留空图。
+   `cover` 写的是**该目录内的文件名**，构建时作为本地原图资源打包；文件名写错或文件缺失会直接构建失败。
 5. 平台写 `qq` 或 `netease`，两者都有适配器（`src/utils/qq-playlist.mjs`／`netease-playlist.mjs`）；其它平台需先在 `src/utils/playlists.mjs` 的 `ADAPTERS` 注册并补测试，否则整次快照会失败、页面进失败态。
-6. 校验：`pnpm check`、`pnpm build`、`pnpm test:built-restructure`。构建通过即说明封面可解析、配置形状正确。不要把完整曲目写进 JSON 或 Markdown。
+6. 先核对配置：`id` 唯一，`platform` 已支持，`sourceId` 为数字字符串，`url` 指向该歌单，`cover` 文件真实存在；再运行 `pnpm check`、`pnpm build`、`pnpm test:built-restructure`。这些检查验证构建和本地资源，不代替上游验证；另用对应平台适配器核对真实歌单与可导出数量，网络不可用时明确说明未验证。公开接口可能只返回部分曲目，页面会标明实际可导出数；完整曲目不写进 JSON 或 Markdown。
 7. 交接时说明：加了哪份歌单、封面来源链接与实际图片尺寸。
 
 ### 生成卡片
