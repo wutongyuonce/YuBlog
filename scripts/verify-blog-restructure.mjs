@@ -719,7 +719,7 @@ test('interest menu and index agree and their links resolve to content pages', a
   }
 })
 
-test('playlist page ships fixed metadata and noscript links without song data', async () => {
+test('playlist page ships fixed config and noscript links', async () => {
   const page = await load('interests/playlists/index.html')
   const panel = elements(page, (node) => node.tagName === 'playlist-panel')[0]
   assert.ok(panel)
@@ -731,8 +731,14 @@ test('playlist page ships fixed metadata and noscript links without song data', 
       cover: sitePath(entry.cover),
     }))
   )
-  const body = elements(panel, (node) => node.tagName === 'tbody')[0]
-  assert.equal(elements(body, (node) => node.tagName === 'tr').length, 0)
+  const playLinks = elements(panel, (node) =>
+    hasClass(node, 'playlists-panel__play')
+  )
+  assert.deepEqual(
+    playLinks.map((node) => node.properties.href),
+    playlists.map((entry) => entry.url),
+    'each card plays the configured platform playlist'
+  )
   const noscript = elements(panel, (node) => node.tagName === 'noscript')[0]
   assert.ok(noscript)
   const links = elements(noscript, (node) => node.tagName === 'a')

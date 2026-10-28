@@ -24,83 +24,81 @@ const config = playlists.map((entry) => ({
           data-playlist-id={entry.id}
           aria-labelledby={`playlist-title-${entry.id}`}
         >
-          <button type="button" data-export disabled>
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              aria-hidden="true"
-            >
-              <path
-                d="M12 3v12m-4-4 4 4 4-4M4 16v5h16v-5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            导出文本
-          </button>
+          <div class="playlists-panel__media">
+            <img
+              class="playlists-panel__cover"
+              data-cover
+              src={entry.cover}
+              width="600"
+              height="600"
+              alt=""
+              loading="eager"
+            />
+            <span class="playlists-panel__blend" aria-hidden="true" />
+          </div>
 
-          <div data-details hidden>
-            <div class="playlists-panel__header">
-              <img
-                class="playlists-panel__cover"
-                data-cover
-                src={entry.cover}
-                width="144"
-                height="144"
-                alt=""
-                loading="eager"
-              />
-              <div class="playlists-panel__info">
-                <div class="playlists-panel__topline">
-                  <span class="playlists-panel__source">
-                    {entry.platform === 'qq' ? 'QQ 音乐' : '网易云音乐'}
-                  </span>
-                  <p class="playlists-panel__meta" data-meta hidden>
-                    <span>
-                      by <span data-author />
-                    </span>
-                    <span class="playlists-panel__meta-sep" aria-hidden="true">
-                      ·
-                    </span>
-                    <span class="playlists-panel__count" data-count />
-                  </p>
-                </div>
-                <h2 id={`playlist-title-${entry.id}`}>
-                  <a
-                    data-title
-                    href={entry.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {entry.title || entry.id}
-                  </a>
-                </h2>
-                <p
-                  class="playlists-panel__description"
-                  data-description
-                  hidden
-                />
-              </div>
+          <div class="playlists-panel__panel" data-details hidden>
+            <p class="playlists-panel__meta">
+              <span class="playlists-panel__source">
+                {entry.platform === 'qq' ? 'QQ 音乐' : '网易云音乐'}
+              </span>
+              <span class="playlists-panel__meta-item" data-meta hidden>
+                <span aria-hidden="true">·</span>
+                <span data-author />
+              </span>
+              <span class="playlists-panel__meta-item playlists-panel__count">
+                <span aria-hidden="true">·</span>
+                <span data-count>—</span>
+                <span class="playlists-panel__unit">首</span>
+              </span>
+            </p>
+
+            <h2 id={`playlist-title-${entry.id}`}>
+              <a
+                data-title
+                href={entry.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {entry.title || entry.id}
+              </a>
+            </h2>
+
+            <p class="playlists-panel__description" data-description hidden />
+
+            <p class="playlists-panel__note" data-note hidden />
+
+            <div class="playlists-panel__actions">
+              <a
+                class="playlists-panel__play"
+                href={entry.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`播放${entry.title || entry.id}`}
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d="M8 5.5v13l11-6.5-11-6.5Z" />
+                </svg>
+                播放
+              </a>
+              <button type="button" data-export disabled>
+                导出文本
+              </button>
             </div>
           </div>
 
-          <div data-skeleton aria-hidden="true">
-            <div class="playlists-panel__header">
-              <div class="playlists-panel__cover playlists-panel__bone" />
-              <div class="playlists-panel__info playlists-panel__skeleton-info">
-                <span class="playlists-panel__bone" />
-                <span class="playlists-panel__bone" />
-                <span class="playlists-panel__bone" />
-                <span class="playlists-panel__bone" />
-              </div>
-            </div>
+          <div class="playlists-panel__panel" data-skeleton aria-hidden="true">
+            <span class="playlists-panel__bone playlists-panel__bone--meta" />
+            <span class="playlists-panel__bone playlists-panel__bone--title" />
+            <span class="playlists-panel__bone playlists-panel__bone--desc" />
+            <span class="playlists-panel__bone playlists-panel__bone--desc-short" />
           </div>
-
-          <p class="playlists-panel__note" data-note hidden />
         </article>
       ))}
     </div>
@@ -152,9 +150,10 @@ const config = playlists.map((entry) => ({
 
 <style>
   .playlists-panel {
-    --playlist-muted: color-mix(in srgb, var(--c-text) 62%, var(--c-bg));
-    --playlist-line: color-mix(in srgb, var(--c-text) 10%, transparent);
-    --playlist-cover-edge: color-mix(in srgb, var(--c-text) 10%, transparent);
+    --playlist-poster: oklch(0.155 0.012 20);
+    --playlist-poster-ink: oklch(0.97 0.005 20);
+    --playlist-poster-muted: oklch(0.8 0.015 20);
+    --playlist-page-muted: color-mix(in srgb, var(--c-text) 60%, var(--c-bg));
     display: block;
     min-width: 0;
     margin-top: 2rem;
@@ -163,198 +162,169 @@ const config = playlists.map((entry) => ({
   [hidden] {
     display: none !important;
   }
+  :global(.dark) .playlists-panel {
+    --playlist-poster: oklch(0.235 0.012 20);
+  }
   .playlists-panel__cards {
     display: grid;
-    gap: 1.25rem;
+    gap: 1.5rem;
   }
   .playlists-panel__card {
-    --playlist-tint: 132 136 148;
-    --playlist-tint-soft: 168 172 184;
-    position: relative;
-    min-width: 0;
-    padding: 1.25rem 1.35rem 1.35rem;
-    border: 1px solid
-      color-mix(in srgb, rgb(var(--playlist-tint)) 26%, var(--playlist-line));
-    border-radius: 1rem;
-    background:
-      linear-gradient(
-        145deg,
-        rgb(var(--playlist-tint) / 0.2),
-        rgb(var(--playlist-tint-soft) / 0.08) 42%,
-        color-mix(in srgb, var(--c-bg) 55%, transparent) 100%
-      ),
-      color-mix(in srgb, var(--c-bg) 62%, transparent);
-    box-shadow:
-      inset 0 1px 0 rgb(255 255 255 / 0.14),
-      0 1px 2px color-mix(in srgb, var(--c-text) 4%, transparent),
-      0 10px 28px rgb(var(--playlist-tint) / 0.1);
-    backdrop-filter: blur(14px) saturate(1.15);
-    -webkit-backdrop-filter: blur(14px) saturate(1.15);
-    transition:
-      border-color 280ms ease,
-      box-shadow 280ms ease,
-      background-color 280ms ease;
-  }
-  .playlists-panel__card[data-tint='ready'] {
-    border-color: color-mix(
-      in srgb,
-      rgb(var(--playlist-tint)) 34%,
-      var(--playlist-line)
-    );
-  }
-  .playlists-panel__header {
     display: grid;
-    grid-template-columns: 9rem minmax(0, 1fr);
-    gap: 1.35rem;
-    align-items: start;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.6fr);
+    min-height: 16rem;
+    overflow: hidden;
+    border-radius: 1rem;
+    color: var(--playlist-poster-ink);
+    background: var(--playlist-poster);
+  }
+  .playlists-panel__media {
+    position: relative;
   }
   .playlists-panel__cover {
-    display: block;
+    position: absolute;
+    inset: 0;
     width: 100%;
-    height: auto;
-    aspect-ratio: 1;
+    height: 100%;
     object-fit: cover;
-    border-radius: 0.6rem;
-    border: 1px solid var(--playlist-cover-edge);
-    background: color-mix(in srgb, var(--c-text) 6%, var(--c-bg));
-    box-shadow:
-      0 1px 2px color-mix(in srgb, var(--c-text) 6%, transparent),
-      0 8px 20px color-mix(in srgb, var(--c-text) 5%, transparent);
-    transition:
-      transform 180ms ease,
-      box-shadow 180ms ease;
   }
-  .playlists-panel__cover:not(.playlists-panel__bone):hover {
-    transform: translateY(-2px);
-    box-shadow:
-      0 2px 4px color-mix(in srgb, var(--c-text) 8%, transparent),
-      0 12px 28px color-mix(in srgb, var(--c-text) 8%, transparent);
+  .playlists-panel__blend {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to right,
+      transparent 55%,
+      color-mix(in srgb, var(--playlist-poster) 85%, transparent) 88%,
+      var(--playlist-poster) 100%
+    );
   }
-  .playlists-panel__info {
+  .playlists-panel__panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     min-width: 0;
-    padding-top: 0.125rem;
-    padding-right: 6.5rem;
+    padding: 2rem 2rem 2rem 0.5rem;
   }
-  .playlists-panel__topline {
+  .playlists-panel__meta {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    justify-content: flex-start;
-    gap: 0.25rem 0.75rem;
+    gap: 0.25rem 0.5rem;
+    margin: 0;
+    color: var(--playlist-poster-muted);
+    font-size: 0.75rem;
+    line-height: 1.6;
   }
   .playlists-panel__source {
-    color: var(--playlist-muted);
-    font-size: 0.75rem;
-    line-height: 1.5;
-    letter-spacing: 0.06em;
+    color: var(--playlist-poster-ink);
+    letter-spacing: 0.04em;
   }
-  h2 {
-    margin: 0.35rem 0 0;
-    font-family: var(--font-heading);
-    font-size: 1.375rem;
-    font-weight: 400;
-    line-height: 1.5;
+  .playlists-panel__meta-item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.375rem;
+    min-width: 0;
     overflow-wrap: anywhere;
   }
-  a {
-    color: inherit;
-    text-decoration: none;
+  .playlists-panel__unit {
+    font-size: 0.6875rem;
+  }
+  h2 {
+    margin: 0.5rem 0 0;
+    font-family: var(--font-heading);
+    font-size: 1.875rem;
+    font-weight: 400;
+    line-height: 1.32;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
   }
   h2 a {
-    color: color-mix(in srgb, var(--c-text) 88%, transparent);
-    border-bottom: 1px solid transparent;
-    transition:
-      color 160ms ease,
-      border-color 160ms ease;
+    color: inherit;
+    text-decoration: none;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 5px;
   }
   h2 a:hover,
   h2 a:focus-visible {
-    color: var(--accent);
-    border-bottom-color: currentColor;
-  }
-  a:focus-visible,
-  button:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 4px;
-  }
-  .playlists-panel__meta {
-    display: inline-flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.3rem;
-    margin: 0;
-    color: var(--playlist-muted);
-    font-size: 0.75rem;
-    line-height: 1.5;
-    overflow-wrap: anywhere;
-  }
-  .playlists-panel__meta-sep {
-    color: color-mix(in srgb, var(--playlist-muted) 70%, transparent);
-  }
-  .playlists-panel__count {
-    color: var(--accent);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
+    text-decoration-line: underline;
   }
   .playlists-panel__description {
-    margin: 0.7rem 0 0;
-    color: var(--playlist-muted);
-    font-size: 0.875rem;
-    line-height: 1.8;
+    max-width: 34rem;
+    margin: 0.75rem 0 0;
+    color: var(--playlist-poster-muted);
+    font-size: 0.8125rem;
+    line-height: 1.85;
     overflow-wrap: anywhere;
     white-space: pre-line;
   }
+  .playlists-panel__note {
+    margin: 0.625rem 0 0;
+    color: var(--playlist-poster-muted);
+    font-size: 0.75rem;
+    line-height: 1.7;
+  }
+  .playlists-panel__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.625rem;
+    margin-top: 1.5rem;
+  }
+  .playlists-panel__play,
   button[data-export] {
-    position: absolute;
-    top: 1.15rem;
-    right: 1.15rem;
-    z-index: 1;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.4rem;
-    min-height: 2rem;
-    padding: 0.3rem 0.65rem;
-    border: 1px solid color-mix(in srgb, var(--c-text) 14%, transparent);
+    gap: 0.4375rem;
+    min-height: 2.75rem;
+    padding: 0.5rem 1.25rem;
     border-radius: 999px;
-    color: var(--playlist-muted);
-    background: color-mix(in srgb, var(--c-bg) 45%, transparent);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
     font: inherit;
-    font-size: 0.6875rem;
-    letter-spacing: 0.02em;
+    font-size: 0.8125rem;
     white-space: nowrap;
+    text-decoration: none;
     transition:
-      color 160ms ease,
-      border-color 160ms ease,
-      background-color 160ms ease;
+      background-color 150ms ease,
+      border-color 150ms ease;
+  }
+  .playlists-panel__play {
+    color: oklch(0.16 0.01 20);
+    background: oklch(0.98 0 0);
+  }
+  button[data-export] {
+    padding-inline: 1rem;
+    border: 1px solid oklch(1 0 0 / 0.28);
+    color: var(--playlist-poster-ink);
+    background: none;
+    font-size: 0.75rem;
   }
   button:enabled {
     cursor: pointer;
   }
-  button:enabled:hover {
-    color: var(--c-text);
-    border-color: color-mix(in srgb, var(--c-text) 28%, transparent);
-    background: color-mix(in srgb, var(--c-bg) 70%, transparent);
-  }
   button:disabled {
     opacity: 0.45;
   }
-  .playlists-panel__note {
-    margin: 0.75rem 0 0;
-    color: var(--playlist-muted);
-    font-size: 0.75rem;
-    line-height: 1.8;
+  @media (hover: hover) and (pointer: fine) {
+    .playlists-panel__play:hover {
+      background: oklch(0.9 0.01 20);
+    }
+    button:enabled:hover {
+      border-color: oklch(1 0 0 / 0.55);
+    }
+  }
+  .playlists-panel__card
+    :is(.playlists-panel__play, button, h2 a):focus-visible {
+    outline: 2px solid oklch(1 0 0 / 0.75);
+    outline-offset: 3px;
   }
   .playlists-panel__footer {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: 0.5rem 1rem;
-    padding-top: 0.35rem;
-    color: var(--playlist-muted);
-    font-size: 0.6875rem;
+    padding-top: 0.5rem;
+    color: var(--playlist-page-muted);
+    font-size: 0.625rem;
     line-height: 1.8;
   }
   .playlists-panel__status {
@@ -371,10 +341,13 @@ const config = playlists.map((entry) => ({
     justify-content: flex-start;
     font-size: 0.8125rem;
   }
+  [data-state='failed'] .playlists-panel__count {
+    display: none;
+  }
   .playlists-panel__fallback {
-    color: var(--playlist-muted);
-    line-height: 1.8;
+    color: var(--playlist-page-muted);
     font-size: 0.875rem;
+    line-height: 1.8;
   }
   .playlists-panel__fallback a {
     display: inline-block;
@@ -386,90 +359,71 @@ const config = playlists.map((entry) => ({
   .playlists-panel__bone {
     display: block;
     border-radius: 0.2rem;
-    background: color-mix(in srgb, var(--c-text) 7%, var(--c-bg));
+    background: oklch(1 0 0 / 0.12);
     animation: playlist-pulse 1.8s ease-in-out infinite;
   }
-  .playlists-panel__cover.playlists-panel__bone {
-    border-radius: 0.6rem;
-    box-shadow: none;
+  .playlists-panel__bone--meta {
+    width: 9rem;
+    height: 0.6875rem;
   }
-  .playlists-panel__skeleton-info {
-    display: grid;
-    gap: 0.55rem;
-    align-content: start;
+  .playlists-panel__bone--title {
+    width: 70%;
+    height: 1.75rem;
+    margin-top: 0.75rem;
   }
-  .playlists-panel__skeleton-info span {
-    height: 0.75rem;
-    width: 38%;
-  }
-  .playlists-panel__skeleton-info span:nth-child(2) {
-    height: 1.5rem;
-    width: 88%;
-    margin-top: 0.15rem;
-  }
-  .playlists-panel__skeleton-info span:nth-child(3),
-  .playlists-panel__skeleton-info span:nth-child(4) {
+  .playlists-panel__bone--desc,
+  .playlists-panel__bone--desc-short {
     width: 92%;
-    margin-top: 0.15rem;
+    height: 0.75rem;
+    margin-top: 0.5rem;
   }
-  .playlists-panel__skeleton-info span:nth-child(4) {
+  .playlists-panel__bone--desc {
+    margin-top: 0.875rem;
+  }
+  .playlists-panel__bone--desc-short {
     width: 64%;
   }
   @keyframes playlist-pulse {
     50% {
-      opacity: 0.4;
+      opacity: 0.45;
     }
   }
   @media (prefers-reduced-motion: reduce) {
     .playlists-panel__bone {
       animation: none;
     }
-    a,
-    button,
-    .playlists-panel__cover,
-    .playlists-panel__card {
+    .playlists-panel__play,
+    button {
       transition: none;
-    }
-    .playlists-panel__cover:not(.playlists-panel__bone):hover {
-      transform: none;
     }
   }
   @media (max-width: 600px) {
-    .playlists-panel__cards {
-      gap: 1rem;
-    }
     .playlists-panel__card {
-      padding: 1rem 0.95rem 1.05rem;
+      grid-template-columns: minmax(0, 1fr);
+      min-height: 0;
     }
-    .playlists-panel__header {
-      grid-template-columns: 6rem minmax(0, 1fr);
-      gap: 0.9rem;
+    .playlists-panel__media {
+      aspect-ratio: 1;
+    }
+    .playlists-panel__blend {
+      background: linear-gradient(
+        to top,
+        var(--playlist-poster) 4%,
+        color-mix(in srgb, var(--playlist-poster) 35%, transparent) 42%,
+        transparent 78%
+      );
+    }
+    .playlists-panel__panel {
+      padding: 0 1.25rem 1.25rem;
     }
     h2 {
-      font-size: 1.125rem;
-    }
-    .playlists-panel__meta {
-      font-size: 0.6875rem;
-    }
-    .playlists-panel__info {
-      padding-right: 0;
+      font-size: 1.375rem;
     }
     .playlists-panel__description {
-      margin-top: 0.6rem;
-      font-size: 0.8125rem;
+      font-size: 0.75rem;
     }
-    button[data-export] {
-      top: 0.85rem;
-      right: 0.85rem;
-    }
-  }
-  @media (max-width: 360px) {
-    .playlists-panel__header {
-      grid-template-columns: 4.5rem minmax(0, 1fr);
-      gap: 0.7rem;
-    }
-    .playlists-panel__card {
-      padding: 0.9rem 0.8rem 1rem;
+    .playlists-panel__actions {
+      margin-top: 1.25rem;
     }
   }
 </style>

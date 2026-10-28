@@ -136,7 +136,7 @@ try {
   )
   assert.deepEqual(
     options.map(({ name }) => name),
-    ['原粉色', '灰紫', '深紫', '雾蓝', '鼠尾草绿']
+    ['原粉', '灰紫', '深紫', '雾蓝', '鼠尾草绿']
   )
 
   // Keyboard opens at the selected item, moves without applying, confirms and closes.

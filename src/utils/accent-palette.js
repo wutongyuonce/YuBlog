@@ -2,7 +2,7 @@
 export const ACCENT_PALETTES = [
   {
     id: 'rose',
-    name: '原粉色',
+    name: '原粉',
     color: '#ad526c',
     soft: '#c98299',
     dark: '#e7a1b5',

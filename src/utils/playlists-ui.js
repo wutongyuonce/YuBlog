@@ -1,32 +1,4 @@
-import { tintFromRgba } from './playlist-cover-tint.js'
-
 const isText = (value) => typeof value === 'string'
-
-/** 从站内封面采样主色，写入卡片 CSS 变量；失败保留中性玻璃底。 */
-export function applyPlaylistCoverTint(card, img) {
-  if (!card || !img) return
-  const paint = () => {
-    try {
-      if (!img.naturalWidth) return
-      const size = 32
-      const canvas = document.createElement('canvas')
-      canvas.width = size
-      canvas.height = size
-      const ctx = canvas.getContext('2d', { willReadFrequently: true })
-      if (!ctx) return
-      ctx.drawImage(img, 0, 0, size, size)
-      const tint = tintFromRgba(ctx.getImageData(0, 0, size, size).data)
-      if (!tint) return
-      card.style.setProperty('--playlist-tint', tint.tint)
-      card.style.setProperty('--playlist-tint-soft', tint.soft)
-      card.dataset.tint = 'ready'
-    } catch {
-      /* CORS／解码失败：保留默认中性 tint */
-    }
-  }
-  if (img.complete && img.naturalWidth) paint()
-  else img.addEventListener('load', paint, { once: true })
-}
 
 /** 先校验整个快照；封面和外链始终使用构建时的固定配置。 */
 export function parsePlaylistsPayload(payload, config) {
@@ -99,7 +71,6 @@ export function mountPlaylists(root) {
     root.querySelectorAll('[data-playlist-id]'),
     (card) => ({
       id: card.dataset.playlistId,
-      el: card,
       find: (selector) => card.querySelector(selector),
     })
   )
@@ -165,7 +136,7 @@ export function mountPlaylists(root) {
         card.find('[data-cover]').alt = `${playlist.title}的封面`
         card.find('[data-author]').textContent =
           playlist.author || '作者信息暂缺'
-        card.find('[data-count]').textContent = `${playlist.songCount} 首`
+        card.find('[data-count]').textContent = String(playlist.songCount)
         card.find('[data-meta]').hidden = false
         const description = card.find('[data-description]')
         description.textContent = playlist.description
@@ -180,7 +151,6 @@ export function mountPlaylists(root) {
         card.find('[data-export]').disabled = playlist.songs.length === 0
         card.find('[data-skeleton]').hidden = true
         card.find('[data-details]').hidden = false
-        applyPlaylistCoverTint(card.el, card.find('[data-cover]'))
       }
 
       updated.dateTime = data.updatedAt
@@ -204,7 +174,6 @@ export function mountPlaylists(root) {
       for (const card of cards) {
         card.find('[data-skeleton]').hidden = true
         card.find('[data-details]').hidden = false
-        applyPlaylistCoverTint(card.el, card.find('[data-cover]'))
       }
     } finally {
       if (!signal.aborted) root.setAttribute('aria-busy', 'false')

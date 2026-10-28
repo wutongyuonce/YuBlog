@@ -31,7 +31,7 @@
 | [正文与媒体](./design/content.md) | 图片、卡片、相册、HTML／音视频、绘图与博文卡的写法、设计及资源边界 | 订阅器中的输出策略 |
 | [SEO 与全文订阅](./design/distribution.md) | canonical、sitemap、RSS 身份、内容降级、安全及失败语义 | 网站视觉布局 |
 | [Last.fm](./design/listening.md) | 运行时接口、缓存、专辑匹配、请求上限和页面状态 | 通用卡片与图片查看器实现 |
-| [拾趣歌单](./design/playlists.md) | 固定歌单、QQ 适配、运行时缓存、切换排序与文本导出 | 播放器、任意 URL 导入 |
+| [拾趣歌单](./design/playlists.md) | 固定歌单、QQ 适配、运行时缓存、海报卡片与文本导出 | 播放器、任意 URL 导入 |
 | [Oneko](./design/oneko.md) | 可选像素猫的托管集成、开关、换页和许可 | 本站内容与搜索 |
 | [Astro 学习笔记](./reference/astro.md) | 框架概念与教学例子 | 当前项目规范或完整官方 API 文档 |
 
