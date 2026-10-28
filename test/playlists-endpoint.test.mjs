@@ -27,7 +27,7 @@ test('a plain GET returns all fixed playlists with the listening CDN window', as
   assert.match(response.headers.get('content-type'), /^application\/json/)
   assert.equal(
     response.headers.get('cache-control'),
-    'public, max-age=0, s-maxage=1800, stale-while-revalidate=300, stale-if-error=86400'
+    'public, max-age=0, s-maxage=86400, stale-while-revalidate=3600, stale-if-error=604800'
   )
   const data = await response.json()
   assert.equal(data.updatedAt, now.toISOString())

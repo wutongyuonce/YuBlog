@@ -2,8 +2,8 @@ name: Warm playlists CDN
 
 on:
   schedule:
-    # Every ~25 minutes (UTC), inside the 30-minute CDN fresh window.
-    - cron: '*/25 * * * *'
+    # 歌单变动很少，缓存一天；每天预热一次，避免访客撞上冷回源。
+    - cron: '17 3 * * *'
   workflow_dispatch:
 
 permissions: {}

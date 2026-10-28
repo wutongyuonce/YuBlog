@@ -1,7 +1,7 @@
 import { fetchPlaylistsSnapshot } from '../src/utils/playlists.mjs'
 
 const CACHE =
-  'public, max-age=0, s-maxage=1800, stale-while-revalidate=300, stale-if-error=86400'
+  'public, max-age=0, s-maxage=86400, stale-while-revalidate=3600, stale-if-error=604800'
 
 const json = (body, status, cache) =>
   new Response(JSON.stringify(body), {
