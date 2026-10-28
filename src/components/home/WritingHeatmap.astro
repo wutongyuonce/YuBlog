@@ -452,11 +452,16 @@ const yearSwitchCss = years
     font-size: 0.75rem;
     line-height: 1.5;
     text-decoration: none;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.16em;
     overflow-wrap: anywhere;
   }
+  /* 提示层里的标题也是标题族链接。 */
   .writing-heatmap__tip :global(a:hover),
   .writing-heatmap__tip :global(a:focus-visible) {
     color: var(--accent);
+    text-decoration-line: underline;
+    text-decoration-color: var(--accent);
   }
 </style>
 

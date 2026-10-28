@@ -4,7 +4,45 @@ description: 银幕里的故事
 order: 3
 ---
 
+### 准备看
+
+:::card{title="猎凶风河谷" href="https://zh.wikipedia.org/wiki/極地追擊" label="电影"}
+![猎凶风河谷海报](./movie/wind-river.jpg)
+
+准备看。
+:::
+
+:::card{title="赴汤蹈火" href="https://zh.wikipedia.org/wiki/非正常械劫案" label="电影"}
+![赴汤蹈火海报](./movie/hell-or-high-water.jpg)
+
+准备看。
+:::
+
 ### 看过
+
+:::card{title="无人区" href="https://zh.wikipedia.org/wiki/无人区_(电影)" score="5" date="2026-10-29" label="电影"}
+![无人区海报](./movie/no-mans-land.jpg)
+
+可能是中国西部黑色犯罪片中最早也最好的一部
+:::
+
+:::card{title="十二生肖" href="https://zh.wikipedia.org/wiki/十二生肖_(電影)" score="3.5" label="电影"}
+![十二生肖海报](./movie/twelve-zodiac.jpg)
+
+感觉小时候过年在电视上看过好几遍
+:::
+
+:::card{title="心花路放" href="https://zh.wikipedia.org/wiki/心花路放" score="4.5" label="电影"}
+![心花路放海报](./movie/breakup-buddies.jpg)
+
+经典公路片
+:::
+
+:::card{title="落叶归根" href="https://zh.wikipedia.org/wiki/落叶归根" score="4.5" label="电影"}
+![落叶归根海报](./movie/getting-home.jpg)
+
+黑色喜剧
+:::
 
 :::card{title="星球大战：曼达洛人与古古" href="https://zh.wikipedia.org/wiki/曼达洛人与古古" score="3.5" date="2026-10-27" label="电影"}
 ![星球大战：曼达洛人与古古海报](./movie/mandalorian-and-grogu.jpg)

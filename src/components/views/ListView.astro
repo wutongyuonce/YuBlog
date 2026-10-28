@@ -179,6 +179,30 @@ const firstPagePaginationHtml = showFirstPagePagination
     border-radius: 7px;
     color: inherit;
     text-decoration: none;
+    transition:
+      border-color 160ms ease,
+      color 160ms ease;
+  }
+  /* 筛选芯片属于容器控件：用边框与字色反馈，不加文字下划线。 */
+  .blog-filters a:is(:hover, :focus-visible) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  /* 空状态与「清空」控件同属正文族：常驻弱下划线，交互时字色与下划线一起变强调色。 */
+  [data-empty] a {
+    text-decoration: underline;
+    text-decoration-color: var(--link-underline);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+  [data-empty] a:is(:hover, :focus-visible) {
+    color: var(--accent);
+    text-decoration-color: var(--accent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .blog-filters a {
+      transition: none;
+    }
   }
   @media (max-width: 767px) {
     .blog-category-header h1 {

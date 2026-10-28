@@ -233,4 +233,14 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
     font-size: 0.75rem;
     color: color-mix(in srgb, var(--c-text) 65%, var(--c-bg));
   }
+  /* 无脚本回退里的链接沿用正文族：常驻弱下划线，交互时字色与下划线一起变强调色。 */
+  .recent-listening__message a {
+    text-decoration: underline;
+    text-decoration-color: var(--link-underline);
+    text-underline-offset: 0.2em;
+  }
+  .recent-listening__message a:is(:hover, :focus-visible) {
+    color: var(--accent);
+    text-decoration-color: var(--accent);
+  }
 </style>

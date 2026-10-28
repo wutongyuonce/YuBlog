@@ -131,15 +131,18 @@ const href = data.redirect || withBasePath(`/blogs/${id}/`)
   .post-preview h2 :global(a) {
     opacity: 1;
     color: color-mix(in srgb, var(--c-text) 88%, transparent);
-    border-bottom: 1px solid transparent;
+    text-decoration: none;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.16em;
     transition:
       color 160ms ease,
-      border-color 160ms ease;
+      text-decoration-color 160ms ease;
   }
-  .post-preview h2 :global(a:hover),
-  .post-preview h2 :global(a:focus-visible) {
+  /* 标题族：无常驻下划线，悬浮或键盘聚焦时字色与下划线一起变强调色。 */
+  .post-preview h2 :global(a:is(:hover, :focus-visible)) {
     color: var(--accent);
-    border-bottom-color: currentColor;
+    text-decoration-line: underline;
+    text-decoration-color: var(--accent);
   }
   .post-preview p {
     margin: 0;

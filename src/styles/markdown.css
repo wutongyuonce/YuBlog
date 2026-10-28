@@ -12,13 +12,14 @@
   color: var(--fg);
 }
 
+/* 正文族：常驻弱下划线，悬浮或键盘聚焦只把下划线换成强调色，字色不动。 */
 .prose a {
-  border-bottom: 1px solid rgba(125, 125, 125, 0.3);
-  transition: border 0.3s ease-in-out;
+  border-bottom: 1px solid var(--link-underline);
+  transition: border-bottom-color 0.3s ease-in-out;
 }
 
-.prose a:hover {
-  border-bottom: 1px solid var(--accent);
+.prose a:is(:hover, :focus-visible) {
+  border-bottom-color: var(--accent);
 }
 
 .prose a code {

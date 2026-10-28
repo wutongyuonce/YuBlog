@@ -284,9 +284,11 @@ const runtimeConfig = config.map(({ cover, ...entry }) => entry)
     text-decoration-thickness: 1px;
     text-underline-offset: 5px;
   }
-  h2 a:hover,
-  h2 a:focus-visible {
+  /* 标题族：无常驻下划线，悬浮或键盘聚焦时字色与下划线一起变强调色。 */
+  h2 a:is(:hover, :focus-visible) {
+    color: var(--accent);
     text-decoration-line: underline;
+    text-decoration-color: var(--accent);
   }
   .playlists-panel__description {
     margin: 0.5rem 0 0;
