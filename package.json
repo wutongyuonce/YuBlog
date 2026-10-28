@@ -51,8 +51,8 @@
     "@types/node": "^24.19.0",
     "@types/subset-font": "^2.3.0",
     "@typescript-eslint/parser": "^8.70.1",
-    "@unocss/astro": "66.10.5",
-    "@unocss/reset": "66.10.5",
+    "@unocss/astro": "66.12.0",
+    "@unocss/reset": "66.12.0",
     "astro": "^7.3.5",
     "astro-expressive-code": "^0.44.0",
     "css-tree": "^3.2.1",
@@ -86,7 +86,7 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.70.1",
     "unist-util-visit": "^5.1.0",
-    "unocss": "66.10.5",
+    "unocss": "66.12.0",
     "vfile": "^6.0.3"
   },
   "engines": {
