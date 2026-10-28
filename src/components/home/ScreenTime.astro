@@ -1,46 +1,16 @@
 ---
-/* eslint-disable astro/jsx-a11y/no-noninteractive-tabindex -- 明细是可滚动的 region，需显式聚焦以支持键盘浏览。 */
-import rawSnapshot from '../../../public/data/screen-time.json'
-import {
-  buildScreenTimeChart,
-  formatScreenTime,
-  formatScreenTimeExact,
-  parseScreenTime,
-  SCREEN_TIME_ZONE,
-} from '~/utils/screen-time.js'
-
-const snapshot = parseScreenTime(rawSnapshot)
-const chart = buildScreenTimeChart(snapshot)
-const latest = snapshot.days.at(-1)!
-const scale = Math.max(
-  3600,
-  Math.ceil(Math.max(...snapshot.days.map((day) => day.seconds ?? 0)) / 3600) *
-    3600
-)
-const dayLabel = (date: string) =>
-  `${Number(date.slice(5, 7))}/${Number(date.slice(8))}`
-const hours = (seconds: number | null) =>
-  seconds === null
-    ? '—'
-    : seconds > 0 && seconds < 360
-      ? '<0.1'
-      : (seconds / 3600).toFixed(1)
-const percent = (value: number) =>
-  value < 0.1 ? '<0.1%' : `${value.toFixed(1)}%`
-const updated = new Intl.DateTimeFormat('zh-CN', {
-  timeZone: SCREEN_TIME_ZONE,
-  month: 'numeric',
-  day: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false,
-}).format(new Date(snapshot.updatedAt))
+/*
+ * 屏幕时间只在运行时取得：这里只输出加载态骨架、空的消息位与无脚本提示，
+ * 数据与失败文案都由 `~/utils/screen-time-view.js` 在校验接口响应后填入。
+ * `aria-busy` 也由脚本设置：无脚本时没有东西在加载，不该标成忙碌。
+ */
 ---
 
 <section
   class="screen-time"
   aria-labelledby="screen-time-title"
   data-screen-time
+  data-state="loading"
 >
   <header class="home-section-header">
     <h2 id="screen-time-title">屏幕时间</h2>
@@ -52,115 +22,55 @@ const updated = new Intl.DateTimeFormat('zh-CN', {
       ActivityWatch ↗
     </a>
   </header>
-  <div class="screen-time__body">
-    <div class="screen-time__summary">
-      <p class="screen-time__label" data-screen-time-day={latest.date}>
-        {Number(latest.date.slice(5, 7))} 月 {Number(latest.date.slice(8))}{' '}
-        日活跃
-      </p>
-      <p class="screen-time__value">{formatScreenTime(latest.seconds)}</p>
+  <div class="screen-time__body" data-screen-time-body>
+    <div class="screen-time__summary" aria-hidden="true">
+      <p class="screen-time__label">最近活跃</p>
+      <p class="screen-time__value">—</p>
       <p class="screen-time__note">仅统计电脑前的活跃时间</p>
     </div>
-    <div class="screen-time__week">
+    <div class="screen-time__week" aria-hidden="true">
       <p class="screen-time__label">近 7 天（小时）</p>
-      <ol class="screen-time__chart" aria-label="最近七天每日活跃时长">
-        {chart.days.map((day) => (
+      <ol class="screen-time__chart">
+        {Array.from({ length: 7 }, () => (
           <li>
-            <details class="screen-time__day" data-screen-day>
-              <summary
-                aria-label={`${day.date}，${formatScreenTime(day.seconds)}，查看应用明细`}
-              >
-                <span class="screen-time__hours" aria-hidden="true">
-                  {hours(day.seconds)}
-                </span>
-                <span class="screen-time__column" aria-hidden="true">
-                  <span
-                    class="screen-time__bar"
-                    style={{ height: `${((day.seconds ?? 0) / scale) * 100}%` }}
-                  >
-                    {day.segments.map((segment) => (
-                      <span
-                        class="screen-time__segment"
-                        data-screen-slot={segment.slot}
-                        style={{
-                          'height': `${segment.percent}%`,
-                          '--app-color': `var(--screen-app-${segment.slot})`,
-                        }}
-                      />
-                    ))}
-                  </span>
-                </span>
-                <time datetime={day.date} aria-hidden="true">
-                  {dayLabel(day.date)}
-                </time>
-              </summary>
-              <div
-                class="screen-time__detail"
-                role="region"
-                tabindex="0"
-                aria-label={`${day.date}应用明细`}
-              >
-                <h3>{dayLabel(day.date)} 的应用时间</h3>
-                <p class="screen-time__detail-total">
-                  活跃总时长
-                  {day.seconds === null
-                    ? '暂无记录'
-                    : formatScreenTimeExact(day.seconds)}
-                </p>
-                {day.details.length ? (
-                  <ul class="screen-time__apps">
-                    {day.details.map((app) => (
-                      <li
-                        data-screen-app={app.slot}
-                        style={{
-                          '--app-color': `var(--screen-app-${app.slot})`,
-                        }}
-                      >
-                        <span class="screen-time__swatch" aria-hidden="true" />
-                        <span class="screen-time__app-name">{app.name}</span>
-                        <span>{formatScreenTimeExact(app.seconds)}</span>
-                        <span class="screen-time__percent">
-                          {percent(app.percent)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p class="screen-time__empty">
-                    {day.seconds === null
-                      ? '这一天还没有采集记录。'
-                      : day.apps === null
-                        ? '这份记录尚未包含应用明细。'
-                        : '这一天没有活跃的应用记录。'}
-                  </p>
-                )}
-              </div>
-            </details>
+            <span class="screen-time__skeleton-day">
+              <span class="screen-time__hours screen-time__skeleton-text">
+                0.0
+              </span>
+              <span class="screen-time__column">
+                <span
+                  class="screen-time__bar screen-time__skeleton-bar"
+                  aria-hidden="true"
+                />
+              </span>
+              <span class="screen-time__skeleton-text">00/00</span>
+            </span>
           </li>
         ))}
       </ol>
-      {chart.legend.length > 0 && (
-        <ul class="screen-time__legend" aria-label="应用颜色图例">
-          {chart.legend.map(({ name, slot }) => (
-            <li
-              style={{ '--app-color': `var(--screen-app-${slot})` }}
-              title={name}
-            >
-              <span class="screen-time__swatch" aria-hidden="true" />
-              <span>{name}</span>
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul class="screen-time__legend">
+        {Array.from({ length: 6 }, () => (
+          <li>
+            <span class="screen-time__swatch" aria-hidden="true" />
+            <span class="screen-time__skeleton-text">应用名称</span>
+          </li>
+        ))}
+      </ul>
     </div>
   </div>
+  <p class="screen-time__message" data-screen-time-message hidden></p>
   <p class="screen-time__updated">
-    更新于 <time datetime={snapshot.updatedAt}>{updated}</time>（北京时间）；—
-    表示暂无记录
+    更新于 <time data-screen-time-time>—</time>（北京时间）；— 表示暂无记录
   </p>
+  <noscript>
+    <p class="screen-time__message">
+      屏幕时间由本机同步后按需加载，需要启用 JavaScript。
+    </p>
+  </noscript>
 </section>
 
-<style>
+<style is:global>
+  /* 必须是全局作用域：交互与图表在运行时插入，拿不到 Astro 的 scoped 属性。 */
   .screen-time {
     --screen-app-0: var(--accent);
     --screen-app-1: #567f9c;
@@ -171,7 +81,7 @@ const updated = new Intl.DateTimeFormat('zh-CN', {
     --screen-app-6: color-mix(in srgb, var(--c-text) 20%, var(--c-bg));
     margin-top: 3rem;
   }
-  :global(.dark) .screen-time {
+  .dark .screen-time {
     --screen-app-1: #8aadc5;
     --screen-app-2: #9ab58e;
     --screen-app-3: #d9b47b;
@@ -191,7 +101,8 @@ const updated = new Intl.DateTimeFormat('zh-CN', {
   .screen-time__label,
   .screen-time__note,
   .screen-time__updated,
-  .screen-time__percent {
+  .screen-time__percent,
+  .screen-time__message {
     color: color-mix(in srgb, var(--c-text) 65%, var(--c-bg));
     font-size: 0.75rem;
   }
@@ -216,12 +127,15 @@ const updated = new Intl.DateTimeFormat('zh-CN', {
     font-size: 0.6875rem;
     font-variant-numeric: tabular-nums;
   }
-  .screen-time__day summary {
+  .screen-time__day summary,
+  .screen-time__skeleton-day {
     display: flex;
     min-width: 0;
     flex-direction: column;
     align-items: center;
     gap: 0.4rem;
+  }
+  .screen-time__day summary {
     list-style: none;
     cursor: pointer;
   }
@@ -245,6 +159,20 @@ const updated = new Intl.DateTimeFormat('zh-CN', {
     flex: none;
     width: 100%;
     background: var(--app-color);
+  }
+  /* 骨架保留与真实柱子相同的布局，只提示「正在加载」，不暗示任何数值。 */
+  .screen-time__skeleton-text {
+    visibility: hidden;
+  }
+  .screen-time__skeleton-bar {
+    height: 30%;
+    background: color-mix(in srgb, var(--c-text) 10%, var(--c-bg));
+    animation: screen-time-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes screen-time-pulse {
+    50% {
+      opacity: 0.45;
+    }
   }
   .screen-time__day:is([open], :hover) .screen-time__column {
     outline: 1px solid color-mix(in srgb, var(--c-text) 35%, var(--c-bg));
@@ -338,6 +266,15 @@ const updated = new Intl.DateTimeFormat('zh-CN', {
     margin-top: 1rem;
     line-height: 1.8;
   }
+  .screen-time .screen-time__message {
+    margin-top: 0.75rem;
+    line-height: 1.8;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .screen-time__skeleton-bar {
+      animation: none;
+    }
+  }
   @media (max-width: 540px) {
     .screen-time__body {
       grid-template-columns: minmax(0, 1fr);
@@ -351,6 +288,24 @@ const updated = new Intl.DateTimeFormat('zh-CN', {
 
 <script>
   import { screenTimeDayLabel } from '~/utils/screen-time.js'
+  import {
+    parseScreenTimePayload,
+    renderScreenTime,
+  } from '~/utils/screen-time-view.js'
+
+  /** 与 Vercel 上的函数路径一致；接口不受站点 base 影响。 */
+  const ENDPOINT = '/api/screen-time'
+
+  let request: AbortController | undefined
+  let timer: ReturnType<typeof setInterval> | undefined
+
+  const updateDay = () => {
+    document
+      .querySelectorAll<HTMLElement>('[data-screen-time-day]')
+      .forEach((label) => {
+        label.textContent = screenTimeDayLabel(label.dataset.screenTimeDay!)
+      })
+  }
 
   const bindChart = (root: HTMLElement) => {
     if (root.hasAttribute('data-screen-bound')) return
@@ -526,25 +481,45 @@ const updated = new Intl.DateTimeFormat('zh-CN', {
     )
   }
 
-  const updateDay = () => {
-    document
-      .querySelectorAll<HTMLElement>('[data-screen-time-day]')
-      .forEach((label) => {
-        label.textContent = screenTimeDayLabel(label.dataset.screenTimeDay!)
+  const fill = async (root: HTMLElement, signal: AbortSignal) => {
+    let snapshot = null
+    try {
+      const response = await fetch(ENDPOINT, {
+        signal,
+        headers: { accept: 'application/json' },
       })
-  }
-  let timer: ReturnType<typeof setInterval> | undefined
-  const bindDay = () => {
-    clearInterval(timer)
+      if (response.ok) snapshot = parseScreenTimePayload(await response.json())
+    } catch (error) {
+      if (signal.aborted) return
+      // 网络错误、超时和非 JSON 响应都走同一套失败状态。
+      console.warn('Screen time request failed', error)
+    }
+    if (signal.aborted || !root.isConnected) return
+    renderScreenTime(root, snapshot)
+    if (!snapshot) return
+    bindChart(root)
     updateDay()
-    document
-      .querySelectorAll<HTMLElement>('[data-screen-time]')
-      .forEach(bindChart)
-    if (document.querySelector('[data-screen-time-day]'))
-      timer = setInterval(updateDay, 60_000)
+    timer = setInterval(updateDay, 60_000)
   }
-  document.addEventListener('astro:page-load', bindDay)
-  document.addEventListener('astro:before-swap', () => clearInterval(timer))
+
+  const start = () => {
+    const root = document.querySelector<HTMLElement>('[data-screen-time]')
+    if (!root || root.dataset.state !== 'loading' || request) return
+    clearInterval(timer)
+    root.setAttribute('aria-busy', 'true')
+    const current = new AbortController()
+    request = current
+    void fill(root, current.signal).finally(() => {
+      if (request === current) request = undefined
+    })
+  }
+
+  document.addEventListener('astro:before-swap', () => {
+    request?.abort()
+    request = undefined
+    clearInterval(timer)
+  })
+  document.addEventListener('astro:page-load', start)
   document.addEventListener('visibilitychange', updateDay)
-  bindDay()
+  start()
 </script>

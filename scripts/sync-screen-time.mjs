@@ -1,17 +1,19 @@
 /** 本机运行：读取 ActivityWatch 按日／应用聚合结果，不输出原始窗口信息。 */
-import { execFileSync } from 'node:child_process'
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { hostname } from 'node:os'
-import { dirname, resolve } from 'node:path'
+import { resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { parseEnv } from 'node:util'
 
 import {
   parseScreenTime,
   SCREEN_TIME_ZONE,
   screenTimePeriods,
 } from '../src/utils/screen-time.js'
+import { writeScreenTime } from '../src/utils/screen-time-store.mjs'
 
-export const SNAPSHOT_PATH = 'public/data/screen-time.json'
+/** 仅供本机预览的数据副本，不再进入仓库；线上读取由接口负责。 */
+export const SNAPSHOT_PATH = '.local/screen-time.json'
 const ROOT = fileURLToPath(new URL('../', import.meta.url))
 
 export async function fetchScreenTime({
@@ -115,42 +117,21 @@ export async function fetchScreenTime({
   return snapshot
 }
 
-const git = (root, args) =>
-  execFileSync('git', args, {
-    cwd: root,
-    encoding: 'utf8',
-    timeout: 30_000,
-    env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
-    stdio: ['ignore', 'pipe', 'pipe'],
-  }).trim()
-
-/** 不自动合并、拉取或暂存其它改动；离线推送留下的纯数据提交可在下次重试。 */
-function checkPublish(root) {
-  if (git(root, ['branch', '--show-current']) !== 'main')
-    throw new Error('Screen time: publish requires main')
-  git(root, ['fetch', 'origin', 'main'])
-  git(root, ['merge-base', '--is-ancestor', 'origin/main', 'HEAD'])
-  const outgoing = git(root, [
-    'log',
-    '--format=',
-    '--name-only',
-    '--diff-merges=first-parent',
-    'origin/main..HEAD',
-  ])
-  if (outgoing.split('\n').some((file) => file && file !== SNAPSHOT_PATH))
-    throw new Error(
-      'Screen time: publish refused; unrelated commits are pending'
-    )
-  if (git(root, ['diff', '--name-only', '--diff-filter=U']))
-    throw new Error('Screen time: resolve Git conflicts before publishing')
-}
-
-/** 只看七天数据；同一份数据不重复提交，updatedAt 只随真实变化前进。 */
+/** 只看七天数据；只用于报告这次运行是否带来新活跃记录。 */
 const sameDays = (a, b) => JSON.stringify(a) === JSON.stringify(b)
+
+/** launchd 不加载 `.env`，这里按 Astro 的约定补读工作目录下的同名文件。 */
+async function publishToken(root) {
+  const fromEnv = process.env.BLOB_READ_WRITE_TOKEN
+  if (fromEnv) return fromEnv
+  const contents = await readFile(resolve(root, '.env'), 'utf8').catch(() => '')
+  return parseEnv(contents).BLOB_READ_WRITE_TOKEN
+}
 
 export async function syncScreenTime({
   root = ROOT,
   publish = false,
+  client,
   ...options
 } = {}) {
   const local = resolve(root, '.local')
@@ -161,32 +142,25 @@ export async function syncScreenTime({
   const temporary = `${target}.tmp`
   try {
     const snapshot = await fetchScreenTime(options)
-    // 数据没变就不重写也不发布：周期性同步只在实际使用后产生提交与部署。
     const previous = await readFile(target, 'utf8')
       .then((contents) => parseScreenTime(JSON.parse(contents)))
       .catch(() => null)
-    if (previous && sameDays(previous.days, snapshot.days))
-      return { snapshot: previous, changed: false }
-    if (publish) checkPublish(root)
-    await mkdir(dirname(target), { recursive: true })
+    // 先推远端再写本地：上传失败时本地仍是旧数据，下一次运行会重新尝试。
+    // 远端不按本地副本去重：副本只说明本机上次同步的结果，不能证明对象还在，
+    // 更不能证明它没被删掉；每小时覆盖一次仍在 Blob 的额度内。
+    const url = publish
+      ? await writeScreenTime(snapshot, {
+          token: await publishToken(root),
+          client,
+        })
+      : null
     await writeFile(temporary, `${JSON.stringify(snapshot, null, 2)}\n`)
     await rename(temporary, target)
-    if (publish) {
-      // --only 保留用户已暂存的其它文件，不把它们夹带进每次提交。
-      if (!git(root, ['ls-files', '--', SNAPSHOT_PATH]))
-        git(root, ['add', '--', SNAPSHOT_PATH])
-      if (git(root, ['status', '--porcelain', '--', SNAPSHOT_PATH]))
-        git(root, [
-          'commit',
-          '--only',
-          '-m',
-          'chore: update screen time',
-          '--',
-          SNAPSHOT_PATH,
-        ])
-      git(root, ['push', 'origin', 'HEAD:main'])
+    return {
+      snapshot,
+      changed: !previous || !sameDays(previous.days, snapshot.days),
+      url,
     }
-    return { snapshot, changed: true }
   } finally {
     await rm(temporary, { force: true })
     await rm(lock, { recursive: true, force: true })
@@ -203,16 +177,19 @@ if (
     process.exitCode = 1
   } else {
     try {
-      const { snapshot, changed } = await syncScreenTime({
+      const { snapshot, changed, url } = await syncScreenTime({
         publish: args.includes('--publish'),
         apiUrl: process.env.AW_URL,
         host: process.env.AW_HOSTNAME,
       })
-      console.log(
-        changed
-          ? `Screen time: synced ${snapshot.days.at(-1).date} (${snapshot.updatedAt})`
-          : `Screen time: unchanged since ${snapshot.updatedAt}`
-      )
+      if (url)
+        console.log(
+          `Screen time: published ${snapshot.days.at(-1).date} (${snapshot.updatedAt}) to ${url}`
+        )
+      else
+        console.log(
+          `Screen time: ${changed ? 'synced' : 'unchanged'} ${snapshot.days.at(-1).date} (${snapshot.updatedAt})`
+        )
     } catch (error) {
       console.error(
         error instanceof Error ? error.message : 'Screen time: sync failed'

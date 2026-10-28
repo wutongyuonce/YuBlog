@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict'
-import { execFileSync } from 'node:child_process'
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -89,12 +88,22 @@ const sandbox = async (t) => {
   t.after(() => rm(directory, { recursive: true, force: true }))
   return directory
 }
-const git = (cwd, ...args) =>
-  execFileSync('git', args, {
-    cwd,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-  }).trim()
+
+/** 记录远端覆盖写入；`put` 可换成失败版本以驱动重试路径。 */
+const blobStore = (
+  put = async () => ({ url: 'https://blob.test/screen-time.json' })
+) => {
+  const writes = []
+  return {
+    writes,
+    client: {
+      put: async (pathname, body, options) => {
+        writes.push({ pathname, body, options })
+        return await put(pathname, body, options)
+      },
+    },
+  }
+}
 
 test('seven calendar days roll over at Beijing midnight, including leap days and stale labels', () => {
   const instant = new Date('2024-02-29T16:00:01Z')
@@ -300,9 +309,9 @@ test('seven days share weekly colors, retain tiny apps and regroup after a new s
   assert.equal(first.legend[0].name, 'Ghostty')
 })
 
-test('failed sync retains the previous file and releases the lock for a later retry', async (t) => {
+test('failed sync retains the previous preview and releases the lock for a later retry', async (t) => {
   const root = await sandbox(t)
-  await mkdir(join(root, 'public/data'), { recursive: true })
+  await mkdir(join(root, '.local'), { recursive: true })
   const target = join(root, SNAPSHOT_PATH)
   await writeFile(target, 'previous snapshot')
   await assert.rejects(
@@ -320,85 +329,117 @@ test('failed sync retains the previous file and releases the lock for a later re
   assert.deepEqual(JSON.parse(await readFile(target, 'utf8')), snapshot)
 })
 
-test('daily publishing excludes staged user edits, retries a data-only commit, and refuses unrelated commits', async (t) => {
-  const directory = await sandbox(t)
-  const remote = join(directory, 'remote.git')
-  const root = join(directory, 'working')
-  git(directory, 'init', '--bare', remote)
-  await mkdir(root)
-  git(root, 'init', '-b', 'main')
-  git(root, 'config', 'user.name', 'Screen time test')
-  git(root, 'config', 'user.email', 'screen-time@example.invalid')
-  await writeFile(join(root, 'author.txt'), 'original')
-  git(root, 'add', '.')
-  git(root, 'commit', '-m', 'initial')
-  git(root, 'remote', 'add', 'origin', remote)
-  git(root, 'push', '-u', 'origin', 'main')
-  await writeFile(join(root, 'author.txt'), 'user edit')
-  git(root, 'add', 'author.txt')
-  await syncScreenTime({ root, publish: true, ...fixture() })
-  assert.equal(
-    git(root, 'diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD'),
-    SNAPSHOT_PATH
-  )
-  assert.equal(git(root, 'diff', '--cached', '--name-only'), 'author.txt')
-  assert.equal(git(root, 'show', 'HEAD:author.txt'), 'original')
-  // An interrupted push leaves a valid data-only commit; the next run can deliver it.
-  await writeFile(join(root, SNAPSHOT_PATH), 'pending')
-  git(root, 'commit', '--only', '-m', 'pending data', '--', SNAPSHOT_PATH)
-  await syncScreenTime({ root, publish: true, ...fixture() })
-  assert.equal(git(root, 'rev-parse', 'HEAD'), git(remote, 'rev-parse', 'main'))
-  git(root, 'commit', '-m', 'unrelated user commit')
-  const old = await readFile(join(root, SNAPSHOT_PATH), 'utf8')
-  await assert.rejects(
-    syncScreenTime({ root, publish: true, ...fixture(newDay()) }),
-    /unrelated commits/
-  )
-  assert.equal(await readFile(join(root, SNAPSHOT_PATH), 'utf8'), old)
-  assert.notEqual(
-    git(root, 'rev-parse', 'HEAD'),
-    git(remote, 'rev-parse', 'main')
-  )
-
-  // A merge can introduce an unrelated file even when every branch commit is data-only.
-  git(root, 'push', 'origin', 'main')
-  git(root, 'switch', '-c', 'data-branch')
-  await writeFile(join(root, SNAPSHOT_PATH), 'branch data')
-  git(root, 'commit', '--only', '-m', 'branch data', '--', SNAPSHOT_PATH)
-  git(root, 'switch', 'main')
-  git(root, 'merge', '--no-ff', '--no-commit', 'data-branch')
-  await writeFile(join(root, 'merge-only.txt'), 'unrelated merge resolution')
-  git(root, 'add', 'merge-only.txt')
-  git(root, 'commit', '-m', 'merge with extra change')
-  assert.equal(
-    git(root, 'log', '--format=', '--name-only', 'origin/main..HEAD'),
-    SNAPSHOT_PATH
-  )
-  const merged = await readFile(join(root, SNAPSHOT_PATH), 'utf8')
-  await assert.rejects(
-    syncScreenTime({ root, publish: true, ...fixture(newDay()) }),
-    /unrelated commits/
-  )
-  assert.equal(await readFile(join(root, SNAPSHOT_PATH), 'utf8'), merged)
-  assert.notEqual(
-    git(root, 'rev-parse', 'HEAD'),
-    git(remote, 'rev-parse', 'main')
+test('publishing overwrites one fixed path and keeps the preview outside the repository', async (t) => {
+  const root = await sandbox(t)
+  await writeFile(join(root, '.env'), 'BLOB_READ_WRITE_TOKEN=file-token\n')
+  const store = blobStore()
+  const { snapshot, changed, url } = await syncScreenTime({
+    root,
+    publish: true,
+    client: store.client,
+    ...fixture(),
+  })
+  assert.equal(changed, true)
+  assert.equal(url, 'https://blob.test/screen-time.json')
+  assert.equal(store.writes.length, 1)
+  const [write] = store.writes
+  assert.equal(write.pathname, 'screen-time.json')
+  // 覆盖写入的选项与缓存头属于存储模块，已在端点测试里钉住；这里只看同步是否
+  // 传入了正确的 token，以及是否在写本地副本之前完成上传。
+  assert.equal(write.options.token, 'file-token')
+  assert.deepEqual(JSON.parse(write.body), snapshot)
+  assert.deepEqual(
+    JSON.parse(await readFile(join(root, SNAPSHOT_PATH), 'utf8')),
+    snapshot
   )
 })
 
-test('an hourly rerun without new activity rewrites and publishes nothing', async (t) => {
+test('a failed upload keeps the previous preview so the next run publishes again', async (t) => {
   const root = await sandbox(t)
-  const first = await syncScreenTime({ root, ...fixture() })
-  assert.equal(first.changed, true)
+  await writeFile(join(root, '.env'), 'BLOB_READ_WRITE_TOKEN=file-token\n')
+  await syncScreenTime({
+    root,
+    publish: true,
+    client: blobStore().client,
+    ...fixture(),
+  })
   const before = await readFile(join(root, SNAPSHOT_PATH), 'utf8')
+  const broken = blobStore(async () => {
+    throw new Error('blob unavailable')
+  })
+  await assert.rejects(
+    syncScreenTime({
+      root,
+      publish: true,
+      client: broken.client,
+      ...fixture(newDay()),
+    }),
+    /blob unavailable/
+  )
+  assert.equal(await readFile(join(root, SNAPSHOT_PATH), 'utf8'), before)
+  const retry = blobStore()
+  const { snapshot, changed } = await syncScreenTime({
+    root,
+    publish: true,
+    client: retry.client,
+    ...fixture(newDay()),
+  })
+  assert.equal(changed, true)
+  assert.equal(retry.writes.length, 1)
+  assert.deepEqual(JSON.parse(retry.writes[0].body), snapshot)
+})
+
+test('the environment token wins over .env for publishing', async (t) => {
+  const root = await sandbox(t)
+  await writeFile(join(root, '.env'), 'BLOB_READ_WRITE_TOKEN=file-token\n')
+  const store = blobStore()
+  const previous = process.env.BLOB_READ_WRITE_TOKEN
+  process.env.BLOB_READ_WRITE_TOKEN = 'env-token'
+  try {
+    await syncScreenTime({
+      root,
+      publish: true,
+      client: store.client,
+      ...fixture(),
+    })
+  } finally {
+    if (previous === undefined) delete process.env.BLOB_READ_WRITE_TOKEN
+    else process.env.BLOB_READ_WRITE_TOKEN = previous
+  }
+  assert.equal(store.writes[0].options.token, 'env-token')
+})
+
+test('an idle hour still republishes and reports no new activity', async (t) => {
+  const root = await sandbox(t)
+  await writeFile(join(root, '.env'), 'BLOB_READ_WRITE_TOKEN=file-token\n')
+  const store = blobStore()
+  const first = await syncScreenTime({
+    root,
+    publish: true,
+    client: store.client,
+    ...fixture(),
+  })
+  assert.equal(first.changed, true)
+  assert.equal(store.writes.length, 1)
+  // 远端不按本地副本去重：没有新活跃记录也覆盖写一次，本地副本随之刷新。
+  // 这样副本丢失、存储被重建时下一个整点就能自愈，而不是等数据变化。
   const later = await syncScreenTime({
     root,
+    publish: true,
+    client: store.client,
     ...fixture(),
     now: new Date(now.getTime() + 3_600_000),
   })
   assert.equal(later.changed, false)
-  assert.equal(later.snapshot.updatedAt, first.snapshot.updatedAt)
-  assert.equal(await readFile(join(root, SNAPSHOT_PATH), 'utf8'), before)
+  assert.equal(store.writes.length, 2)
+  assert.deepEqual(
+    JSON.parse(store.writes[1].body).days,
+    JSON.parse(store.writes[0].body).days
+  )
+  assert.equal(
+    JSON.parse(await readFile(join(root, SNAPSHOT_PATH), 'utf8')).updatedAt,
+    later.snapshot.updatedAt
+  )
   // New activity in the current day is a real change again.
   const rows = Array.from({ length: 7 }, () => [
     1800.4,
@@ -409,11 +450,14 @@ test('an hourly rerun without new activity rewrites and publishes nothing', asyn
   rows[6] = [2400, 3600, 7200, [event('Safari', 2400)]]
   const grown = await syncScreenTime({
     root,
+    publish: true,
+    client: store.client,
     ...fixture(rows),
     now: new Date(now.getTime() + 7_200_000),
   })
   assert.equal(grown.changed, true)
   assert.equal(grown.snapshot.days.at(-1).seconds, 2400)
+  assert.equal(store.writes.length, 3)
 })
 
 test('the launch agent runs every hour at minute 50', () => {

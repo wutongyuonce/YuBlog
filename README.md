@@ -90,7 +90,7 @@ dev 搜索使用模拟数据，真实 Pagefind 搜索需先构建再预览。`pn
 | Markdown 语法与媒体处理 | `plugins/index.ts`、各 Remark／Rehype 插件 | 见 [正文与媒体](docs/design/content.md#pipeline) |
 | 评论、听歌、统计与像素猫 | `GISCUS`、`api/lastfm.js`、`Head.astro`、`FEATURES.oneko` | 先替换演示账号，见 [外部服务配置](docs/guides/development.md#services) |
 
-更换域名、base 或文章 slug 会影响永久地址、RSS 去重及评论关联，需要单独核对迁移，见 [SEO 与全文订阅](docs/design/distribution.md#canonical)。Vercel 配置同时服务静态页面与根目录 API；仅把 `dist/` 放到静态托管不能提供听歌接口。
+更换域名、base 或文章 slug 会影响永久地址、RSS 去重及评论关联，需要单独核对迁移，见 [SEO 与全文订阅](docs/design/distribution.md#canonical)。Vercel 配置同时服务静态页面与根目录 API；仅把 `dist/` 放到静态托管不能提供听歌与屏幕时间接口。
 
 目录速查：
 
