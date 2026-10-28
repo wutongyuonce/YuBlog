@@ -4,8 +4,7 @@
   --c-scrollbar: #ddd;
   --c-scrollbar-hover: #bbb;
   --c-text: #000;
-  /* 链接语言：常驻下划线统一用弱色，交互时换成 --accent。
-     两族规则见 docs/design/site.md#visuals。 */
+  /* 常驻下划线弱色 token；三族规则见 docs/design/site.md#visuals。 */
   --link-underline: color-mix(in srgb, var(--c-text) 30%, transparent);
   --font-heading: 'SourceHanSerifCN-Regular', serif;
   --site-nav-width: var(--blog-shell-width);

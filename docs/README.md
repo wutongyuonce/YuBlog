@@ -26,8 +26,8 @@
 | 文档 | 负责回答 | 不在这里维护 |
 | --- | --- | --- |
 | [开发与部署指南](./guides/development.md) | 如何运行、配置、维护内容、部署和验证 | 完整算法及组件状态机 |
-| [站点与页面](./design/site.md) | 各页面、导航、筛选、上下篇、目录、主题、评论的用户契约 | 正文组件和订阅的完整规则 |
-| [架构与模块边界](./design/architecture.md) | 规则由谁定义、调用链路、改功能应落在哪 | 与专题重复的详细媒体契约 |
+| [站点与页面](./design/site.md) | 各页面、导航、筛选、上下篇、目录、主题、评论的用户契约；视觉不变量（含链接反馈三族，见 [#visuals](./design/site.md#visuals)） | 正文组件和订阅的完整规则；模块属主与调用链路 |
+| [架构与模块边界](./design/architecture.md) | 规则由谁定义、调用链路、改功能应落在哪（含 `--link-underline`／首页次级入口的样式属主） | 链接反馈交互细则与专题重复的媒体契约（细则见 [visuals](./design/site.md#visuals)） |
 | [正文与媒体](./design/content.md) | 图片、卡片、相册、HTML／音视频、绘图与博文卡的写法、设计及资源边界 | 订阅器中的输出策略 |
 | [SEO 与全文订阅](./design/distribution.md) | canonical、sitemap、RSS 身份、内容降级、安全及失败语义 | 网站视觉布局 |
 | [Last.fm](./design/listening.md) | 运行时接口、缓存、专辑匹配、请求上限和页面状态 | 通用卡片与图片查看器实现 |

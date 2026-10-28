@@ -59,8 +59,9 @@ const onekoEnabled = Array.isArray(oneko) && oneko[0]
     font-synthesis: none;
   }
 
+  /* 页脚常驻下划线：docs/design/site.md#visuals */
   .footer-link {
-    border-bottom: 1px solid color-mix(in srgb, var(--fg) 35%, transparent);
+    border-bottom: 1px solid var(--link-underline);
     color: color-mix(in srgb, var(--fg) 72%, transparent);
     text-decoration: none;
     transition:
@@ -79,7 +80,7 @@ const onekoEnabled = Array.isArray(oneko) && oneko[0]
     margin: 0;
     padding: 0;
     border: 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--fg) 35%, transparent);
+    border-bottom: 1px solid var(--link-underline);
     background: transparent;
     color: color-mix(in srgb, var(--fg) 72%, transparent);
     font: inherit;

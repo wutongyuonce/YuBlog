@@ -80,7 +80,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 路径是否带 `base`、是否补尾斜杠 | `src/utils/path.ts` | 字符串拼接 `/tags` |
 | 顶栏、布局、归档线、分页的跨页 CSS | `public/shell.css` | 复制共享规则；需要局部覆盖时不检查作用域和层叠效果 |
 | 索引版心与文章阅读宽度 | `src/styles/main.css` 的 `--blog-shell-width` / `--blog-prose-width` | 在页面或目录组件另写宽度值 |
-| 链接常驻下划色的强度与交互色 | `src/styles/main.css` 的 `--link-underline`；正文／标题／首页次级入口三族分工见 [视觉不变量](./site.md#visuals) | 在组件里另写灰色下划线常量，或给导航、卡片、筛选芯片加文字下划线 |
+| 链接常驻下划色 token；首页板块次级入口样式 | `--link-underline` 在 `src/styles/main.css`；`.home-section-header` 次级入口只在 `public/shell.css`；三族契约见 [视觉不变量](./site.md#visuals) | 在组件另写灰色下划线常量；把首页次级入口规则复制到组件；给导航、卡片、筛选芯片加文字下划线 |
 | 文稿列表封面列宽 | `ListItem.astro` 的 250px／222px | 在 `main.css` 或列表页再写一份列宽 |
 | 拾趣分区与菜单名称、说明、顺序 | `src/content/interests/*.{md,mdx}` 的 `title`/`description`/`order`；集合范围在 `src/content.config.ts` | 在导航与页面各写一份或限制分类 ID／数量 |
 | 拾趣菜单可选图标 | `src/config.ts` 的 `INTEREST_ICONS`，键为文件名去掉扩展名；UnoCSS 自动加入 safelist | 为无图标分类补占位或重复维护图标 safelist |
@@ -131,8 +131,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 排序 | `getSortedPosts`（`src/utils/data.ts`） | 在组件内另写排序 |
 | 邻接与随机纯函数 | `src/utils/post-nav.ts` | 在 Astro 模板内手算下标 |
 | 详情 UI | `src/components/blog/PostNav.astro` | 把按钮散落进 `RenderPost` 模板 |
-| 列表顶行 | `src/components/blog/RandomBrowse.astro` + `ListView.astro` | 把随机行塞进分页 HTML |
-| 首页入口 | `RecentWriting.astro` 复用 `RandomBrowse` | 另写一套随机逻辑 |
+| 列表顶行 | `src/components/blog/RandomBrowse.astro` + `ListView.astro` | 把随机行塞进分页 HTML；不要在首页复用 |
 | 随机 `href` 重写 | `src/utils/post-nav-random.js` | 每页复制一份内联随机逻辑 |
 | 文稿 URL | 与列表一致：`redirect \|\| withBasePath(\`/blogs/${id}/\`)` | 自造路径编码 |
 
@@ -374,7 +373,7 @@ Pagefind **按需加载**：面板打开时调 `window.ensurePagefind()`（打�
 
 `RenderPost` + 常驻右侧 TOC。最大高度 `min(50vh, 28rem)`，水平位置在侧边留白中线基础上向外移 16px、中心比视口中线高 32px，超出内部滚动；窄屏使用浮动目录按钮。文章主标题独立渲染，封面作者头像 40px。
 
-页脚由 `Footer.astro` 用宋体显示版权、Astro 与“萌ICP备20269668号”；启用 Oneko 时另有「隐藏小猫」按钮（左侧装饰性 `🐾`）。宽屏段间用次要字色 `·` 分隔，窄屏纵向堆叠并隐藏分隔符。作者名、Astro 和备案都是带下划线的链接：作者名指向站点首页，Astro 指向 `https://astro.build`，备案指向 `https://icp.gov.moe/?keyword=20269668` 并在新标签页打开。悬停或键盘焦点时链接变为强调色。窄屏纵向排列，备案入口不隐藏。
+页脚由 `Footer.astro` 用宋体显示版权、Astro 与“萌ICP备20269668号”；启用 Oneko 时另有「隐藏小猫」按钮（左侧装饰性 `🐾`）。宽屏段间用次要字色 `·` 分隔，窄屏纵向堆叠并隐藏分隔符。作者名、Astro 和备案都是链接：作者名指向站点首页，Astro 指向 `https://astro.build`，备案指向 `https://icp.gov.moe/?keyword=20269668` 并在新标签页打开；链接反馈见 [视觉不变量](./site.md#visuals)。窄屏纵向排列，备案入口不隐藏。
 
 <a id="utilities"></a>
 

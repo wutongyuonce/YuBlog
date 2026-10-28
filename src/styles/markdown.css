@@ -12,7 +12,7 @@
   color: var(--fg);
 }
 
-/* 正文族：常驻弱下划线，悬浮或键盘聚焦只把下划线换成强调色，字色不动。 */
+/* 正文族链接反馈：docs/design/site.md#visuals */
 .prose a {
   border-bottom: 1px solid var(--link-underline);
   transition: border-bottom-color 0.3s ease-in-out;
