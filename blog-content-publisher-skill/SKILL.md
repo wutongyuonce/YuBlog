@@ -310,7 +310,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
    ```
 
    `cover` 写的是**该目录内的文件名**，构建时由图片管线解析；文件名写错或文件缺失会直接构建失败，不会静默留空图。
-5. 平台只有 QQ 已实现（`src/utils/qq-playlist.mjs`）。`platform` 写 `netease` 目前没有适配器：整次快照会失败、页面进失败态；要接网易云需先在 `src/utils/playlists.mjs` 接适配器并补测试，再写配置。
+5. 平台写 `qq` 或 `netease`，两者都有适配器（`src/utils/qq-playlist.mjs`／`netease-playlist.mjs`）；其它平台需先在 `src/utils/playlists.mjs` 的 `ADAPTERS` 注册并补测试，否则整次快照会失败、页面进失败态。
 6. 校验：`pnpm check`、`pnpm build`、`pnpm test:built-restructure`。构建通过即说明封面可解析、配置形状正确。不要把完整曲目写进 JSON 或 Markdown。
 7. 交接时说明：加了哪份歌单、封面来源链接与实际图片尺寸。
 
