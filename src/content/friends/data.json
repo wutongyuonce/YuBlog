@@ -257,5 +257,15 @@
     "desc": "理解以真实为本，但真实本身并不会自动呈现",
     "category": "双向",
     "order": 31
+  },
+  {
+    "id": "shishishi3",
+    "name": "豕豕豕",
+    "link": "https://blog.shishishi3.com",
+    "avatar": "https://blog.shishishi3.com/_astro/shishishi.BzPJMGkr.png",
+    "desc": "偏爱能真正解决问题的工具型项目，持续探索自动化、效率工具和更顺手的 AI 工作流。",
+    "category": "双向",
+    "siteLabel": "自动化 / 效率工具 / AI 工作流",
+    "order": 32
   }
 ]

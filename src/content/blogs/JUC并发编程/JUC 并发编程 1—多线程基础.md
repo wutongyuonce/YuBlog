@@ -9,8 +9,6 @@ toc: true
 search: true
 ---
 
-[【跳转到下一篇：JUC 并发编程 2—Java 内存模型与底层同步机制】](/blogs/juc并发编程/juc-并发编程-2java-内存模型与底层同步机制/)
-
 ## 一、基础
 
 ### 线程与进程
@@ -1835,3 +1833,6 @@ while (!success) {
 >
 > - **虚拟线程（Java 21+）**：极大降低线程创建成本，简化异步编程
 > - **无锁数据结构**：`ConcurrentLinkedQueue`, `Disruptor`（高性能队列）
+
+:::blog-link{slug="JUC并发编程/JUC 并发编程 2—Java 内存模型与底层同步机制" title="下一篇：JUC 并发编程 2"}
+:::
