@@ -20,7 +20,7 @@ try {
       ['400 16px Inter', 'Reading text 123'],
       ['600 16px Inter', 'Reading text 123'],
       ['800 16px Inter', 'Reading text 123'],
-      ['400 16px "DM Mono"', 'const answer = 42'],
+      ['400 16px "Maple Mono"', 'const answer = 42'],
     ]
     const loaded = await Promise.all(
       fonts.map(([font, text]) => document.fonts.load(font, text))
