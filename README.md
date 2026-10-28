@@ -10,7 +10,7 @@
 
 梧桐雨的个人博客，使用 Astro 7、TypeScript 和 Markdown／MDX 构建。以文章阅读为主，兼顾项目、书影游、个人介绍和友链；提供亮暗主题、可选点缀配色、全文搜索和全文 RSS。
 
-页面与文章在构建时生成静态 HTML，普通阅读不依赖后端。首页 Last.fm 排行通过运行时接口获取，评论由 GitHub Discussions／Giscus 提供。
+页面与文章在构建时生成静态 HTML，普通阅读不依赖后端。首页 Last.fm 排行与[拾趣歌单](docs/design/playlists.md)通过运行时接口获取，评论由 GitHub Discussions／Giscus 提供。
 
 [页面总览](#页面总览) · [主要功能](#主要功能) · [快速开始](#快速开始) · [维护内容](#维护内容) · [二次开发](#二次开发) · [详细文档](#详细文档)
 
@@ -69,6 +69,7 @@ dev 搜索使用模拟数据，真实 Pagefind 搜索需先构建再预览。`pn
 | 博客与正文资源 | `src/content/blogs/`；文章配图放同目录或子目录 |
 | 文章封面 | `src/content/blogs/_title-images/`，用 `titleImage`／`titleImageAlt` 引用 |
 | 拾趣分类与配图 | `src/content/interests/<id>.md` 或 `.mdx`，配图放对应子目录 |
+| 歌单 | `src/data/playlists.json`，封面放 `src/content/interests/playlists/` |
 | 首页近期书影游 | `src/content/interests/recent.md` |
 | 作者介绍 | `src/content/about/about.md` |
 | 项目／友链 | `src/content/projects/data.json`／`src/content/friends/data.json` |

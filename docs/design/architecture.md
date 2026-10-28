@@ -95,6 +95,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 共享 Markdown 标题排版 | `prose.css` 的 `.prose.markdown-content` | 为首页、拾趣、关于各写标题字号 |
 | 屏幕时间日期、公开形状与缺失值；Blob 地址与上传；柱高刻度与失败文案 | `src/utils/screen-time.js`、`src/utils/screen-time-store.mjs`、`src/utils/screen-time-view.js`；本机采集在 `scripts/sync-screen-time.mjs`，运行时接口在 `api/screen-time.js`，详见 [设计](./screen-time.md) | 在组件内推断活跃状态或连接本机 API |
 | Last.fm 查询、统计、专辑匹配、资料缺失与请求上限 | `src/utils/lastfm.mjs`；缓存与失败语义在 `api/lastfm.js` | 在视图中重新调用 API 或推断排行／周总数 |
+| 拾趣固定歌单、平台资料归一化、运行时快照 | `src/data/playlists.json`、`src/utils/qq-playlist.mjs`／`netease-playlist.mjs` 与 `playlists.mjs`；缓存在 `api/playlists.js`，见 [拾趣歌单](./playlists.md) | 提交全量曲目、在页面抓远程封面或接受任意来源 URL |
 | 写作热力统计与失败语义 | `blog-heatmap.js` | 在组件重算年度字数、将缺失字数当 0 |
 | 热力提示交互与页面清理 | `WritingHeatmap.astro` | 用旧根节点的定时器关闭新页面的提示层 |
 | 内容图片的路径与写入规则 | `src/content/**` 里的相对路径；正文宽度标记由 `plugins/remark-image-width.ts` 解析 | 把图片放进 `public/`、在正文写原始 `<img>`（相对路径会构建报错）、手写 `_astro` 地址 |
@@ -178,7 +179,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 #### 点缀配色 seam
 
-点缀行为以[页面配色契约](./site.md#appearance)为准。`src/utils/accent-palette.js` 的 `ACCENT_PALETTES` 是唯一预设表，首项原粉色决定默认配色；浅色主色为原粉色 `#ad526c`、灰紫 `#665477`、深紫 `#3a1b74`、雾蓝 `#476d89`、鼠尾草绿 `#52735c`。每套都生成不同的浅色与深色强调色；`--accent-swatch` 始终是浅色主色。灰紫深色为 `#d0adf2`，深紫深色为 `#a987e8`，原粉色保留旧深色 `#e7a1b5`，雾蓝深色为 `#7fafd2`，鼠尾草绿深色为 `#7fd298`。未单独指定的深色仍按主色 45% 混入白色，未单独指定的浅色柔和色按主色 72% 混入白色。`main.css` 保留黑白基底，不另写点缀表。
+点缀行为以[页面配色契约](./site.md#appearance)为准。`src/utils/accent-palette.js` 的 `ACCENT_PALETTES` 是唯一预设表，首项原粉决定默认配色；浅色主色为原粉 `#ad526c`、灰紫 `#665477`、深紫 `#3a1b74`、雾蓝 `#476d89`、鼠尾草绿 `#52735c`。每套都生成不同的浅色与深色强调色；`--accent-swatch` 始终是浅色主色。灰紫深色为 `#d0adf2`，深紫深色为 `#a987e8`，原粉保留旧深色 `#e7a1b5`，雾蓝深色为 `#7fafd2`，鼠尾草绿深色为 `#7fd298`。未单独指定的深色仍按主色 45% 混入白色，未单独指定的浅色柔和色按主色 72% 混入白色。`main.css` 保留黑白基底，不另写点缀表。
 
 `createAccentPreference(palettes)` 提供 `resolve`／`restore`／`select`，统一合法值、默认和 localStorage `accent-palette` 的异常语义。工厂自包含，`Head.astro` 将同一函数和配置序列化为内联初始化，并输出未依赖 JS 的配色变量；选择器模块直接调用同一工厂。在 `astro:before-swap` 对传入根元素恢复偏好，硬导航则由 Head 在首屏前恢复；无需新协议、状态缓存或主题观察器。配色写入根元素 `data-accent-palette`，与现有 `.dark` 独立，视图通过 CSS 变量立即更新。
 

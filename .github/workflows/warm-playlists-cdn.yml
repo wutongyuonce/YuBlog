@@ -1,0 +1,43 @@
+name: Warm playlists CDN
+
+on:
+  schedule:
+    # Every ~25 minutes (UTC), inside the 30-minute CDN fresh window.
+    - cron: '*/25 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  warm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: GET /api/playlists
+        run: |
+          set -euo pipefail
+          headers=$(mktemp)
+          code=$(curl -sS -L --max-time 60 \
+            -o /tmp/playlists.json -D "$headers" -w '%{http_code}' \
+            -H 'accept: application/json' \
+            'https://www.wutongyu.site/api/playlists')
+          echo "HTTP ${code}"
+          grep -iE '^(HTTP/|age:|x-vercel-cache:|cache-control:)' "$headers" || true
+          test "${code}" = '200'
+          python3 - <<'PY'
+          import json
+          from datetime import datetime
+          data = json.load(open('/tmp/playlists.json'))
+          datetime.fromisoformat(data['updatedAt'].replace('Z', '+00:00'))
+          assert isinstance(data.get('playlists'), list) and data['playlists']
+          for playlist in data['playlists']:
+              assert isinstance(playlist.get('id'), str) and playlist['id']
+              assert isinstance(playlist.get('title'), str) and playlist['title']
+              assert isinstance(playlist.get('songCount'), int) and playlist['songCount'] >= 0
+              assert isinstance(playlist.get('songs'), list)
+              assert len(playlist['songs']) <= playlist['songCount']
+              assert playlist['songCount'] == 0 or playlist['songs']
+              assert all(isinstance(song.get(field), str)
+                         for song in playlist['songs'] for field in ('title', 'artist', 'album'))
+          print(f"playlists={len(data['playlists'])} updatedAt={data['updatedAt']}")
+          PY

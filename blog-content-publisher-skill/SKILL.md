@@ -2,8 +2,8 @@
 name: blog-content-publisher
 description: >
   维护 YuBlog（Wutong-Yu Astro 站）所有可改内容。按页面改：文稿与配图、首页近期笔墨和标签/归档所依赖的文章元数据、
-  项目 JSON、关于作者介绍、拾趣分类（可新增、图标可选）与个人社交、友链 JSON、顶栏导航与顶栏 GitHub、友链申请模板文案。
-  触发：发博客、改文章、改封面、改 titleImage、改分类、改关于、改拾趣、新增拾趣分类、给拾趣分类补图标、改设备、改动漫、改影视、改游戏、改书、改 Kpop、改友链、改项目、改导航、改顶栏 GitHub、改关于页社交、改名片站名。
+  项目 JSON、关于作者介绍、拾趣分类（可新增、图标可选）与个人社交、歌单配置与封面、友链 JSON、顶栏导航与顶栏 GitHub、友链申请模板文案。
+  触发：发博客、改文章、改封面、改 titleImage、改分类、改关于、改拾趣、新增拾趣分类、给拾趣分类补图标、改设备、改动漫、改影视、改游戏、改书、改 Kpop、加歌单、新增歌单、改歌单、换歌单封面、改友链、改项目、改导航、改顶栏 GitHub、改关于页社交、改名片站名。
   能把作者交来的稿子落地：本地图片复制进文章配图目录并改写引用（外链保持外链）、按内容自动排版（grid／横滚／绕排）、把书影视条目生成卡片（可联网补链接与封面）、落地 Excalidraw 图与博文链接卡，含排版／卡片／Excalidraw／博文链接卡时默认启动或复用同一 worktree 的 dev 并核实文章预览链接。
   不要用来做布局实现、CSS 或交互重构。
 ---
@@ -24,6 +24,7 @@ description: >
 | 项目卡片 | 项目 | `src/content/projects/data.json` |
 | 作者介绍 | 关于 `/about/` | `src/content/about/about.md` |
 | 改拾趣内容、新增或重排拾趣分类（如设备、动漫、旅行） | 拾趣入口和对应子页 | `src/content/interests/<id>.md`，图放对应 `<id>/` |
+| 加歌单、换歌单封面 | 拾趣「歌单」子页 | 配置 `src/data/playlists.json`；封面放 `src/content/interests/playlists/` |
 | 友链增删改、申请模板里的站名/链接 | 友链 | `data.json` 或 `FriendsApplyPanel.astro` 的 `friendInfo` |
 | 顶栏页面名、顶栏 GitHub | 全站顶栏 | `src/config.ts` 的 `UI` |
 | 个人社交（名字、链接、图标） | 首页与关于 | `config.ts` 的 `AUTHOR_LINKS`；若 `about.md` 也展示同一联系方式，再同步该字段 |
@@ -222,6 +223,9 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 | `book` | 书 |
 | `kpop` | 喜欢的团体与 idle |
 | `software` | Mac 与手机软件 |
+| `playlists` | 固定歌单的运行时列表；资料配置在 `src/data/playlists.json`，封面在 `src/content/interests/playlists/` |
+
+「歌单」的 `playlists.md` 只维护页面标题、说明和顺序；曲目由运行时接口取得，不把完整歌曲数组写进仓库。新增固定歌单见下节，不把它改为手写 Markdown 曲目表。
 
 读取同目录样例后修改。frontmatter 的 `title`、`description` 必须为非空字符串，`order` 必须为非负整数；三者供入口、子页和顶部下拉共同使用，`order` 越小越靠前。子页标题直接是分类名，不加“拾趣-”。
 
@@ -284,6 +288,31 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 竖卡和方卡都必须有标题和一张独立 Markdown 封面；`meta` 和 `href` 可省略。不要带 `score`、`date`、`label` 或介绍正文，这些输入会报错而不会被隐藏。竖封面按 `2:3` 裁切，方封面按 `1:1` 裁切；专辑封面通常就是正方形，源图不是时仍裁切，点击可看完整图片。资源默认宽度 480，显式 `|w` 仍优先。当前桌面版心竖卡大约四张半、方卡大约五张半，手机保留横滑与后续露出，不改全站版心。标题自然换行，小字最多两行高度，超长时独立上下滚动且可键盘聚焦。小字区及默认横卡评论区的纵向滚动条默认隐藏，仅实际滚动时短暂显示。横滑栏无灰色底框，直接嵌入背景；深浅主题可读；无 JS 仍可横滚，聚焦栏后用左右方向键，RSS 保留全部作者条目的封面、标题和小字顺序。
 
 需要自动滚动时，这一排每张都写 `scroll="auto"`，不要只写第一张。条目必须多到排不开一屏才会动：桌面版心下竖卡通常多于四张、方卡多于五张，不够时保持手动横滑，不报错。滚动头尾相接，左右淡出；按下或键盘聚焦时暂停，单纯悬停不暂停。减少动态效果或无 JS 时不自动滚。不要把 `scroll` 写到默认横卡上。
+
+### 新增或修改歌单
+
+**用户只给一个歌单链接就够**，其余由你查证后写入；用户也可以指定封面。歌单页的标题、作者、简介、曲目数量和曲目列表来自运行时接口，但**平台、歌单 ID、封面和链接是构建期配置**，必须显式写清。
+
+1. 从链接取三个值：路径或查询里的歌单 ID 即 `sourceId`（QQ 形如 `https://y.qq.com/n/ryqq/playlist/<id>`，网易云形如 `https://music.163.com/playlist?id=<id>`）；`url` 用去掉跟踪参数的桌面地址；`id` 用 `<platform>-<sourceId>`，一旦发布不要改。
+2. 从原平台页面或对应适配器核对标题、作者与简介；`title` 写歌单现名作为后备，运行时以上游非空标题为准（QQ 的 `dissname`／网易云的 `name`）。不要编造作者或简介。
+3. 封面：优先用歌单页的正式封面图（QQ 可从 `og:image` 或页面封面大图取），下载后放进 `src/content/interests/playlists/`，文件名用短 ASCII（建议 `<id>.jpg`），扩展名与真实格式一致；保留原图，不压缩、不缩放、不转格式，不热链平台图片，也不放进 `public/`。
+4. 在 `src/data/playlists.json` 追加一条，`cover` 不能省：
+
+   ```json
+   {
+     "id": "qq-9798567837",
+     "platform": "qq",
+     "sourceId": "9798567837",
+     "title": "伤心忧郁 · 深夜情绪场",
+     "cover": "qq-9798567837.jpg",
+     "url": "https://y.qq.com/n/ryqq/playlist/9798567837"
+   }
+   ```
+
+   `cover` 写的是**该目录内的文件名**，构建时作为本地原图资源打包；文件名写错或文件缺失会直接构建失败。
+5. 平台写 `qq` 或 `netease`，两者都有适配器（`src/utils/qq-playlist.mjs`／`netease-playlist.mjs`）；其它平台需先在 `src/utils/playlists.mjs` 的 `ADAPTERS` 注册并补测试，否则整次快照会失败、页面进失败态。
+6. 先核对配置：`id` 唯一，`platform` 已支持，`sourceId` 为数字字符串，`url` 指向该歌单，`cover` 文件真实存在；再运行 `pnpm check`、`pnpm build`、`pnpm test:built-restructure`。这些检查验证构建和本地资源，不代替上游验证；另用对应平台适配器核对真实歌单与可导出数量，网络不可用时明确说明未验证。公开接口可能只返回部分曲目，页面会标明实际可导出数；完整曲目不写进 JSON 或 Markdown。
+7. 交接时说明：加了哪份歌单、封面来源链接与实际图片尺寸。
 
 ### 生成卡片
 
