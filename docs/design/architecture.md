@@ -76,7 +76,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 单标签选中链接 | `src/utils/blog-browser.js` 的 `tagSelectionLinks`；`TagLinks` 只呈现 | 用 ` / ` 拼接标签，或在文章元信息、归档、列表卡片里手写 `?tag=` |
 | 归档分类配色领取、唯一性、持久化与容量失败 | `src/utils/blog-category-colors.js`；预设及记录在 `src/data/blog-category-colors.json` | 在视图中推断颜色、循环复用或按分类顺序重排已有分配 |
 | 首页各板块标题、名片与居中布局样式 | `public/shell.css` | 通过 JS 重复测量或复制卡片模板 |
-| 标签 AND 匹配 | `src/utils/blog-tag-filter.js` | 在点击处理里写 `every`/`includes` |
+| 标签 AND 匹配、搜索标签包含过滤 | `src/utils/blog-tag-filter.js`（`matchesAllTags`／`filterTagsMatchingQuery`） | 在点击或搜索面板里另写 `every`/`includes`／大小写规则 |
 | 路径是否带 `base`、是否补尾斜杠 | `src/utils/path.ts` | 字符串拼接 `/tags` |
 | 顶栏、布局、归档线、分页的跨页 CSS | `public/shell.css` | 复制共享规则；需要局部覆盖时不检查作用域和层叠效果 |
 | 索引版心与文章阅读宽度 | `src/styles/main.css` 的 `--blog-shell-width` / `--blog-prose-width` | 在页面或目录组件另写宽度值 |
@@ -339,11 +339,13 @@ plugins/
 
 `SearchSwitch` 负责搜索、键盘选中、结果跳转与加载分页逻辑，`Backdrop` 负责关闭。搜索面板、输入框、结果、快捷键和遮罩的视觉样式统一放在静态加载的 `public/shell.css`，避免面板背景和阴影依赖未生效的工具类。面板使用主题的实色背景、边框和阴影；遮罩压暗并模糊页面，结果摘要与快捷键使用明确的次级文字颜色，选中结果有底色及左侧标记。手机端保留快捷键提示，长结果只在面板中间区域滚动；减少动画设置下关闭过渡。
 
+结果列表**最上方**可出现「标签」区：构建期用与 `/tags/` 相同的已发布集合（`getFilteredPosts` + `buildTagSummary`）嵌入标签名单；输入后由 `filterTagsMatchingQuery` 做包含匹配（查询 trim；拉丁字母不区分大小写，展示保留原 tag 文案）。无匹配时整块隐藏。标签项与文章结果共用 `role="option"` 键盘选中／`aria-activedescendant`；点击跳到 `withBasePath('/tags/')` + `tagSelectionLinks`／`serializeBlogQuery({ category:'', tags:[tag], page:1 })` 的单标签 URL。不改 Pagefind 索引，不另缓存标签 JSON。无脚本时不要求标签搜索（面板本就依赖 JS）。
+
 Pagefind **按需加载**：面板打开时调 `window.ensurePagefind()`（打开与输入两处触发，带 memo），否则不拉 `pagefind.js` 与 worker；`pagefind-highlight.js` 只在带 `?search=` 的页面加载于 `astro:page-load`。没打开过搜索的访问因此零 Pagefind 请求。
 
 面板声明了 `role="dialog" aria-modal="true"`，所以 Tab 在面板内循环（`SearchPanel.#handlePanelTab`），退出靠 Escape 或点击遮罩，两者都会把焦点还给搜索按钮。结果项是 `role="option" tabindex="-1"`，用方向键选择，并用 `aria-activedescendant` 把当前高亮项报给读屏器。
 
-开发模式搜索仍使用模拟数据；真实 Pagefind 搜索需先 build，再在 preview 中验证。
+开发模式文章结果仍使用模拟数据，标签区仍按嵌入名单真实过滤；真实 Pagefind 搜索需先 build，再在 preview 中验证。
 
 ### 归档 `/archives/`
 
@@ -385,7 +387,7 @@ Pagefind **按需加载**：面板打开时调 `window.ensurePagefind()`（打�
 | `blog-heatmap.js` | 上海日历日、强度、年份范围、年度字数与字数缺失／非法失败 |
 | `blog-browser.js` | 原值分类动态入口与预览、URL 兼容别名与精确筛选状态、分页 |
 | `blog-category-colors.js` | 预设校验、分类配色领取与持久化、耗尽失败 |
-| `blog-tag-filter.js` | 标签计数、AND |
+| `blog-tag-filter.js` | 标签计数、AND、搜索包含过滤 |
 | `blog-stats.js` | 可读字数统计与「万」格式 |
 | `progress-stats.js` | 年积日、年进度、日进度 |
 | `recent-post-date.js` | 「n 天前」 |

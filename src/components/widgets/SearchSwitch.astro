@@ -1,7 +1,8 @@
 ---
 import { FEATURES } from '~/config'
 import { withBasePath } from '~/utils/path'
-import { parseTuple } from '~/utils/data'
+import { getFilteredPosts, parseTuple } from '~/utils/data'
+import { buildTagSummary } from '~/utils/blog-tag-filter.js'
 
 const { search } = FEATURES
 if (!search || (Array.isArray(search) && !search[0])) return
@@ -15,6 +16,12 @@ if (includes.length === 0)
 const filterEnabled = filter && includes.length > 1
 const batchSize = parseTuple(batchLoadSize, 'batchLoadSize')
 const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
+
+/** Same tag universe as `/tags/` (TagFilter ← getFilteredPosts + buildTagSummary). */
+const searchTagNames = buildTagSummary(
+  (await getFilteredPosts('blogs')).map(({ data }) => data.tags)
+).map(({ tag }) => tag)
+const searchTagsBase = withBasePath('/tags/')
 ---
 
 <!-- Search Switch -->
@@ -39,6 +46,8 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
   data-filter={filterEnabled}
   data-batch-size={batchSize}
   data-max-items={maxItems}
+  data-tags-base={searchTagsBase}
+  data-tag-names={JSON.stringify(searchTagNames)}
 >
   <div class="flex flex-col gap-2">
     <!-- Tab list -->
@@ -181,6 +190,8 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
 
 <script>
   import { toggleFadeEffect } from '~/utils/misc'
+  import { tagSelectionLinks } from '~/utils/blog-browser.js'
+  import { filterTagsMatchingQuery } from '~/utils/blog-tag-filter.js'
 
   interface Anchor {
     element: string
@@ -230,6 +241,19 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
     #btnMore: HTMLButtonElement | null = null
     #btnAll: HTMLButtonElement | null = null
     #selectedItem: HTMLAnchorElement | null = null
+    #tagsBase = this.dataset.tagsBase || '/tags/'
+    #tagNames: string[] = (() => {
+      try {
+        const raw = this.dataset.tagNames
+        if (!raw) return []
+        const parsed = JSON.parse(raw)
+        return Array.isArray(parsed)
+          ? parsed.filter((tag): tag is string => typeof tag === 'string')
+          : []
+      } catch {
+        return []
+      }
+    })()
 
     #filter = this.dataset.filter === 'true'
     #tabs: HTMLElement[] = []
@@ -339,6 +363,7 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
             if (type) options.filters = { collection: type }
           }
 
+          const tagCount = this.#renderTagMatches(value)
           this.#showLoading(requestId)
 
           // 保底：若 pagefind 还没就绪（例如面板刚打开就输入），先等它加载完。
@@ -351,9 +376,14 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
           if (res === null) return
           if (requestId !== this.#activeRequestId) return
 
-          // when no results
+          // when no article results: keep tag block if any, else empty feedback
           if (res.results.length === 0) {
-            this.#showOnlyNoResult(requestId)
+            if (tagCount === 0) this.#showOnlyNoResult(requestId)
+            else {
+              this.#showFeedback('')
+              this.#results?.removeAttribute('aria-busy')
+              this.#input?.setAttribute('aria-expanded', 'true')
+            }
             return
           }
 
@@ -364,22 +394,71 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
           this.#showOnlyError(requestId)
         }
       } else {
-        if (this.#content.innerHTML && value) return
-        if (!value) {
-          this.#content.innerHTML = ''
-          return
-        }
+        this.#resetView()
+        if (!value) return
+
+        this.#renderTagMatches(value)
         for (const result of fakeResults) {
-          this.#content.innerHTML += `
-            <a href="${this.#results?.dataset.base}" id="${this.#nextOptionId()}" class="search-result-item">
+          const a = document.createElement('a')
+          a.href = this.#results?.dataset.base || '/'
+          a.id = this.#nextOptionId()
+          a.className = 'search-result-item'
+          a.setAttribute('role', 'option')
+          a.setAttribute('tabindex', '-1')
+          a.setAttribute('aria-selected', 'false')
+          a.innerHTML = `
               <div class="search-result-title">${result.meta.title}</div>
-              <div class="search-result-excerpt">${result.excerpt}</div>
-            </a>`
+              <div class="search-result-excerpt">${result.excerpt}</div>`
+          this.#content.appendChild(a)
         }
-        this.#selectedItem = this.#content.querySelector('a')
-        this.#selectedItem?.setAttribute('aria-selected', 'true')
-        this.#syncActiveDescendant()
+        if (!this.#selectedItem) {
+          this.#selectedItem = this.#content.querySelector('a')
+          this.#selectedItem?.setAttribute('aria-selected', 'true')
+          this.#syncActiveDescendant()
+        }
+        this.#input?.setAttribute('aria-expanded', 'true')
       }
+    }
+
+    /** Renders matching tags at the top of #search-content; hides the block when empty. */
+    #renderTagMatches = (query: string) => {
+      if (!this.#content) return 0
+      const matched = filterTagsMatchingQuery(this.#tagNames, query)
+      if (matched.length === 0) return 0
+
+      const frag = document.createDocumentFragment()
+      const heading = document.createElement('div')
+      heading.className = 'search-result-h1'
+      heading.dataset.searchTagSection = 'heading'
+      heading.textContent = '标签'
+      frag.appendChild(heading)
+
+      const links = tagSelectionLinks(matched)
+      for (let i = 0; i < links.length; i++) {
+        const link = links[i]
+        const a = document.createElement('a')
+        a.href = `${this.#tagsBase}${link.query}`
+        a.className = 'search-result-item'
+        a.dataset.searchTagSection = 'item'
+        a.id = this.#nextOptionId()
+        a.setAttribute('role', 'option')
+        a.setAttribute('tabindex', '-1')
+        a.setAttribute('aria-selected', i === 0 && !this.#selectedItem ? 'true' : 'false')
+
+        const title = document.createElement('div')
+        title.className = 'search-result-title'
+        title.textContent = link.tag
+        a.appendChild(title)
+        frag.appendChild(a)
+
+        if (i === 0 && !this.#selectedItem) {
+          this.#selectedItem = a
+          this.#syncActiveDescendant()
+        }
+      }
+
+      this.#content.prepend(frag)
+      return matched.length
     }
 
     #handleResultClick = (event: MouseEvent) => {
@@ -455,12 +534,15 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
           ? this.#getNextItem(this.#selectedItem)
           : this.#getPrevItem(this.#selectedItem)
 
-      // when there's no next/prev item, loop around
+      // when there's no next/prev item, loop around the flat option list
       if (!target) {
-        target =
-          key === 'ArrowDown'
-            ? (this.#content?.querySelector('a') ?? null)
-            : (this.#content?.querySelector('a:last-child') ?? null)
+        const options = this.#content?.querySelectorAll('a.search-result-item')
+        if (options && options.length > 0) {
+          target =
+            key === 'ArrowDown'
+              ? (options[0] as HTMLAnchorElement)
+              : (options[options.length - 1] as HTMLAnchorElement)
+        }
       }
 
       if (target) {
@@ -568,10 +650,9 @@ const maxItems = parseTuple(maxItemsPerPage, 'maxItemsPerPage')
             a.setAttribute('role', 'option')
             a.setAttribute('tabindex', '-1')
 
-            if (r === 0 && s === 0) {
+            // Keep an already-selected tag as the first keyboard target.
+            if (!this.#selectedItem && r === 0 && s === 0) {
               a.setAttribute('aria-selected', 'true')
-              if (this.#selectedItem)
-                this.#selectedItem.setAttribute('aria-selected', 'false')
               this.#selectedItem = a
               this.#syncActiveDescendant()
             } else {
