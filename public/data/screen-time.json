@@ -1,6 +1,6 @@
 {
   "timeZone": "Asia/Shanghai",
-  "updatedAt": "2026-10-28T11:50:05.942Z",
+  "updatedAt": "2026-10-28T12:50:05.716Z",
   "days": [
     {
       "date": "2026-10-22",
@@ -127,23 +127,23 @@
     },
     {
       "date": "2026-10-28",
-      "seconds": 19340,
+      "seconds": 22563,
       "apps": [
         {
           "name": "Safari浏览器",
-          "seconds": 6252.279
+          "seconds": 7037.159
         },
         {
           "name": "Ghostty",
-          "seconds": 5191.421
+          "seconds": 5707.989
         },
         {
           "name": "ChatGPT",
-          "seconds": 1263.326
+          "seconds": 2582.782
         },
         {
           "name": "Typora",
-          "seconds": 912.523
+          "seconds": 1076.735
         },
         {
           "name": "Tangentry",
@@ -154,6 +154,10 @@
           "seconds": 596.352
         },
         {
+          "name": "访达",
+          "seconds": 576.517
+        },
+        {
           "name": "Zed",
           "seconds": 563.262
         },
@@ -162,28 +166,24 @@
           "seconds": 561.547
         },
         {
-          "name": "magpie",
-          "seconds": 495.916
+          "name": "ego lite",
+          "seconds": 508.259
         },
         {
-          "name": "访达",
-          "seconds": 477.141
+          "name": "magpie",
+          "seconds": 495.916
         },
         {
           "name": "Grok Bot",
           "seconds": 426.724
         },
         {
-          "name": "ego lite",
-          "seconds": 414.546
+          "name": "QQ音乐",
+          "seconds": 301.762
         },
         {
           "name": "夸克",
           "seconds": 249.242
-        },
-        {
-          "name": "QQ音乐",
-          "seconds": 234.148
         },
         {
           "name": "RepoMirror",
@@ -202,8 +202,20 @@
           "seconds": 90.373
         },
         {
+          "name": "totk-native",
+          "seconds": 67.498
+        },
+        {
+          "name": "QQ",
+          "seconds": 48.801
+        },
+        {
           "name": "Obsidian",
           "seconds": 44.289
+        },
+        {
+          "name": "游戏",
+          "seconds": 42.156
         },
         {
           "name": "百变小樱",
@@ -214,32 +226,32 @@
           "seconds": 38.092
         },
         {
-          "name": "SecurityAgent",
-          "seconds": 22.658
+          "name": "Deck",
+          "seconds": 30.827
         },
         {
-          "name": "Deck",
-          "seconds": 22.472
+          "name": "SecurityAgent",
+          "seconds": 22.658
         },
         {
           "name": "App Store",
           "seconds": 21.138
         },
         {
+          "name": "CoreServicesUIAgent",
+          "seconds": 16.863
+        },
+        {
           "name": "GameOverlayUI",
           "seconds": 13.564
         },
         {
+          "name": "UserNotificationCenter",
+          "seconds": 12.146
+        },
+        {
           "name": "小宇宙",
           "seconds": 9.58
-        },
-        {
-          "name": "CoreServicesUIAgent",
-          "seconds": 9.441
-        },
-        {
-          "name": "UserNotificationCenter",
-          "seconds": 9.232
         },
         {
           "name": "MyGo 云音乐",
