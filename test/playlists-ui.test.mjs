@@ -3,7 +3,6 @@ import test from 'node:test'
 import {
   parsePlaylistsPayload,
   playlistText,
-  sortPlaylistSongs,
 } from '../src/utils/playlists-ui.js'
 
 const songs = [
@@ -34,31 +33,6 @@ const payload = {
     },
   ],
 }
-
-test('sorts use stable secondary fields and never mutate source order', () => {
-  assert.deepEqual(sortPlaylistSongs(songs, 'title'), [
-    songs[2],
-    songs[3],
-    songs[1],
-    songs[0],
-  ])
-  assert.deepEqual(sortPlaylistSongs(songs, 'artist'), [
-    songs[2],
-    songs[3],
-    songs[0],
-    songs[1],
-  ])
-  assert.deepEqual(sortPlaylistSongs(songs, 'album'), [
-    songs[2],
-    songs[3],
-    songs[1],
-    songs[0],
-  ])
-  const original = sortPlaylistSongs(songs, 'original')
-  assert.deepEqual(original, songs)
-  assert.notEqual(original, songs)
-  assert.equal(songs[0].title, 'B')
-})
 
 test('exports exactly one plain-text line per track, including missing albums', () => {
   assert.equal(
@@ -97,4 +71,46 @@ test('validates the whole response and trusts only static cover/link metadata', 
     },
   ])
     assert.equal(parsePlaylistsPayload(invalid, config), null)
+})
+
+test('matches multiple playlists by id in config order and exports each original song order', () => {
+  const secondEntry = {
+    ...config[0],
+    id: 'qq-second',
+    sourceId: '456',
+    cover: '/base/playlists/second.jpg',
+    url: 'https://y.qq.com/n/ryqq/playlist/456',
+  }
+  const secondPlaylist = {
+    ...payload.playlists[0],
+    ...secondEntry,
+    title: '第二份歌单',
+    songs: [songs[1], songs[0]],
+    songCount: 2,
+  }
+  const multipleConfig = [...config, secondEntry]
+  const data = {
+    ...payload,
+    playlists: [secondPlaylist, payload.playlists[0]],
+  }
+  const parsed = parsePlaylistsPayload(data, multipleConfig)
+  assert.deepEqual(
+    parsed.playlists.map(({ id }) => id),
+    ['qq-test', 'qq-second']
+  )
+  assert.equal(
+    playlistText(parsed.playlists[0].songs),
+    'B - A - Z\nA - B - Z\nA - A - Y\nA - A - Y'
+  )
+  assert.equal(playlistText(parsed.playlists[1].songs), 'A - B - Z\nB - A - Z')
+  assert.equal(
+    parsePlaylistsPayload(
+      {
+        ...payload,
+        playlists: [payload.playlists[0], payload.playlists[0]],
+      },
+      multipleConfig
+    ),
+    null
+  )
 })
