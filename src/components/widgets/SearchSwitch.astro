@@ -154,14 +154,24 @@ const searchTagsBase = withBasePath('/tags/')
 <script>
   import { toggleFadeEffect } from '~/utils/misc'
 
+  /** Keep the dialog on document.body so its z-index is not trapped under header.nav-bar. */
+  const mountSearchPanel = () => {
+    const panel = document.getElementById('search-panel')
+    if (panel && panel.parentElement !== document.body) {
+      document.body.append(panel)
+    }
+  }
+
   /* Open the search panel when the search switch is clicked.
      Bind immediately: the first astro:page-load waits for window load. */
   const bindSearchOpen = () => {
+    mountSearchPanel()
     const searchSwitch = document.getElementById('search-switch')
     if (!searchSwitch || searchSwitch.dataset.searchBound) return
     searchSwitch.dataset.searchBound = 'true'
 
     const handleOpen = () => {
+      mountSearchPanel()
       toggleFadeEffect('backdrop', true, 'hidden')
       toggleFadeEffect('search-panel', true, 'hidden')
 

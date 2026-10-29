@@ -55,6 +55,8 @@ test('search filter keeps tags that contain the query and hides empty matches', 
   assert.deepEqual(filterTagsMatchingQuery(tags, ' agent '), ['Agent', 'agent-ops'])
   assert.deepEqual(filterTagsMatchingQuery(tags, 'ENGINE'), ['Context Engineering'])
   assert.deepEqual(filterTagsMatchingQuery(tags, '测'), ['测试'])
+  // Ablation: case-sensitive String.includes misses Latin casing on "Agent".
+  assert.equal('Agent'.includes('agent'), false)
 })
 
 test('search tag links reuse tagSelectionLinks / serializeBlogQuery shape', () => {
@@ -69,16 +71,4 @@ test('search tag links reuse tagSelectionLinks / serializeBlogQuery shape', () =
     )
     assert.equal(link.label, `#${link.tag}`)
   }
-})
-
-test('ablation: case-insensitive contains is required for Latin queries', () => {
-  const tags = ['Agent', 'RAG']
-  const matched = filterTagsMatchingQuery(tags, 'agent')
-  assert.deepEqual(matched, ['Agent'])
-  // Ablation: a case-sensitive includes would miss "Agent" for query "agent".
-  assert.equal(tags.some((tag) => tag.includes('agent')), false)
-  assert.ok(
-    matched.every((tag) => tag.toLocaleLowerCase().includes('agent')),
-    'matched tags must contain the lowercased needle'
-  )
 })
