@@ -4,6 +4,7 @@ import Link from '~/components/base/Link.astro'
 import TagLinks from '~/components/base/TagLinks.astro'
 import { withBasePath } from '~/utils/path'
 import { serializeBlogQuery, tagSelectionLinks } from '~/utils/blog-browser.js'
+import { formatPostListDate } from '~/utils/post-meta-date.js'
 import type { GroupedBlogItem } from '~/utils/data'
 interface Props {
   item: GroupedBlogItem
@@ -11,32 +12,49 @@ interface Props {
 }
 const {
   priority = false,
-  item: { id, data, minutesRead },
+  item: { id, data, minutesRead, wordCount },
 } = Astro.props
 const image = data.titleImage
 const alt = data.titleImageAlt
 const category = data.category
 const href = data.redirect || withBasePath(`/blogs/${id}/`)
+const pubDateIso = data.pubDate.toISOString()
+const pubDateLabel = formatPostListDate(data.pubDate)
+const showWordCount = wordCount > 0
+const showMinutesRead = minutesRead > 0
 ---
 
 <article class:list={['post-preview', { 'post-preview--with-image': !!image }]}>
   <div>
     <div class="post-preview__meta">
       <a
+        class="post-preview__category"
         data-blog-category={category}
         href={`${withBasePath('/blogs/')}${serializeBlogQuery({ category, tags: [], page: 1 })}`}
       >
         {category}
       </a>
-      <span aria-hidden="true">·</span>
-      <time datetime={data.pubDate.toISOString()}>
-        {data.pubDate.toISOString().slice(0, 10)}
-      </time>
-      {!!minutesRead && (
-        <>
-          <span aria-hidden="true">·</span>
-          <span>约 {minutesRead} 分钟</span>
-        </>
+      <span class="post-preview__stat">
+        <span
+          class="i-ri-calendar-line post-preview__icon"
+          aria-hidden="true"
+        />
+        <time datetime={pubDateIso}>{pubDateLabel}</time>
+      </span>
+      {showWordCount && (
+        <span class="post-preview__stat">
+          <span
+            class="i-ri-pen-nib-line post-preview__icon"
+            aria-hidden="true"
+          />
+          <span>{wordCount} 字</span>
+        </span>
+      )}
+      {showMinutesRead && (
+        <span class="post-preview__stat">
+          <span class="i-ri-timer-line post-preview__icon" aria-hidden="true" />
+          <span>{minutesRead} 分钟</span>
+        </span>
       )}
       {data.video && <span>视频</span>}
       {data.radio && <span>音频</span>}
@@ -91,15 +109,34 @@ const href = data.redirect || withBasePath(`/blogs/${id}/`)
   .post-preview__meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    align-items: center;
+    column-gap: 0.85rem;
+    row-gap: 0.3rem;
     font-size: 0.75rem;
     color: color-mix(in srgb, var(--c-text) 60%, transparent);
   }
-  .post-preview__meta time {
+  .post-preview a.post-preview__category {
     color: var(--accent);
+    text-decoration: none;
   }
-  .post-preview__meta span[aria-hidden='true'] {
-    color: var(--accent-soft);
+  .post-preview a.post-preview__category:is(:hover, :focus-visible) {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.16em;
+    text-decoration-color: var(--accent);
+  }
+  .post-preview__stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    min-width: 0;
+  }
+  .post-preview__icon {
+    flex: none;
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.12em;
   }
   .post-preview a {
     color: inherit;

@@ -47,3 +47,13 @@ export function formatPostMetaDate(d) {
   const { year, month, day } = getSiteCalendarParts(d)
   return `${year} 年 ${month} 月 ${day} 日`
 }
+
+/**
+ * Short list-card date: `YYYY-MM-DD` in Asia/Shanghai.
+ *
+ * @param {Date | string} d
+ */
+export function formatPostListDate(d) {
+  const { year, month, day } = getSiteCalendarParts(d)
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}

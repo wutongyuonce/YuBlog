@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import {
+  formatPostListDate,
   formatPostMetaDate,
   getSiteCalendarParts,
   sameSiteCalendarDate,
@@ -48,4 +49,10 @@ test('sameSiteCalendarDate ignores clock time on the same Shanghai day', () => {
 test('rejects invalid dates', () => {
   assert.throws(() => formatPostMetaDate('not-a-date'), /Invalid Date/)
   assert.throws(() => sameSiteCalendarDate('bad', '2026-01-01'), /Invalid Date/)
+})
+
+test('formats short list dates as YYYY-MM-DD in Asia/Shanghai', () => {
+  assert.equal(formatPostListDate('2026-06-21T00:00:00+08:00'), '2026-06-21')
+  assert.equal(formatPostListDate('2026-06-20T23:30:00Z'), '2026-06-21')
+  assert.equal(formatPostListDate('2026-12-01T12:00:00+08:00'), '2026-12-01')
 })

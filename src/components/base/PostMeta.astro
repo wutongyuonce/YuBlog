@@ -26,7 +26,8 @@ const lastModDateLabel =
   showLastModDate && lastModDate ? formatPostMetaDate(lastModDate) : ''
 const showWordCount = wordCount > 0
 const showMinutesRead = minutesRead > 0
-const showStatsRow = showWordCount || showMinutesRead || visibleTags.length > 0
+const showSecondRow =
+  showLastModDate || showWordCount || showMinutesRead || visibleTags.length > 0
 ---
 
 <div class:list={['post-meta', hasSubtitle && 'post-meta--with-subtitle']}>
@@ -36,16 +37,16 @@ const showStatsRow = showWordCount || showMinutesRead || visibleTags.length > 0
       发布于 <time datetime={pubDate}>{pubDateLabel}</time>
     </span>
   </div>
-  {showLastModDate && (
-    <div class="post-meta__row">
-      <span class="i-ri-history-fill post-meta__icon" aria-hidden="true" />
-      <span>
-        更新于 <time datetime={lastModDate}>{lastModDateLabel}</time>
-      </span>
-    </div>
-  )}
-  {showStatsRow && (
-    <div class="post-meta__row post-meta__row--stats">
+  {showSecondRow && (
+    <div class="post-meta__row post-meta__row--wrap">
+      {showLastModDate && (
+        <span class="post-meta__stat">
+          <span class="i-ri-history-fill post-meta__icon" aria-hidden="true" />
+          <span>
+            更新于 <time datetime={lastModDate}>{lastModDateLabel}</time>
+          </span>
+        </span>
+      )}
       {showWordCount && (
         <span class="post-meta__stat">
           <span
@@ -93,7 +94,7 @@ const showStatsRow = showWordCount || showMinutesRead || visibleTags.length > 0
     min-width: 0;
   }
 
-  .post-meta__row--stats {
+  .post-meta__row--wrap {
     flex-wrap: wrap;
     column-gap: 1rem;
     row-gap: 0.25rem;

@@ -77,6 +77,7 @@ export interface GroupedBlogItem {
   id: CollectionEntry<'blogs'>['id']
   data: CollectionEntry<'blogs'>['data']
   minutesRead: number
+  wordCount: number
 }
 
 export interface GroupedBlogYear {
@@ -105,6 +106,11 @@ export async function getBlogListItems(
       const { data, id } = item
       const { remarkPluginFrontmatter } = await render(item)
 
+      const wordCount =
+        typeof remarkPluginFrontmatter.wordCount === 'number'
+          ? remarkPluginFrontmatter.wordCount
+          : 0
+
       return {
         year: getYear(data.pubDate).toString(),
         id,
@@ -113,6 +119,7 @@ export async function getBlogListItems(
           data.minutesRead,
           remarkPluginFrontmatter.minutesRead
         ),
+        wordCount,
       }
     })
   )
