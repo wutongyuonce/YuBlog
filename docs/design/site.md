@@ -160,7 +160,7 @@
 
 长行内代码可断行，原生 `pre/code` 保留换行与缩进；宽块级公式在自身容器横滚，内容可访问，不带动页面横移。公式输入语法以 [publisher skill 的作者契约](../../blog-content-publisher-skill/SKILL.md#公式与代码标记) 为准。
 
-文章页（`RenderPost`／`StandardLayout` 的 `isArticle`）标题左上方有「← 返回文稿」链接，与标题左边界对齐，指向 `withBasePath('/blogs/')`；字号与文章正文一致（`.prose.post-content` 的 `1rem`），页顶为普通文字（静息无下划线，悬浮／聚焦按标题链接族改字色并加强调色下划线）；向下滚动时在顶栏下方左侧固定，并渐变为与手机浮动条同系的乳白半实雾面 pill，滚回顶部恢复文字。拾趣、关于等非文章页不渲染此链接。
+文章页（`RenderPost`／`StandardLayout` 的 `isArticle`）标题左上方有「← 返回文稿」链接，与标题左边界对齐，指向 `withBasePath('/blogs/')`；字号与文章正文一致（`.prose.post-content` 的 `1rem`），页顶为普通文字（静息无下划线，悬浮／聚焦按标题链接族改字色并加强调色下划线）；向下滚动时固定为与手机浮动条同系的乳白半实雾面 pill，`top` 随顶栏 `[data-site-header]` 显隐零延迟同动（可见时贴顶栏下方，顶栏收起时同步上移至近屏顶，再出现时同步下移），滚回顶部恢复文字。拾趣、关于等非文章页不渲染此链接。
 
 文章始终保留一个独立宋体 h1。其下元信息由 `PostMeta` 独占，左对齐，使用思源宋体加粗（`--font-heading`／`font-weight: 700`；字体资源仅 400 字重，700 由浏览器合成）：
 
