@@ -160,7 +160,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 
 KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；版本与公式渲染依赖一致，浏览器按实际页面内容加载所需字体。
 
-静态防撑宽职责：`main.css` 维护 `html` 横向 `overflow-x: clip` 兜底与宽度变量；纵向滚动及 `scrollbar-gutter: stable` 留白统一归页面根节点，`body` 不另建滚动容器，使固定顶栏、正文与页脚共享居中基准。`prose.css` 维护正文限宽；`markdown.css` 维护行内 code 断行与块级公式局部横滚。弹层临时锁滚动仍由 `misc.lockScroll()` 维护：锁定根节点，已有稳定留白时不再补偿；释放只恢复同页的根节点和原 body 留白。版心与手机页脚四行居中由 `scripts/verify-shell-alignment.mjs` 浏览器验收。
+静态防撑宽职责：`main.css` 维护 `html` 横向 `overflow-x: clip` 兜底与宽度变量；纵向滚动及 `scrollbar-gutter: stable` 留白统一归页面根节点，`body` 不另建滚动容器，使固定顶栏、正文与页脚共享居中基准。`prose.css` 维护正文限宽，并对普通长无空格 token 使用 `overflow-wrap: anywhere`（含 `min-width: 0`）断行；`markdown.css` 维护行内 code 断行与块级公式／宽表局部横滚。弹层临时锁滚动仍由 `misc.lockScroll()` 维护：锁定根节点，已有稳定留白时不再补偿；释放只恢复同页的根节点和原 body 留白。版心与手机页脚四行居中由 `scripts/verify-shell-alignment.mjs` 浏览器验收。
 
 `--font-heading`（本地思源宋体 400 字重）用于页面大标题、文章顶部标题、作者名、写作热力与近期笔墨；文稿列表与归档文章标题使用同一宋体，字重分别为 700 与 400，分别由 `ListItem.astro` 的 `.post-preview h2` 和 `shell.css` 的 `.archive-post__title` 维护；标签筛选结果复用 `ListItem`。字体资源提供 400 字重，700 由浏览器合成加粗。Markdown 内部 h1–h6、正文和标签使用 Inter／系统无衬线字体。顶栏及下拉菜单文字使用宋体；品牌为「梧桐雨の博客」，使用桌面 16px、601–799px 为 14.72px、600px 及以下为 14.4px 思源宋体，行高 1；归档年份与日期也使用思源宋体。`PageHeading` 是标签、拾趣（含子页）、项目、关于的共享页头：标题 28px 宋体 400 字重，说明 14px 普通字体；友链分组标题为 24px 宋体。
 
