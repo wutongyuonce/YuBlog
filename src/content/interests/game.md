@@ -11,7 +11,7 @@ order: 5
 :::card{title="影之刃零" href="https://zh.wikipedia.org/wiki/影之刃零" label="游戏"}
 ![影之刃零海报](./game/shadowblade.jpg)
 
-摩拳擦掌 ing。
+又是类魂～
 :::
 
 :::card{title="星露谷物语" href="https://zh.wikipedia.org/wiki/星露谷物语" label="游戏"}

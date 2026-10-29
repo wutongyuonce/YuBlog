@@ -1,4 +1,4 @@
-:::card{layout="portrait" title="影之刃零" href="https://zh.wikipedia.org/wiki/影之刃零" meta="摩拳擦掌 ing。"}
+:::card{layout="portrait" title="影之刃零" href="https://zh.wikipedia.org/wiki/影之刃零" meta="又是类魂～"}
 ![影之刃零海报](./game/shadowblade.jpg)
 :::
 
