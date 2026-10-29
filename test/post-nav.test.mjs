@@ -111,3 +111,16 @@ test('assignRandomBrowseLinks rewrites href from data-candidates', () => {
     delete globalThis.HTMLAnchorElement
   }
 })
+
+import { toAbsoluteUrl } from '../src/utils/site-url.ts'
+
+test('toAbsoluteUrl joins website and base-aware path', () => {
+  assert.equal(
+    toAbsoluteUrl('https://www.wutongyu.site/', '/blogs/hello/'),
+    'https://www.wutongyu.site/blogs/hello/'
+  )
+  assert.equal(
+    toAbsoluteUrl('https://www.wutongyu.site/', '/blogs/中文/'),
+    'https://www.wutongyu.site/blogs/%E4%B8%AD%E6%96%87/'
+  )
+})

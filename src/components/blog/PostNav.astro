@@ -1,5 +1,4 @@
 ---
-import RandomBrowse from './RandomBrowse.astro'
 import { getFilteredPosts, getSortedPosts } from '~/utils/data'
 import { getPostNeighbors, type PostNavItem } from '~/utils/post-nav'
 import { withBasePath } from '~/utils/path'
@@ -17,29 +16,24 @@ const items: PostNavItem[] = posts.map((post) => ({
   href: post.data.redirect || withBasePath(`/blogs/${post.id}/`),
 }))
 const { prev, next } = getPostNeighbors(items, currentId)
-const showNav = Boolean(prev || next || items.length > 1)
+const showNav = Boolean(prev || next)
 ---
 
 {showNav && (
-  <nav class="post-nav prose mx-auto" aria-label="文章导航">
+  <nav class="post-nav" aria-label="文章导航">
     <div class="post-nav__row">
       {prev ? (
-        <a class="post-nav__link" href={prev.href} title={prev.title}>
-          <span class="post-nav__icon" aria-hidden="true">
-            ←
-          </span>
-          上一篇
+        <a class="post-nav__link post-nav__link--prev" href={prev.href}>
+          <span class="post-nav__label">← 上一篇</span>
+          <span class="post-nav__title">{prev.title}</span>
         </a>
       ) : (
         <span class="post-nav__spacer" aria-hidden="true" />
       )}
-      <RandomBrowse candidates={items} excludeId={currentId} landmark={false} />
       {next ? (
-        <a class="post-nav__link" href={next.href} title={next.title}>
-          下一篇
-          <span class="post-nav__icon" aria-hidden="true">
-            →
-          </span>
+        <a class="post-nav__link post-nav__link--next" href={next.href}>
+          <span class="post-nav__label">下一篇 →</span>
+          <span class="post-nav__title">{next.title}</span>
         </a>
       ) : (
         <span class="post-nav__spacer" aria-hidden="true" />
@@ -50,48 +44,67 @@ const showNav = Boolean(prev || next || items.length > 1)
 
 <style>
   .post-nav {
-    margin-top: 1.75rem;
+    width: 100%;
+    max-width: var(--blog-prose-width);
+    margin-inline: auto;
+    margin-top: 1.35rem;
     margin-bottom: 0.25rem;
   }
 
   .post-nav__row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    align-items: baseline;
-    gap: 0.75rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
   }
 
-  .post-nav__row > :first-child {
-    justify-self: start;
-  }
-
-  .post-nav__row > :last-child {
-    justify-self: end;
-  }
-
-  /* 正文族：docs/design/site.md#visuals */
+  /* 容器控件：底色 + 标题变色；见 docs/design/site.md#visuals */
   .post-nav__link {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 0.4em;
-    width: fit-content;
-    max-width: 100%;
-    color: var(--fg-deeper, var(--c-text));
-    font-size: 0.9375rem;
-    line-height: 1.5;
-    font-weight: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+    padding: 0.7rem 0.8rem;
+    border-radius: 0.7rem;
+    color: inherit;
     text-decoration: none;
-    border-bottom: 1px solid var(--link-underline);
-    transition: border-bottom-color 0.3s ease-in-out;
+    border-bottom: none;
+    transition: background-color 0.2s ease;
+  }
+
+  .post-nav__link--prev {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .post-nav__link--next {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .post-nav__label {
+    color: color-mix(in srgb, var(--c-text) 48%, transparent);
+    font-size: 0.75rem;
+    line-height: 1.35;
+    font-weight: 400;
+  }
+
+  .post-nav__title {
+    color: var(--c-text);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    transition: color 0.2s ease;
   }
 
   .post-nav__link:hover,
   .post-nav__link:focus-visible {
-    border-bottom-color: var(--accent);
+    background: color-mix(in srgb, var(--c-text) 6%, var(--c-bg));
   }
 
-  .post-nav__icon {
-    color: color-mix(in srgb, var(--c-text) 48%, transparent);
+  .post-nav__link:hover .post-nav__title,
+  .post-nav__link:focus-visible .post-nav__title {
+    color: var(--accent);
   }
 
   .post-nav__spacer {
@@ -100,17 +113,21 @@ const showNav = Boolean(prev || next || items.length > 1)
 
   @media (max-width: 480px) {
     .post-nav__row {
-      gap: 0.45rem;
+      gap: 0.4rem;
     }
 
-    .post-nav__link,
-    .post-nav :global(.random-browse__link) {
+    .post-nav__link {
+      padding: 0.6rem 0.55rem;
+    }
+
+    .post-nav__title {
       font-size: 0.875rem;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .post-nav__link {
+    .post-nav__link,
+    .post-nav__title {
       transition: none;
     }
   }

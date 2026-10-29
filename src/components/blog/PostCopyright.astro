@@ -1,0 +1,210 @@
+---
+import { AUTHOR_DISPLAY_NAME, CONTENT_LICENSE, SITE } from '~/config'
+import { formatChineseDate } from '~/utils/datetime'
+import { withBasePath } from '~/utils/path'
+import { toAbsoluteUrl } from '~/utils/site-url'
+
+interface Props {
+  title: string
+  postId: string
+  pubDate: Date
+}
+
+const { title, postId, pubDate } = Astro.props
+const postPath = withBasePath(`/blogs/${postId}/`)
+const absoluteUrl = toAbsoluteUrl(SITE.website, postPath)
+const publishedLabel = formatChineseDate(pubDate)
+---
+
+<aside class="post-copyright" aria-label="文章版权信息">
+  <div class="post-copyright__card">
+    <svg
+      class="post-copyright__watermark"
+      viewBox="0 0 120 120"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <circle
+        cx="60"
+        cy="60"
+        r="52"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="6"
+      ></circle>
+      <text
+        x="60"
+        y="72"
+        text-anchor="middle"
+        font-size="48"
+        font-weight="700"
+        font-family="Inter, system-ui, sans-serif"
+        fill="currentColor"
+      >
+        CC
+      </text>
+    </svg>
+
+    <p class="post-copyright__title">{title}</p>
+    <a class="post-copyright__url" href={absoluteUrl}>
+      {absoluteUrl}
+    </a>
+
+    <dl class="post-copyright__meta">
+      <div class="post-copyright__meta-item">
+        <dt>作者</dt>
+        <dd>{AUTHOR_DISPLAY_NAME}</dd>
+      </div>
+      <div class="post-copyright__meta-item">
+        <dt>发布时间</dt>
+        <dd>
+          <time datetime={pubDate.toISOString()}>{publishedLabel}</time>
+        </dd>
+      </div>
+      <div class="post-copyright__meta-item">
+        <dt>许可协议</dt>
+        <dd>
+          <a
+            class="post-copyright__license"
+            href={CONTENT_LICENSE.href}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {CONTENT_LICENSE.label}
+          </a>
+        </dd>
+      </div>
+    </dl>
+  </div>
+</aside>
+
+<style>
+  .post-copyright {
+    width: 100%;
+    max-width: var(--blog-prose-width);
+    margin-inline: auto;
+    margin-top: 2rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .post-copyright__card {
+    --post-copyright-bg: color-mix(in srgb, var(--c-text) 5.5%, var(--c-bg));
+    --post-copyright-muted: color-mix(in srgb, var(--c-text) 52%, transparent);
+    --post-copyright-url: color-mix(in srgb, var(--c-text) 58%, transparent);
+    --post-copyright-watermark: color-mix(
+      in srgb,
+      var(--c-text) 8%,
+      transparent
+    );
+
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: 0.85rem;
+    padding: 1.15rem 1.2rem 1.05rem;
+    background: var(--post-copyright-bg);
+  }
+
+  .post-copyright__watermark {
+    position: absolute;
+    z-index: 0;
+    inset: 50% auto auto 50%;
+    width: min(9.5rem, 42%);
+    height: auto;
+    transform: translate(-50%, -50%);
+    color: var(--post-copyright-watermark);
+    pointer-events: none;
+  }
+
+  .post-copyright__title,
+  .post-copyright__url,
+  .post-copyright__meta {
+    position: relative;
+    z-index: 1;
+  }
+
+  .post-copyright__title {
+    margin: 0;
+    color: var(--c-text);
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.45;
+  }
+
+  .post-copyright__url {
+    display: inline-block;
+    margin-top: 0.45rem;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    color: var(--post-copyright-url);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    text-decoration: none;
+    border-bottom: none;
+    word-break: break-all;
+  }
+
+  .post-copyright__url:hover,
+  .post-copyright__url:focus-visible {
+    color: var(--accent);
+  }
+
+  .post-copyright__meta {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem 1rem;
+    margin: 1.15rem 0 0;
+  }
+
+  .post-copyright__meta-item {
+    min-width: 0;
+  }
+
+  .post-copyright__meta dt {
+    margin: 0;
+    color: var(--post-copyright-muted);
+    font-size: 0.75rem;
+    line-height: 1.4;
+    font-weight: 400;
+  }
+
+  .post-copyright__meta dd {
+    margin: 0.28rem 0 0;
+    color: var(--c-text);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+
+  .post-copyright__license {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: none;
+  }
+
+  .post-copyright__license:hover,
+  .post-copyright__license:focus-visible {
+    color: var(--accent);
+  }
+
+  @media (max-width: 540px) {
+    .post-copyright__meta {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.85rem 0.9rem;
+    }
+
+    .post-copyright__meta-item:last-child {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .post-copyright__meta {
+      grid-template-columns: 1fr;
+    }
+
+    .post-copyright__meta-item:last-child {
+      grid-column: auto;
+    }
+  }
+</style>
