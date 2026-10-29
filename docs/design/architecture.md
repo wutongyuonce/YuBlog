@@ -75,7 +75,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 已发布文章列表、排序、按年分组 | `src/utils/data.ts` | 在视图里 `getCollection` 再 filter 一遍 |
 | 原值分类的动态入口、URL 的分类 hash／兼容 query、精确筛选、标签、页码 | `src/utils/blog-browser.js` | 写固定分类允许表、合并别名或在 `ListView` 里手写 `URLSearchParams` |
 | 单标签选中链接 | `src/utils/blog-browser.js` 的 `tagSelectionLinks`；`TagLinks` 只呈现 | 用 ` / ` 拼接标签，或在文章元信息、归档、列表卡片里手写 `?tag=` |
-| 文章头返回文稿与元信息排版 | `StandardLayout`（仅 `isArticle`）输出「← 返回文稿」（字号对齐正文 `1rem`）；`PostMeta` 独占两行：发布于；更新于（条件）与字数／时长／各 `#标签` 为同一 flex-wrap 行的子项（`display: contents` 展开 TagLinks）；日期文案由 `post-meta-date.js`（上海时区）格式化；字数由 remark `wordCount` 经 `RenderPost` 传入 | 在拾趣／关于复用返回链；再引入 `postMetaStyle`；把全部标签包成单个 flex item；在视图里手写日期空格规则 |
+| 文章头返回文稿与元信息排版 | `StandardLayout`（仅 `isArticle`）输出「← 返回文稿」（字号对齐正文 `1rem`；页顶普通文字，下滚固定并渐变为与手机浮动条同系雾面 pill）；`PostMeta` 独占两行：发布于；更新于（条件）与字数／时长／标签组为同一 flex-wrap 行且组间距一致、标签组内更紧；日期文案由 `post-meta-date.js`（上海时区）格式化；字数由 remark `wordCount` 经 `RenderPost` 传入 | 在拾趣／关于复用返回链；再引入 `postMetaStyle`；在视图里手写日期空格规则；另起模块管返回链滚动态 |
 | 文稿列表卡片顶部元信息 | `ListItem`；分类强调色；日历／钢笔／计时图标 + 短日期／字数／分钟；`wordCount`／`minutesRead` 由 `getBlogListItems` 提供 | 点号拼接分类·日期·阅读；列表另算字数或漏改标签筛选复用入口 |
 | 归档分类配色领取、唯一性、持久化与容量失败 | `src/utils/blog-category-colors.js`；预设及记录在 `src/data/blog-category-colors.json` | 在视图中推断颜色、循环复用或按分类顺序重排已有分配 |
 | 首页各板块标题、名片与居中布局样式 | `public/shell.css` | 通过 JS 重复测量或复制卡片模板 |
@@ -224,7 +224,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 `FEATURES.toc` 决定开不开、标题层级、左右。
 `RenderPost`、`InterestsView` 和 `AboutView` 把 Markdown 渲染返回的 `headings` 交给共享 `Toc`；文章另传 `frontmatter.toc` 作为单篇开关。`Toc` 统一根据全局功能开关、页面开关与标题级别调用 `generateToc` 一次，`generateToc` 拥有级别过滤与父子树生成，结果非空时 `Toc` 才挂载目录；桌面和移动端只呈现同一棵树。正文级别与页面顶部标题的行为约定见 [文章与目录](./site.md#article)。`TocSidebar` 负责高度（不超过 `min(50vh, 28rem)`）和内部滚动。
-`DesktopAside` 在 1200px 及以上始终显示目录，无顶部开关；宽度为侧边留白减 48px 与 208px 中的较小值，靠正文一侧至少留 40px、外侧至少留 8px（另有视口外边距）；在正文边缘与视口外边距之间的留白中线基础上向外移 16px，中心比视口中线高 32px。更窄视口继续使用 `MobileTocControl` 浮动入口，展开时通知共享目录逻辑将当前项滚入可视范围。
+`DesktopAside` 在 1200px 及以上始终显示目录，无顶部开关；宽度为侧边留白减 48px 与 208px 中的较小值，靠正文一侧至少留 40px、外侧至少留 8px（另有视口外边距）；在正文边缘与视口外边距之间的留白中线基础上向外移 16px，中心比视口中线高 32px。更窄视口由 `MobileTocControl` 拥有右下角雾玻璃浮动条（收起为细线 `…`，展开含细线箭头＋仅已读进度弧回顶、list＋点目录、跳底、收起；无返回）；打开目录时仍通知共享逻辑将当前项滚入可视范围。挂载时该控件在同断点隐藏全局 `ToTopButton`，回顶／进度／跳底不另起模块。
 
 当前章节由 `src/utils/toc-active.js` 的 `pickActiveHeadingIndex()` 决定：激活线取标题的 `scrollMarginTop`，到页面底部时最后一个标题胜出。`Toc` 唯一维护 `--post-anchor-offset`：导航隐藏时 20px，显示时为导航顶部位置加实际高度再加 12px。`nav-scroll.js` 唯一保存累计滚动状态，`NavBar` 用 `updateNavVisibility()` 更新它；点击前 `Toc` 用 `predictNavVisibility()` 从同一状态预测导航显隐，不消耗累计距离，原生锚点直接消费对应距离；滚动、导航显隐、缩放和字体加载后重新核对同一基准。保留正常 fragment 与历史记录行为，不补播第二次滚动。正文标题仅使用透明度入场，锚点位置不随入场动画变化；无脚本时保留导航可见所需的静态距离。
 
@@ -377,7 +377,7 @@ Pagefind **按需加载**：面板打开时调 `window.ensurePagefind()`（打�
 
 ### 文章 `/blogs/[slug]/`
 
-`RenderPost` + 常驻右侧 TOC。最大高度 `min(50vh, 28rem)`，水平位置在侧边留白中线基础上向外移 16px、中心比视口中线高 32px，超出内部滚动；窄屏使用浮动目录按钮。文章主标题独立渲染，封面作者头像 40px。
+`RenderPost` + 常驻右侧 TOC。最大高度 `min(50vh, 28rem)`，水平位置在侧边留白中线基础上向外移 16px、中心比视口中线高 32px，超出内部滚动；窄屏使用 `MobileTocControl` 雾玻璃浮动控件。文章主标题独立渲染，封面作者头像 40px。
 
 页脚由 `Footer.astro` 用宋体显示版权、Astro 与“萌ICP备20269668号”；启用 Oneko 时另有「隐藏小猫」按钮（左侧装饰性 `🐾`）。宽屏段间用次要字色 `·` 分隔，窄屏纵向堆叠并隐藏分隔符。作者名、Astro 和备案都是链接：作者名指向站点首页，Astro 指向 `https://astro.build`，备案指向 `https://icp.gov.moe/?keyword=20269668` 并在新标签页打开；链接反馈见 [视觉不变量](./site.md#visuals)。窄屏纵向排列，备案入口不隐藏。
 

@@ -36,9 +36,12 @@ const blogsHref = withBasePath('/blogs/')
   ]}
 >
   {isArticle && (
-    <a class="post-back-link" href={blogsHref}>
-      ← 返回文稿
-    </a>
+    <post-back-link class="post-back-link-host">
+      <span class="post-back-link__spacer" hidden></span>
+      <a class="post-back-link" href={blogsHref}>
+        ← 返回文稿
+      </a>
+    </post-back-link>
   )}
   {title && <h1 class="page-title">{title}</h1>}
   {subtitle && !hasHeroImage && (
@@ -73,10 +76,30 @@ const blogsHref = withBasePath('/blogs/')
     margin-bottom: 1.75rem;
   }
 
+  .post-back-link-host {
+    display: block;
+    margin: 0 0 0.85rem;
+  }
+
+  .post-back-link__spacer {
+    display: block;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .post-back-link__spacer[hidden] {
+    display: none;
+  }
+
   .post-back-link,
   :global(.prose) .post-back-link {
+    /* Glass strength 0→1 while scrolling; ::before paints FAB-matched milk pill
+       without changing in-flow text metrics. */
+    --post-back-glass: 0;
+    position: relative;
     display: inline-block;
-    margin: 0 0 0.85rem;
+    margin: 0;
+    padding: 0.2rem 0.15rem;
     color: inherit;
     font-family: inherit;
     /* Same root-relative 1rem as .prose.post-content paragraphs (not
@@ -88,9 +111,48 @@ const blogsHref = withBasePath('/blogs/')
     border-bottom: 0;
     text-decoration: none;
     text-underline-offset: 0.18em;
+    isolation: isolate;
+    z-index: 150;
     transition:
       color 160ms ease,
       text-decoration-color 160ms ease;
+  }
+
+  .post-back-link::before {
+    content: '';
+    position: absolute;
+    /* Match MobileTocControl FAB milk glass (rgba 0.9 / blur 14 / soft shadow). */
+    inset: calc(-0.2rem - 0.15rem * var(--post-back-glass))
+      calc(-0.35rem - 0.55rem * var(--post-back-glass));
+    z-index: -1;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, calc(0.9 * var(--post-back-glass)));
+    box-shadow: 0 2px 10px rgba(0, 0, 0, calc(0.07 * var(--post-back-glass)));
+    backdrop-filter: blur(calc(14px * var(--post-back-glass)))
+      saturate(calc(1 + 0.15 * var(--post-back-glass)));
+    -webkit-backdrop-filter: blur(calc(14px * var(--post-back-glass)))
+      saturate(calc(1 + 0.15 * var(--post-back-glass)));
+    opacity: 1;
+    pointer-events: none;
+    transition: none;
+  }
+
+  :global(.dark) .post-back-link::before {
+    background: rgba(28, 28, 28, calc(0.88 * var(--post-back-glass)));
+    box-shadow: 0 2px 12px rgba(0, 0, 0, calc(0.34 * var(--post-back-glass)));
+  }
+
+  .post-back-link.is-pinned {
+    position: fixed;
+    top: var(--post-back-top, 4.5rem);
+    left: var(--post-back-left, 1.25rem);
+    margin: 0;
+    /* Slightly roomier hit target once pinned as a pill. */
+    padding: 0.35rem 0.85rem;
+  }
+
+  .post-back-link.is-pinned::before {
+    inset: 0;
   }
 
   .post-back-link:is(:hover, :focus-visible),
@@ -101,7 +163,134 @@ const blogsHref = withBasePath('/blogs/')
     text-decoration-thickness: 1px;
     text-decoration-color: var(--accent);
   }
+
+  .post-back-link.is-pinned:is(:hover, :focus-visible) {
+    /* Pill already frames the label; underline reads busy on glass. */
+    text-decoration: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .post-back-link::before {
+      transition: none;
+    }
+  }
 </style>
+
+<script>
+  class PostBackLink extends HTMLElement {
+    #link: HTMLAnchorElement | null = null
+    #spacer: HTMLElement | null = null
+    #pinned = false
+    #left = 0
+    #frame = 0
+    #reduceMotion = false
+    #mq: MediaQueryList | null = null
+
+    #onScroll = () => {
+      if (this.#frame) return
+      this.#frame = requestAnimationFrame(() => {
+        this.#frame = 0
+        this.#update()
+      })
+    }
+
+    #onResize = () => {
+      this.#update(true)
+    }
+
+    #onMotion = () => {
+      this.#reduceMotion = !!this.#mq?.matches
+      this.#update(true)
+    }
+
+    connectedCallback() {
+      this.#link = this.querySelector('.post-back-link')
+      this.#spacer = this.querySelector('.post-back-link__spacer')
+      if (!this.#link || !this.#spacer) return
+
+      this.#mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+      this.#reduceMotion = this.#mq.matches
+      this.#mq.addEventListener('change', this.#onMotion)
+
+      window.addEventListener('scroll', this.#onScroll, { passive: true })
+      window.addEventListener('resize', this.#onResize)
+      this.#update(true)
+    }
+
+    disconnectedCallback() {
+      window.removeEventListener('scroll', this.#onScroll)
+      window.removeEventListener('resize', this.#onResize)
+      this.#mq?.removeEventListener('change', this.#onMotion)
+      if (this.#frame) cancelAnimationFrame(this.#frame)
+      this.#frame = 0
+    }
+
+    #fixedTop() {
+      // Resting nav: top 18px + ~52px chrome. Keep one screen position even when
+      // the nav auto-hides on scroll (matches "始终同一位置").
+      return 72
+    }
+
+    #update = (remeasure = false) => {
+      const link = this.#link
+      const spacer = this.#spacer
+      if (!link || !spacer) return
+
+      const fixedTop = this.#fixedTop()
+      const naturalTop = this.#pinned
+        ? spacer.getBoundingClientRect().top
+        : link.getBoundingClientRect().top
+
+      // Glass fades in over the last 56px before the pin line; pin only when the
+      // in-flow slot would cross that line (no jump).
+      const morph = 56
+      let glass = (fixedTop + morph - naturalTop) / morph
+      glass = Math.min(1, Math.max(0, glass))
+      if (this.#reduceMotion) glass = glass >= 0.5 ? 1 : 0
+
+      const shouldPin = naturalTop <= fixedTop
+
+      if (shouldPin && !this.#pinned) {
+        const rect = link.getBoundingClientRect()
+        this.#left = rect.left
+        spacer.style.width = `${Math.ceil(rect.width)}px`
+        spacer.style.height = `${Math.ceil(rect.height)}px`
+        spacer.hidden = false
+        link.classList.add('is-pinned')
+        this.#pinned = true
+      } else if (!shouldPin && this.#pinned) {
+        link.classList.remove('is-pinned')
+        spacer.hidden = true
+        spacer.style.width = ''
+        spacer.style.height = ''
+        this.#pinned = false
+      } else if (this.#pinned && remeasure) {
+        link.classList.remove('is-pinned')
+        const rect = link.getBoundingClientRect()
+        this.#left = rect.left
+        spacer.style.width = `${Math.ceil(rect.width)}px`
+        spacer.style.height = `${Math.ceil(rect.height)}px`
+        link.classList.add('is-pinned')
+      }
+
+      link.style.setProperty('--post-back-glass', String(glass))
+      if (this.#pinned) {
+        link.style.setProperty('--post-back-top', `${fixedTop}px`)
+        link.style.setProperty(
+          '--post-back-left',
+          `${Math.max(12, this.#left)}px`
+        )
+      } else {
+        link.style.removeProperty('--post-back-top')
+        link.style.removeProperty('--post-back-left')
+      }
+    }
+  }
+
+  if (!customElements.get('post-back-link')) {
+    customElements.define('post-back-link', PostBackLink)
+  }
+</script>
 
 <style is:inline>
   .prose.post-header .post-meta {

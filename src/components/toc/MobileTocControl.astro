@@ -13,14 +13,75 @@ const { headings } = Astro.props
   <mobile-toc-control class="mobile-toc-control print:hidden">
     <button
       type="button"
-      class="mobile-toc-control__toggle"
+      class="mobile-toc-control__fab"
       aria-expanded="false"
-      aria-controls="mobile-toc-panel"
-      aria-label="Toggle table of contents"
-      title="Table of contents"
+      aria-controls="mobile-toc-rail"
+      aria-label="Open reading controls"
+      title="Reading controls"
     >
-      <span u-i-ri-menu-line></span>
+      <span u-i-ri-more-line aria-hidden="true"></span>
     </button>
+
+    <div
+      id="mobile-toc-rail"
+      class="mobile-toc-control__rail"
+      role="toolbar"
+      aria-label="Reading controls"
+      hidden
+    >
+      <button
+        type="button"
+        class="mobile-toc-control__action mobile-toc-control__top"
+        aria-label="Scroll to top"
+        title="Scroll to top"
+      >
+        <svg
+          class="mobile-toc-control__ring"
+          viewBox="0 0 36 36"
+          aria-hidden="true"
+        >
+          <!-- Progress arc only — no full track circle. -->
+          <circle
+            class="mobile-toc-control__ring-value"
+            cx="18"
+            cy="18"
+            r="15"
+            fill="none"
+            pathLength="100"
+          ></circle>
+        </svg>
+        <span u-i-ri-arrow-up-s-line aria-hidden="true"></span>
+      </button>
+
+      <button
+        type="button"
+        class="mobile-toc-control__action mobile-toc-control__toggle"
+        aria-expanded="false"
+        aria-controls="mobile-toc-panel"
+        aria-label="Toggle table of contents"
+        title="Table of contents"
+      >
+        <span u-i-ri-list-unordered aria-hidden="true"></span>
+      </button>
+
+      <button
+        type="button"
+        class="mobile-toc-control__action mobile-toc-control__bottom"
+        aria-label="Scroll to bottom"
+        title="Scroll to bottom"
+      >
+        <span u-i-ri-arrow-down-s-line aria-hidden="true"></span>
+      </button>
+
+      <button
+        type="button"
+        class="mobile-toc-control__action mobile-toc-control__close"
+        aria-label="Collapse reading controls"
+        title="Collapse"
+      >
+        <span u-i-ri-close-line aria-hidden="true"></span>
+      </button>
+    </div>
 
     <nav
       id="mobile-toc-panel"
@@ -47,50 +108,175 @@ const { headings } = Astro.props
     .mobile-toc-control {
       display: contents;
     }
+
+    /* Replace the global to-top FAB while this control owns the corner. */
+    :global(body:has(mobile-toc-control) #to-top-button) {
+      display: none !important;
+    }
   }
 
-  .mobile-toc-control__toggle {
+  /*
+   * Capsule: fixed width, border-radius = width/2 → true semicircle end caps.
+   * Avoid strong Y-offset shadows (they flatten the top / fatten the bottom).
+   */
+  .mobile-toc-control__fab,
+  .mobile-toc-control__rail {
+    --mobile-toc-size: 2.75rem;
+    box-sizing: border-box;
     position: fixed;
     right: 1.25rem;
-    bottom: 4.75rem;
-    z-index: 201;
+    bottom: 1.5rem;
+    z-index: 210;
+    width: var(--mobile-toc-size);
+    border: 0;
+    border-radius: calc(var(--mobile-toc-size) / 2);
+    color: var(--c-text);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+    backdrop-filter: blur(14px) saturate(1.15);
+    -webkit-backdrop-filter: blur(14px) saturate(1.15);
+  }
+
+  :global(.dark) .mobile-toc-control__fab,
+  :global(.dark) .mobile-toc-control__rail {
+    background: rgba(28, 28, 28, 0.88);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.34);
+  }
+
+  .mobile-toc-control__fab {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
+    height: var(--mobile-toc-size);
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .mobile-toc-control__fab[hidden] {
+    display: none;
+  }
+
+  .mobile-toc-control__rail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    /* Symmetric pad: (rail width − action) / 2 so icons sit on center axis. */
+    padding: 0.25rem;
+  }
+
+  .mobile-toc-control__rail[hidden] {
+    display: none;
+  }
+
+  .mobile-toc-control__action {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin: 0;
     padding: 0;
     border: 0;
-    border-radius: 9999px;
-    background: rgba(136, 136, 136, 0.2);
-    color: var(--c-text);
-    opacity: 0.55;
-    backdrop-filter: blur(10px);
-    transition:
-      opacity 0.2s ease,
-      background-color 0.2s ease;
+    border-radius: 50%;
+    background: transparent;
+    box-shadow: none;
+    filter: none;
+    color: inherit;
+    cursor: pointer;
+    opacity: 0.88;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.15s ease;
   }
 
-  :global(.dark) .mobile-toc-control__toggle {
-    background: rgba(136, 136, 136, 0.38);
-  }
-
-  .mobile-toc-control__toggle:hover,
+  /* No circular hover plate / focus ring — reads as a misaligned shadow on ✕. */
+  .mobile-toc-control__action:hover,
+  .mobile-toc-control__action:active,
+  .mobile-toc-control__action:focus,
+  .mobile-toc-control__action:focus-visible,
   .mobile-toc-control__toggle[aria-expanded='true'] {
-    opacity: 0.92;
-    background: rgba(136, 136, 136, 0.3);
+    opacity: 1;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    outline: none;
+    filter: none;
+    --un-ring-width: 0px;
+    --un-ring-offset-width: 0px;
+    --un-ring-shadow: 0 0 #0000;
+    --un-ring-offset-shadow: 0 0 #0000;
   }
 
-  :global(.dark) .mobile-toc-control__toggle:hover,
-  :global(.dark) .mobile-toc-control__toggle[aria-expanded='true'] {
-    background: rgba(136, 136, 136, 0.5);
+  .mobile-toc-control__close,
+  .mobile-toc-control__close:hover,
+  .mobile-toc-control__close:active,
+  .mobile-toc-control__close:focus,
+  .mobile-toc-control__close:focus-visible {
+    background: transparent;
+    box-shadow: none;
+    filter: none;
+  }
+
+  .mobile-toc-control__fab > :global(span),
+  .mobile-toc-control__action > :global(span) {
+    display: block;
+    width: 1.125rem;
+    height: 1.125rem;
+    font-size: 1.125rem;
+    line-height: 0;
+  }
+
+  .mobile-toc-control__close > :global(span) {
+    width: 1rem;
+    height: 1rem;
+    font-size: 1rem;
+  }
+
+  /* list-unordered dots read heavier than chevrons; keep TOC a hair smaller. */
+  .mobile-toc-control__toggle > :global(span) {
+    width: 1.05rem;
+    height: 1.05rem;
+    font-size: 1.05rem;
+  }
+
+  .mobile-toc-control__top {
+    color: var(--accent);
+  }
+
+  .mobile-toc-control__ring {
+    position: absolute;
+    inset: 0.15rem;
+    width: calc(100% - 0.3rem);
+    height: calc(100% - 0.3rem);
+    pointer-events: none;
+  }
+
+  .mobile-toc-control__ring-value {
+    stroke: var(--accent);
+    stroke-width: 1.35;
+    stroke-linecap: round;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+    transition: stroke-dashoffset 0.12s linear;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-toc-control__ring-value {
+      transition: none;
+    }
   }
 
   .mobile-toc-control__panel {
     position: fixed;
     right: 1.25rem;
-    bottom: 7.75rem;
-    z-index: 200;
+    bottom: 13.5rem;
+    z-index: 209;
     display: flex;
     flex-direction: column;
     width: min(24rem, calc(100vw - 2rem));
@@ -101,6 +287,7 @@ const { headings } = Astro.props
     background: rgba(255, 255, 255, 0.88);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
   }
 
   .mobile-toc-control__panel[hidden] {
@@ -200,71 +387,165 @@ const { headings } = Astro.props
 
 <script>
   class MobileTocControl extends HTMLElement {
+    #fab: HTMLButtonElement | null = null
+    #rail: HTMLElement | null = null
     #toggle: HTMLButtonElement | null = null
     #panel: HTMLElement | null = null
+    #topButton: HTMLButtonElement | null = null
+    #bottomButton: HTMLButtonElement | null = null
+    #closeButton: HTMLButtonElement | null = null
+    #ringValue: SVGCircleElement | null = null
+    #frame = 0
+
     #onDocumentClick = (event: MouseEvent) => {
-      if (!this.#panel || !this.#toggle) return
       const target = event.target as Node | null
       if (!target || this.contains(target)) return
-      this.#close()
+      this.#closePanel()
     }
 
     #onDocumentKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
-      if (!this.#panel || this.#panel.hidden) return
-
-      this.#close()
-      this.#toggle?.focus()
+      if (this.#panel && !this.#panel.hidden) {
+        this.#closePanel()
+        this.#toggle?.focus()
+        return
+      }
+      if (this.#rail && !this.#rail.hidden) {
+        this.#collapseRail()
+        this.#fab?.focus()
+      }
     }
 
     #onResize = () => {
-      if (window.matchMedia('(min-width: 1200px)').matches) this.#close()
+      if (window.matchMedia('(min-width: 1200px)').matches) {
+        this.#closePanel()
+        this.#collapseRail()
+      }
     }
 
     #onPanelClick = (event: MouseEvent) => {
       const target = event.target
       if (!(target instanceof Element) || !target.closest('a[href^="#"]'))
         return
-      this.#close()
+      this.#closePanel()
+    }
+
+    #onScroll = () => {
+      if (this.#frame) return
+      this.#frame = requestAnimationFrame(() => {
+        this.#frame = 0
+        this.#updateProgress()
+      })
     }
 
     connectedCallback() {
+      this.#fab = this.querySelector('.mobile-toc-control__fab')
+      this.#rail = this.querySelector('.mobile-toc-control__rail')
       this.#toggle = this.querySelector('.mobile-toc-control__toggle')
       this.#panel = this.querySelector('.mobile-toc-control__panel')
-      if (!this.#toggle || !this.#panel) return
+      this.#topButton = this.querySelector('.mobile-toc-control__top')
+      this.#bottomButton = this.querySelector('.mobile-toc-control__bottom')
+      this.#closeButton = this.querySelector('.mobile-toc-control__close')
+      this.#ringValue = this.querySelector('.mobile-toc-control__ring-value')
+      if (
+        !this.#fab ||
+        !this.#rail ||
+        !this.#toggle ||
+        !this.#panel ||
+        !this.#topButton ||
+        !this.#bottomButton ||
+        !this.#closeButton
+      )
+        return
 
+      this.#fab.addEventListener('click', this.#expandRail)
+      this.#closeButton.addEventListener('click', this.#onClose)
       this.#toggle.addEventListener('click', this.#onToggle)
+      this.#topButton.addEventListener('click', this.#scrollTop)
+      this.#bottomButton.addEventListener('click', this.#scrollBottom)
       this.#panel.addEventListener('click', this.#onPanelClick)
       document.addEventListener('click', this.#onDocumentClick)
       document.addEventListener('keydown', this.#onDocumentKeyDown)
       window.addEventListener('resize', this.#onResize)
+      window.addEventListener('scroll', this.#onScroll, { passive: true })
+      this.#updateProgress()
     }
 
     disconnectedCallback() {
+      this.#fab?.removeEventListener('click', this.#expandRail)
+      this.#closeButton?.removeEventListener('click', this.#onClose)
       this.#toggle?.removeEventListener('click', this.#onToggle)
+      this.#topButton?.removeEventListener('click', this.#scrollTop)
+      this.#bottomButton?.removeEventListener('click', this.#scrollBottom)
       this.#panel?.removeEventListener('click', this.#onPanelClick)
       document.removeEventListener('click', this.#onDocumentClick)
       document.removeEventListener('keydown', this.#onDocumentKeyDown)
       window.removeEventListener('resize', this.#onResize)
+      window.removeEventListener('scroll', this.#onScroll)
+      if (this.#frame) cancelAnimationFrame(this.#frame)
+      this.#frame = 0
+    }
+
+    #expandRail = () => {
+      if (!this.#fab || !this.#rail) return
+      this.#fab.hidden = true
+      this.#fab.setAttribute('aria-expanded', 'true')
+      this.#rail.hidden = false
+    }
+
+    #collapseRail = () => {
+      if (!this.#fab || !this.#rail) return
+      this.#closePanel()
+      this.#rail.hidden = true
+      this.#fab.hidden = false
+      this.#fab.setAttribute('aria-expanded', 'false')
+    }
+
+    #onClose = () => {
+      this.#collapseRail()
+      this.#fab?.focus()
     }
 
     #onToggle = () => {
       if (!this.#toggle || !this.#panel) return
       const expanded = this.#toggle.getAttribute('aria-expanded') === 'true'
-      expanded ? this.#close() : this.#open()
+      expanded ? this.#closePanel() : this.#openPanel()
     }
 
-    #open = () => {
+    #openPanel = () => {
       if (!this.#toggle || !this.#panel) return
       this.#toggle.setAttribute('aria-expanded', 'true')
       this.#panel.hidden = false
       this.dispatchEvent(new CustomEvent('toc-reveal', { bubbles: true }))
     }
 
-    #close = () => {
+    #closePanel = () => {
       if (!this.#toggle || !this.#panel) return
       this.#toggle.setAttribute('aria-expanded', 'false')
       this.#panel.hidden = true
+    }
+
+    #scrollTop = () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+
+    #scrollBottom = () => {
+      const top = Math.max(
+        0,
+        document.documentElement.scrollHeight - window.innerHeight
+      )
+      window.scrollTo({ top, behavior: 'smooth' })
+    }
+
+    #updateProgress = () => {
+      if (!this.#ringValue) return
+      const max = Math.max(
+        0,
+        document.documentElement.scrollHeight - window.innerHeight
+      )
+      const progress =
+        max === 0 ? 1 : Math.min(1, Math.max(0, window.scrollY / max))
+      this.#ringValue.style.strokeDashoffset = String(100 - progress * 100)
     }
   }
 
