@@ -77,7 +77,7 @@ node scripts/sync-screen-time.mjs --publish
 | 执行命令 | 安装时的 Node 绝对路径 + 仓库 `scripts/sync-screen-time.mjs --publish` |
 | 工作目录 | 执行安装器的仓库绝对路径 |
 
-安装器写入绝对路径，计划为每小时第 50 分钟；移动仓库或删除原 Node 版本后需要重装。同名任务只有一份，在另一个 worktree 重装会替换它。本地预览目录只手动同步，不安装任务；用 `launchctl print` 核实实际脚本和工作目录。合入已安装的目录后，原任务就会执行新代码；`kickstart` 触发的是已安装路径的版本。
+安装器写入绝对路径，计划为每小时第 50 分钟；移动仓库或删除原 Node 版本后需要重装。任务不复制代码，运行时直接从仓库读 `scripts/sync-screen-time.mjs`、`src/utils/` 模块和 `.env`，所以仓库必须原地保留：删掉后整点任务只会失败并写日志，页面停在最后一次快照；删除仓库前先卸载任务。同名任务只有一份，在另一个 worktree 重装会替换它。本地预览目录只手动同步，不安装任务；用 `launchctl print` 核实实际脚本和工作目录。合入已安装的目录后，原任务就会执行新代码；`kickstart` 触发的是已安装路径的版本。
 
 ```bash
 # 在正式目录安装或重装
@@ -89,7 +89,7 @@ launchctl print gui/$(id -u)/site.wutongyu.screen-time
 # 立即触发已安装版本（会上传远端）
 launchctl kickstart gui/$(id -u)/site.wutongyu.screen-time
 
-# 卸载每小时任务
+# 卸载每小时任务；删除或移动仓库前先执行这两行
 launchctl bootout gui/$(id -u)/site.wutongyu.screen-time
 rm ~/Library/LaunchAgents/site.wutongyu.screen-time.plist
 ```

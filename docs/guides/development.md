@@ -110,7 +110,7 @@ LASTFM_USER=你的_Lastfm_用户名
 
 首页屏幕时间在访问时从 `/api/screen-time` 获取，仓库不存快照。数据由本机脚本每小时读取 ActivityWatch 的七日聚合结果，覆盖写入 Vercel Blob 的一个固定对象。Vercel 项目需连接一个 **Public** 的 Blob 存储：连接后平台自动注入 `BLOB_STORE_ID`（读取用，不涉密）与 `BLOB_READ_WRITE_TOKEN`（写入用），接口不需要额外配置。访问模式创建后不能修改，建成 Private 时接口会一直返回 502。
 
-本机只需要 `BLOB_READ_WRITE_TOKEN`，把它放在被忽略的 `.env`：`node scripts/sync-screen-time.mjs --publish` 先读环境变量，再读该文件。
+本机只需要 `BLOB_READ_WRITE_TOKEN`，把它放在被忽略的 `.env`：`node scripts/sync-screen-time.mjs --publish` 先读环境变量，再读该文件。每小时任务按绝对路径执行仓库里的脚本并读取该 `.env`，因此仓库不能删除或移动；移动后重跑 `node scripts/install-screen-time-launchd.mjs`，删除前先卸载任务。
 
 ```dotenv
 BLOB_READ_WRITE_TOKEN=vercel_blob_rw_...
