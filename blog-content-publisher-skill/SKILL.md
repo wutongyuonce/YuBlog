@@ -378,7 +378,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --frie
 
 个人社交不在 `UI.socialLinks`。首页读取 `AUTHOR_LINKS`，关于正文独立维护作者希望展示的联系方式；若也展示同一账号，再同步该字段。个人 GitHub 指向主页，顶栏 GitHub 指向本仓库。首页名言／作者文案在 `BlogProfile`，品牌文案在 `NavBar`；不要以为修改 `SITE.title` 会同步所有正文文案。
 
-图标类名构建后若空白：首页身份图标由 `AUTHOR_LINKS`、拾趣菜单图标由 `INTEREST_ICONS` 自动加入 safelist；关于页独有图标才需检查 `unocss.config.ts`。关于页图标尺寸在 `public/shell.css` 的 `.about-social__icon`，本 skill 不改 CSS。
+图标类名构建后若空白：首页身份图标由 `AUTHOR_LINKS`、拾趣菜单图标由 `INTEREST_ICONS`、更多菜单由 `MORE_LINKS`、顶栏社交由 `UI.socialLinks` 自动加入 safelist；动态类漏抽再查 `unocss.config.ts`。关于页只渲染 `about.md` 正文联系方式，**没有** Iconify 社交条或 `.about-social__*`，不要按旧路径排查。
 
 ---
 

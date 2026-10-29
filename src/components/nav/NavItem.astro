@@ -45,17 +45,19 @@ const ariaCurrent =
   {(item.displayMode === 'alwaysText' ||
     item.displayMode === 'textHiddenOnMobile') && <span>{item.text}</span>}
   {(item.displayMode === 'alwaysIcon' ||
-    item.displayMode === 'iconHiddenOnMobile') && <div class={item.icon} />}
+    item.displayMode === 'iconHiddenOnMobile') && (
+    <div class={item.icon} aria-hidden="true" />
+  )}
   {item.displayMode === 'textToIconOnMobile' && (
     <>
       <span class="lt-md:hidden">{item.text}</span>
-      <div class={`md:hidden ${item.icon}`} />
+      <div class={`md:hidden ${item.icon}`} aria-hidden="true" />
     </>
   )}
   {item.displayMode === 'iconToTextOnMobile' && (
     <>
       <span class="md:hidden">{item.text}</span>
-      <div class={`lt-md:hidden ${item.icon}`} />
+      <div class={`lt-md:hidden ${item.icon}`} aria-hidden="true" />
     </>
   )}
 </Link>

@@ -132,11 +132,12 @@ const showMinutesRead = minutesRead > 0
     gap: 0.3em;
     min-width: 0;
   }
+  /* flex + align-items:center 下 vertical-align 无效；列表字更小、非粗体，
+     几何居中已够齐，不用 PostMeta 的 translateY。 */
   .post-preview__icon {
     flex: none;
     width: 1em;
     height: 1em;
-    vertical-align: -0.12em;
   }
   .post-preview a {
     color: inherit;

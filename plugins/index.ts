@@ -72,7 +72,7 @@ const externalLinkContentProperties: CreateProperties = (el) => {
   if (hasImage) return null
 
   return {
-    'u-i-carbon-arrow-up-right': true, // 使用 Carbon 图标集
+    'u-i-ri-arrow-right-up-line': true, // 与名片 RSS 外链箭头同一套 ri
     'className': ['new-tab-icon'], // 添加 CSS 类
     'aria-hidden': 'true', // 对屏幕阅读器隐藏
   }

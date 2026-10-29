@@ -158,7 +158,7 @@ export interface IconNavItem extends BaseNavItem {
    * `'iconToTextOnMobile'` or `'textToIconOnMobile'`.
    *
    * @example
-   * "i-ri:twitter-x-fill", "i-ri-twitter-x-fill", "i-mdi:github", "i-mdi-github"
+   * "i-ri-mail-line", "i-simple-icons-x", "i-uil-github-alt"（现役主用 ri + simple-icons + uil）
    *
    * @see {@link https://icon-sets.iconify.design/ Check all available icons}
    */
@@ -200,7 +200,7 @@ export interface ResponsiveNavItem extends BaseNavItem {
    * `'iconToTextOnMobile'` or `'textToIconOnMobile'`.
    *
    * @example
-   * "i-ri:twitter-x-fill", "i-ri-twitter-x-fill", "i-mdi:github", "i-mdi-github"
+   * "i-ri-mail-line", "i-simple-icons-x", "i-uil-github-alt"（现役主用 ri + simple-icons + uil）
    *
    * @see {@link https://icon-sets.iconify.design/ Check all available icons}
    */
@@ -279,7 +279,7 @@ export interface IconSocialItem extends BaseSocialItem {
    * `'iconToTextOnMobile'` or `'textToIconOnMobile'`.
    *
    * @example
-   * "i-ri:twitter-x-fill", "i-ri-twitter-x-fill", "i-mdi:github", "i-mdi-github"
+   * "i-ri-mail-line", "i-simple-icons-x", "i-uil-github-alt"（现役主用 ri + simple-icons + uil）
    *
    * @see {@link https://icon-sets.iconify.design/ Check all available icons}
    */
@@ -322,7 +322,7 @@ export interface ResponsiveSocialItem extends BaseSocialItem {
    * or `'textToIconOnMobile'`.
    *
    * @example
-   * "i-ri:twitter-x-fill", "i-ri-twitter-x-fill", "i-mdi:github", "i-mdi-github"
+   * "i-ri-mail-line", "i-simple-icons-x", "i-uil-github-alt"（现役主用 ri + simple-icons + uil）
    *
    * @see {@link https://icon-sets.iconify.design/ Check all available icons}
    */

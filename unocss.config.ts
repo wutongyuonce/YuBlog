@@ -8,7 +8,7 @@ import {
 } from 'unocss'
 
 import { UI, INTEREST_ICONS, AUTHOR_LINKS, MORE_LINKS } from './src/config'
-import projecstData from './src/content/projects/data.json'
+import projectsData from './src/content/projects/data.json'
 
 import type {
   IconNavItem,
@@ -33,7 +33,7 @@ const socialIcons = socialLinks
   )
   .map((item) => (item as IconSocialItem | ResponsiveSocialItem).icon)
 
-const projectIcons = (projecstData as { icon?: string }[])
+const projectIcons = (projectsData as { icon?: string }[])
   .map((item) => item.icon)
   .filter((icon): icon is string => Boolean(icon))
 
@@ -111,10 +111,6 @@ export default defineConfig({
     ...Object.values(INTEREST_ICONS),
     ...MORE_LINKS.map(({ icon }) => icon),
     ...AUTHOR_LINKS.map(({ icon }) => icon),
-    'i-simple-icons-x',
-    'i-simple-icons-instagram',
-    'i-simple-icons-bilibili',
-    'i-simple-icons-xiaohongshu',
 
     /* BaseLayout */
     'focus:not-sr-only',
@@ -122,11 +118,8 @@ export default defineConfig({
     'focus:start-1',
     'focus:top-1.5',
     'focus:op-20',
-    /* Toc */
-    'i-ri-menu-2-fill',
-    'i-ri-menu-3-fill',
 
-    /* PostMeta */
+    /* PostMeta：静态类本可被扫描覆盖；保留作防御性 safelist，防 content 扫描边界漏抽 */
     'i-ri-calendar-line',
     'i-ri-history-fill',
     'i-ri-pen-nib-line',

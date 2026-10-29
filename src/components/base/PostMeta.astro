@@ -122,7 +122,7 @@ const showStatsRow = showWordCount || showMinutesRead || visibleTags.length > 0
   }
 
   /* flex align-items:center 几何居中；粗体宋体光学中线略低、Remix 图标视觉重心偏上，
-     vertical-align 在 flex 里无效 → 略下移贴齐文字水平线。列表 ListItem 观感已齐，不动。 */
+     vertical-align 在 flex 里无效 → 略下移贴齐文字水平线。列表 ListItem 字更小／非粗体，几何居中已齐，不加 translateY。 */
   .post-meta__icon {
     flex: none;
     width: 1.15em;

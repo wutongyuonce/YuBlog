@@ -32,7 +32,7 @@ const searchTagsBase = withBasePath('/tags/')
   title="Search"
   aria-label="Search"
 >
-  <div u-i-grommet-icons-search></div>
+  <div u-i-ri-search-line aria-hidden="true"></div>
 </button>
 
 <!-- Search Panel -->
@@ -72,7 +72,7 @@ const searchTagsBase = withBasePath('/tags/')
     }
     <!-- Search Bar -->
     <div class="search-bar">
-      <div u-i-grommet-icons-search></div>
+      <div u-i-ri-search-line aria-hidden="true"></div>
       <label for="search-input" id="search-label" class="sr-only"></label>
       <input
         type="search"
@@ -113,14 +113,14 @@ const searchTagsBase = withBasePath('/tags/')
         class="flex items-center justify-center gap-1"
         data-action="more"
       >
-        <div u-i-material-symbols-arrow-cool-down></div>
+        <div u-i-ri-arrow-down-double-line aria-hidden="true"></div>
         <span></span>
       </button>
       <button
         class="flex items-center justify-center gap-1"
         data-action="all"
       >
-        <div u-i-material-symbols-expand-all></div>
+        <div u-i-ri-expand-diagonal-line aria-hidden="true"></div>
         <span></span>
       </button>
     </div>
@@ -130,16 +130,16 @@ const searchTagsBase = withBasePath('/tags/')
     <ul class="search-shortcuts">
       <li class="flex items-center gap-1">
         <kbd class="search-kbd-key">
-          <div u-i-material-symbols-arrow-upward></div>
+          <div u-i-ri-arrow-up-line aria-hidden="true"></div>
         </kbd>
         <kbd class="search-kbd-key">
-          <div u-i-material-symbols-arrow-downward></div>
+          <div u-i-ri-arrow-down-line aria-hidden="true"></div>
         </kbd>
         <span>Navigate</span>
       </li>
       <li class="flex items-center gap-1">
         <kbd class="search-kbd-key">
-          <div u-i-grommet-icons-return></div>
+          <div u-i-ri-corner-down-left-line aria-hidden="true"></div>
         </kbd>
         <span>Go to Page</span>
       </li>

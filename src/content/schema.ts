@@ -158,7 +158,7 @@ export const projectSchema = z.object({
     )
     .describe(
       '**可选**。项目图标，遵循 UnoCSS 图标规范。' +
-        '格式示例：i-logos-vue、i-ri:twitter-fill\n' +
+        '格式示例：i-ri-github-line、i-simple-icons-x（现役主用 ri + simple-icons + uil）\n' +
         '可用的图标：https://icones.js.org/'
     )
     .optional(),
