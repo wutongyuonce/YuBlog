@@ -67,11 +67,11 @@ export const postSchema = ({ image }: SchemaContext) =>
         .date() // z.coerce 会自动转换各种日期格式
         .describe('**必填**。发布日期。'),
 
-      // 最后修改日期（可选）
+      // 最后修改日期（可选；未填时文章页「更新于」显示与发布日相同）
       lastModDate: z
         .union([z.coerce.date(), z.literal('')]) // 可以是日期或空字符串
         .optional()
-        .describe('最后修改日期。不需要时留空。'),
+        .describe('最后修改日期。可选；不填时文章页「更新于」与发布日一致。'),
 
       // 预计阅读时间
       minutesRead: z

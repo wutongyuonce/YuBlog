@@ -56,7 +56,7 @@ Markdown 插件修改后若 dev 仍输出旧结构，用 `pnpm dev --force` 清�
 
 | 内容 | 维护位置 | 发布方式 |
 | --- | --- | --- |
-| 博客 | `src/content/blogs/**/*.{md,mdx}` | 生产排除 `draft: true`；文件路径／slug 决定地址 |
+| 博客 | `src/content/blogs/**/*.{md,mdx}` | 生产排除 `draft: true`；文件路径／slug 决定地址；`pubDate` 必填，`lastModDate` 可选取，不填时文章页「更新于」与发布日一致 |
 | 文章封面 | `src/content/blogs/_title-images/`，用 `titleImage`、`titleImageAlt` 引用 | 配置封面时必须有 alt |
 | 正文图片、音视频、绘图源 | 文章同目录或子目录 | Markdown 使用相对路径；处理方式见 [正文与媒体](../design/content.md) |
 | 项目 | `src/content/projects/data.json` | 按原始 `category` 分组 |

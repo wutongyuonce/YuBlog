@@ -1,8 +1,5 @@
 ---
-import {
-  formatPostMetaDate,
-  sameSiteCalendarDate,
-} from '~/utils/post-meta-date.js'
+import { formatPostMetaDate } from '~/utils/post-meta-date.js'
 import { tagSelectionLinks } from '~/utils/blog-browser.js'
 import TagLinks from '~/components/base/TagLinks.astro'
 
@@ -19,34 +16,32 @@ const { pubDate, lastModDate, minutesRead, wordCount, tags, hasSubtitle } =
   Astro.props
 
 const visibleTags = tagSelectionLinks(tags)
-const showLastModDate =
-  !!lastModDate && !sameSiteCalendarDate(lastModDate, pubDate)
+// 更新于始终显示：作者没写 lastModDate 时与发布日一致。
+const lastModIso = lastModDate || pubDate
 const pubDateLabel = formatPostMetaDate(pubDate)
-const lastModDateLabel =
-  showLastModDate && lastModDate ? formatPostMetaDate(lastModDate) : ''
+const lastModDateLabel = formatPostMetaDate(lastModIso)
 const showWordCount = wordCount > 0
 const showMinutesRead = minutesRead > 0
-const showSecondRow =
-  showLastModDate || showWordCount || showMinutesRead || visibleTags.length > 0
+const showStatsRow = showWordCount || showMinutesRead || visibleTags.length > 0
 ---
 
 <div class:list={['post-meta', hasSubtitle && 'post-meta--with-subtitle']}>
-  <div class="post-meta__row">
-    <span class="i-ri-calendar-line post-meta__icon" aria-hidden="true" />
-    <span>
-      发布于 <time datetime={pubDate}>{pubDateLabel}</time>
+  <div class="post-meta__row post-meta__row--dates">
+    <span class="post-meta__stat">
+      <span class="i-ri-calendar-line post-meta__icon" aria-hidden="true" />
+      <span>
+        发布于 <time datetime={pubDate}>{pubDateLabel}</time>
+      </span>
+    </span>
+    <span class="post-meta__stat">
+      <span class="i-ri-history-fill post-meta__icon" aria-hidden="true" />
+      <span>
+        更新于 <time datetime={lastModIso}>{lastModDateLabel}</time>
+      </span>
     </span>
   </div>
-  {showSecondRow && (
-    <div class="post-meta__row post-meta__row--wrap">
-      {showLastModDate && (
-        <span class="post-meta__stat">
-          <span class="i-ri-history-fill post-meta__icon" aria-hidden="true" />
-          <span>
-            更新于 <time datetime={lastModDate}>{lastModDateLabel}</time>
-          </span>
-        </span>
-      )}
+  {showStatsRow && (
+    <div class="post-meta__row post-meta__row--stats">
       {showWordCount && (
         <span class="post-meta__stat">
           <span
@@ -78,27 +73,36 @@ const showSecondRow =
   .post-meta {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0.35rem;
+    align-items: center;
+    gap: 0.45rem;
     color: color-mix(in srgb, var(--c-text) 58%, transparent);
     font-family: var(--font-heading);
     font-weight: 700;
     font-size: 0.9375rem;
     line-height: 1.55;
+    text-align: center;
   }
 
+  /* 桌面：两个日期分居版心左右两端；窄屏改为居中堆叠。 */
   .post-meta__row {
     display: flex;
     align-items: center;
     gap: 0.4em;
     min-width: 0;
+    width: 100%;
+  }
+
+  .post-meta__row--dates {
+    justify-content: space-between;
+    gap: 1.5rem;
   }
 
   /* Row gap 0.5rem; each .post-meta__stat adds 0.5rem end margin →
      stat↔stat / stat↔first-tag = 1rem, tag↔tag = 0.5rem. Tags use
      display:contents so each #tag wraps as its own flex item. */
-  .post-meta__row--wrap {
+  .post-meta__row--stats {
     flex-wrap: wrap;
+    justify-content: center;
     column-gap: 0.5rem;
     row-gap: 0.25rem;
   }
@@ -109,6 +113,12 @@ const showSecondRow =
     gap: 0.35em;
     min-width: 0;
     margin-inline-end: 0.5rem;
+  }
+
+  /* Dates sit at the row ends; their trailing margin would offset the
+     居中 relationship, so only the inner stat gaps apply. */
+  .post-meta__row--dates .post-meta__stat {
+    margin-inline-end: 0;
   }
 
   /* flex align-items:center 几何居中；粗体宋体光学中线略低、Remix 图标视觉重心偏上，
@@ -140,6 +150,12 @@ const showSecondRow =
   @media (max-width: 767px) {
     .post-meta {
       font-size: 0.875rem;
+    }
+
+    .post-meta__row--dates {
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.3rem;
     }
   }
 </style>

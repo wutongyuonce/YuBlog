@@ -27,17 +27,6 @@ export function getSiteCalendarParts(d) {
   return parts
 }
 
-/** @param {Date | string} a @param {Date | string} b */
-export function sameSiteCalendarDate(a, b) {
-  const left = getSiteCalendarParts(a)
-  const right = getSiteCalendarParts(b)
-  return (
-    left.year === right.year &&
-    left.month === right.month &&
-    left.day === right.day
-  )
-}
-
 /**
  * Post-meta date: `YYYY 年 M 月 D 日` with spaces between digits and CJK.
  *

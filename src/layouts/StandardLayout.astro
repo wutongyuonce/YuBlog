@@ -45,7 +45,13 @@ const blogsHref = withBasePath('/blogs/')
   )}
   {title && <h1 class="page-title">{title}</h1>}
   {subtitle && !hasHeroImage && (
-    <p class={`${isArticle ? 'post-subtitle' : 'mt--8!'} op-50 italic`}>
+    <p
+      class:list={[
+        isArticle ? 'post-subtitle' : 'mt--8!',
+        'op-50 italic',
+        isArticle && 'post-subtitle--centered',
+      ]}
+    >
       {subtitle}
     </p>
   )}
@@ -74,6 +80,17 @@ const blogsHref = withBasePath('/blogs/')
 
   .post-header {
     margin-bottom: 1.75rem;
+    text-align: center;
+  }
+
+  /* 文章头标题与元信息中线对称；「← 返回文稿」保持靠左。 */
+  .post-header .post-back-link-host {
+    text-align: left;
+  }
+
+  .post-subtitle--centered {
+    margin-inline: auto;
+    max-width: 46rem;
   }
 
   .post-back-link-host {
