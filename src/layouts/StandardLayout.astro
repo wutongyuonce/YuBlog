@@ -80,10 +80,15 @@ const blogsHref = withBasePath('/blogs/')
 
   .post-header {
     margin-bottom: 1.75rem;
+  }
+
+  /* 只让文章标题与副标题居中；封面卡片（hero slot）及草稿提示保持自己的排布。 */
+  .post-header .page-title,
+  .post-header .post-subtitle {
     text-align: center;
   }
 
-  /* 文章头标题与元信息中线对称；「← 返回文稿」保持靠左。 */
+  /* 「← 返回文稿」保持靠左。 */
   .post-header .post-back-link-host {
     text-align: left;
   }

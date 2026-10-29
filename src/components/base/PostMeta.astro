@@ -83,7 +83,6 @@ const showStatsRow = showWordCount || showMinutesRead || visibleTags.length > 0
     text-align: center;
   }
 
-  /* 桌面：两个日期分居版心左右两端；窄屏改为居中堆叠。 */
   .post-meta__row {
     display: flex;
     align-items: center;
@@ -93,7 +92,7 @@ const showStatsRow = showWordCount || showMinutesRead || visibleTags.length > 0
   }
 
   .post-meta__row--dates {
-    justify-content: space-between;
+    justify-content: center;
     gap: 1.5rem;
   }
 
@@ -115,8 +114,7 @@ const showStatsRow = showWordCount || showMinutesRead || visibleTags.length > 0
     margin-inline-end: 0.5rem;
   }
 
-  /* Dates sit at the row ends; their trailing margin would offset the
-     居中 relationship, so only the inner stat gaps apply. */
+  /* 日期项不保留尾部 margin，保证整组居中且只由 gap 控制间距。 */
   .post-meta__row--dates .post-meta__stat {
     margin-inline-end: 0;
   }
