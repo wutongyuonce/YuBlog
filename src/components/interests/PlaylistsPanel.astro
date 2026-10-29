@@ -55,7 +55,7 @@ const runtimeConfig = config.map(({ cover, ...entry }) => entry)
             <span class="playlists-panel__blend" aria-hidden="true" />
           </div>
 
-          <div class="playlists-panel__panel" data-details hidden>
+          <div class="playlists-panel__panel" data-details>
             <p class="playlists-panel__meta">
               <span class="playlists-panel__source">
                 {entry.platform === 'qq' ? 'QQ 音乐' : '网易云音乐'}
@@ -124,7 +124,12 @@ const runtimeConfig = config.map(({ cover, ...entry }) => entry)
             </div>
           </div>
 
-          <div class="playlists-panel__panel" data-skeleton aria-hidden="true">
+          <div
+            class="playlists-panel__panel"
+            data-skeleton
+            hidden
+            aria-hidden="true"
+          >
             <span class="playlists-panel__bone playlists-panel__bone--meta" />
             <span class="playlists-panel__bone playlists-panel__bone--title" />
             <span class="playlists-panel__bone playlists-panel__bone--desc" />

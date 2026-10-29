@@ -84,13 +84,9 @@ export function mountPlaylists(root) {
     const entry = config.find((entry) => entry.id === card.id)
     card.find('[data-title]').textContent = entry.title || entry.id
     card.find('[data-export]').disabled = true
-    card.find('[data-skeleton]').hidden = false
-    for (const selector of [
-      '[data-details]',
-      '[data-meta]',
-      '[data-description]',
-      '[data-note]',
-    ])
+    // 首屏已亮静态封面／平台／标题／播放；骨架保持 hidden，不盖住整卡。
+    card.find('[data-skeleton]').hidden = true
+    for (const selector of ['[data-meta]', '[data-description]', '[data-note]'])
       card.find(selector).hidden = true
 
     card.find('[data-export]').addEventListener(
