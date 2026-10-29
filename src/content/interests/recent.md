@@ -1,3 +1,7 @@
+:::card{layout="portrait" title="影之刃零" href="https://zh.wikipedia.org/wiki/影之刃零" meta="摩拳擦掌 ing。"}
+![影之刃零海报](./game/shadowblade.jpg)
+:::
+
 :::card{layout="portrait" title="赛博朋克边缘行者 2" href="https://zh.wikipedia.org/wiki/赛博浪客" meta="可惜了赛博朋克的设定和画面制作水平，第二季整个剧本混乱又缺乏张力，毫无内核。"}
 ![赛博朋克边缘行者 2 海报](./anime/edgerunners-2.png)
 :::
