@@ -47,6 +47,21 @@ export function matchesAllTags(postTags, selectedTags) {
 }
 
 /**
+ * Filters normalized tag names that contain the query (substring).
+ * Trims the query; empty query yields []. Latin letters match case-insensitively;
+ * display callers keep the original tag casing.
+ *
+ * @param {string[]} tags
+ * @param {string} query
+ * @returns {string[]}
+ */
+export function filterTagsMatchingQuery(tags, query) {
+  const needle = query.trim().toLocaleLowerCase()
+  if (!needle) return []
+  return tags.filter((tag) => tag.toLocaleLowerCase().includes(needle))
+}
+
+/**
  * Truncates a label by Unicode code point while keeping its full value intact.
  *
  * @param {string} tag
