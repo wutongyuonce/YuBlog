@@ -49,6 +49,7 @@ docs/
     distribution.md         SEO 与全文订阅
     listening.md            Last.fm
     playlists.md            拾趣歌单
+    screen-time.md          ActivityWatch 屏幕时间
     oneko.md                Oneko
   reference/
     astro.md                Astro 学习笔记

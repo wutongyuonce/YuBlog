@@ -2,27 +2,7 @@
 
 全站可选的跟鼠标像素猫，使用托管脚本 [oneko.dhrv.pw](https://oneko.dhrv.pw/)，不自托管引擎或皮肤资源。
 
-## SPEC + 设计
-
-### 背景
-
-想在站点 chrome 上加一只轻量、可关掉的像素猫，作为装饰交互，而不是内容功能。托管脚本约 33 KB gzip，用 `data-*` 配置，适合 Astro + ClientRouter，无需把 React/shadcn 组件拷进仓库。
-
-### 规则（已确认）
-
-- **启用方式**：`FEATURES.oneko: FeatureConfig<OnekoConfig>`，默认 `[true, { skin: 'classic' }]`。
-- **ON**：跟随光标、睡觉、气泡、记住位置、季节帽子、`reducedMotion="hide"`、访客隐藏开关、导航避让区。
-- **OFF**：喵叫、激光笔、抓取、零食、跟随焦点、悬停栖息、打字时打盹。
-- **挂载**：`BaseLayout` 用 `createOneko` 挂载托管引擎；猫挂在 `document.body`，不占版心。站内 View Transitions 换页后若猫被移除，则在 `astro:page-load` 上重建。
-- **隐藏**：页脚 `data-oneko-toggle` 按钮，可见文案前有装饰性 `🐾`（`aria-hidden`），读屏仍为「隐藏小猫」；引擎负责跨标签页记忆与 `aria-pressed` 同步。
-
-### 非目标
-
-- 不自托管 `oneko.js` 或皮肤表。
-- 不开启声音（`meow`）或激光笔。
-- 不做 rehype 给每个 `pre` 自动打避让区（过重）；作者可自行加 `data-oneko-zone="avoid"`。
-
-### 权威表
+## 权威表
 
 | 事实 | 权威 | 不要 |
 | :--- | :--- | :--- |
@@ -61,7 +41,7 @@ oneko: [false, { skin: 'classic' }],
 | 季节帽子 | `seasonal: true` |
 | 减少动态 | `reducedMotion: 'hide'` |
 | 喵叫／激光 | `meow: false`、`laserPointer: false` |
-| 隐藏开关 | 页脚按钮 `data-oneko-toggle`（引擎同步，重建后仍有效） |
+| 隐藏开关 | 页脚按钮 `data-oneko-toggle`；引擎用 `oneko:hidden` 跨标签页记住，重建后仍有效 |
 | 避让 | 顶栏 `data-oneko-zone="avoid"`（开关关闭时属性仍在，无害） |
 
 ## View Transitions
@@ -77,10 +57,6 @@ oneko: [false, { skin: 'classic' }],
 ## 集成位置
 
 模块职责见上方权威表；站点其它配置和部署见 [开发与部署指南](../guides/development.md#personalization)。
-
-## 访客隐藏
-
-页脚「隐藏小猫」按钮带 `data-oneko-toggle`。托管脚本会同步 `aria-pressed`，并在 `localStorage`（`oneko:hidden`）记住选择，跨标签页生效。无需本站自写状态机。
 
 ## 署名与许可
 

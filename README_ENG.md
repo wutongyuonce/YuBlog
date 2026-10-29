@@ -54,7 +54,7 @@ pnpm build
 pnpm preview
 ```
 
-dev uses mock search results; preview serves the most recent build and does not provide `/api/lastfm`. The dev server provides the local listening endpoint. Drafts are visible in dev web pages, but remain excluded from RSS and production pages.
+dev uses mock search results; preview serves the most recent build and does not provide the listening, playlist or screen-time endpoints. The dev server provides those three local endpoints. Drafts are visible in dev web pages, but remain excluded from RSS and production pages.
 
 See [verification](docs/guides/development.md#verification) for format, lint, tests, type checks, builds and artifact checks, and [deployment](docs/guides/development.md#deployment) for hosting requirements.
 
@@ -65,6 +65,7 @@ See [verification](docs/guides/development.md#verification) for format, lint, te
 | Posts and body assets | `src/content/blogs/`; assets next to the article or in a child directory |
 | Article covers | `src/content/blogs/_title-images/`, referenced with `titleImage`/`titleImageAlt` |
 | Interest categories and assets | `src/content/interests/<id>.md` or `.mdx`, with matching asset directories |
+| Playlists | `src/data/playlists.json`; covers in `src/content/interests/playlists/` |
 | Home recent media | `src/content/interests/recent.md` |
 | Author introduction | `src/content/about/about.md` |
 | Projects / friends | `src/content/projects/data.json` / `src/content/friends/data.json` |

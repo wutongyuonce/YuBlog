@@ -87,6 +87,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 文稿列表封面列宽 | `ListItem.astro` 的 250px／222px | 在 `main.css` 或列表页再写一份列宽 |
 | 拾趣分区与菜单名称、说明、顺序 | `src/content/interests/*.{md,mdx}` 的 `title`/`description`/`order`；集合范围在 `src/content.config.ts` | 在导航与页面各写一份或限制分类 ID／数量 |
 | 拾趣菜单可选图标 | `src/config.ts` 的 `INTEREST_ICONS`，键为文件名去掉扩展名；UnoCSS 自动加入 safelist | 为无图标分类补占位或重复维护图标 safelist |
+| 图标集合与 UnoCSS safelist | `unocss.config.ts`：`presetIcons`、content 扫描范围、配置动态源进 safelist；集合选择与例外见 [视觉不变量](./site.md#visuals) | 在组件里手工复制 safelist；为同一语义再引一套图标集 |
 | 友链申请模板里的站名 / 链接 | `FriendsApplyPanel.astro` 里的 `friendInfo` | 在其他组件复制申请模板 |
 | 访问统计脚本 | `src/components/base/Head.astro` 的 Umami `<script is:inline>` | 放进页脚、再复制一份，或加 `data-astro-rerun` / 在 `astro:page-load` 手动 `track()` |
 | Markdown 卡片单封面／文字介绍、属性、链接安全、评分、日期与连续分组 | `plugins/remark-media-card.ts`；展示只在 `prose.css` | 组件自行识别卡片或覆写网格；RSS 从 CSS 猜评分 |
@@ -166,7 +167,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 静态防撑宽职责：`main.css` 维护 `html` 横向 `overflow-x: clip` 兜底与宽度变量；纵向滚动及 `scrollbar-gutter: stable` 留白统一归页面根节点，`body` 不另建滚动容器，使固定顶栏、正文与页脚共享居中基准。`prose.css` 维护正文限宽，并对普通长无空格 token 使用 `overflow-wrap: anywhere`（含 `min-width: 0`）断行；`markdown.css` 维护行内 code 断行与块级公式／宽表局部横滚。弹层临时锁滚动仍由 `misc.lockScroll()` 维护：锁定根节点，已有稳定留白时不再补偿；释放只恢复同页的根节点和原 body 留白。版心与手机页脚四行居中由 `scripts/verify-shell-alignment.mjs` 浏览器验收。
 
-`--font-heading`（本地思源宋体 400 字重）用于页面大标题、文章顶部标题、作者名、写作热力与近期笔墨；文稿列表与归档文章标题使用同一宋体，字重分别为 700 与 400，分别由 `ListItem.astro` 的 `.post-preview h2` 和 `shell.css` 的 `.archive-post__title` 维护；文章头 `PostMeta` 同样使用宋体 700；标签筛选结果复用 `ListItem`。字体资源提供 400 字重，700 由浏览器合成加粗。Markdown 内部 h1–h6、正文和标签使用 Inter／系统无衬线字体。顶栏及下拉菜单文字使用宋体；品牌为「梧桐雨の博客」，字号随桌面／中部／手机三档收小，行高 1；归档年份与日期也使用思源宋体。`PageHeading` 是标签、拾趣（含子页）、项目、关于的共享页头：宋体标题配普通字体说明；友链分组标题用更小号的宋体。
+`--font-heading`（本地思源宋体 400 字重）用于页面大标题、文章顶部标题、作者名、写作热力与近期笔墨；文稿列表、文章顶部大标题与文章底上一篇／下一篇标题使用同一宋体加粗（700），归档文章标题用常规字重（400），分别由 `ListItem.astro` 的 `.post-preview h2`、`main.css` 的 `.prose.post-header h1.page-title`、`PostNav.astro` 的 `.post-nav__title` 和 `shell.css` 的 `.archive-post__title` 维护；文章头 `PostMeta` 同样使用宋体 700；标签筛选结果复用 `ListItem`。字体资源提供 400 字重，700 由浏览器合成加粗，相关规则显式写 `font-synthesis: weight`。Markdown 内部 h1–h6、正文和标签使用 Inter／系统无衬线字体。顶栏及下拉菜单文字使用宋体；品牌为「梧桐雨の博客」，字号随桌面／中部／手机三档收小，行高 1；归档年份与日期也使用思源宋体。`PageHeading` 是标签、拾趣（含子页）、项目、关于的共享页头：宋体标题配普通字体说明；友链分组标题用更小号的宋体。
 
 正文字体 Inter 和代码字体 Maple Mono 也在本地：`public/fonts/Inter-latin.woff2`、`public/fonts/MapleMono-latin.woff2`，与思源宋体一起由 `public/shell.css` 的 `@font-face` 引用。这些声明随 `site-styles` 跨页保留，避免已加载字体回退；不要把共享字体声明放进会被替换的组件样式。不要再接 Google Fonts 或 `presetWebFonts`。这两份只含拉丁字符，中文走字体栈后面的系统字体。保留的两种手写字体 `@font-face` 在 `public/shell.css` 中，优先引用构建结束后生成的 `*-title.woff2` 子集，再回退到完整字体；`plugins/astro-subset-title-fonts.ts` 在构建后检查每个子集引用和文件都存在。Vite 不会提前解析尚未生成的字体路径。开发服务器没有子集时会回退到同一次声明里的完整文件，那不是线上行为。
 

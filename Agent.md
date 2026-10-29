@@ -14,11 +14,12 @@
 | canonical、sitemap、RSS 身份与全文表达 | `docs/design/distribution.md` |
 | 首页听歌接口、缓存、凭据及页面状态 | `docs/design/listening.md` |
 | 拾趣歌单、固定来源、运行时接口、缓存与导出 | `docs/design/playlists.md` |
+| 首页屏幕时间、Blob 与本机同步 | `docs/design/screen-time.md` |
 | Oneko 开关、皮肤与 ClientRouter 重建 | `docs/design/oneko.md` |
 
 Astro 通用语法笔记在 `docs/reference/astro.md`，只作学习参考。导航、社交、开关的配置入口是 `src/config.ts`，正文管线注册在 `plugins/index.ts`。
 
-新增拾趣分类属于内容维护：在 `src/content/interests/` 顶层新增 `.md`／`.mdx`，填写 `title`、`description`、`order`，构建后自动生成子页、入口和菜单。`recent.md` 排除出分类，图标只在 `INTEREST_ICONS` 配置，无图标保留纯文字。
+新增拾趣分类属于内容维护，按内容发布 skill 操作，不改路由或导航数组。
 
 ## 文档与变更记录
 

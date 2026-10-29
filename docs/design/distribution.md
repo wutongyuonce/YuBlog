@@ -57,15 +57,11 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site)
 
 只取 `pathname`，查询串和片段不进入 canonical。文章官方路径为 `/blogs/<slug>/`；canonical 是声明，不是重定向，不改变地址栏。
 
-文稿 `/blogs/?category=技术`、`/blogs/#tech`、`/blogs/#旅行` 的官方地址仍为 `/blogs/`。片段不产生服务器页面请求，脚本从已有文章中筛选并分页；首页兼容筛选书签会转到文稿页。
+文稿筛选地址的官方地址仍是 `/blogs/`，筛选规则见 [站点与页面](./site.md#browsing)。这些状态不新增 sitemap 条目，也不改变文章 URL、GUID、发布日期或 RSS 范围。
 
-分类入口按 `category` 原值编码，不合并分类。旧 `#tech`、`#thought`、`#diary` 仅兼容“技术”“思考”“日记”；英文原值用 `#category=tech` 等逃逸。旧 `?category=` 按原值精确筛选，脚本转为等价片段并保留标签、页码。
+拾趣分类页有独立 canonical 和 sitemap 条目，不进入博客 RSS。页面如何生成见 [架构](./architecture.md)。
 
-动态入口、URL 和筛选由 [blog-browser.js](../../src/utils/blog-browser.js) 统一负责；归档分类配色由 [blog-category-colors.js](../../src/utils/blog-category-colors.js) 分配并持久记录。这些状态不新增 sitemap 条目，也不改变文章 URL、GUID、发布日期或 RSS 范围。
-
-独立内容页如 `/interests/movie/` 有静态 HTML 和独立 canonical。新增满足 schema 的 `src/content/interests/` 顶层 `.md` / `.mdx` 文件，重新构建会自动生成分类页、菜单入口和 sitemap 条目；`recent.md` 不生成分类页。图标可选，不影响收录，拾趣不进入博客 RSS。
-
-Head 同时输出页面标题（通常为“页面名 - Wutong Yu”）、描述、作者、社交元信息，以及有 `pubDate` 时的 `BlogPosting`、否则的 `WebPage` JSON-LD；结构化数据不是收录前提。favicon、manifest 也在此挂载，随 Head 内联的 shell CSS 与 SEO 无关。文章标题 schema 限制 60 字符，清晰摘要有助于搜索结果点击。
+Head 同时输出页面标题、描述、作者、社交元信息，以及有 `pubDate` 时的 `BlogPosting`、否则的 `WebPage` JSON-LD；结构化数据不是收录前提。
 
 ### 地址迁移必须单独处理
 
@@ -79,7 +75,7 @@ Head 同时输出页面标题（通常为“页面名 - Wutong Yu”）、描述
 
 [astro.config.ts](../../astro.config.ts) 中的官方集成 `@astrojs/sitemap` 使用 `site: SITE.website` 在生产构建时生成 XML，不手写页面清单。总目录为 `sitemap-index.xml`，其引用 `sitemap-0.xml` 等分片；页面多时可拆多个分片。`<loc>` 必须是绝对 URL。
 
-sitemap 来自构建路由，不来自文稿筛选结果。生产文章路由排除草稿；独立文章、拾趣分类等页面随静态路由进入清单。当前使用 `sitemap()` 默认配置，没有额外按 `search`、redirect 或工具页设置的自定义过滤器；不能把“通常应排除跳转壳/工具页”的建议当成现有实现保证，也不承诺默认生成 `<lastmod>`。
+sitemap 来自构建路由，不来自文稿筛选结果。生产文章路由排除草稿；独立文章、拾趣分类等页面随静态路由进入清单。当前使用 `sitemap()` 默认配置，没有自定义过滤器，也不生成 `<lastmod>`。
 
 Head 挂载 `rel="sitemap"`，地址为 `withBasePath('/sitemap-index.xml')`。日常检查与提交：
 
@@ -242,11 +238,9 @@ channel 标题、介绍、语言取 `SITE.title`、`SITE.description`、`SITE.la
 
 真实样本按内容选择：带图片的文章看宽度/alt，技术文章看代码/表格/Mermaid，算法文章看公式，提示框文章看说明文字。只检查 HTML fixture 不能替代真实 Astro 渲染。临时草稿/坏文章用于受控构建，恢复后再跑最终成功构建，不提交内容、不加生产专用测试开关。
 
-测试消融要求：去掉 `content`、地址绝对化、逐行代码提取，或让 GUID 回退 link 时，对应检查应失败。保留表达义务的测试，删除被替代/重复的 fixture，不能靠测试数量证明完整。
-
 ### 门禁与真实阅读器限制
 
-仓库门禁以 [.github/workflows/ci.yml](../../.github/workflows/ci.yml) 为准：`pnpm install --frozen-lockfile`、`pnpm format`、`pnpm lint`、`pnpm test`、`pnpm check`、`pnpm build`、`pnpm test:built-pagination`、`pnpm test:built-restructure`、`pnpm test:built-markdown`。它们是实现验收流程，不表示本次文档合并已运行这些检查。
+仓库门禁以 [.github/workflows/ci.yml](../../.github/workflows/ci.yml) 为准，命令见 [检查与验收](../guides/development.md#verification)。
 
 Astro、Expressive Code、RSS 或清洗依赖升级时必须重跑真实构建及正文转换验证。实际阅读器至少抽查一篇带图片/代码的文章和一篇带公式的文章，单独报告显示效果；没有访问条件必须写明“未进行真实阅读器验证”，不能以浏览器显示 XML 替代，不能声称所有阅读器兼容。
 

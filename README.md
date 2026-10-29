@@ -58,7 +58,7 @@ pnpm build
 pnpm preview
 ```
 
-dev 搜索使用模拟数据，真实 Pagefind 搜索需先构建再预览。`pnpm preview` 只服务静态产物，不提供 Last.fm 接口；本地接口由 dev 提供。
+dev 搜索使用模拟数据，真实 Pagefind 搜索需先构建再预览。`pnpm preview` 只服务静态产物，不提供听歌、歌单和屏幕时间接口；这三个本地接口由 dev 提供。
 
 准备部署或修改功能时，按 [检查与验收](docs/guides/development.md#verification) 运行格式、lint、单测、类型与构建检查。环境变量、Vercel 和其它平台的差异见 [部署指南](docs/guides/development.md#deployment)。
 

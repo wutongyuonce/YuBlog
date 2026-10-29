@@ -19,9 +19,9 @@ pnpm dev --open
 
 | 模式 | 能验证什么 | 边界 |
 | --- | --- | --- |
-| `pnpm dev` | 内容与组件热更新、草稿网页、本地 `/api/lastfm` | 搜索使用模拟数据；RSS 仍排除草稿 |
-| `pnpm build` | 生产页面、图片资源、字体子集、Pagefind 索引及正文检查 | 不查询 Last.fm，不启动网站服务 |
-| `pnpm preview` | 最近一次 `dist/` 的静态页面与真实搜索 | 不提供 `/api/lastfm`；不反映构建后的源码修改 |
+| `pnpm dev` | 内容与组件热更新、草稿网页，以及本地 `/api/lastfm`、`/api/playlists`、`/api/screen-time` | 搜索使用模拟数据；RSS 仍排除草稿 |
+| `pnpm build` | 生产页面、图片资源、字体子集、Pagefind 索引及正文检查 | 不查询运行时接口，不启动网站服务 |
+| `pnpm preview` | 最近一次 `dist/` 的静态页面与真实搜索 | 不提供上述三个本地接口；不反映构建后的源码修改 |
 
 Markdown 插件修改后若 dev 仍输出旧结构，用 `pnpm dev --force` 清内容缓存；普通刷新不会重新编译缓存的 Markdown。生产构建命令已带 `--force`。
 
@@ -37,16 +37,17 @@ Markdown 插件修改后若 dev 仍输出旧结构，用 `pnpm dev --force` 清�
 | 顶栏入口、仓库 GitHub 与工具顺序 | `src/config.ts` → `UI` | 顶栏 GitHub 是仓库地址；个人主页属于 `AUTHOR_LINKS` |
 | 更多菜单中的友链、相册、访问统计 | `src/config.ts` → `MORE_LINKS` | 相册和统计看板是外部站点，不由本项目生成 |
 | 首页社交入口 | `src/config.ts` → `AUTHOR_LINKS` | 关于正文里的联系方式独立维护 |
-| 首页名字、INTJ、名言 | `src/components/blog/BlogProfile.astro` | 品牌文案在 `src/components/nav/NavBar.astro`，不随 `SITE.title` 自动同步 |
+| 作者展示名 | `src/config.ts` → `AUTHOR_DISPLAY_NAME` | 同时用于首页名字、页脚署名和文章版权卡 |
+| 首页 INTJ、名言 | `src/components/blog/BlogProfile.astro` | 品牌文案在 `src/components/nav/NavBar.astro`，不随 `SITE.title` 自动同步 |
 | 头像、图标、默认 OG 图 | `public/avatar.webp`、`public/` 及 `SITE.socialImage` | 正文配图放 `src/content/`，不放这里 |
 | 关于介绍 | `src/content/about/about.md` | 只有一个正文入口，不自动生成页签 |
 | 友链申请模板 | `src/components/views/FriendsApplyPanel.astro` → `friendInfo` | 与 `SITE` 独立，需同步替换模板中的个人信息 |
-| 页脚署名、备案 | `src/components/base/Footer.astro` | 替换演示站备案，或按自己的站点情况移除 |
+| 页脚备案 | `src/components/base/Footer.astro` | 署名读 `AUTHOR_DISPLAY_NAME`；替换演示站备案，或按自己的站点情况移除 |
 | TOC、搜索、Oneko 开关 | `src/config.ts` → `FEATURES` | Oneko 皮肤与访客隐藏见 [像素猫设计](../design/oneko.md) |
 | 拾趣菜单图标 | `src/config.ts` → `INTEREST_ICONS` | 键为分类文件名，不含扩展名；未配即纯文字菜单 |
 | 点缀配色预设 | `src/utils/accent-palette.js` | 亮暗主题与点缀独立，预设首项为默认 |
 
-样式职责保持清晰：跨页壳层与共享字体声明在 `public/shell.css`，全局变量与目录样式在 `src/styles/main.css`，正文组件在 `prose.css`，Markdown 基础排版在 `markdown.css`；四份公共源码由 `Head.astro` 统一输出为跨页固定的 `site-styles`，其中三份 `src/styles/` CSS 通过 `?inline` 使用 Vite 处理，不可改为 `?raw`。局部组件样式仍由组件拥有并按页打包。字体、首屏内联和 ClientRouter 生命周期见 [架构设计](../design/architecture.md#boundaries)。
+样式文件分工与首屏加载方式见 [架构设计](../design/architecture.md#boundaries)。跨页壳层在 `public/shell.css`，全局变量与目录在 `src/styles/main.css`，正文组件在 `prose.css`，Markdown 排版在 `markdown.css`；局部组件样式仍由组件自己维护。
 
 <a id="content"></a>
 
@@ -80,7 +81,7 @@ draft: true
 正文。
 ```
 
-示例日期需替换为实际发布日期。博客 `category` 是必填的非空原值，新分类随已发布内容自动进入菜单。归档会为新分类领取配色并更新 `src/data/blog-category-colors.json`，把记录与文章一起提交；已有分类的颜色不重排，删除后仍保留占位，预设用尽需扩充 `palette`。
+示例日期需替换为实际发布日期。博客 `category` 是必填的非空原值，新分类随已发布内容自动进入菜单。归档会为新分类领取配色并更新 `src/data/blog-category-colors.json`，把记录与文章一起提交。领取、占位和配色耗尽的规则见 [归档](../design/site.md#archives-friends)。
 
 新增拾趣分类只需在顶层放文件并填写非空 `title`、`description` 和非负整数 `order`，不改路由或导航数组。`recent.md` 排除出分类集合，配图子目录也不生成分类。
 
@@ -115,7 +116,7 @@ LASTFM_USER=你的_Lastfm_用户名
 BLOB_READ_WRITE_TOKEN=vercel_blob_rw_...
 ```
 
-缺少它时同步失败并且不改本地副本，下一个整点重试；未连接存储（缺 `BLOB_STORE_ID`）时接口返回 503、页面显示失败说明。两者都不影响静态博客的构建。快照边界、缓存策略、每小时任务的服务文件与卸载步骤统一见 [屏幕时间设计](../design/screen-time.md)。
+缺少它时同步失败并且不改本地副本，也不影响静态博客的构建。状态码、快照边界、缓存，以及每小时任务的时刻、服务文件与卸载步骤，见 [屏幕时间设计](../design/screen-time.md)。
 
 ### Giscus 评论
 
@@ -137,13 +138,13 @@ Oneko 使用外部托管脚本，开关与皮肤配置在 `FEATURES.oneko`。页
 
 ### Vercel
 
-仓库的 `vercel.json` 使用 `framework: null`（Other）、`buildCommand: pnpm build`、`outputDirectory: dist`，以同时提供静态页面和根目录的 `api/lastfm.js`、`api/screen-time.js` 函数。保留这套配置；直接改用 Astro 框架预设可能导致根 `api/` 不被收集、两个接口都返回 404。屏幕时间还需要在项目的 Storage 中连接一个 Blob 存储。
+仓库的 `vercel.json` 使用 `framework: null`（Other）、`buildCommand: pnpm build`、`outputDirectory: dist`，以同时提供静态页面和根目录 `api/` 函数（听歌、歌单、屏幕时间）。保留这套配置；直接改用 Astro 框架预设可能导致这些接口返回 404。屏幕时间还需要在项目的 Storage 中连接一个 Blob 存储。
 
 部署前核实 `SITE.website`／`SITE.base`、Giscus、统计及 Last.fm 账户。不要把 `/blogs/` 重定向到首页，它承载文章列表和分类筛选。
 
 ### 其它静态平台
 
-静态页面可从 `dist/` 托管；`/api/lastfm` 与 `/api/screen-time` 需要自行适配平台函数或独立服务，单独托管静态文件不能提供它们。子路径部署先配置 `SITE.base` 并验证文章、资源、canonical、RSS 和评论路径；手写 `/demos/` 等根路径引用时也需包含实际 base。
+静态页面可从 `dist/` 托管；听歌、歌单与屏幕时间接口需要自行适配平台函数或独立服务，单独托管静态文件不能提供它们。子路径部署先配置 `SITE.base` 并验证文章、资源、canonical、RSS 和评论路径；手写 `/demos/` 等根路径引用时也需包含实际 base。
 
 发布后核实页面、搜索、RSS、评论和所启用的外部服务。构建通过不能说明 DNS、Giscus OAuth、CDN 缓存或线上 API 已验证。
 
@@ -192,7 +193,7 @@ sed -e 's/__TASK_SPACE_ID__/<id>/g' \
   scripts/verify-nav-dropdown.mjs | ego-browser nodejs
 ```
 
-按功能选用 `verify-home-content.mjs`、`verify-toc-navigation.mjs`、`verify-theme-refresh.mjs`、`verify-accent-palette.mjs`、`verify-background-layering.mjs`、`verify-shell-alignment.mjs`、`verify-prose-overflow.mjs`、`verify-media-focus.mjs`、`verify-card-rails.mjs`、`verify-giscus.mjs` 和 `verify-listening-startup.mjs`；以脚本内的占位符说明为准。目录检查覆盖 1200px 阈值及不同高度。
+按功能选用 `verify-home-content.mjs`、`verify-toc-navigation.mjs`、`verify-theme-refresh.mjs`、`verify-accent-palette.mjs`、`verify-background-layering.mjs`、`verify-shell-alignment.mjs`、`verify-prose-overflow.mjs`、`verify-media-focus.mjs`、`verify-card-rails.mjs`、`verify-giscus.mjs` 和 `verify-listening-startup.mjs`；以脚本内的占位符说明为准。目录检查覆盖 1200px 阈值。
 
 `verify-image-layouts.mjs` 还需将 `__REPO_ROOT__` 替换为当前 worktree 的绝对路径，它会创建并清理临时草稿和 SVG 夹具，不应修改真实文章。评论脚本不发送留言，OAuth 和评论持久化需单独用账号验收。
 

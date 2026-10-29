@@ -90,8 +90,11 @@ const showNav = Boolean(prev || next)
 
   .post-nav__title {
     color: var(--c-text);
+    font-family: var(--font-heading);
     font-size: 1.0625rem;
+    /* 思源宋体只提供 400 字重，加粗由浏览器合成。 */
     font-weight: 700;
+    font-synthesis: weight;
     line-height: 1.45;
     overflow-wrap: anywhere;
     transition: color 0.2s ease;
