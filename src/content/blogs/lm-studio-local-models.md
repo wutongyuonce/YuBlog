@@ -2,7 +2,7 @@
 title: 本地模型下载与 LM Studio 适配
 description: 从 aria2 多连接下载、镜像与 SHA256 校验，到 LM Studio 识别手工模型、量化档位选择、加载设置与内存行为。
 pubDate: 2026-10-28
-category: 技术
+category: 教程
 tags: [LM Studio]
 titleImage: ./_title-images/lm-studio.png
 titleImageAlt: LM Studio 应用图标与文字标识

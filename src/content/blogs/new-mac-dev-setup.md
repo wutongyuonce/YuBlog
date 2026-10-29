@@ -2,7 +2,7 @@
 title: 新 Mac 配置：开发环境与终端
 description: 面向 Apple Silicon Mac 的新机开发环境配置指南，涵盖 Homebrew、zsh、语言环境、Git、数据库与 Ghostty 终端。
 pubDate: 2026-02-02
-category: 技术
+category: 教程
 lastModDate: 2026-10-17
 tags: [macOS, ghostty]
 toc: true

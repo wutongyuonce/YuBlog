@@ -2,7 +2,7 @@
 title: Collie 安装配置与卸载
 description: 在 macOS 上安装 Tailscale、Herdr 和 Collie，把 Agent 终端显示到手机，并说明连接条件与卸载步骤。
 pubDate: 2026-10-20
-category: 技术
+category: 教程
 tags: [Collie, Tailscale]
 titleImage: ./_title-images/collie-pwa.png
 titleImageAlt: ColliePWA 官网首页截图，左侧是 Your terminal agents, on your phone，右侧是手机里的 Herdr 终端面板
