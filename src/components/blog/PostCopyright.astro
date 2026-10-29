@@ -18,31 +18,17 @@ const publishedLabel = formatChineseDate(pubDate)
 
 <aside class="post-copyright" aria-label="文章版权信息">
   <div class="post-copyright__card">
+    {/* FA Brands Creative Commons path; large muted mark at right like reference. */}
     <svg
       class="post-copyright__watermark"
-      viewBox="0 0 120 120"
+      viewBox="0 0 496 512"
       aria-hidden="true"
       focusable="false"
     >
-      <circle
-        cx="60"
-        cy="60"
-        r="52"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="6"
-      ></circle>
-      <text
-        x="60"
-        y="72"
-        text-anchor="middle"
-        font-size="48"
-        font-weight="700"
-        font-family="Inter, system-ui, sans-serif"
+      <path
         fill="currentColor"
-      >
-        CC
-      </text>
+        d="m245.83 214.87l-33.22 17.28c-9.43-19.58-25.24-19.93-27.46-19.93c-22.13 0-33.22 14.61-33.22 43.84c0 23.57 9.21 43.84 33.22 43.84c14.47 0 24.65-7.09 30.57-21.26l30.55 15.5c-6.17 11.51-25.69 38.98-65.1 38.98c-22.6 0-73.96-10.32-73.96-77.05c0-58.69 43-77.06 72.63-77.06c30.72-.01 52.7 11.95 65.99 35.86m143.05 0l-32.78 17.28c-9.5-19.77-25.72-19.93-27.9-19.93c-22.14 0-33.22 14.61-33.22 43.84c0 23.55 9.23 43.84 33.22 43.84c14.45 0 24.65-7.09 30.54-21.26l31 15.5c-2.1 3.75-21.39 38.98-65.09 38.98c-22.69 0-73.96-9.87-73.96-77.05c0-58.67 42.97-77.06 72.63-77.06c30.71-.01 52.58 11.95 65.56 35.86M247.56 8.05C104.74 8.05 0 123.11 0 256.05c0 138.49 113.6 248 247.56 248c129.93 0 248.44-100.87 248.44-248c0-137.87-106.62-248-248.44-248m.87 450.81c-112.54 0-203.7-93.04-203.7-202.81c0-105.42 85.43-203.27 203.72-203.27c112.53 0 202.82 89.46 202.82 203.26c-.01 121.69-99.68 202.82-202.84 202.82"
+      ></path>
     </svg>
 
     <p class="post-copyright__title">{title}</p>
@@ -88,12 +74,11 @@ const publishedLabel = formatChineseDate(pubDate)
   }
 
   .post-copyright__card {
-    --post-copyright-bg: color-mix(in srgb, var(--c-text) 5.5%, var(--c-bg));
-    --post-copyright-muted: color-mix(in srgb, var(--c-text) 52%, transparent);
-    --post-copyright-url: color-mix(in srgb, var(--c-text) 58%, transparent);
+    --post-copyright-bg: color-mix(in srgb, var(--c-text) 6%, var(--c-bg));
+    --post-copyright-muted: color-mix(in srgb, var(--c-text) 55%, transparent);
     --post-copyright-watermark: color-mix(
       in srgb,
-      var(--c-text) 8%,
+      var(--c-text) 5%,
       transparent
     );
 
@@ -101,17 +86,19 @@ const publishedLabel = formatChineseDate(pubDate)
     isolation: isolate;
     overflow: hidden;
     border-radius: 0.85rem;
-    padding: 1.15rem 1.2rem 1.05rem;
+    padding: 1.25rem 1.5rem;
     background: var(--post-copyright-bg);
+    color: var(--c-text);
   }
 
   .post-copyright__watermark {
     position: absolute;
     z-index: 0;
-    inset: 50% auto auto 50%;
-    width: min(9.5rem, 42%);
+    top: 50%;
+    right: 1.25rem;
+    width: 15rem;
     height: auto;
-    transform: translate(-50%, -50%);
+    transform: translateY(-50%);
     color: var(--post-copyright-watermark);
     pointer-events: none;
   }
@@ -125,19 +112,19 @@ const publishedLabel = formatChineseDate(pubDate)
 
   .post-copyright__title {
     margin: 0;
-    color: var(--c-text);
-    font-size: 1.125rem;
+    font-size: 1rem;
     font-weight: 700;
     line-height: 1.45;
   }
 
   .post-copyright__url {
     display: inline-block;
-    margin-top: 0.45rem;
+    margin-top: 0.35rem;
     max-width: 100%;
     overflow-wrap: anywhere;
-    color: var(--post-copyright-url);
+    color: var(--post-copyright-muted);
     font-size: 0.875rem;
+    font-weight: 700;
     line-height: 1.5;
     text-decoration: none;
     border-bottom: none;
@@ -149,11 +136,12 @@ const publishedLabel = formatChineseDate(pubDate)
     color: var(--accent);
   }
 
+  /* Natural-width columns + gap (reference uses flex gap-6), not equal 1fr grid. */
   .post-copyright__meta {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.75rem 1rem;
-    margin: 1.15rem 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+    margin: 0.75rem 0 0;
   }
 
   .post-copyright__meta-item {
@@ -163,15 +151,15 @@ const publishedLabel = formatChineseDate(pubDate)
   .post-copyright__meta dt {
     margin: 0;
     color: var(--post-copyright-muted);
-    font-size: 0.75rem;
+    font-size: 0.875rem;
     line-height: 1.4;
     font-weight: 400;
   }
 
   .post-copyright__meta dd {
-    margin: 0.28rem 0 0;
+    margin: 0.15rem 0 0;
     color: var(--c-text);
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     font-weight: 700;
     line-height: 1.4;
   }
@@ -185,26 +173,5 @@ const publishedLabel = formatChineseDate(pubDate)
   .post-copyright__license:hover,
   .post-copyright__license:focus-visible {
     color: var(--accent);
-  }
-
-  @media (max-width: 540px) {
-    .post-copyright__meta {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.85rem 0.9rem;
-    }
-
-    .post-copyright__meta-item:last-child {
-      grid-column: 1 / -1;
-    }
-  }
-
-  @media (max-width: 360px) {
-    .post-copyright__meta {
-      grid-template-columns: 1fr;
-    }
-
-    .post-copyright__meta-item:last-child {
-      grid-column: auto;
-    }
   }
 </style>

@@ -291,7 +291,15 @@ test('only articles, friends and every interest category have isolated comments 
         for (const link of elements(nav, (node) =>
           hasClass(node, 'post-nav__link')
         )) {
-          assert.match(textOf(link).replace(/\s+/g, ''), /^(←上一篇|下一篇→)$/)
+          const label = elements(link, (node) =>
+            hasClass(node, 'post-nav__label')
+          )[0]
+          assert.ok(label, 'Neighbor link exposes a label')
+          assert.match(textOf(label).replace(/\s+/g, ''), /^(←上一篇|下一篇→)$/)
+          const title = elements(link, (node) =>
+            hasClass(node, 'post-nav__title')
+          )[0]
+          assert.ok(title && textOf(title).trim(), 'Neighbor link shows title')
         }
       }
     }
