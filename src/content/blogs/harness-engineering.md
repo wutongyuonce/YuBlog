@@ -16,7 +16,7 @@ search: true
 
 ![com.xingin.xhs_20260516210416](./harness-engineering-img/com.xingin.xhs_20260516210416.png)
 
-![Harness 101：从 ReAct Loop 讲起-image-3|w640](./harness-engineering-img/Harness%20101：从%20ReAct%20Loop%20讲起-image-3.png)
+![Harness 101：从 ReAct Loop 讲起-image-3|w640](./harness-engineering-img/harness-101-image-3.png)
 
 * **Agent Loop**：Harness 的运行核心，驱动 LLM ↔ Tool ↔ Context 的循环调度，每一轮都要决定"调工具还是出终态"。
 * **Tool Layer**：Agent 在每一步 Loop 里可调用的能力集合。
@@ -61,7 +61,7 @@ search: true
 
 ## Harness 范式的演进
 
-![Harness 101：从 ReAct Loop 讲起-diagram](./harness-engineering-img/Harness%20101：从%20ReAct%20Loop%20讲起-diagram.png)
+![Harness 101：从 ReAct Loop 讲起-diagram](./harness-engineering-img/harness-101-diagram.png)
 
 每一级往上加的东西都极少：多轮只是让 loop 多转几圈；Plan 只是在 loop 外头多塞一条 TODO；Coding Agent 只是把 Tool 从 `web_search` 换成 `read_file`、`write_file`、`edit_file`、`bash`；Offloading 和 Skill 解决的则是「东西多到塞不进 Context Window」之后的两个不同方向的妥协。
 
@@ -69,11 +69,11 @@ search: true
 
 * 发起单次工具调用：
 
-  ![Harness 101：从 ReAct Loop 讲起-diagram-1|w637](./harness-engineering-img/Harness%20101：从%20ReAct%20Loop%20讲起-diagram-1.png)
+  ![Harness 101：从 ReAct Loop 讲起-diagram-1|w637](./harness-engineering-img/harness-101-diagram-1.png)
 
 * 发起多次工具调用（一次 emit 多个 tool\_call）：
 
-  ![Harness 101：从 ReAct Loop 讲起-diagram-2|w618](./harness-engineering-img/Harness%20101：从%20ReAct%20Loop%20讲起-diagram-2.png)
+  ![Harness 101：从 ReAct Loop 讲起-diagram-2|w618](./harness-engineering-img/harness-101-diagram-2.png)
 
 #### tool_calls 工具调用
 
@@ -87,7 +87,7 @@ Function Calling 是 OpenAI 于 2023 年 6 月推出的重要特性，让模型�
 
 ![Agent感知-思考-行动循环](./harness-engineering-img/chapter_intro_03_loop.svg)
 
-![Harness 101：从 ReAct Loop 讲起-diagram-3|w546](./harness-engineering-img/Harness%20101：从%20ReAct%20Loop%20讲起-diagram-3.png)
+![Harness 101：从 ReAct Loop 讲起-diagram-3|w546](./harness-engineering-img/harness-101-diagram-3.png)
 
 谁决定 loop 什么时候停：**决定 loop 停机的不是 harness，而是 LLM 自己**。
 
@@ -225,7 +225,7 @@ async function runAgent(sessionId: string, userInput: string) {
 
 ![image-20260728161427551|w496](./harness-engineering-img/image-20260728161427551.png)
 
-![Harness 101：从 ReAct Loop 讲起-diagram-5](./harness-engineering-img/Harness%20101：从%20ReAct%20Loop%20讲起-diagram-5.png)
+![Harness 101：从 ReAct Loop 讲起-diagram-5](./harness-engineering-img/harness-101-diagram-5.png)
 
 实战中会撞见两个小坑：
 
@@ -266,7 +266,7 @@ Harness 的解法叫 **nudge（提醒 / 推一把）**，也叫 **system-reminde
 
 画成时序图更清楚：
 
-![Harness 101：从 ReAct Loop 讲起-diagram-6|w499](./harness-engineering-img/Harness%20101：从%20ReAct%20Loop%20讲起-diagram-6.png)
+![Harness 101：从 ReAct Loop 讲起-diagram-6|w499](./harness-engineering-img/harness-101-diagram-6.png)
 
 注意 Harness 的两个动作：一是把 `tool_result` 原样回传给 LLM；二是在检查到「当前 todo list 非空」时，**额外**追加一条 system-reminder。两件事在同一个消息里交给 LLM，看起来像是「工具返回自带了一句 nudge」。
 

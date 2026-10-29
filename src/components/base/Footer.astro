@@ -1,5 +1,5 @@
 ---
-import { FEATURES } from '~/config'
+import { AUTHOR_DISPLAY_NAME, FEATURES } from '~/config'
 import { withBasePath } from '~/utils/path'
 
 const currentYear = new Date().getFullYear()
@@ -13,7 +13,7 @@ const onekoEnabled = Array.isArray(oneko) && oneko[0]
       <span>
         <span class="op-50">© {currentYear}</span>{' '}
         <a class="footer-link" href={withBasePath('/')}>
-          梧桐雨
+          {AUTHOR_DISPLAY_NAME}
         </a>
       </span>
       <span class="footer-mark lt-sm:hidden" aria-hidden="true">

@@ -1,13 +1,13 @@
 ---
 import { withBasePath } from '~/utils/path'
-import { AUTHOR_LINKS } from '~/config'
+import { AUTHOR_DISPLAY_NAME, AUTHOR_LINKS } from '~/config'
 ---
 
 <section class="blog-profile" aria-labelledby="blog-profile-name">
   <div class="blog-profile__top">
     <a class="blog-profile__identity" href={withBasePath('/about/')}>
       <div class="blog-profile__heading">
-        <h2 id="blog-profile-name">梧桐雨</h2>
+        <h2 id="blog-profile-name">{AUTHOR_DISPLAY_NAME}</h2>
         <span class="blog-profile__mbti">INTJ</span>
       </div>
       <span class="blog-profile__avatar" aria-hidden="true">

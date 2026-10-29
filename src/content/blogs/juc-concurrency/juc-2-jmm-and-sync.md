@@ -9,7 +9,7 @@ toc: true
 search: true
 ---
 
-:::blog-link{slug="JUC并发编程/JUC 并发编程 1—多线程基础" title="上一篇：JUC 并发编程 1"}
+:::blog-link{slug="juc-concurrency/juc-1-multithreading-basics" title="上一篇：JUC 并发编程 1"}
 :::
 
 ## 六、Java 内存模型（Java Memory Model，JMM）

@@ -8,8 +8,8 @@ import type { Image, Root } from 'mdast'
  * 图片进入 Astro 图片管线后默认按原图尺寸输出，这个插件让作者仍能控制显示宽度：
  *
  * ```md
- * ![满宽](./代码库搜索-img/a.png)
- * ![半宽|w330](./代码库搜索-img/b.png)
+ * ![满宽](./codebase-search-img/a.png)
+ * ![半宽|w330](./codebase-search-img/b.png)
  * ```
  *
  * 标记会被剥离，转成 `width` 传给图片管线。正文目标列宽为 660px，所以「半宽」写

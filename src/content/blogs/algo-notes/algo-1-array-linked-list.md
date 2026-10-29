@@ -3300,5 +3300,5 @@ public Node copyRandomList(Node head) {
 }
 ```
 
-:::blog-link{slug="算法笔记/算法-2哈希表字符串双指针总结栈与队列" title="下一篇：算法 2（哈希表、字符串、双指针总结、栈与队列）"}
+:::blog-link{slug="algo-notes/algo-2-hash-string-two-pointer-stack-queue" title="下一篇：算法 2（哈希表、字符串、双指针总结、栈与队列）"}
 :::
