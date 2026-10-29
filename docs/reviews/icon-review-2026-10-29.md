@@ -2,7 +2,7 @@
 
 - **日期**：2026-10-29（Asia/Shanghai）
 - **审查基线**：只读审查时 `main` @ `2f2eb14`；落地前已 `git pull --ff-only` 至当时最新 `main`
-- **状态**：工作区已实现；loop-review 中（提交／推送后回填 hash）
+- **状态**：**已落地**（loop-review 收敛）
 - **轴**：Standards（本仓约定／管线一致性）+ Opinionated（集合分裂、死代码、文档过时）；不扩成整站 UI redesign
 
 ---
@@ -111,6 +111,9 @@ Favicon／PWA、Excalidraw 工具条、Lightbox、Warning SVG、歌单 SVG、版
 
 ## 6. 验证与 commit
 
-- 门禁（本机已跑）：`pnpm format:write`、`pnpm lint`、`pnpm check`（0 errors）、`pnpm test`（293 pass）
-- Round 1 自审 + Codex 补充：义务均满足；唯一确认问题为本笔记状态超前（本轮已改）
-- commit／hash：提交后回填
+- 门禁：`pnpm format:write`、`pnpm lint`、`pnpm check`（0 errors）、`pnpm test`（293 pass）、`pnpm build` + 产物冒烟通过
+- Round 1：义务满足；确认问题＝本笔记曾超前标「已落地」（已改后再审）
+- Round 2：完整审查 `64d175c` + Codex 补充 → **无必须修**
+- Round 3：仅回填本笔记状态／hash／验证（无代码改动）→ 无进一步问题
+- 实现 commit：`64d175c`（`fix(icons): 收敛壳层图标卫生与审查落地`）
+- 笔记收尾 commit：见本文件随后提交；推送 `main` 后完整 hash 以远端为准
