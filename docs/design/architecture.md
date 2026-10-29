@@ -224,7 +224,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 `FEATURES.toc` 决定开不开、标题层级、左右。
 `RenderPost`、`InterestsView` 和 `AboutView` 把 Markdown 渲染返回的 `headings` 交给共享 `Toc`；文章另传 `frontmatter.toc` 作为单篇开关。`Toc` 统一根据全局功能开关、页面开关与标题级别调用 `generateToc` 一次，`generateToc` 拥有级别过滤与父子树生成，结果非空时 `Toc` 才挂载目录；桌面和移动端只呈现同一棵树。正文级别与页面顶部标题的行为约定见 [文章与目录](./site.md#article)。`TocSidebar` 负责高度（不超过 `min(50vh, 28rem)`）和内部滚动。
-`DesktopAside` 在 1200px 及以上始终显示目录，无顶部开关；宽度为侧边留白减 48px 与 208px 中的较小值，靠正文一侧至少留 40px、外侧至少留 8px（另有视口外边距）；在正文边缘与视口外边距之间的留白中线基础上向外移 16px，中心比视口中线高 32px。更窄视口由 `MobileTocControl` 拥有右下角雾玻璃浮动条（收起为细线 `…`，展开含细线箭头＋仅已读进度弧回顶、list＋点目录、跳底、收起；无返回）；打开目录时仍通知共享逻辑将当前项滚入可视范围。挂载时该控件在同断点隐藏全局 `ToTopButton`，回顶／进度／跳底不另起模块。
+`DesktopAside` 在 1200px 及以上始终显示目录，无顶部开关；宽度为侧边留白减 48px 与 208px 中的较小值，靠正文一侧至少留 40px、外侧至少留 8px（另有视口外边距）；在正文边缘与视口外边距之间的留白中线基础上向外移 16px，中心比视口中线高 32px。`MobileTocControl`（名沿用，桌面亦挂载）拥有右下角雾玻璃浮动条（收起为细线 `…`，展开含细线箭头＋仅已读进度弧回顶、list＋点目录、跳底、收起；无返回）；与 `DesktopAside` 同一 `min-width: 1200px` 断点下目录按钮 `disabled`，窄屏可开浮动面板；打开目录时仍通知共享逻辑将当前项滚入可视范围。组件挂载时所有宽度隐藏全局 `ToTopButton`（无 TOC 时不挂载，回顶钮保留），回顶／进度／跳底不另起模块。
 
 当前章节由 `src/utils/toc-active.js` 的 `pickActiveHeadingIndex()` 决定：激活线取标题的 `scrollMarginTop`，到页面底部时最后一个标题胜出。`Toc` 唯一维护 `--post-anchor-offset`：导航隐藏时 20px，显示时为导航顶部位置加实际高度再加 12px。`nav-scroll.js` 唯一保存累计滚动状态，`NavBar` 用 `updateNavVisibility()` 更新它；点击前 `Toc` 用 `predictNavVisibility()` 从同一状态预测导航显隐，不消耗累计距离，原生锚点直接消费对应距离；滚动、导航显隐、缩放和字体加载后重新核对同一基准。保留正常 fragment 与历史记录行为，不补播第二次滚动。正文标题仅使用透明度入场，锚点位置不随入场动画变化；无脚本时保留导航可见所需的静态距离。
 
@@ -377,7 +377,7 @@ Pagefind **按需加载**：面板打开时调 `window.ensurePagefind()`（打�
 
 ### 文章 `/blogs/[slug]/`
 
-`RenderPost` + 常驻右侧 TOC。最大高度 `min(50vh, 28rem)`，水平位置在侧边留白中线基础上向外移 16px、中心比视口中线高 32px，超出内部滚动；窄屏使用 `MobileTocControl` 雾玻璃浮动控件。文章主标题独立渲染，封面作者头像 40px。
+`RenderPost` + 常驻右侧 TOC。最大高度 `min(50vh, 28rem)`，水平位置在侧边留白中线基础上向外移 16px、中心比视口中线高 32px，超出内部滚动；各宽度使用 `MobileTocControl` 雾玻璃浮动控件（宽屏目录钮禁用）。文章主标题独立渲染，封面作者头像 40px。
 
 页脚由 `Footer.astro` 用宋体显示版权、Astro 与“萌ICP备20269668号”；启用 Oneko 时另有「隐藏小猫」按钮（左侧装饰性 `🐾`）。宽屏段间用次要字色 `·` 分隔，窄屏纵向堆叠并隐藏分隔符。作者名、Astro 和备案都是链接：作者名指向站点首页，Astro 指向 `https://astro.build`，备案指向 `https://icp.gov.moe/?keyword=20269668` 并在新标签页打开；链接反馈见 [视觉不变量](./site.md#visuals)。窄屏纵向排列，备案入口不隐藏。
 

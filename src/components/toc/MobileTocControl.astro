@@ -100,19 +100,17 @@ const { headings } = Astro.props
 )}
 
 <style>
+  /*
+   * Also used on desktop (≥1200px, same as DesktopAside). Name kept; only the
+   * TOC toggle is disabled while the right sidebar is visible.
+   */
   .mobile-toc-control {
-    display: none;
+    display: contents;
   }
 
-  @media (max-width: 1199.9px) {
-    .mobile-toc-control {
-      display: contents;
-    }
-
-    /* Replace the global to-top FAB while this control owns the corner. */
-    :global(body:has(mobile-toc-control) #to-top-button) {
-      display: none !important;
-    }
+  /* Own the corner whenever this control is mounted (article with TOC). */
+  :global(body:has(mobile-toc-control) #to-top-button) {
+    display: none !important;
   }
 
   /*
@@ -241,6 +239,30 @@ const { headings } = Astro.props
     width: 1.05rem;
     height: 1.05rem;
     font-size: 1.05rem;
+  }
+
+  .mobile-toc-control__toggle:disabled,
+  .mobile-toc-control__toggle[aria-disabled='true'] {
+    opacity: 0.38;
+    cursor: not-allowed;
+  }
+
+  .mobile-toc-control__toggle:disabled:is(
+      :hover,
+      :active,
+      :focus,
+      :focus-visible
+    ),
+  .mobile-toc-control__toggle[aria-disabled='true']:is(
+      :hover,
+      :active,
+      :focus,
+      :focus-visible
+    ) {
+    opacity: 0.38;
+    background: transparent;
+    box-shadow: none;
+    outline: none;
   }
 
   .mobile-toc-control__top {
@@ -407,7 +429,8 @@ const { headings } = Astro.props
       if (event.key !== 'Escape') return
       if (this.#panel && !this.#panel.hidden) {
         this.#closePanel()
-        this.#toggle?.focus()
+        if (this.#toggle && !this.#toggle.disabled) this.#toggle.focus()
+        else this.#fab?.focus()
         return
       }
       if (this.#rail && !this.#rail.hidden) {
@@ -417,10 +440,12 @@ const { headings } = Astro.props
     }
 
     #onResize = () => {
-      if (window.matchMedia('(min-width: 1200px)').matches) {
+      // Same breakpoint as DesktopAside: sidebar visible ⇒ disable TOC toggle.
+      // Keep the rail; only close the floating panel when crossing into desktop.
+      if (this.#sidebarVisible()) {
         this.#closePanel()
-        this.#collapseRail()
       }
+      this.#syncTocToggle()
     }
 
     #onPanelClick = (event: MouseEvent) => {
@@ -468,6 +493,7 @@ const { headings } = Astro.props
       document.addEventListener('keydown', this.#onDocumentKeyDown)
       window.addEventListener('resize', this.#onResize)
       window.addEventListener('scroll', this.#onScroll, { passive: true })
+      this.#syncTocToggle()
       this.#updateProgress()
     }
 
@@ -484,6 +510,20 @@ const { headings } = Astro.props
       window.removeEventListener('scroll', this.#onScroll)
       if (this.#frame) cancelAnimationFrame(this.#frame)
       this.#frame = 0
+    }
+
+    /** DesktopAside shows at the same query; keep one breakpoint. */
+    #sidebarVisible = () => window.matchMedia('(min-width: 1200px)').matches
+
+    #syncTocToggle = () => {
+      if (!this.#toggle) return
+      const desktop = this.#sidebarVisible()
+      this.#toggle.disabled = desktop
+      this.#toggle.setAttribute('aria-disabled', desktop ? 'true' : 'false')
+      this.#toggle.title = desktop
+        ? 'Table of contents (sidebar)'
+        : 'Table of contents'
+      if (desktop) this.#closePanel()
     }
 
     #expandRail = () => {
@@ -507,13 +547,13 @@ const { headings } = Astro.props
     }
 
     #onToggle = () => {
-      if (!this.#toggle || !this.#panel) return
+      if (!this.#toggle || !this.#panel || this.#toggle.disabled) return
       const expanded = this.#toggle.getAttribute('aria-expanded') === 'true'
       expanded ? this.#closePanel() : this.#openPanel()
     }
 
     #openPanel = () => {
-      if (!this.#toggle || !this.#panel) return
+      if (!this.#toggle || !this.#panel || this.#toggle.disabled) return
       this.#toggle.setAttribute('aria-expanded', 'true')
       this.#panel.hidden = false
       this.dispatchEvent(new CustomEvent('toc-reveal', { bubbles: true }))

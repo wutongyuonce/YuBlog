@@ -191,6 +191,27 @@ for (const width of [1440, 390, 320]) {
       ),
       'visible'
     )
+    // Floating rail stays; TOC toggle disabled while sidebar is visible.
+    assert.equal(
+      await page.evaluate(() => {
+        const fab = document.querySelector('.mobile-toc-control__fab')
+        return Boolean(fab && getComputedStyle(fab).display !== 'none')
+      }),
+      true
+    )
+    assert.equal(
+      await page.evaluate(() => {
+        const toggle = document.querySelector('.mobile-toc-control__toggle')
+        return Boolean(toggle?.disabled)
+      }),
+      true
+    )
+    assert.equal(
+      await page.evaluate(
+        () => getComputedStyle(document.querySelector('#to-top-button')).display
+      ),
+      'none'
+    )
   }
   const prefix = `${width}`
   // Downward child, same target again, upward parent, downward sibling, final section.
