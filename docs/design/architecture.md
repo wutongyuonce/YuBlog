@@ -54,7 +54,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 `dot` / `snow` 是 canvas 动画（`src/components/backgrounds/`）：
 
 - `prefers-reduced-motion: reduce` 时只画一帧静态背景，不启动 RAF 循环，并在系统设置变化时启停。
-- `dot` 每帧按透明度分 6 档批量描边。布点规则在 `Dot.astro`：基础间距 15px；估算点数超过约 8000 时按面积放大间距。这是密度目标，边缘补点可能超过它，不是硬上限。
+- `dot` 每帧按透明度分档批量描边。布点规则在 `Dot.astro`：有基础间距，并按面积在点数过多时放大间距。这是密度目标，边缘补点可能超过它，不是硬上限。
 
 <a id="ownership"></a>
 
@@ -103,7 +103,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 热力提示交互与页面清理 | `WritingHeatmap.astro` | 用旧根节点的定时器关闭新页面的提示层 |
 | 内容图片的路径与写入规则 | `src/content/**` 里的相对路径；正文宽度标记由 `plugins/remark-image-width.ts` 解析 | 把图片放进 `public/`、在正文写原始 `<img>`（相对路径会构建报错）、手写 `_astro` 地址 |
 | 正文媒体／绘图源引用的路径与落盘 | `plugins/media-paths.ts`（`MEDIA_EXTENSIONS`＋`DRAWING_EXTENSIONS`→`MIRROR_EXTENSIONS`）；`rehype-media-assets` 改写与报错；`astro-media-sync` 镜像到 `public/_media/` | 在这三个模块之外各自推断映射；把预览图／正文图也纳入镜像 |
-| 点阵间距与约 8000 点目标 | `src/components/backgrounds/Dot.astro` | 另写一个网格工具，或把 8000 当成硬上限 |
+| 点阵间距与点数密度目标 | `src/components/backgrounds/Dot.astro` | 另写一个网格工具，或把密度阈值当成硬上限 |
 | 点缀预设、默认与存储规则、强调色变量 | `src/utils/accent-palette.js`；`Head`／`AccentSwitch` 调用 | 在 CSS、首屏脚本和选项中复制调色板或默认值判断 |
 | 配色面板和焦点生命周期 | `AccentSwitch.astro` | 在 `NavBar` 重建配色状态；导航只读面板展开状态 |
 | 实际主题变化订阅与退订 | `src/utils/theme-observer.js`；Dot／Snow 只负责重绘 | 在背景中各写一份根元素 class 观察逻辑 |
@@ -149,7 +149,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 
 页码窗口由 `getPageNumbers` 统一生成，包含省略号最多 6 项（上一页 / 下一页另计）：总页数 ≤6 时全部显示；>6 时，优先判断当前页 ≤4，显示 `1 2 3 4 … N`；否则当前页 ≥N−3 显示 `1 … N−3 N−2 N−1 N`；其余显示 `1 … p p+1 … N`。省略号不可点击，至少代表两页；首尾和当前页始终可见。中间窗口优先展示下一页，无法同时保留前后邻页时可用独立的上一页 / 下一页控件连续翻页。生成窗口的计算和输出大小不随总页数增长。
 
-`ListView` 负责标记当前页、禁用首尾的上一页/下一页，以及在 0 或 1 页时隐藏分页。分页渲染成一行胶囊条：两端是同一枚箭头（`‹` / `›`，用 `aria-label` 给出「上一页 / 下一页」），中间是页码窗口，当前页画成填充块。`>480px` 时单项 `2.25rem`；`≤480px` 时单项降到 `1.9rem`、列间距降到 `0.25rem`、页码间距归零，让「箭头 + 六项窗口」共 8 项在 320px 视口内仍保持一行而不横向溢出。分页视觉统一放在 `public/shell.css`，由文稿和标签页共用，组件通过同一份样式呈现。页码边界和 1–50 页所有有效当前页组合由 `test/blog-browser.test.mjs` 验证。
+`ListView` 负责标记当前页、禁用首尾的上一页/下一页，以及在 0 或 1 页时隐藏分页。分页渲染成一行胶囊条：两端是同一枚箭头（`‹` / `›`，用 `aria-label` 给出「上一页 / 下一页」），中间是页码窗口，当前页画成填充块。`>480px` 与 `≤480px` 两档尺寸让「箭头 + 六项窗口」共 8 项在 320px 视口内仍保持一行而不横向溢出，具体尺寸写在 `public/shell.css`。分页视觉统一放在 `public/shell.css`，由文稿和标签页共用，组件通过同一份样式呈现。页码边界和 1–50 页所有有效当前页组合由 `test/blog-browser.test.mjs` 验证。
 
 ### 4.4 壳层样式 seam
 
@@ -166,7 +166,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 静态防撑宽职责：`main.css` 维护 `html` 横向 `overflow-x: clip` 兜底与宽度变量；纵向滚动及 `scrollbar-gutter: stable` 留白统一归页面根节点，`body` 不另建滚动容器，使固定顶栏、正文与页脚共享居中基准。`prose.css` 维护正文限宽，并对普通长无空格 token 使用 `overflow-wrap: anywhere`（含 `min-width: 0`）断行；`markdown.css` 维护行内 code 断行与块级公式／宽表局部横滚。弹层临时锁滚动仍由 `misc.lockScroll()` 维护：锁定根节点，已有稳定留白时不再补偿；释放只恢复同页的根节点和原 body 留白。版心与手机页脚四行居中由 `scripts/verify-shell-alignment.mjs` 浏览器验收。
 
-`--font-heading`（本地思源宋体 400 字重）用于页面大标题、文章顶部标题、作者名、写作热力与近期笔墨；文稿列表与归档文章标题使用同一宋体，字重分别为 700 与 400，分别由 `ListItem.astro` 的 `.post-preview h2` 和 `shell.css` 的 `.archive-post__title` 维护；文章头 `PostMeta` 同样使用宋体 700；标签筛选结果复用 `ListItem`。字体资源提供 400 字重，700 由浏览器合成加粗。Markdown 内部 h1–h6、正文和标签使用 Inter／系统无衬线字体。顶栏及下拉菜单文字使用宋体；品牌为「梧桐雨の博客」，使用桌面 16px、601–799px 为 14.72px、600px 及以下为 14.4px 思源宋体，行高 1；归档年份与日期也使用思源宋体。`PageHeading` 是标签、拾趣（含子页）、项目、关于的共享页头：标题 28px 宋体 400 字重，说明 14px 普通字体；友链分组标题为 24px 宋体。
+`--font-heading`（本地思源宋体 400 字重）用于页面大标题、文章顶部标题、作者名、写作热力与近期笔墨；文稿列表与归档文章标题使用同一宋体，字重分别为 700 与 400，分别由 `ListItem.astro` 的 `.post-preview h2` 和 `shell.css` 的 `.archive-post__title` 维护；文章头 `PostMeta` 同样使用宋体 700；标签筛选结果复用 `ListItem`。字体资源提供 400 字重，700 由浏览器合成加粗。Markdown 内部 h1–h6、正文和标签使用 Inter／系统无衬线字体。顶栏及下拉菜单文字使用宋体；品牌为「梧桐雨の博客」，字号随桌面／中部／手机三档收小，行高 1；归档年份与日期也使用思源宋体。`PageHeading` 是标签、拾趣（含子页）、项目、关于的共享页头：宋体标题配普通字体说明；友链分组标题用更小号的宋体。
 
 正文字体 Inter 和代码字体 Maple Mono 也在本地：`public/fonts/Inter-latin.woff2`、`public/fonts/MapleMono-latin.woff2`，与思源宋体一起由 `public/shell.css` 的 `@font-face` 引用。这些声明随 `site-styles` 跨页保留，避免已加载字体回退；不要把共享字体声明放进会被替换的组件样式。不要再接 Google Fonts 或 `presetWebFonts`。这两份只含拉丁字符，中文走字体栈后面的系统字体。保留的两种手写字体 `@font-face` 在 `public/shell.css` 中，优先引用构建结束后生成的 `*-title.woff2` 子集，再回退到完整字体；`plugins/astro-subset-title-fonts.ts` 在构建后检查每个子集引用和文件都存在。Vite 不会提前解析尚未生成的字体路径。开发服务器没有子集时会回退到同一次声明里的完整文件，那不是线上行为。
 
@@ -200,11 +200,11 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 全站没有个人右侧栏；`BlogProfile` 只在首页出现，其下依次是 `WritingHeatmap`、`ProgressStats`、`RecentWriting`、`ScreenTime`、`RecentMedia`、`RecentListening`。导航页统一通过 `BlogIndexLayout` 限制宽度。文章详情使用 `StandardLayout`，TOC 独立放在正文外侧。
 
-顶栏的 `--site-nav-width` 引用 `--blog-shell-width`，与内容版心共用 660px 目标；更多右侧保留剩余空白。内容宽度同时受 `100vw - 两侧外边距` 限制；1200px 及以上再减去 32rem，避免加宽正文时把目录从 208px 挤窄。顶栏与正文同步收窄，小屏两排导航仍受响应式外边距 `--site-gutter` 约束。`--blog-prose-width` 引用版心宽度，标题、正文与文章头「← 返回文稿」对齐；目录读取同一个 `--blog-prose-width`，在正文边缘与视口外边距之间的留白中线基础上向外移 16px，最大 208px、受视口剩余空间约束。文稿列表卡片的封面列固定为无图 222px、有图 250px，版心宽度变化只进入左侧文字；768px 及以上封面垂直居中，更窄时改为单列并隐藏空封面列。目录与正文读取同一版心宽度。小屏由可用视口宽度约束。
+顶栏的 `--site-nav-width` 引用 `--blog-shell-width`，与内容版心共用 660px 目标；更多右侧保留剩余空白。内容宽度同时受 `100vw - 两侧外边距` 限制；1200px 及以上让出右侧目录留白，避免加宽正文时把目录挤窄。顶栏与正文同步收窄，小屏两排导航仍受响应式外边距 `--site-gutter` 约束。`--blog-prose-width` 引用版心宽度，标题、正文与文章头「← 返回文稿」对齐；目录同样读 `--blog-prose-width`，尺寸与定位规则由 `DesktopAside`／`TocSidebar` 维护。文稿列表卡片的封面列固定为无图 222px、有图 250px，版心宽度变化只进入左侧文字；768px 及以上封面垂直居中，更窄时改为单列并隐藏空封面列。目录与正文读取同一版心宽度。小屏由可用视口宽度约束。
 
 导航是一条有细边框、轻阴影和柔和当前态的居中悬浮条，品牌、页面入口、工具按钮分组。≥800px 为一排，更窄视口为品牌／工具和页面入口两排。用 `top` 与 opacity 隐藏，不在包含搜索面板的祖先上使用 transform 或 backdrop-filter，保证搜索弹窗仍相对于视口定位。
 
-所有页面的初始顶部位置由 `shell.css` 的 `.site-main` 统一维护：桌面顶部内边距 104px，799px 及以下 136px，扣除顶栏占位后留白约 40px／36px。目录点击后的锚点间距仍由 TOC 单独维护，不用初始页面留白推断滚动落点。
+所有页面的初始顶部位置由 `shell.css` 的 `.site-main` 统一维护：桌面与 799px 及以下两档顶部内边距，扣除顶栏占位后留出固定空白。目录点击后的锚点间距仍由 TOC 单独维护，不用初始页面留白推断滚动落点。
 
 ### 4.6 导航与首页 seam
 
@@ -223,10 +223,10 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 ### 4.7 TOC seam
 
 `FEATURES.toc` 决定开不开、标题层级、左右。
-`RenderPost`、`InterestsView` 和 `AboutView` 把 Markdown 渲染返回的 `headings` 交给共享 `Toc`；文章另传 `frontmatter.toc` 作为单篇开关。`Toc` 统一根据全局功能开关、页面开关与标题级别调用 `generateToc` 一次，`generateToc` 拥有级别过滤与父子树生成，结果非空时 `Toc` 才挂载目录；桌面和移动端只呈现同一棵树。正文级别与页面顶部标题的行为约定见 [文章与目录](./site.md#article)。`TocSidebar` 负责高度（不超过 `min(50vh, 28rem)`）和内部滚动。
-`DesktopAside` 在 1200px 及以上始终显示目录，无顶部开关；宽度为侧边留白减 48px 与 208px 中的较小值，靠正文一侧至少留 40px、外侧至少留 8px（另有视口外边距）；在正文边缘与视口外边距之间的留白中线基础上向外移 16px，中心比视口中线高 32px。`MobileTocControl`（名沿用，桌面亦挂载）拥有右下角雾玻璃浮动条（收起为细线 `…`，展开含细线箭头＋仅已读进度弧回顶、list＋点目录、跳底、收起；无返回）；与 `DesktopAside` 同一 `min-width: 1200px` 断点下目录按钮 `disabled`，窄屏可开浮动面板；打开目录时仍通知共享逻辑将当前项滚入可视范围。组件挂载时所有宽度隐藏全局 `ToTopButton`（无 TOC 时不挂载，回顶钮保留），回顶／进度／跳底不另起模块。
+`RenderPost`、`InterestsView` 和 `AboutView` 把 Markdown 渲染返回的 `headings` 交给共享 `Toc`；文章另传 `frontmatter.toc` 作为单篇开关。`Toc` 统一根据全局功能开关、页面开关与标题级别调用 `generateToc` 一次，`generateToc` 拥有级别过滤与父子树生成，结果非空时 `Toc` 才挂载目录；桌面和移动端只呈现同一棵树。正文级别与页面顶部标题的行为约定见 [文章与目录](./site.md#article)。`TocSidebar` 负责高度上限和内部滚动。
+`DesktopAside` 在 1200px 及以上始终显示目录，无顶部开关；宽度、与正文的间距及垂直位置由组件自身维护，不在页面或全局样式里另写。`MobileTocControl`（名沿用，桌面亦挂载）拥有右下角雾玻璃浮动条（收起为细线 `…`，展开含细线箭头＋仅已读进度弧回顶、list＋点目录、跳底、收起；无返回）；与 `DesktopAside` 同一 `min-width: 1200px` 断点下目录按钮 `disabled`，窄屏可开浮动面板；打开目录时仍通知共享逻辑将当前项滚入可视范围。组件挂载时所有宽度隐藏全局 `ToTopButton`（无 TOC 时不挂载，回顶钮保留），回顶／进度／跳底不另起模块。
 
-当前章节由 `src/utils/toc-active.js` 的 `pickActiveHeadingIndex()` 决定：激活线取标题的 `scrollMarginTop`，到页面底部时最后一个标题胜出。`Toc` 唯一维护 `--post-anchor-offset`：导航隐藏时 20px，显示时为导航顶部位置加实际高度再加 12px。`nav-scroll.js` 唯一保存累计滚动状态，`NavBar` 用 `updateNavVisibility()` 更新它；点击前 `Toc` 用 `predictNavVisibility()` 从同一状态预测导航显隐，不消耗累计距离，原生锚点直接消费对应距离；滚动、导航显隐、缩放和字体加载后重新核对同一基准。保留正常 fragment 与历史记录行为，不补播第二次滚动。正文标题仅使用透明度入场，锚点位置不随入场动画变化；无脚本时保留导航可见所需的静态距离。
+当前章节由 `src/utils/toc-active.js` 的 `pickActiveHeadingIndex()` 决定：激活线取标题的 `scrollMarginTop`，到页面底部时最后一个标题胜出。`Toc` 唯一维护 `--post-anchor-offset`：导航隐藏时用固定小偏移，显示时为导航顶部位置加实际高度再加一段间隙。`nav-scroll.js` 唯一保存累计滚动状态，`NavBar` 用 `updateNavVisibility()` 更新它；点击前 `Toc` 用 `predictNavVisibility()` 从同一状态预测导航显隐，不消耗累计距离，原生锚点直接消费对应距离；滚动、导航显隐、缩放和字体加载后重新核对同一基准。保留正常 fragment 与历史记录行为，不补播第二次滚动。正文标题仅使用透明度入场，锚点位置不随入场动画变化；无脚本时保留导航可见所需的静态距离。
 
 桌面目录各级标题完整换行；当前项超出内部区域时，`Toc` 将其滚回可视范围。
 
@@ -315,7 +315,7 @@ plugins/
 
 ### 首页 `/`
 
-`BlogProfile` 无卡片背景：头像与作者信息作为一组居中，头像右侧的名字与 INTJ 上下两行排列，INTJ 在名字下方，字号为 13px；RSS 居右；下方依次是一行居中的六个 15px 社交图标和独立一行居中的斜体名言「我与我周旋久，宁做我」。图标横向间距为桌面 15px／窄屏 9px，名言较长时在版心内自动换行，没有全站总数。社交入口由 `config.ts` 的 `AUTHOR_LINKS` 维护，名称保留给读屏器和悬停提示。窄屏仍保持作者组居中、RSS 靠右同一行，社交仍为单行、名言在其下方，缩小图标间隔；时间进度标签和数字上下排列。`WritingHeatmap` 放在名片下方，首页随后呈现独立的 `ProgressStats` 三列细时间进度，再显示近期笔墨和屏幕时间。屏幕时间在访问时从 `/api/screen-time` 读取本机同步的七日聚合结果，数据边界与本机同步见 [设计](./screen-time.md)。标题与近期笔墨左对齐，年份在标题右侧以自定义下拉选择（多一年时；列表在触发器下方展开）；日历按上海时区自然年、周一起始，只计已发布文章。每年摘要显示篇数、字数和有文章的天数。单篇格子是链接，多篇在脚本启用后从提示层进入。`RecentWriting` 在其下显示最近五篇已发布文稿，无卡片底色，标题大小接近正文。`RecentMedia` 再往下渲染 `src/content/interests/recent.md`，不另画边框，宽度跟首页版心走。正文标题和卡片仅使用共享 `prose.css`，没有首页专用覆盖；近期条目使用连续 `:::card{layout="portrait"}` 组成一排，原封面、标题和顺序保留，原评论精简后放入 `meta`，不显示评分或类别角标，作品标题 `href` 直接指向对应 Wiki；不写 `scroll="auto"`，仅手动横滑。标题右侧「全部拾趣」进入拾趣入口。Markdown 标题按原层级分段并保留锚点。该文件排除出拾趣集合，不生成子页。`RecentListening` 接在近期书影游下方展示 Last.fm 听歌排行。首页不显示文章分页或个人侧栏。首页带 `?page=`、`?category=`、`?tag=` 的兼容书签在客户端转到 `/blogs/`。
+`BlogProfile` 无卡片背景：头像与作者信息作为一组居中，头像右侧的名字与 INTJ 上下两行排列，INTJ 在名字下方且字明显更小；RSS 居右；下方依次是一行居中的六个社交图标和一行居中的斜体名言「我与我周旋久，宁做我」。名言较长时在版心内自动换行，没有全站总数。社交入口由 `config.ts` 的 `AUTHOR_LINKS` 维护，名称保留给读屏器和悬停提示。窄屏仍保持作者组居中、RSS 靠右同一行，社交仍为单行、名言在其下方，缩小图标间隔；时间进度标签和数字上下排列。`WritingHeatmap` 放在名片下方，首页随后呈现独立的 `ProgressStats` 三列细时间进度，再显示近期笔墨和屏幕时间。屏幕时间在访问时从 `/api/screen-time` 读取本机同步的七日聚合结果，数据边界与本机同步见 [设计](./screen-time.md)。标题与近期笔墨左对齐，年份在标题右侧以自定义下拉选择（多一年时；列表在触发器下方展开）；日历按上海时区自然年、周一起始，只计已发布文章。每年摘要显示篇数、字数和有文章的天数。单篇格子是链接，多篇在脚本启用后从提示层进入。`RecentWriting` 在其下显示最近五篇已发布文稿，无卡片底色，标题大小接近正文。`RecentMedia` 再往下渲染 `src/content/interests/recent.md`，不另画边框，宽度跟首页版心走。正文标题和卡片仅使用共享 `prose.css`，没有首页专用覆盖；近期条目使用连续 `:::card{layout="portrait"}` 组成一排，原封面、标题和顺序保留，原评论精简后放入 `meta`，不显示评分或类别角标，作品标题 `href` 直接指向对应 Wiki；不写 `scroll="auto"`，仅手动横滑。标题右侧「全部拾趣」进入拾趣入口。Markdown 标题按原层级分段并保留锚点。该文件排除出拾趣集合，不生成子页。`RecentListening` 接在近期书影游下方展示 Last.fm 听歌排行。首页不显示文章分页或个人侧栏。首页带 `?page=`、`?category=`、`?tag=` 的兼容书签在客户端转到 `/blogs/`。
 
 ### 文稿 `/blogs/`
 
@@ -353,9 +353,9 @@ Pagefind **按需加载**：面板打开时调 `window.ensurePagefind()`（打�
 
 ### 归档 `/archives/`
 
-`ArchiveView` ← `getGroupedPostsByYear`。点线 + 年份空心圆 + 文章小点。年份与日期位于时间线左侧，日期在列内右对齐并靠近时间线；日期、标记和标题首行共用 24px 高度。每篇文章的标签在标题下方自然换行，每个 `#标签名` 是只选中该标签的链接；标题下划线跟文字走，不拉满格子。
+`ArchiveView` ← `getGroupedPostsByYear`。点线 + 年份空心圆 + 文章小点。年份与日期位于时间线左侧，日期在列内右对齐并靠近时间线；日期、标记和标题首行共用同一基线。每篇文章的标签在标题下方自然换行，每个 `#标签名` 是只选中该标签的链接；标题下划线跟文字走，不拉满格子。
 
-`blog-category-colors.js` 是分类配色的唯一属主，数据在 `src/data/blog-category-colors.json`：`palette` 初始提供 16 个不同色相的配色 ID，`assignments` 保存分类原值到 ID 的已领取映射。浅色主题统一 32% 饱和度／36% 亮度，深色 32%／72%；当前技术／思考／日记保留蓝／暖红／青色。`ArchiveView` 获取按年分组后，把实际呈现的分类集合交给 `syncCategoryColors`，它保留全部历史分配，将同批新名称去重、按字典序排列，依次领取预设池中未占用的 ID，容量不足先报错而不修改记录。只有有新分配时才将完整 JSON 写入同目录临时文件并替换旧记录；随后 `getBlogCategoryColors` 从这份结果中取得颜色。页面只将深浅颜色写入 CSS 变量，`shell.css` 选择当前主题并呈现徽标，宽度最多占标题行的 40%，长名称换行。模块仅在服务端使用，不进入浏览器筛选代码。
+`blog-category-colors.js` 是分类配色的唯一属主，数据在 `src/data/blog-category-colors.json`：`palette` 初始提供 16 个不同色相的配色 ID，`assignments` 保存分类原值到 ID 的已领取映射。浅色与深色各用一套固定的饱和度／亮度推导，不逐色手调；当前技术／思考／日记保留蓝／暖红／青色。`ArchiveView` 获取按年分组后，把实际呈现的分类集合交给 `syncCategoryColors`，它保留全部历史分配，将同批新名称去重、按字典序排列，依次领取预设池中未占用的 ID，容量不足先报错而不修改记录。只有有新分配时才将完整 JSON 写入同目录临时文件并替换旧记录；随后 `getBlogCategoryColors` 从这份结果中取得颜色。页面只将深浅颜色写入 CSS 变量，`shell.css` 选择当前主题并呈现徽标，宽度最多占标题行的 40%，长名称换行。模块仅在服务端使用，不进入浏览器筛选代码。
 
 本地访问归档或构建时会自动补充映射，开发归档中的草稿分类也计入；记录必须与新分类文章一起提交，CI／Vercel 不会自动提交生成的映射。删除分类不释放颜色，重新出现沿用原色；改名视为新分类。池耗尽、配置无效或重复、记录读写失败都明确失败；补充不同整数色相的新预设后可重试，不重置已有分配。不同颜色值不代表都能肉眼区分，分类文字仍保留。记录按本地单写者维护，不支持并发进程分配；不新增数据库、监听器、客户端状态或自动改名迁移。
 
@@ -371,13 +371,13 @@ Pagefind **按需加载**：面板打开时调 `window.ensurePagefind()`（打�
 
 ### 友链 `/friends/`
 
-卡片交互样式由 `FriendsView` 维护：悬停／键盘焦点时头像放大 10%，头像和外边框使用 35% 主题强调色柔光，无实色光圈；离开后以 180ms 过渡复原，减少动态偏好下取消过渡。黑夜卡片背景为纯黑。
+卡片交互样式由 `FriendsView` 维护，规则见[视觉不变量](./site.md#archives-friends)。
 
 `FriendsView` 按数据 `category` 分成「推荐」「双向」两组，宋体小标题配简短说明。「推荐」是单向收藏，「双向」是已交换友链；schema 限定这两个值，避免无效分组被静默漏掉。组内按 `order`／名称排序并展示卡片；卡片网格固定两列、宽度随版心伸缩，窄屏不收成单列。底部由 `FriendsApplyPanel` 展示交换说明。920px 以上说明和参考格式各占一半并等高，更窄时上下排列；说明里的 PR 按钮靠底，模板代码横向滚动。交换友链标题使用普通无衬线字体、700 字重。规则是“先友后链”和“使用 https 协议”。
 
 ### 文章 `/blogs/[slug]/`
 
-`RenderPost` + 常驻右侧 TOC。最大高度 `min(50vh, 28rem)`，水平位置在侧边留白中线基础上向外移 16px、中心比视口中线高 32px，超出内部滚动；各宽度使用 `MobileTocControl` 雾玻璃浮动控件（宽屏目录钮禁用）。文章主标题独立渲染，封面作者头像 40px。
+`RenderPost` + 常驻右侧 TOC。目录高度受限后内部滚动，位置与间距由 `DesktopAside`／`TocSidebar` 维护；各宽度使用 `MobileTocControl` 雾玻璃浮动控件（宽屏目录钮禁用）。文章主标题独立渲染，封面作者行使用小尺寸圆形头像。
 
 页脚由 `Footer.astro` 用宋体显示版权、Astro 与“萌ICP备20269668号”；启用 Oneko 时另有「隐藏小猫」按钮（左侧装饰性 `🐾`）。宽屏段间用次要字色 `·` 分隔，窄屏纵向堆叠并隐藏分隔符。作者名、Astro 和备案都是链接：作者名指向站点首页，Astro 指向 `https://astro.build`，备案指向 `https://icp.gov.moe/?keyword=20269668` 并在新标签页打开；链接反馈见 [视觉不变量](./site.md#visuals)。窄屏纵向排列，备案入口不隐藏。
 
