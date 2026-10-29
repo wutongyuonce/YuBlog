@@ -62,6 +62,10 @@ const showStatsRow = showWordCount || showMinutesRead || visibleTags.length > 0
       )}
       {visibleTags.length > 0 && (
         <span class="post-meta__tags">
+          <span
+            class="i-ri-price-tag-3-line post-meta__icon post-meta__icon--stat"
+            aria-hidden="true"
+          />
           <TagLinks {tags} />
         </span>
       )}
@@ -97,8 +101,8 @@ const showStatsRow = showWordCount || showMinutesRead || visibleTags.length > 0
   }
 
   /* Row gap 0.5rem; each .post-meta__stat adds 0.5rem end margin →
-     stat↔stat / stat↔first-tag = 1rem, tag↔tag = 0.5rem. Tags use
-     display:contents so each #tag wraps as its own flex item. */
+     stat↔stat / stat↔tag-group = 1rem. Inside the tag group the icon sits
+     0.35em from the first tag (same as other stats) and tags are 0.5rem apart. */
   .post-meta__row--stats {
     flex-wrap: wrap;
     justify-content: center;
@@ -133,9 +137,21 @@ const showStatsRow = showWordCount || showMinutesRead || visibleTags.length > 0
     height: 1em;
   }
 
-  .post-meta__tags,
+  .post-meta__tags {
+    /* 标签组整体作为一个 flex 项：一个几何图标 + 组内可换行的标签。 */
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    min-width: 0;
+    margin-inline-end: 0.5rem;
+  }
+
   .post-meta__tags :global(.tag-links) {
-    display: contents;
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
   }
 
   .post-meta__tags :global(.tag-link) {

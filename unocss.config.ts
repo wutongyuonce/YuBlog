@@ -124,6 +124,7 @@ export default defineConfig({
     'i-ri-history-fill',
     'i-ri-pen-nib-line',
     'i-ri-timer-line',
+    'i-ri-price-tag-3-line',
 
     /* Rose background */
     'z--1',
