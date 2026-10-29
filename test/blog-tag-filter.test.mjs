@@ -52,8 +52,13 @@ test('search filter keeps tags that contain the query and hides empty matches', 
   assert.deepEqual(filterTagsMatchingQuery(tags, ''), [])
   assert.deepEqual(filterTagsMatchingQuery(tags, '   '), [])
   assert.deepEqual(filterTagsMatchingQuery(tags, '无此标签'), [])
-  assert.deepEqual(filterTagsMatchingQuery(tags, ' agent '), ['Agent', 'agent-ops'])
-  assert.deepEqual(filterTagsMatchingQuery(tags, 'ENGINE'), ['Context Engineering'])
+  assert.deepEqual(filterTagsMatchingQuery(tags, ' agent '), [
+    'Agent',
+    'agent-ops',
+  ])
+  assert.deepEqual(filterTagsMatchingQuery(tags, 'ENGINE'), [
+    'Context Engineering',
+  ])
   assert.deepEqual(filterTagsMatchingQuery(tags, '测'), ['测试'])
   // Ablation: case-sensitive String.includes misses Latin casing on "Agent".
   assert.equal('Agent'.includes('agent'), false)

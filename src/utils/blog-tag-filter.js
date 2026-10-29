@@ -46,7 +46,6 @@ export function matchesAllTags(postTags, selectedTags) {
   return [...selectedTags].every((tag) => normalizedTags.has(tag))
 }
 
-
 /**
  * Filters normalized tag names that contain the query (substring).
  * Trims the query; empty query yields []. Latin letters match case-insensitively;
