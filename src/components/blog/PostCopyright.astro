@@ -136,11 +136,12 @@ const publishedLabel = formatChineseDate(pubDate)
     color: var(--accent);
   }
 
-  /* Natural-width columns + gap (reference uses flex gap-6), not equal 1fr grid. */
+  /* Three fixed-ratio columns stay one row on narrow screens; values wrap inside. */
   .post-copyright__meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem 1.5rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr) minmax(0, 1.35fr);
+    column-gap: 0.85rem;
+    row-gap: 0.75rem;
     margin: 0.75rem 0 0;
   }
 
@@ -162,12 +163,14 @@ const publishedLabel = formatChineseDate(pubDate)
     font-size: 0.875rem;
     font-weight: 700;
     line-height: 1.4;
+    overflow-wrap: anywhere;
   }
 
   .post-copyright__license {
     color: inherit;
     text-decoration: none;
     border-bottom: none;
+    overflow-wrap: anywhere;
   }
 
   .post-copyright__license:hover,

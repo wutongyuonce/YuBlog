@@ -125,7 +125,7 @@
 
 #### P3：版权卡片
 
-浅灰圆角卡；右侧放大淡化的 Creative Commons 标志作水印（内联 SVG path，不外链图，卡片 `overflow: hidden` 裁切）。标题与绝对 URL 在上；下方元信息用左对齐 flex + 间距（非均分三列）：作者「梧桐雨」、中文发布时间「YYYY 年 M 月 D 日」、许可 `CC BY-NC-SA 4.0`（外链 deed，`noopener`）。作者展示名与许可权威在 `config.ts`（`AUTHOR_DISPLAY_NAME`、`CONTENT_LICENSE`）。不做「返回列表」。深色用 `color-mix` 与现有 token。
+浅灰圆角卡；右侧放大淡化的 Creative Commons 标志作水印（内联 SVG path，不外链图，卡片 `overflow: hidden` 裁切）。标题与绝对 URL 在上；下方元信息三列固定比例栅格（约 `1 : 1.45 : 1.35`，作者／发布时间／许可），窄屏仍保持一行，值在列内 `overflow-wrap` 换行。许可 `CC BY-NC-SA 4.0` 外链 deed（`noopener`）。作者展示名与许可权威在 `config.ts`（`AUTHOR_DISPLAY_NAME`、`CONTENT_LICENSE`）。不做「返回列表」。深色用 `color-mix` 与现有 token。
 
 #### P4：随便逛逛（仅列表顶）
 
