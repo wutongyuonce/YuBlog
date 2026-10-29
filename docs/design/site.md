@@ -165,7 +165,7 @@
 文章始终保留一个独立宋体 h1。其下元信息由 `PostMeta` 独占，左对齐，使用思源宋体加粗（`--font-heading`／`font-weight: 700`；字体资源仅 400 字重，700 由浏览器合成）：
 
 1. `i-ri-calendar-line` +「发布于 YYYY 年 M 月 D 日」（上海时区日历日；数字与汉字之间有空格，如「2026 年 6 月 21 日」）。
-2. 第二行流式排布并可换行：有 `lastModDate` 且与发布日不是同一上海日历日时先显示「更新于 …」（`i-ri-history-fill`）；其后为 `i-ri-pen-nib-line` +「N 字」、`i-ri-timer-line` +「N 分钟」、以及可点的 `#标签名`（`TagLinks`，悬浮样式保留）。无更新日时第二行仍为字数／时长／标签。字数来自 remark `wordCount`；字数或时长为 0 时隐藏对应项；无标签时不渲染标签段；若第二行各项皆空则不渲染该行。不用点号或竖线分隔。已废弃 `UI.postView.postMetaStyle`（`minimal`／`icon`）双样式。
+2. 第二行流式排布并可换行：有 `lastModDate` 且与发布日不是同一上海日历日时先显示「更新于 …」（`i-ri-history-fill`）；其后为 `i-ri-pen-nib-line` +「N 字」、`i-ri-timer-line` +「N 分钟」、以及可点的 `#标签名`（`TagLinks`）。标签外层用 `display: contents`，每个 `.tag-link` 是第二行 flex 子项——能与字数／时长同排放几个放几个，放不下的单个标签再换行，不整组独占一行。无更新日时第二行仍为字数／时长／标签。字数来自 remark `wordCount`；字数或时长为 0 时隐藏对应项；无标签时不渲染标签段；若第二行各项皆空则不渲染该行。不用点号或竖线分隔。已废弃 `UI.postView.postMetaStyle`（`minimal`／`icon`）双样式。
 
 标题下的标签为 `#标签名` 链接，指向标签页并只选中该标签；名字里的 `/` 或 `#` 不拆开标签。有封面时在其下渲染图片卡片：重复标题用段落，描述取 `description`、缺失时取 `subtitle`，作者行只含 40px 头像、梧桐雨与日期。封面白字和深色渐变遮罩适配两种主题。无封面时保持标题和正文结构，不构造假封面。
 
