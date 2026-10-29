@@ -94,10 +94,12 @@ const showSecondRow =
     min-width: 0;
   }
 
-  /* Group gap (字数／时长／标签组／更新于) stays even; tags use a tighter gap. */
+  /* Row gap 0.5rem; each .post-meta__stat adds 0.5rem end margin →
+     stat↔stat / stat↔first-tag = 1rem, tag↔tag = 0.5rem. Tags use
+     display:contents so each #tag wraps as its own flex item. */
   .post-meta__row--wrap {
     flex-wrap: wrap;
-    column-gap: 1rem;
+    column-gap: 0.5rem;
     row-gap: 0.25rem;
   }
 
@@ -106,6 +108,7 @@ const showSecondRow =
     align-items: center;
     gap: 0.35em;
     min-width: 0;
+    margin-inline-end: 0.5rem;
   }
 
   .post-meta__icon {
@@ -120,21 +123,15 @@ const showSecondRow =
     height: 1em;
   }
 
-  .post-meta__tags {
-    display: inline-flex;
-    flex-wrap: wrap;
-    align-items: center;
-    column-gap: 0.5rem;
-    row-gap: 0.25rem;
-    min-width: 0;
-  }
-
+  .post-meta__tags,
   .post-meta__tags :global(.tag-links) {
     display: contents;
   }
 
   .post-meta__tags :global(.tag-link) {
+    /* Override TagLinks default margin-right: 0.35em; gap comes from the row. */
     margin-right: 0;
+    margin-inline-end: 0;
     overflow-wrap: anywhere;
   }
 

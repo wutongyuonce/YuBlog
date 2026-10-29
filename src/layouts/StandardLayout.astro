@@ -93,13 +93,14 @@ const blogsHref = withBasePath('/blogs/')
 
   .post-back-link,
   :global(.prose) .post-back-link {
-    /* Glass strength 0→1 while scrolling; ::before paints FAB-matched milk pill
-       without changing in-flow text metrics. */
+    /* Glass strength 0→1 while scrolling; ::before paints FAB-matched milk pill.
+       Padding tracks glass so morph outline never exceeds the pinned pill. */
     --post-back-glass: 0;
     position: relative;
     display: inline-block;
     margin: 0;
-    padding: 0.2rem 0.15rem;
+    padding: calc(0.2rem + 0.15rem * var(--post-back-glass))
+      calc(0.15rem + 0.7rem * var(--post-back-glass));
     color: inherit;
     font-family: inherit;
     /* Same root-relative 1rem as .prose.post-content paragraphs (not
@@ -121,9 +122,9 @@ const blogsHref = withBasePath('/blogs/')
   .post-back-link::before {
     content: '';
     position: absolute;
-    /* Match MobileTocControl FAB milk glass (rgba 0.9 / blur 14 / soft shadow). */
-    inset: calc(-0.2rem - 0.15rem * var(--post-back-glass))
-      calc(-0.35rem - 0.55rem * var(--post-back-glass));
+    /* Match MobileTocControl FAB milk glass (rgba 0.9 / blur 14 / soft shadow).
+       Always inset 0 — size comes from interpolated padding, not negative inset. */
+    inset: 0;
     z-index: -1;
     border-radius: 999px;
     background: rgba(255, 255, 255, calc(0.9 * var(--post-back-glass)));
