@@ -1,5 +1,8 @@
 .prose {
   max-width: min(var(--blog-prose-width), 100%);
+  min-width: 0;
+  /* Plain long tokens (not only inline code) must wrap; html clip alone still lets some UAs widen layout. */
+  overflow-wrap: anywhere;
   font-size: var(--blog-reading-size);
   line-height: 1.75;
 }
