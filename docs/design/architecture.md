@@ -65,6 +65,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 事实 | 权威 | 不要 |
 | :--- | :--- | :--- |
 | 站点 URL、标题、语言 | `src/config.ts` `SITE` | 在页面里写死域名 |
+| 中文作者展示名、正文默认许可 | `src/config.ts` `AUTHOR_DISPLAY_NAME`／`CONTENT_LICENSE` | 在版权卡等处另写「梧桐雨」或 CC 文案／链接 |
 | 更多菜单及相册地址 | `src/config.ts` `MORE_LINKS`，图标自动加入 UnoCSS safelist | 在下拉组件中另写条目或手工复制图标 safelist |
 | 顶栏导航、顶栏 GitHub | `src/config.ts` `UI.internalNavs` / `UI.socialLinks` | 在 `NavBar` 里加死链接 |
 | 个人社交展示 | 首页 `config.ts` 的 `AUTHOR_LINKS`；关于页正文仅维护作者希望展示的联系方式 | 写入顶栏 `UI.socialLinks`，或在首页组件另写账号 |
@@ -121,7 +122,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 
 ### 4.2 列表数据 seam
 
-界面：`getFilteredPosts`、`getSortedPosts`、`getBlogListItems`、`getGroupedPostsByYear`、`getRecentBlogPosts`、`getPublishedBlogPosts`；上下篇／随便逛逛纯函数在 `post-nav.ts`（`getPostNeighbors`、`pickRandomOther`）。
+界面：`getFilteredPosts`、`getSortedPosts`、`getBlogListItems`、`getGroupedPostsByYear`、`getRecentBlogPosts`、`getPublishedBlogPosts`；上下篇／列表随机纯函数在 `post-nav.ts`（`getPostNeighbors`、`pickRandomOther`）。
 实现：草稿过滤、日期排序、渲染 `minutesRead`、按年 reduce；邻接与随机候选不在组件内重排。
 
 首页、文稿、顶部分类预览、标签、归档、RSS、名片、近期笔墨都应穿过这里取文章集合。顶部分类菜单和开发／生产 RSS 均只读取 `getPublishedBlogPosts`；开发网页列表／正文仍可预览草稿，不属于菜单排除草稿的设计边界。写作热力只从这里取已发布文章，按日聚合篇数，并按上海自然年汇总字数，规则在 `blog-heatmap.js`（`test/blog-heatmap.test.mjs`）。字数格式测试见 `test/blog-stats.test.mjs`。
@@ -132,10 +133,11 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | --- | --- | --- |
 | 排序 | `getSortedPosts`（`src/utils/data.ts`） | 在组件内另写排序 |
 | 邻接与随机纯函数 | `src/utils/post-nav.ts` | 在 Astro 模板内手算下标 |
-| 详情 UI | `src/components/blog/PostNav.astro` | 把按钮散落进 `RenderPost` 模板 |
-| 列表顶行 | `src/components/blog/RandomBrowse.astro` + `ListView.astro` | 把随机行塞进分页 HTML；不要在首页复用 |
+| 详情版权卡 | `src/components/blog/PostCopyright.astro`；作者展示名／许可在 `config.ts` | 把版权块塞进 `PostNav`；散落魔法字符串 |
+| 详情邻接 UI | `src/components/blog/PostNav.astro`（只邻接，无随便逛逛） | 把按钮散落进 `RenderPost` 模板 |
+| 列表顶行 | `src/components/blog/RandomBrowse.astro` + `ListView.astro` | 把随机行塞进分页 HTML；不要在首页或文章底复用 |
 | 随机 `href` 重写 | `src/utils/post-nav-random.js` | 每页复制一份内联随机逻辑 |
-| 文稿 URL | 与列表一致：`redirect \|\| withBasePath(\`/blogs/${id}/\`)` | 自造路径编码 |
+| 文稿 URL | 与列表一致：`redirect \|\| withBasePath(\`/blogs/${id}/\`)`；绝对 URL 用 `toAbsoluteUrl(SITE.website, …)` | 自造路径编码 |
 
 
 ### 4.3 浏览器状态 seam
@@ -236,7 +238,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 ### 4.9 评论 seam
 
-`GiscusComments.astro` 提供可选的 `title`／`description`，调用方只负责挂载位置：`RenderPost` 通过 `BaseLayout` 的 `after-content` slot 放在正文和 `PostNav` 之后、`FriendsView` 的申请说明之后、`InterestsView` 有 `entry` 的分类正文之后。`BaseLayout` 只提供正文之后的通用 slot，不判断评论范围。评论组件自身以 `width: 100%`／`max-width: var(--blog-prose-width)` 复用正文版心，不能依赖外层恰好套有 `BlogIndexLayout`；否则文章标题／正文虽然受 `.prose` 限制，默认 slot 里的评论仍会铺满 `<main>`。
+`GiscusComments.astro` 提供可选的 `title`／`description`，调用方只负责挂载位置：`RenderPost` 通过 `BaseLayout` 的 `after-content` slot 按版权卡 → `PostNav` → 评论挂载；`FriendsView` 在申请说明之后、`InterestsView` 在有 `entry` 的分类正文之后挂载评论。`BaseLayout` 只提供正文之后的通用 slot，不判断评论范围。评论组件自身以 `width: 100%`／`max-width: var(--blog-prose-width)` 复用正文版心，不能依赖外层恰好套有 `BlogIndexLayout`；否则文章标题／正文虽然受 `.prose` 限制，默认 slot 里的评论仍会铺满 `<main>`。
 
 | 规则／状态 | Authority | Interface／调用方 | 证据 |
 | --- | --- | --- | --- |
@@ -405,6 +407,7 @@ Pagefind **按需加载**：面板打开时调 `window.ensurePagefind()`（打�
 | `misc.ts` | `lockScroll()` 提供带滚动条补偿、恢复先前样式的 release；backdrop 和图片查看器复用 |
 | `image-interactions.ts` | `ImageInteractions` 自定义元素；唯一管理横滚控件、原生 dialog（含正文大图相册翻页）与连接／断开资源 |
 | `path.ts` | `withBasePath`、`resolvePath` |
+| `site-url.ts` | `toAbsoluteUrl`（无 Astro 依赖，可单测） |
 
 数据与算法检查直接调用这些接口；导航事件、目录定位等 DOM 行为在其组件属主接口和真实浏览器中验证，不用纯函数通过来代替页面接线检查。
 
