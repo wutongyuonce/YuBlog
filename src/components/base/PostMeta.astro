@@ -111,11 +111,13 @@ const showSecondRow =
     margin-inline-end: 0.5rem;
   }
 
+  /* flex align-items:center 几何居中；粗体宋体光学中线略低、Remix 图标视觉重心偏上，
+     vertical-align 在 flex 里无效 → 略下移贴齐文字水平线。列表 ListItem 观感已齐，不动。 */
   .post-meta__icon {
     flex: none;
     width: 1.15em;
     height: 1.15em;
-    vertical-align: -0.15em;
+    transform: translateY(0.07em);
   }
 
   .post-meta__icon--stat {

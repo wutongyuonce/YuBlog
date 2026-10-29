@@ -41,6 +41,8 @@
 
 ### 修复
 
+- 修复文章顶栏 `PostMeta` 图标相对相邻文字光学偏高：flex 几何居中下 `vertical-align` 无效，改为 `translateY(0.07em)` 略下移；列表卡片不动。
+
 - 修复文章顶栏元信息第二行标签整组掉到下一行：`PostMeta` 对标签外层使用 `display: contents`，让每个 `#标签` 与更新于／字数／时长同为 flex-wrap 子项，能放几个放几个。
 - 修复正文普通长无空格串（非行内 code／KaTeX）在窄屏撑开页面宽度的问题：`.prose` 对普通文本断行，保留既有 html clip 与块级局部横滚。
 
