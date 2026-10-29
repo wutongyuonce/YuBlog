@@ -2,5 +2,17 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "buildCommand": "pnpm build",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "redirects": [
+    {
+      "source": "/blogs/lm-studio-本地模型部署",
+      "destination": "/blogs/lm-studio-local-models/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/lm-studio-本地模型部署/",
+      "destination": "/blogs/lm-studio-local-models/",
+      "permanent": true
+    }
+  ]
 }
