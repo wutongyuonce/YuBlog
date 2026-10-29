@@ -140,7 +140,7 @@ Vercel 在部署的静态资源和函数前面有一层全球分布的缓存。�
 本站接口返回的头是这样的：
 
 ```http
-Cache-Control: public, max-age=0, s-maxage=1800, stale-while-revalidate=300, stale-if-error=86400
+Cache-Control: public, max-age=0, s-maxage=3600, stale-while-revalidate=300, stale-if-error=86400
 Content-Type: application/json; charset=utf-8
 ```
 
@@ -150,11 +150,11 @@ Content-Type: application/json; charset=utf-8
 | --- | --- | --- |
 | `public` | 所有缓存 | 响应里没有个人数据，可以共享缓存 |
 | `max-age=0` | 浏览器 | 每次访问都向 CDN 确认一次，避免浏览器把旧数据留在本地 |
-| `s-maxage=1800` | CDN | 30 分钟内直接用缓存，不执行函数 |
+| `s-maxage=3600` | CDN | 1 小时内直接用缓存，不执行函数 |
 | `stale-while-revalidate=300` | CDN | 刚过期的那 5 分钟，先把旧数据给访客，同时在后台取新的 |
 | `stale-if-error=86400` | CDN | 回源出错（比如 Last.fm 抖动）时最多再沿用一天旧数据，而不是把错误给访客 |
 
-**“30 分钟”不是定时任务。** 没有任何人访问时不会产生请求；过期之后，是第一个访问者触发回源。`stale-while-revalidate` 让这个触发过程不影响体验：他仍然立刻拿到 30 分钟前的那份数据，后台取完再换新。
+**“1 小时”不是定时任务。** 没有任何人访问时不会产生请求；过期之后，是第一个访问者触发回源。`stale-while-revalidate` 让这个触发过程不影响体验：他仍然立刻拿到 1 小时前的那份数据，后台取完再换新。
 
 也正因为如此，这个方案对“一个人看的博客”和“有点访问量的站点”是同一个逻辑：访问越少，回源越少。
 
@@ -174,11 +174,11 @@ Content-Type: application/json; charset=utf-8
 
 加缓存之后，最容易出的问题不是“没缓存上”，而是“把错误也缓存了”。
 
-- **失败响应一律 `no-store`。** 一次 Last.fm 超时如果被缓存 30 分钟，用户要等半小时才能看到恢复。所以 502、503、400、405 全部带 `no-store`，下一次请求重新试。
+- **失败响应一律 `no-store`。** 一次 Last.fm 超时如果被缓存 1 小时，用户要等一小时才能看到恢复。所以 502、503、400、405 全部带 `no-store`，下一次请求重新试。
 - **只接受不带查询参数的 `GET`。** 缓存键包含查询字符串，`/api/lastfm?v=1` 和 `?v=2` 是两份缓存、两次回源；而一次回源最多会打 33 个 Last.fm 请求。把接口限定在唯一地址，既让缓存行为可预测，也让别人没法用随机参数消耗你的 API 配额。
 - **错误信息分两层。** 响应体只给机器可读的错误码（`missing_api_key`、`upstream_unavailable`），人看的细节走运行日志；日志里的消息由适配器净化过，不含密钥。
 
-这几点加起来，接口的行为就是：成功时“慢一半小时、快一百倍”，失败时“立刻失败、下次再试、不污染缓存”。
+这几点加起来，接口的行为就是：成功时“慢一小时、快一百倍”，失败时“立刻失败、下次再试、不污染缓存”。
 
 ## 把接口放到 Vercel：根目录 api/ 一个文件一个函数
 
@@ -213,7 +213,7 @@ Vercel 文档里“根目录 `api/` 下一个文件一个函数”是平台层�
 import { fetchLastfmSnapshot } from '../src/utils/lastfm.mjs'
 
 const CACHE =
-  'public, max-age=0, s-maxage=1800, stale-while-revalidate=300, stale-if-error=86400'
+  'public, max-age=0, s-maxage=3600, stale-while-revalidate=300, stale-if-error=86400'
 
 export async function handleListening(request, { apiKey, user, fetchImpl, now } = {}) {
   if (request.method !== 'GET')
@@ -345,7 +345,7 @@ document.dispatchEvent(new Event('content:added'))
 
 3. **在浏览器里看四种状态。** 正常加载、接口失败、真实空数据、禁用 JavaScript，各看一次。减少动态效果（`prefers-reduced-motion`）下的横滑也值得看一次。
 
-4. **上线后确认一遍真实数据。** 冷缓存的那次访问要等函数把这一轮 Last.fm 请求跑完，随后 30 分钟内所有访客都命中缓存。这一步只能在实际部署上验证，本地和浏览器结果都代替不了。
+4. **上线后确认一遍真实数据。** 冷缓存的那次访问要等函数把这一轮 Last.fm 请求跑完，随后 1 小时内所有访客都命中缓存。这一步只能在实际部署上验证，本地和浏览器结果都代替不了。
 
 ## 如果要在自己的站上复刻
 
@@ -358,7 +358,7 @@ document.dispatchEvent(new Event('content:added'))
 5. 页面输出骨架与卡片模板，脚本取回数据后校验、填充、派发 `content:added`。
 6. 验证：响应头、注入假 `fetch` 的单测、浏览器的四种状态、上线后的真实数据。
 
-两个可以按需改的参数：`s-maxage` 决定数据最多滞后多久（本站 30 分钟，越小越新鲜、回源越频繁），以及是否保留 `stale-if-error`（保留的代价是上游故障时你会继续展示旧数据，而不是让页面显式报错）。
+两个可以按需改的参数：`s-maxage` 决定数据最多滞后多久（本站 1 小时，越小越新鲜、回源越频繁），以及是否保留 `stale-if-error`（保留的代价是上游故障时你会继续展示旧数据，而不是让页面显式报错）。
 
 不适合这层缓存的东西也要说清楚：带登录态的个性化响应应该用 `private, max-age=0`；实时性要求高到“过期即错误”的数据用 `no-store`。CDN 缓存解决的是“同样的数据被反复请求”，不是“数据必须永远最新”。
 

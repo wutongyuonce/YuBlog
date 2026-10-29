@@ -8,11 +8,11 @@
 import { fetchLastfmSnapshot } from '../src/utils/lastfm.mjs'
 
 /**
- * CDN 缓存 30 分钟：过期后 5 分钟内先返回旧数据并在后台刷新；上游出错时最多再沿用
+ * CDN 缓存 1 小时：过期后 5 分钟内先返回旧数据并在后台刷新；上游出错时最多再沿用
  * 一天旧数据，避免 Last.fm 抖动让首页听歌区块变空。
  */
 const CACHE =
-  'public, max-age=0, s-maxage=1800, stale-while-revalidate=300, stale-if-error=86400'
+  'public, max-age=0, s-maxage=3600, stale-while-revalidate=300, stale-if-error=86400'
 const NO_STORE = 'no-store'
 
 const json = (body, { status = 200, cache }) =>

@@ -2,8 +2,8 @@ name: Warm Last.fm CDN
 
 on:
   schedule:
-    # Every 25 minutes (UTC), inside the 30-minute CDN fresh window.
-    - cron: '*/25 * * * *'
+    # 每小时一次，落在 1 小时 CDN 新鲜窗口内。
+    - cron: '23 * * * *'
   workflow_dispatch:
 
 permissions: {}
