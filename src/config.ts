@@ -129,9 +129,6 @@ export const UI: Ui = {
     left: ['internalNavs'],
     right: ['socialLinks', 'searchButton', 'accentButton', 'themeButton'],
   },
-  postView: {
-    postMetaStyle: 'minimal',
-  },
   groupView: {
     showGroupItemColorOnHover: true,
   },

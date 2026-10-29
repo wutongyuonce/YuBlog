@@ -74,6 +74,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 已发布文章列表、排序、按年分组 | `src/utils/data.ts` | 在视图里 `getCollection` 再 filter 一遍 |
 | 原值分类的动态入口、URL 的分类 hash／兼容 query、精确筛选、标签、页码 | `src/utils/blog-browser.js` | 写固定分类允许表、合并别名或在 `ListView` 里手写 `URLSearchParams` |
 | 单标签选中链接 | `src/utils/blog-browser.js` 的 `tagSelectionLinks`；`TagLinks` 只呈现 | 用 ` / ` 拼接标签，或在文章元信息、归档、列表卡片里手写 `?tag=` |
+| 文章头返回文稿与元信息排版 | `StandardLayout`（仅 `isArticle`）输出「← 返回文稿」；`PostMeta` 独占发布／更新／字数／时长／标签三行；日期文案由 `post-meta-date.js`（上海时区）格式化；字数由 remark `wordCount` 经 `RenderPost` 传入 | 在拾趣／关于复用返回链；再引入 `postMetaStyle`；在视图里手写日期空格规则 |
 | 归档分类配色领取、唯一性、持久化与容量失败 | `src/utils/blog-category-colors.js`；预设及记录在 `src/data/blog-category-colors.json` | 在视图中推断颜色、循环复用或按分类顺序重排已有分配 |
 | 首页各板块标题、名片与居中布局样式 | `public/shell.css` | 通过 JS 重复测量或复制卡片模板 |
 | 标签 AND 匹配、搜索标签包含过滤 | `src/utils/blog-tag-filter.js`（`matchesAllTags`／`filterTagsMatchingQuery`） | 在点击或搜索面板里另写 `every`/`includes`／大小写规则 |
@@ -162,7 +163,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 静态防撑宽职责：`main.css` 维护 `html` 横向 `overflow-x: clip` 兜底与宽度变量；纵向滚动及 `scrollbar-gutter: stable` 留白统一归页面根节点，`body` 不另建滚动容器，使固定顶栏、正文与页脚共享居中基准。`prose.css` 维护正文限宽；`markdown.css` 维护行内 code 断行与块级公式局部横滚。弹层临时锁滚动仍由 `misc.lockScroll()` 维护：锁定根节点，已有稳定留白时不再补偿；释放只恢复同页的根节点和原 body 留白。版心与手机页脚四行居中由 `scripts/verify-shell-alignment.mjs` 浏览器验收。
 
-`--font-heading`（本地思源宋体 400 字重）用于页面大标题、文章顶部标题、作者名、写作热力与近期笔墨；文稿列表与归档文章标题使用同一宋体，字重分别为 700 与 400，分别由 `ListItem.astro` 的 `.post-preview h2` 和 `shell.css` 的 `.archive-post__title` 维护；标签筛选结果复用 `ListItem`。字体资源提供 400 字重，700 由浏览器合成加粗。Markdown 内部 h1–h6、正文和标签使用 Inter／系统无衬线字体。顶栏及下拉菜单文字使用宋体；品牌为「梧桐雨の博客」，使用桌面 16px、601–799px 为 14.72px、600px 及以下为 14.4px 思源宋体，行高 1；归档年份与日期也使用思源宋体。`PageHeading` 是标签、拾趣（含子页）、项目、关于的共享页头：标题 28px 宋体 400 字重，说明 14px 普通字体；友链分组标题为 24px 宋体。
+`--font-heading`（本地思源宋体 400 字重）用于页面大标题、文章顶部标题、作者名、写作热力与近期笔墨；文稿列表与归档文章标题使用同一宋体，字重分别为 700 与 400，分别由 `ListItem.astro` 的 `.post-preview h2` 和 `shell.css` 的 `.archive-post__title` 维护；文章头 `PostMeta` 同样使用宋体 700；标签筛选结果复用 `ListItem`。字体资源提供 400 字重，700 由浏览器合成加粗。Markdown 内部 h1–h6、正文和标签使用 Inter／系统无衬线字体。顶栏及下拉菜单文字使用宋体；品牌为「梧桐雨の博客」，使用桌面 16px、601–799px 为 14.72px、600px 及以下为 14.4px 思源宋体，行高 1；归档年份与日期也使用思源宋体。`PageHeading` 是标签、拾趣（含子页）、项目、关于的共享页头：标题 28px 宋体 400 字重，说明 14px 普通字体；友链分组标题为 24px 宋体。
 
 正文字体 Inter 和代码字体 Maple Mono 也在本地：`public/fonts/Inter-latin.woff2`、`public/fonts/MapleMono-latin.woff2`，与思源宋体一起由 `public/shell.css` 的 `@font-face` 引用。这些声明随 `site-styles` 跨页保留，避免已加载字体回退；不要把共享字体声明放进会被替换的组件样式。不要再接 Google Fonts 或 `presetWebFonts`。这两份只含拉丁字符，中文走字体栈后面的系统字体。保留的两种手写字体 `@font-face` 在 `public/shell.css` 中，优先引用构建结束后生成的 `*-title.woff2` 子集，再回退到完整字体；`plugins/astro-subset-title-fonts.ts` 在构建后检查每个子集引用和文件都存在。Vite 不会提前解析尚未生成的字体路径。开发服务器没有子集时会回退到同一次声明里的完整文件，那不是线上行为。
 
@@ -196,7 +197,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 全站没有个人右侧栏；`BlogProfile` 只在首页出现，其下依次是 `WritingHeatmap`、`ProgressStats`、`RecentWriting`、`ScreenTime`、`RecentMedia`、`RecentListening`。导航页统一通过 `BlogIndexLayout` 限制宽度。文章详情使用 `StandardLayout`，TOC 独立放在正文外侧。
 
-顶栏的 `--site-nav-width` 引用 `--blog-shell-width`，与内容版心共用 660px 目标；更多右侧保留剩余空白。内容宽度同时受 `100vw - 两侧外边距` 限制；1200px 及以上再减去 32rem，避免加宽正文时把目录从 208px 挤窄。顶栏与正文同步收窄，小屏两排导航仍受响应式外边距 `--site-gutter` 约束。`--blog-prose-width` 引用版心宽度，标题、正文与返回链接对齐；目录读取同一个 `--blog-prose-width`，在正文边缘与视口外边距之间的留白中线基础上向外移 16px，最大 208px、受视口剩余空间约束。文稿列表卡片的封面列固定为无图 222px、有图 250px，版心宽度变化只进入左侧文字；768px 及以上封面垂直居中，更窄时改为单列并隐藏空封面列。目录与正文读取同一版心宽度。小屏由可用视口宽度约束。
+顶栏的 `--site-nav-width` 引用 `--blog-shell-width`，与内容版心共用 660px 目标；更多右侧保留剩余空白。内容宽度同时受 `100vw - 两侧外边距` 限制；1200px 及以上再减去 32rem，避免加宽正文时把目录从 208px 挤窄。顶栏与正文同步收窄，小屏两排导航仍受响应式外边距 `--site-gutter` 约束。`--blog-prose-width` 引用版心宽度，标题、正文与文章头「← 返回文稿」对齐；目录读取同一个 `--blog-prose-width`，在正文边缘与视口外边距之间的留白中线基础上向外移 16px，最大 208px、受视口剩余空间约束。文稿列表卡片的封面列固定为无图 222px、有图 250px，版心宽度变化只进入左侧文字；768px 及以上封面垂直居中，更窄时改为单列并隐藏空封面列。目录与正文读取同一版心宽度。小屏由可用视口宽度约束。
 
 导航是一条有细边框、轻阴影和柔和当前态的居中悬浮条，品牌、页面入口、工具按钮分组。≥800px 为一排，更窄视口为品牌／工具和页面入口两排。用 `top` 与 opacity 隐藏，不在包含搜索面板的祖先上使用 transform 或 backdrop-filter，保证搜索弹窗仍相对于视口定位。
 

@@ -36,6 +36,10 @@ const minutesRead = getMinutesRead(
   frontmatter.minutesRead,
   remarkPluginFrontmatter.minutesRead as number
 )
+const wordCount =
+  typeof remarkPluginFrontmatter.wordCount === 'number'
+    ? remarkPluginFrontmatter.wordCount
+    : 0
 const tags = frontmatter.tags
 const isDraft = frontmatter.draft
 
@@ -90,6 +94,7 @@ frontmatter to <code>false</code> or remove it to publish the post.`
         {pubDate}
         {lastModDate}
         {minutesRead}
+        {wordCount}
         {tags}
         hasSubtitle={!titleImage && !!subtitle}
       />

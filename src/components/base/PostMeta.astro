@@ -1,75 +1,130 @@
 ---
-import { formatDate } from '~/utils/datetime'
+import {
+  formatPostMetaDate,
+  sameSiteCalendarDate,
+} from '~/utils/post-meta-date.js'
 import { tagSelectionLinks } from '~/utils/blog-browser.js'
-import { UI } from '~/config'
 import TagLinks from '~/components/base/TagLinks.astro'
 
 interface Props {
   pubDate: string
   lastModDate: string | undefined
   minutesRead: number
+  wordCount: number
   tags: string[]
   hasSubtitle: boolean
 }
 
-const { pubDate, lastModDate, minutesRead, tags, hasSubtitle } = Astro.props
+const { pubDate, lastModDate, minutesRead, wordCount, tags, hasSubtitle } =
+  Astro.props
 
 const visibleTags = tagSelectionLinks(tags)
-const isMinimal = UI.postView.postMetaStyle === 'minimal'
 const showLastModDate =
-  !!lastModDate && formatDate(lastModDate) !== formatDate(pubDate)
+  !!lastModDate && !sameSiteCalendarDate(lastModDate, pubDate)
+const pubDateLabel = formatPostMetaDate(pubDate)
+const lastModDateLabel =
+  showLastModDate && lastModDate ? formatPostMetaDate(lastModDate) : ''
+const showWordCount = wordCount > 0
+const showMinutesRead = minutesRead > 0
+const showStatsRow = showWordCount || showMinutesRead || visibleTags.length > 0
 ---
 
-{isMinimal ? (
-  <div
-    class:list={[
-      'post-meta op-50 lt-md:text-sm',
-      hasSubtitle && 'post-meta--with-subtitle',
-    ]}
-  >
-    <time datetime={pubDate}>{formatDate(pubDate)}</time>
-    {showLastModDate && (
-      <time datetime={lastModDate}> · Updated {formatDate(lastModDate)}</time>
-    )}
-    {minutesRead > 0 && <span> · {minutesRead} min</span>}
-    {visibleTags.length > 0 && (
+<div class:list={['post-meta', hasSubtitle && 'post-meta--with-subtitle']}>
+  <div class="post-meta__row">
+    <span class="i-ri-calendar-line post-meta__icon" aria-hidden="true" />
+    <span>
+      发布于 <time datetime={pubDate}>{pubDateLabel}</time>
+    </span>
+  </div>
+  {showLastModDate && (
+    <div class="post-meta__row">
+      <span class="i-ri-history-fill post-meta__icon" aria-hidden="true" />
       <span>
-        {' · '}
-        <TagLinks {tags} />
+        更新于 <time datetime={lastModDate}>{lastModDateLabel}</time>
       </span>
-    )}
-  </div>
-) : (
-  <div
-    class:list={[
-      'post-meta flex justify-start items-center gap-x-4 gap-y-1 flex-wrap lt-md:text-sm op-50',
-      hasSubtitle && 'post-meta--with-subtitle',
-    ]}
-  >
-    <div>
-      <span class="i-ri-calendar-line mr-1.2" />
-      <time datetime={pubDate}>{formatDate(pubDate)}</time>
     </div>
-    {showLastModDate && (
-      <div>
-        <span class="i-ri-history-fill mr-1.2" />
-        <time datetime={lastModDate}>{formatDate(lastModDate)}</time>
-      </div>
-    )}
-    <div>
-      <span class="i-ri-timer-line mr-1.2 ml--0.6" />
-      {minutesRead > 0 && <span>{minutesRead} min read</span>}
+  )}
+  {showStatsRow && (
+    <div class="post-meta__row post-meta__row--stats">
+      {showWordCount && (
+        <span class="post-meta__stat">
+          <span
+            class="i-ri-pen-nib-line post-meta__icon post-meta__icon--stat"
+            aria-hidden="true"
+          />
+          <span>{wordCount} 字</span>
+        </span>
+      )}
+      {showMinutesRead && (
+        <span class="post-meta__stat">
+          <span
+            class="i-ri-timer-line post-meta__icon post-meta__icon--stat"
+            aria-hidden="true"
+          />
+          <span>{minutesRead} 分钟</span>
+        </span>
+      )}
+      {visibleTags.length > 0 && (
+        <span class="post-meta__stat post-meta__tags">
+          <TagLinks {tags} />
+        </span>
+      )}
     </div>
-    {visibleTags.length > 0 && (
-      <div>
-        <TagLinks {tags} />
-      </div>
-    )}
-  </div>
-)}
+  )}
+</div>
 
 <style>
-  .post-meta time {
-    color: var(--accent);
+  .post-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    color: color-mix(in srgb, var(--c-text) 58%, transparent);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+  }
+
+  .post-meta__row {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    min-width: 0;
+  }
+
+  .post-meta__row--stats {
+    flex-wrap: wrap;
+    column-gap: 1rem;
+    row-gap: 0.25rem;
+  }
+
+  .post-meta__stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    min-width: 0;
+  }
+
+  .post-meta__icon {
+    flex: none;
+    width: 1.15em;
+    height: 1.15em;
+    vertical-align: -0.15em;
+  }
+
+  .post-meta__icon--stat {
+    width: 1em;
+    height: 1em;
+  }
+
+  .post-meta__tags {
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 767px) {
+    .post-meta {
+      font-size: 0.875rem;
+    }
   }
 </style>

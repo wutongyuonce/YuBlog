@@ -1,4 +1,6 @@
 ---
+import { withBasePath } from '~/utils/path'
+
 interface Props {
   title?: string
   subtitle?: string
@@ -20,6 +22,8 @@ const {
   searchFilter,
   class: className,
 } = Astro.props
+
+const blogsHref = withBasePath('/blogs/')
 ---
 
 <header
@@ -31,6 +35,11 @@ const {
     },
   ]}
 >
+  {isArticle && (
+    <a class="post-back-link" href={blogsHref}>
+      ← 返回文稿
+    </a>
+  )}
   {title && <h1 class="page-title">{title}</h1>}
   {subtitle && !hasHeroImage && (
     <p class={`${isArticle ? 'post-subtitle' : 'mt--8!'} op-50 italic`}>
@@ -62,6 +71,32 @@ const {
 
   .post-header {
     margin-bottom: 1.75rem;
+  }
+
+  .post-back-link,
+  :global(.prose) .post-back-link {
+    display: inline-block;
+    margin: 0 0 0.85rem;
+    color: inherit;
+    font-family: inherit;
+    font-size: var(--blog-reading-size);
+    font-weight: 400;
+    line-height: 1.5;
+    border-bottom: 0;
+    text-decoration: none;
+    text-underline-offset: 0.18em;
+    transition:
+      color 160ms ease,
+      text-decoration-color 160ms ease;
+  }
+
+  .post-back-link:is(:hover, :focus-visible),
+  :global(.prose) .post-back-link:is(:hover, :focus-visible) {
+    color: var(--accent);
+    border-bottom: 0;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--accent);
   }
 </style>
 

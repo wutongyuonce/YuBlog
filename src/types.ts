@@ -363,17 +363,6 @@ export interface NavBarLayout {
   right: NavBarComponentType[]
 }
 
-interface PostView {
-  /**
-   * Controls the display style of post metadata (creation date, read time, modified date):
-   * - `'minimal'`: Plain text with middle dots.
-   * - `'icon'`: Includes icons before each metadata item.
-   *
-   * On mobile devices, the modified date (if present) is hidden.
-   */
-  postMetaStyle: 'minimal' | 'icon'
-}
-
 interface GroupView {
   /**
    * Determines whether group item icons display in color when hovered over.
@@ -431,13 +420,6 @@ export interface Ui {
    * Used in `src/components/nav/NavBar.astro`.
    */
   navBarLayout: NavBarLayout
-
-  /**
-   * Configures the post UIs.
-   *
-   * Used in `src/components/base/PostMeta.astro`.
-   */
-  postView: PostView
 
   /**
    * Configures the `/projects` UIs.
