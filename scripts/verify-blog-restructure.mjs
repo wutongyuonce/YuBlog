@@ -284,11 +284,6 @@ test('only articles, friends and every interest category have isolated comments 
         'Article content flows directly into navigation and comments'
       )
       assert.ok(copyright, 'Article shows a copyright card')
-      assert.equal(
-        elements(page, (node) => hasClass(node, 'random-browse')).length,
-        0,
-        'Article footer no longer offers random browse'
-      )
       const copyrightText = textOf(copyright)
       assert.ok(
         copyrightText.includes(AUTHOR_DISPLAY_NAME),
@@ -331,16 +326,14 @@ test('only articles, friends and every interest category have isolated comments 
   }
 })
 
-test('manuscript list keeps random browse at the top', () => {
-  assert.ok(
-    elements(blogs, (node) => hasClass(node, 'random-browse')).length >= 1,
-    'Blogs list exposes random browse'
-  )
-  assert.equal(
-    elements(home, (node) => hasClass(node, 'random-browse')).length,
-    0,
-    'Home does not expose random browse'
-  )
+test('no page offers random browse', () => {
+  for (const [name, page] of Object.entries({ home, blogs, tags })) {
+    assert.equal(
+      elements(page, (node) => hasClass(node, 'random-browse')).length,
+      0,
+      `${name} must not expose the removed random browse entry`
+    )
+  }
 })
 
 test('deployment preserves the manuscript route', async () => {

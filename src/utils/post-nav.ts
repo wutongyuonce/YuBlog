@@ -1,5 +1,5 @@
 /**
- * Neighbor + random helpers for blog post navigation.
+ * Neighbor helpers for blog post navigation.
  * Order must match `getSortedPosts` in `data.ts` (pubDate desc, id asc).
  *
  * 上一篇 = older neighbor (next index in newest-first array)
@@ -36,31 +36,4 @@ export function getPostNeighbors(
     next: sorted[index - 1] ?? null,
     index,
   }
-}
-
-/**
- * Pick a random entry from `candidates`, optionally excluding `excludeId`
- * (matched against `id`). Injectable `random` for tests (0 ≤ n < 1).
- */
-export function pickRandomOther<T extends { id: string }>(
-  candidates: readonly T[],
-  excludeId: string | null | undefined,
-  random: () => number = Math.random
-): T | null {
-  const pool =
-    excludeId == null || excludeId === ''
-      ? [...candidates]
-      : candidates.filter((item) => item.id !== excludeId)
-  if (pool.length === 0) return null
-  const n = random()
-  const clamped = Number.isFinite(n) ? Math.min(Math.max(n, 0), 0.999999999) : 0
-  return pool[Math.floor(clamped * pool.length)] ?? null
-}
-
-/** Deterministic no-JS fallback: first candidate after exclude. */
-export function fallbackRandomOther<T extends { id: string }>(
-  candidates: readonly T[],
-  excludeId: string | null | undefined
-): T | null {
-  return pickRandomOther(candidates, excludeId, () => 0)
 }

@@ -123,7 +123,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 
 ### 4.2 列表数据 seam
 
-界面：`getFilteredPosts`、`getSortedPosts`、`getBlogListItems`、`getGroupedPostsByYear`、`getRecentBlogPosts`、`getPublishedBlogPosts`；上下篇／列表随机纯函数在 `post-nav.ts`（`getPostNeighbors`、`pickRandomOther`）。
+界面：`getFilteredPosts`、`getSortedPosts`、`getBlogListItems`、`getGroupedPostsByYear`、`getRecentBlogPosts`、`getPublishedBlogPosts`；上下篇纯函数在 `post-nav.ts`（`getPostNeighbors`）。
 实现：草稿过滤、日期排序、渲染 `minutesRead`、按年 reduce；邻接与随机候选不在组件内重排。
 
 首页、文稿、顶部分类预览、标签、归档、RSS、名片、近期笔墨都应穿过这里取文章集合。顶部分类菜单和开发／生产 RSS 均只读取 `getPublishedBlogPosts`；开发网页列表／正文仍可预览草稿，不属于菜单排除草稿的设计边界。写作热力只从这里取已发布文章，按日聚合篇数，并按上海自然年汇总字数，规则在 `blog-heatmap.js`（`test/blog-heatmap.test.mjs`）。字数格式测试见 `test/blog-stats.test.mjs`。
@@ -135,9 +135,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 排序 | `getSortedPosts`（`src/utils/data.ts`） | 在组件内另写排序 |
 | 邻接与随机纯函数 | `src/utils/post-nav.ts` | 在 Astro 模板内手算下标 |
 | 详情版权卡 | `PostCopyright.astro`；作者／许可读 `config.ts`；中文发布日用 `formatPostMetaDate`（`post-meta-date.js`） | 把版权块塞进 `PostNav`；另写日期空格规则或魔法字符串 |
-| 详情邻接 UI | `src/components/blog/PostNav.astro`（只邻接，无随便逛逛） | 把按钮散落进 `RenderPost` 模板 |
-| 列表顶行 | `src/components/blog/RandomBrowse.astro` + `ListView.astro` | 把随机行塞进分页 HTML；不要在首页或文章底复用 |
-| 随机 `href` 重写 | `src/utils/post-nav-random.js` | 每页复制一份内联随机逻辑 |
+| 详情邻接 UI | `src/components/blog/PostNav.astro`（只做上下篇，不提供随机入口） | 把按钮散落进 `RenderPost` 模板，或重启「随便逛逛」随机入口 |
 | 文稿 URL | 与列表一致：`redirect \|\| withBasePath(\`/blogs/${id}/\`)`；绝对 URL 用 `new URL(path, SITE.website).href`（同 RSS） | 自造路径编码 |
 
 
@@ -167,7 +165,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 静态防撑宽职责：`main.css` 维护 `html` 横向 `overflow-x: clip` 兜底与宽度变量；纵向滚动及 `scrollbar-gutter: stable` 留白统一归页面根节点，`body` 不另建滚动容器，使固定顶栏、正文与页脚共享居中基准。`prose.css` 维护正文限宽，并对普通长无空格 token 使用 `overflow-wrap: anywhere`（含 `min-width: 0`）断行；`markdown.css` 维护行内 code 断行与块级公式／宽表局部横滚。弹层临时锁滚动仍由 `misc.lockScroll()` 维护：锁定根节点，已有稳定留白时不再补偿；释放只恢复同页的根节点和原 body 留白。版心与手机页脚四行居中由 `scripts/verify-shell-alignment.mjs` 浏览器验收。
 
-`--font-heading`（本地思源宋体 400 字重）用于页面大标题、文章顶部标题、作者名、写作热力与近期笔墨；文稿列表、文章顶部大标题与文章底上一篇／下一篇标题使用同一宋体加粗（700），归档文章标题用常规字重（400），分别由 `ListItem.astro` 的 `.post-preview h2`、`main.css` 的 `.prose.post-header h1.page-title`、`PostNav.astro` 的 `.post-nav__title` 和 `shell.css` 的 `.archive-post__title` 维护；文章头 `PostMeta` 同样使用宋体 700；标签筛选结果复用 `ListItem`。字体资源提供 400 字重，700 由浏览器合成加粗，相关规则显式写 `font-synthesis: weight`。Markdown 内部 h1–h6、正文和标签使用 Inter／系统无衬线字体。顶栏及下拉菜单文字使用宋体；品牌为「梧桐雨の博客」，字号随桌面／中部／手机三档收小，行高 1；归档年份与日期也使用思源宋体。`PageHeading` 是标签、拾趣（含子页）、项目、关于的共享页头：宋体标题配普通字体说明；友链分组标题用更小号的宋体。
+`--font-heading`（本地思源宋体 400 字重）用于页面大标题、文章顶部标题、作者名、写作热力与近期笔墨；只有文章顶部大标题与文章底上一篇／下一篇标题使用同一宋体加粗（700），分别由 `main.css` 的 `.prose.post-header h1.page-title` 和 `PostNav.astro` 的 `.post-nav__title` 维护；文稿列表与标签筛选结果的列表标题（`ListItem.astro` 的 `.post-preview h2`）和归档文章标题（`shell.css` 的 `.archive-post__title`）保持宋体常规字重（400）；文章头 `PostMeta` 同样使用宋体 700；标签筛选结果复用 `ListItem`。字体资源提供 400 字重，700 由浏览器合成加粗，相关规则显式写 `font-synthesis: weight`。Markdown 内部 h1–h6、正文和标签使用 Inter／系统无衬线字体。顶栏及下拉菜单文字使用宋体；品牌为「梧桐雨の博客」，字号随桌面／中部／手机三档收小，行高 1；归档年份与日期也使用思源宋体。`PageHeading` 是标签、拾趣（含子页）、项目、关于的共享页头：宋体标题配普通字体说明；友链分组标题用更小号的宋体。
 
 正文字体 Inter 和代码字体 Maple Mono 也在本地：`public/fonts/Inter-latin.woff2`、`public/fonts/MapleMono-latin.woff2`，与思源宋体一起由 `public/shell.css` 的 `@font-face` 引用。这些声明随 `site-styles` 跨页保留，避免已加载字体回退；不要把共享字体声明放进会被替换的组件样式。不要再接 Google Fonts 或 `presetWebFonts`。这两份只含拉丁字符，中文走字体栈后面的系统字体。保留的两种手写字体 `@font-face` 在 `public/shell.css` 中，优先引用构建结束后生成的 `*-title.woff2` 子集，再回退到完整字体；`plugins/astro-subset-title-fonts.ts` 在构建后检查每个子集引用和文件都存在。Vite 不会提前解析尚未生成的字体路径。开发服务器没有子集时会回退到同一次声明里的完整文件，那不是线上行为。
 

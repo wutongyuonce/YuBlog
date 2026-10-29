@@ -1,8 +1,6 @@
 ---
 import ListItem from './ListItem.astro'
-import RandomBrowse from '~/components/blog/RandomBrowse.astro'
 import { getBlogListItems } from '~/utils/data'
-import type { PostNavItem } from '~/utils/post-nav'
 import {
   BLOG_PAGE_SIZE,
   blogFirstPaintBootSource,
@@ -18,11 +16,6 @@ interface Props {
 
 const { basePath = withBasePath('/blogs/'), requireTags = false } = Astro.props
 const posts = await getBlogListItems()
-const randomCandidates: PostNavItem[] = posts.map((item) => ({
-  id: item.id,
-  title: item.data.title,
-  href: item.data.redirect || withBasePath(`/blogs/${item.id}/`),
-}))
 const firstPaintBoot = blogFirstPaintBootSource()
 const firstPageCount = Math.ceil(posts.length / BLOG_PAGE_SIZE)
 const showFirstPagePagination = !requireTags && firstPageCount > 1
@@ -84,11 +77,6 @@ const firstPagePaginationHtml = showFirstPagePagination
   <div class="blog-filters" data-filters hidden></div>
   <p class="sr-only" data-status aria-live="polite"></p>
   <div data-list-panel hidden={requireTags}>
-    <RandomBrowse
-      class="blog-random-top"
-      candidates={randomCandidates}
-      label="随便逛逛"
-    />
     <div data-post-list>
       {posts.map((item, index) => (
         <div
@@ -162,9 +150,6 @@ const firstPagePaginationHtml = showFirstPagePagination
     font-size: 0.95rem;
     line-height: 1.5;
     color: color-mix(in srgb, var(--c-text) 50%, transparent);
-  }
-  .blog-random-top {
-    margin-bottom: 1.25rem;
   }
   .blog-filters {
     display: flex;

@@ -1,12 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import {
-  fallbackRandomOther,
-  getPostNeighbors,
-  pickRandomOther,
-} from '../src/utils/post-nav.ts'
-import { assignRandomBrowseLinks } from '../src/utils/post-nav-random.js'
+import { getPostNeighbors } from '../src/utils/post-nav.ts'
 
 /** Newest-first fixture matching getSortedPosts order. */
 const sorted = [
@@ -50,64 +45,4 @@ test('same-day id order matches localeCompare ascending in the sorted array', ()
   const aroundBeta = getPostNeighbors(sameDay, 'beta')
   assert.equal(aroundBeta.prev, null)
   assert.equal(aroundBeta.next?.id, 'alpha')
-})
-
-test('pickRandomOther never returns the excluded post', () => {
-  const seen = new Set()
-  for (let i = 0; i < 40; i++) {
-    const pick = pickRandomOther(sorted, 'b-mid', () => i / 40)
-    assert.ok(pick)
-    assert.notEqual(pick.id, 'b-mid')
-    seen.add(pick.id)
-  }
-  assert.deepEqual([...seen].sort(), ['a-old', 'c-new'])
-})
-
-test('pickRandomOther returns null when the pool is empty', () => {
-  assert.equal(pickRandomOther([], null), null)
-  assert.equal(
-    pickRandomOther([{ id: 'only', title: 'O', href: '/o/' }], 'only'),
-    null
-  )
-})
-
-test('fallbackRandomOther is deterministic first-of-pool', () => {
-  assert.equal(fallbackRandomOther(sorted, 'c-new')?.id, 'b-mid')
-  assert.equal(fallbackRandomOther(sorted, null)?.id, 'c-new')
-})
-
-test('assignRandomBrowseLinks rewrites href from data-candidates', () => {
-  class FakeAnchor {
-    constructor() {
-      this.href = '/blogs/fallback/'
-      this._attrs = {
-        'data-candidates': JSON.stringify([
-          '/blogs/a/',
-          '/blogs/b/',
-          '/blogs/c/',
-        ]),
-      }
-    }
-    getAttribute(name) {
-      return this._attrs[name] ?? null
-    }
-  }
-
-  globalThis.HTMLAnchorElement = FakeAnchor
-  const anchor = new FakeAnchor()
-  const root = {
-    querySelectorAll() {
-      return [anchor]
-    },
-  }
-
-  const originalRandom = Math.random
-  Math.random = () => 0.99
-  try {
-    assignRandomBrowseLinks(root)
-    assert.equal(anchor.href, '/blogs/c/')
-  } finally {
-    Math.random = originalRandom
-    delete globalThis.HTMLAnchorElement
-  }
 })

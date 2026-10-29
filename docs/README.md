@@ -11,7 +11,7 @@
 | 写文章、加拾趣、维护友链或项目 | [内容维护](./guides/development.md#content) | [内容发布 skill](../blog-content-publisher-skill/SKILL.md)、[正文样式指南文章](../src/content/blogs/image-layout-demo.md) |
 | 写图片排版、卡片日期、视频或绘图 | [正文与媒体](./design/content.md) | [源码与管线](./design/content.md#pipeline)、[组件验证](./design/content.md#verification) |
 | 理解一个页面应如何工作 | [站点与页面](./design/site.md) | [模块属主](./design/architecture.md#ownership) |
-| 修改导航、分类筛选、分页或上下篇 | [页面契约](./design/site.md#browsing) | [上下篇与随便逛逛](./design/site.md#post-navigation)、[实现边界](./design/architecture.md#boundaries) |
+| 修改导航、分类筛选、分页或上下篇 | [页面契约](./design/site.md#browsing) | [上下篇](./design/site.md#post-navigation)、[实现边界](./design/architecture.md#boundaries) |
 | 改样式、目录、主题、搜索或评论 | [架构与模块边界](./design/architecture.md) | [视觉约束](./design/site.md#visuals)、[评论](./design/site.md#comments) |
 | 确认 RSS 会显示什么、换域名有什么影响 | [SEO 与全文订阅](./design/distribution.md) | [RSS 内容表达](./design/distribution.md#rss-content)、[验证](./design/distribution.md#verification) |
 | 配置首页屏幕时间与本机每小时同步 | [ActivityWatch 屏幕时间](./design/screen-time.md) | 本机脚本、公开数据边界与 launchd 任务 |
