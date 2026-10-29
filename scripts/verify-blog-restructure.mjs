@@ -796,6 +796,27 @@ test('playlist page ships fixed config and noscript links', async () => {
     playlists.map((entry) => entry.url),
     'each card plays the configured platform playlist'
   )
+  const details = elements(
+    panel,
+    (node) => node.properties.dataDetails !== undefined
+  )
+  const skeletons = elements(
+    panel,
+    (node) => node.properties.dataSkeleton !== undefined
+  )
+  assert.equal(details.length, playlists.length, 'each card ships details')
+  assert.equal(
+    skeletons.length,
+    0,
+    'static-first cards ship no loading skeleton'
+  )
+  for (const node of details) {
+    assert.equal(
+      node.properties.hidden,
+      undefined,
+      'static details stay visible before the API returns'
+    )
+  }
   const noscript = elements(panel, (node) => node.tagName === 'noscript')[0]
   assert.ok(noscript)
   const links = elements(noscript, (node) => node.tagName === 'a')

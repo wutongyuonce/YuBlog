@@ -41,6 +41,8 @@ function createElement(tag, ownerDocument) {
     ownerDocument,
     childNodes: [],
     attributes: Object.create(null),
+    listeners: [],
+    isConnected: true,
     _content: null,
     get children() {
       return this.childNodes.filter((child) => child.nodeType === 1)
@@ -129,6 +131,33 @@ function createElement(tag, ownerDocument) {
       if (!parent) return
       parent.childNodes = parent.childNodes.filter((n) => n !== this)
       this.parentNode = null
+    },
+    get hidden() {
+      return this.hasAttribute('hidden')
+    },
+    set hidden(value) {
+      if (value) this.setAttribute('hidden', '')
+      else this.removeAttribute('hidden')
+    },
+    get disabled() {
+      return this.hasAttribute('disabled')
+    },
+    set disabled(value) {
+      if (value) this.setAttribute('disabled', '')
+      else this.removeAttribute('disabled')
+    },
+    addEventListener(type, handler, options) {
+      this.listeners.push({ type, handler, options })
+      const signal =
+        options && typeof options === 'object' ? options.signal : null
+      if (signal) {
+        if (signal.aborted) return
+        signal.addEventListener('abort', () => {
+          this.listeners = this.listeners.filter(
+            (entry) => entry.handler !== handler || entry.type !== type
+          )
+        })
+      }
     },
     cloneNode(deep) {
       const copy = createElement(this.tagName, this.ownerDocument)

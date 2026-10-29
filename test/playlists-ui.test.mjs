@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  mountPlaylists,
   parsePlaylistsPayload,
   playlistText,
 } from '../src/utils/playlists-ui.js'
+import { createDocument } from '../test-support/minimal-dom.mjs'
 
 const songs = [
   { title: 'B', artist: 'A', album: 'Z' },
@@ -109,4 +111,125 @@ test('matches multiple playlists by id in config order and exports each original
     ),
     null
   )
+})
+
+/** 与 PlaylistsPanel 静态结构对齐：封面／标题／播放已亮，接口字段初始隐藏。 */
+function playlistRoot(docConfig = config) {
+  const document = createDocument()
+  const root = document.createElement('playlist-panel')
+  root.dataset.config = JSON.stringify(docConfig)
+  root.dataset.state = 'loading'
+
+  for (const entry of docConfig) {
+    const card = document.createElement('article')
+    card.dataset.playlistId = entry.id
+
+    const cover = document.createElement('img')
+    cover.setAttribute('data-cover', '')
+    cover.alt = ''
+
+    const details = document.createElement('div')
+    details.setAttribute('data-details', '')
+
+    const meta = document.createElement('span')
+    meta.setAttribute('data-meta', '')
+    meta.hidden = true
+    const author = document.createElement('span')
+    author.setAttribute('data-author', '')
+    meta.append(author)
+
+    const count = document.createElement('span')
+    count.setAttribute('data-count', '')
+    count.textContent = '—'
+
+    const title = document.createElement('a')
+    title.setAttribute('data-title', '')
+    title.textContent = entry.title || entry.id
+
+    const description = document.createElement('p')
+    description.setAttribute('data-description', '')
+    description.hidden = true
+
+    const note = document.createElement('p')
+    note.setAttribute('data-note', '')
+    note.hidden = true
+
+    const exportBtn = document.createElement('button')
+    exportBtn.setAttribute('data-export', '')
+    exportBtn.disabled = true
+
+    details.append(meta, count, title, description, note, exportBtn)
+    card.append(cover, details)
+    root.append(card)
+  }
+
+  const status = document.createElement('p')
+  status.setAttribute('data-status', '')
+  status.textContent = '正在获取歌单…'
+  const updated = document.createElement('time')
+  updated.setAttribute('data-updated', '')
+  updated.hidden = true
+  root.append(status, updated)
+  return root
+}
+
+test('mount keeps static details visible while loading, then fills count and export', async () => {
+  const root = playlistRoot()
+  let release
+  const gate = new Promise((resolve) => {
+    release = resolve
+  })
+  const previousFetch = globalThis.fetch
+  globalThis.fetch = async () => {
+    await gate
+    return { ok: true, json: async () => structuredClone(payload) }
+  }
+  try {
+    const cleanup = mountPlaylists(root)
+    assert.equal(root.dataset.state, 'loading')
+    assert.equal(root.querySelector('[data-details]').hidden, false)
+    assert.equal(root.querySelector('[data-export]').disabled, true)
+    assert.equal(root.querySelector('[data-count]').textContent, '—')
+    assert.equal(root.querySelector('[data-meta]').hidden, true)
+    assert.equal(
+      root.querySelector('[data-status]').textContent,
+      '正在获取歌单…'
+    )
+    release()
+    await new Promise((resolve) => setImmediate(resolve))
+    assert.equal(root.dataset.state, 'ready')
+    assert.equal(root.querySelector('[data-details]').hidden, false)
+    assert.equal(
+      root.querySelector('[data-count]').textContent,
+      String(songs.length)
+    )
+    assert.equal(root.querySelector('[data-meta]').hidden, false)
+    assert.equal(root.querySelector('[data-export]').disabled, false)
+    cleanup()
+  } finally {
+    globalThis.fetch = previousFetch
+  }
+})
+
+test('mount failure keeps static details and leaves export disabled', async () => {
+  const root = playlistRoot()
+  const previousFetch = globalThis.fetch
+  globalThis.fetch = async () => {
+    throw new Error('network')
+  }
+  try {
+    const cleanup = mountPlaylists(root)
+    await Promise.resolve()
+    await Promise.resolve()
+    assert.equal(root.dataset.state, 'failed')
+    assert.equal(root.querySelector('[data-details]').hidden, false)
+    assert.equal(root.querySelector('[data-export]').disabled, true)
+    assert.match(
+      root.querySelector('[data-status]').textContent,
+      /暂时无法获取歌单数据/
+    )
+    cleanup()
+  } finally {
+    globalThis.fetch = previousFetch
+  }
 })

@@ -84,13 +84,8 @@ export function mountPlaylists(root) {
     const entry = config.find((entry) => entry.id === card.id)
     card.find('[data-title]').textContent = entry.title || entry.id
     card.find('[data-export]').disabled = true
-    card.find('[data-skeleton]').hidden = false
-    for (const selector of [
-      '[data-details]',
-      '[data-meta]',
-      '[data-description]',
-      '[data-note]',
-    ])
+    // 静态 HTML 已亮封面／平台／标题／播放；接口字段仍藏着，等回填。
+    for (const selector of ['[data-meta]', '[data-description]', '[data-note]'])
       card.find(selector).hidden = true
 
     card.find('[data-export]').addEventListener(
@@ -148,8 +143,6 @@ export function mountPlaylists(root) {
             ? '歌单里还没有歌曲。'
             : `当前可导出 ${playlist.songs.length} 首，共 ${playlist.songCount} 首。`
         card.find('[data-export]').disabled = playlist.songs.length === 0
-        card.find('[data-skeleton]').hidden = true
-        card.find('[data-details]').hidden = false
       }
 
       updated.dateTime = data.updatedAt
@@ -170,10 +163,6 @@ export function mountPlaylists(root) {
       root.dataset.state = 'failed'
       status.textContent =
         '暂时无法获取歌单数据，可以点击歌单标题前往原平台查看。'
-      for (const card of cards) {
-        card.find('[data-skeleton]').hidden = true
-        card.find('[data-details]').hidden = false
-      }
     } finally {
       if (!signal.aborted) root.setAttribute('aria-busy', 'false')
     }
