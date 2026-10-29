@@ -8,7 +8,7 @@ toc: true
 search: true
 ---
 
-:::blog-link{slug="算法笔记/算法-4动态规划" title="上一篇：算法 4（动态规划）"}
+:::blog-link{slug="algo-notes/algo-4-dynamic-programming" title="上一篇：算法 4（动态规划）"}
 :::
 
 ## 十、贪心算法

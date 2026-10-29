@@ -8,7 +8,7 @@ toc: true
 search: true
 ---
 
-:::blog-link{slug="算法笔记/算法-3二叉树图论回溯算法" title="上一篇：算法 3（二叉树、图论、回溯算法）"}
+:::blog-link{slug="algo-notes/algo-3-tree-graph-backtracking" title="上一篇：算法 3（二叉树、图论、回溯算法）"}
 :::
 
 ## 九、动态规划
@@ -2634,5 +2634,5 @@ public int longestPalindromeSubseq(String s) {
 }
 ```
 
-:::blog-link{slug="算法笔记/算法-5贪心算法十大排序技巧" title="下一篇：算法 5（贪心算法、十大排序、技巧）"}
+:::blog-link{slug="algo-notes/algo-5-greedy-sorting-tips" title="下一篇：算法 5（贪心算法、十大排序、技巧）"}
 :::

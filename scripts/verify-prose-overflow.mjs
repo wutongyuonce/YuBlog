@@ -10,7 +10,7 @@ const base = '__BASE_URL__'
 // 长行内代码与超宽公式仅使用真实文章；原生 pre/code 另以最小样例检查。
 let checkedCode = false
 let checkedWideMath = false
-for (const slug of ['image-layout-demo', '英伟达的护城河究竟是什么']) {
+for (const slug of ['image-layout-demo', 'nvidia-moat']) {
   await page.goto(new URL(`blogs/${encodeURIComponent(slug)}/`, base).href)
   await page.waitForSelector('.prose .katex-display')
   await page.cdp('Emulation.setDeviceMetricsOverride', {

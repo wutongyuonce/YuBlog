@@ -31,11 +31,11 @@ RSS 的清洗白名单、地址与身份规则统一见 [RSS 全文表达](./dis
 
 ```text
 src/content/blogs/
-  代码库搜索.md
-  代码库搜索-img/       本篇正文图
+  codebase-search.md
+  codebase-search-img/       本篇正文图
   _title-images/        文章封面
-  算法笔记/
-    算法 1（数组、链表）.md
+  algo-notes/
+    algo-1-array-linked-list.md
     algo-img/           同组文章共享正文图
 src/content/interests/
   device.md             分类正文，也支持 .mdx
@@ -47,7 +47,7 @@ src/content/interests/
 
 | 场景 | 作者写法 | 资源处理 |
 | --- | --- | --- |
-| 本篇正文图 | `![说明](./代码库搜索-img/file.png)` | 相对文章文件解析，进入图片管线 |
+| 本篇正文图 | `![说明](./codebase-search-img/file.png)` | 相对文章文件解析，进入图片管线 |
 | 上层共享图 | `![说明](../共享图/file.png)` | 同样进入管线，文件必须存在 |
 | 限制宽度 | `![说明\|w310](./图.png)` | alt 尾部标记转成图片节点 width |
 | 顶层文章封面 | `titleImage: ./_title-images/foo.webp` | schema 的图片字段解析 |
@@ -288,7 +288,7 @@ public 文件随构建公开，不受文章 draft 控制，草稿演示放进去
 ## 链接、锚点与路径失败
 
 手写空锚点 `<a id="27"></a>` 必须保留，同页和跨文章链接都可能依赖它；短锚点比含中文标点、emoji 的自动标题 slug 更稳定。
-跨文必须使用已发布页面的站内 URL，如 `/blogs/算法笔记/算法-1数组链表/#27`，不要写 `./另一个文件.md#锚点`；后者 Typora 可用，但线上常成当前文章下的 404，构建未必报错。
+跨文必须使用已发布页面的站内 URL，如 `/blogs/algo-notes/algo-1-array-linked-list/#27`，不要写 `./另一个文件.md#锚点`；后者 Typora 可用，但线上常成当前文章下的 404，构建未必报错。
 改链接前确认文章存在且非 draft；目标未发布时保留可见文字、去掉链接并说明，不猜 URL。
 比较 href 的百分号编码片段与未编码 id 前要解码；落点认可任意元素 id 和传统 a name，不把 input name 当锚点。
 

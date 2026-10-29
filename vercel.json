@@ -13,6 +13,216 @@
       "source": "/blogs/lm-studio-本地模型部署/",
       "destination": "/blogs/lm-studio-local-models/",
       "permanent": true
+    },
+    {
+      "source": "/blogs/prompt-caching-的工程策略-llm-推理框架缓存机制设计--agent-提示词设计",
+      "destination": "/blogs/prompt-caching-engineering/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/prompt-caching-的工程策略-llm-推理框架缓存机制设计--agent-提示词设计/",
+      "destination": "/blogs/prompt-caching-engineering/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/juc并发编程/juc-并发编程-2java-内存模型与底层同步机制",
+      "destination": "/blogs/juc-concurrency/juc-2-jmm-and-sync/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/juc并发编程/juc-并发编程-2java-内存模型与底层同步机制/",
+      "destination": "/blogs/juc-concurrency/juc-2-jmm-and-sync/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/不破坏kv-cache的agent工具延迟加载设计",
+      "destination": "/blogs/agent-tool-lazy-load-kv-cache/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/不破坏kv-cache的agent工具延迟加载设计/",
+      "destination": "/blogs/agent-tool-lazy-load-kv-cache/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/算法笔记/算法-2哈希表字符串双指针总结栈与队列",
+      "destination": "/blogs/algo-notes/algo-2-hash-string-two-pointer-stack-queue/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/算法笔记/算法-2哈希表字符串双指针总结栈与队列/",
+      "destination": "/blogs/algo-notes/algo-2-hash-string-two-pointer-stack-queue/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/juc并发编程/juc-并发编程-1多线程基础",
+      "destination": "/blogs/juc-concurrency/juc-1-multithreading-basics/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/juc并发编程/juc-并发编程-1多线程基础/",
+      "destination": "/blogs/juc-concurrency/juc-1-multithreading-basics/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/deepseek-harness-架构解析",
+      "destination": "/blogs/deepseek-harness-architecture/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/deepseek-harness-架构解析/",
+      "destination": "/blogs/deepseek-harness-architecture/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/transformer-与-llm-基础",
+      "destination": "/blogs/transformer-llm-basics/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/transformer-与-llm-基础/",
+      "destination": "/blogs/transformer-llm-basics/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/算法笔记/算法-5贪心算法十大排序技巧",
+      "destination": "/blogs/algo-notes/algo-5-greedy-sorting-tips/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/算法笔记/算法-5贪心算法十大排序技巧/",
+      "destination": "/blogs/algo-notes/algo-5-greedy-sorting-tips/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/算法笔记/算法-3二叉树图论回溯算法",
+      "destination": "/blogs/algo-notes/algo-3-tree-graph-backtracking/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/算法笔记/算法-3二叉树图论回溯算法/",
+      "destination": "/blogs/algo-notes/algo-3-tree-graph-backtracking/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/新-mac-配置-开发环境与终端",
+      "destination": "/blogs/new-mac-dev-setup/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/新-mac-配置-开发环境与终端/",
+      "destination": "/blogs/new-mac-dev-setup/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/算法笔记/算法-1数组链表",
+      "destination": "/blogs/algo-notes/algo-1-array-linked-list/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/算法笔记/算法-1数组链表/",
+      "destination": "/blogs/algo-notes/algo-1-array-linked-list/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/算法笔记/算法-4动态规划",
+      "destination": "/blogs/algo-notes/algo-4-dynamic-programming/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/算法笔记/算法-4动态规划/",
+      "destination": "/blogs/algo-notes/algo-4-dynamic-programming/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/java成员设计最佳实践",
+      "destination": "/blogs/java-member-design/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/java成员设计最佳实践/",
+      "destination": "/blogs/java-member-design/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/omni-多模态模型入门",
+      "destination": "/blogs/omni-multimodal-intro/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/omni-多模态模型入门/",
+      "destination": "/blogs/omni-multimodal-intro/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/英伟达的护城河究竟是什么",
+      "destination": "/blogs/nvidia-moat/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/英伟达的护城河究竟是什么/",
+      "destination": "/blogs/nvidia-moat/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/fastapi最佳实践",
+      "destination": "/blogs/fastapi-best-practices/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/fastapi最佳实践/",
+      "destination": "/blogs/fastapi-best-practices/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/agent-开发习惯",
+      "destination": "/blogs/agent-dev-habits/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/agent-开发习惯/",
+      "destination": "/blogs/agent-dev-habits/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/cli-从零实战教程",
+      "destination": "/blogs/cli-from-scratch/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/cli-从零实战教程/",
+      "destination": "/blogs/cli-from-scratch/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/多模态agent",
+      "destination": "/blogs/multimodal-agent/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/多模态agent/",
+      "destination": "/blogs/multimodal-agent/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/代码库搜索",
+      "destination": "/blogs/codebase-search/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/代码库搜索/",
+      "destination": "/blogs/codebase-search/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/鉴权",
+      "destination": "/blogs/auth/",
+      "permanent": true
+    },
+    {
+      "source": "/blogs/鉴权/",
+      "destination": "/blogs/auth/",
+      "permanent": true
     }
   ]
 }
