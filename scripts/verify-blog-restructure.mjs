@@ -6,7 +6,9 @@ import { visit } from 'unist-util-visit'
 import { XMLParser } from 'fast-xml-parser'
 import { parse as parseCss, walk as walkCss } from 'css-tree'
 import {
+  AUTHOR_DISPLAY_NAME,
   AUTHOR_LINKS,
+  CONTENT_LICENSE,
   FEATURES,
   GISCUS,
   INTEREST_ICONS,
@@ -271,6 +273,9 @@ test('only articles, friends and every interest category have isolated comments 
     }
     if (articles.includes(page)) {
       const body = elements(page, (node) => hasClass(node, 'post-content'))[0]
+      const copyright = elements(page, (node) =>
+        hasClass(node, 'post-copyright')
+      )[0]
       const nav = elements(page, (node) => hasClass(node, 'post-nav'))[0]
       const main = elements(page, (node) => node.tagName === 'main')[0]
       assert.equal(
@@ -278,15 +283,35 @@ test('only articles, friends and every interest category have isolated comments 
         false,
         'Article content flows directly into navigation and comments'
       )
+      assert.ok(copyright, 'Article shows a copyright card')
+      assert.equal(
+        elements(page, (node) => hasClass(node, 'random-browse')).length,
+        0,
+        'Article footer no longer offers random browse'
+      )
+      const copyrightText = textOf(copyright)
       assert.ok(
-        body.position.end.offset < root.position.start.offset,
-        'Comments follow the article'
+        copyrightText.includes(AUTHOR_DISPLAY_NAME),
+        'Copyright card uses AUTHOR_DISPLAY_NAME'
+      )
+      assert.ok(
+        copyrightText.includes(CONTENT_LICENSE.label),
+        'Copyright card uses CONTENT_LICENSE label'
+      )
+      const license = elements(copyright, (node) =>
+        hasClass(node, 'post-copyright__license')
+      )[0]
+      assert.equal(license?.properties.href, CONTENT_LICENSE.href)
+      assert.ok(
+        body.position.end.offset < copyright.position.start.offset &&
+          copyright.position.end.offset < root.position.start.offset,
+        'Copyright sits between body and comments'
       )
       if (nav) {
         assert.ok(
-          body.position.end.offset < nav.position.start.offset &&
+          copyright.position.end.offset < nav.position.start.offset &&
             nav.position.end.offset < root.position.start.offset,
-          'Article navigation sits between body and comments'
+          'Neighbors sit between copyright and comments'
         )
         for (const link of elements(nav, (node) =>
           hasClass(node, 'post-nav__link')
@@ -304,6 +329,18 @@ test('only articles, friends and every interest category have isolated comments 
       }
     }
   }
+})
+
+test('manuscript list keeps random browse at the top', () => {
+  assert.ok(
+    elements(blogs, (node) => hasClass(node, 'random-browse')).length >= 1,
+    'Blogs list exposes random browse'
+  )
+  assert.equal(
+    elements(home, (node) => hasClass(node, 'random-browse')).length,
+    0,
+    'Home does not expose random browse'
+  )
 })
 
 test('deployment preserves the manuscript route', async () => {

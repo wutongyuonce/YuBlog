@@ -1,8 +1,7 @@
 ---
 import { AUTHOR_DISPLAY_NAME, CONTENT_LICENSE, SITE } from '~/config'
-import { formatChineseDate } from '~/utils/datetime'
 import { withBasePath } from '~/utils/path'
-import { toAbsoluteUrl } from '~/utils/site-url'
+import { formatPostMetaDate } from '~/utils/post-meta-date.js'
 
 interface Props {
   title: string
@@ -12,8 +11,8 @@ interface Props {
 
 const { title, postId, pubDate } = Astro.props
 const postPath = withBasePath(`/blogs/${postId}/`)
-const absoluteUrl = toAbsoluteUrl(SITE.website, postPath)
-const publishedLabel = formatChineseDate(pubDate)
+const absoluteUrl = new URL(postPath, SITE.website).href
+const publishedLabel = formatPostMetaDate(pubDate)
 ---
 
 <aside class="post-copyright" aria-label="文章版权信息">

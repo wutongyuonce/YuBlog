@@ -65,7 +65,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 事实 | 权威 | 不要 |
 | :--- | :--- | :--- |
 | 站点 URL、标题、语言 | `src/config.ts` `SITE` | 在页面里写死域名 |
-| 中文作者展示名、正文默认许可 | `src/config.ts` `AUTHOR_DISPLAY_NAME`／`CONTENT_LICENSE` | 在版权卡等处另写「梧桐雨」或 CC 文案／链接 |
+| 中文作者展示名、正文默认许可 | `src/config.ts` `AUTHOR_DISPLAY_NAME`／`CONTENT_LICENSE` | 在名片、版权卡、页脚等处另写「梧桐雨」或 CC 文案／链接 |
 | 更多菜单及相册地址 | `src/config.ts` `MORE_LINKS`，图标自动加入 UnoCSS safelist | 在下拉组件中另写条目或手工复制图标 safelist |
 | 顶栏导航、顶栏 GitHub | `src/config.ts` `UI.internalNavs` / `UI.socialLinks` | 在 `NavBar` 里加死链接 |
 | 个人社交展示 | 首页 `config.ts` 的 `AUTHOR_LINKS`；关于页正文仅维护作者希望展示的联系方式 | 写入顶栏 `UI.socialLinks`，或在首页组件另写账号 |
@@ -133,11 +133,11 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | --- | --- | --- |
 | 排序 | `getSortedPosts`（`src/utils/data.ts`） | 在组件内另写排序 |
 | 邻接与随机纯函数 | `src/utils/post-nav.ts` | 在 Astro 模板内手算下标 |
-| 详情版权卡 | `src/components/blog/PostCopyright.astro`；作者展示名／许可在 `config.ts` | 把版权块塞进 `PostNav`；散落魔法字符串 |
+| 详情版权卡 | `PostCopyright.astro`；作者／许可读 `config.ts`；中文发布日用 `formatPostMetaDate`（`post-meta-date.js`） | 把版权块塞进 `PostNav`；另写日期空格规则或魔法字符串 |
 | 详情邻接 UI | `src/components/blog/PostNav.astro`（只邻接，无随便逛逛） | 把按钮散落进 `RenderPost` 模板 |
 | 列表顶行 | `src/components/blog/RandomBrowse.astro` + `ListView.astro` | 把随机行塞进分页 HTML；不要在首页或文章底复用 |
 | 随机 `href` 重写 | `src/utils/post-nav-random.js` | 每页复制一份内联随机逻辑 |
-| 文稿 URL | 与列表一致：`redirect \|\| withBasePath(\`/blogs/${id}/\`)`；绝对 URL 用 `toAbsoluteUrl(SITE.website, …)` | 自造路径编码 |
+| 文稿 URL | 与列表一致：`redirect \|\| withBasePath(\`/blogs/${id}/\`)`；绝对 URL 用 `new URL(path, SITE.website).href`（同 RSS） | 自造路径编码 |
 
 
 ### 4.3 浏览器状态 seam
@@ -407,7 +407,6 @@ Pagefind **按需加载**：面板打开时调 `window.ensurePagefind()`（打�
 | `misc.ts` | `lockScroll()` 提供带滚动条补偿、恢复先前样式的 release；backdrop 和图片查看器复用 |
 | `image-interactions.ts` | `ImageInteractions` 自定义元素；唯一管理横滚控件、原生 dialog（含正文大图相册翻页）与连接／断开资源 |
 | `path.ts` | `withBasePath`、`resolvePath` |
-| `site-url.ts` | `toAbsoluteUrl`（无 Astro 依赖，可单测） |
 
 数据与算法检查直接调用这些接口；导航事件、目录定位等 DOM 行为在其组件属主接口和真实浏览器中验证，不用纯函数通过来代替页面接线检查。
 
