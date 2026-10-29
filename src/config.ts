@@ -12,6 +12,15 @@ export const SITE: Site = {
   imageDomains: [],
 }
 
+/** 中文展示名（名片、版权卡等）；SITE.author 仍作英文／结构化身份。 */
+export const AUTHOR_DISPLAY_NAME = '梧桐雨'
+
+/** 正文默认许可；版权卡等只读这里。 */
+export const CONTENT_LICENSE = {
+  label: 'CC BY-NC-SA 4.0',
+  href: 'https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans',
+} as const
+
 export const GISCUS = {
   repo: 'wutongyuonce/YuBlog',
   repoId: 'R_kgDOSSGEzw',
@@ -128,9 +137,6 @@ export const UI: Ui = {
   navBarLayout: {
     left: ['internalNavs'],
     right: ['socialLinks', 'searchButton', 'accentButton', 'themeButton'],
-  },
-  postView: {
-    postMetaStyle: 'minimal',
   },
   groupView: {
     showGroupItemColorOnHover: true,

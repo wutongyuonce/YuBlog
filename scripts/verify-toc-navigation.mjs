@@ -13,6 +13,14 @@ const setViewport = async (width) => {
   })
   assert.equal(await page.evaluate(() => innerWidth), width)
 }
+const openMobileToc = async () => {
+  const needsExpand = await page.evaluate(() => {
+    const fab = document.querySelector('.mobile-toc-control__fab')
+    return Boolean(fab && !fab.hidden)
+  })
+  if (needsExpand) await page.click('.mobile-toc-control__fab')
+  await page.click('.mobile-toc-control__toggle')
+}
 const blogsUrl = new URL('blogs/', '__BASE_URL__')
 await page.goto(blogsUrl.href)
 await page.waitForSelector('[data-blog-item] a[href]')
@@ -148,7 +156,7 @@ for (const width of [1440, 390, 320]) {
   await setViewport(width)
   await page.waitForSelector('table-of-contents')
   // Exercise a real click before content entrance animations have finished.
-  if (width < 1200) await page.click('.mobile-toc-control__toggle')
+  if (width < 1200) await openMobileToc()
   const earlyContainer = width < 1200 ? '#mobile-toc-panel' : '#toc-sidebar'
   await clickTocLink(earlyContainer, firstHash)
   await verify(firstHash, `${width}/early-click`)
@@ -183,6 +191,27 @@ for (const width of [1440, 390, 320]) {
       ),
       'visible'
     )
+    // Floating rail stays; TOC toggle disabled while sidebar is visible.
+    assert.equal(
+      await page.evaluate(() => {
+        const fab = document.querySelector('.mobile-toc-control__fab')
+        return Boolean(fab && getComputedStyle(fab).display !== 'none')
+      }),
+      true
+    )
+    assert.equal(
+      await page.evaluate(() => {
+        const toggle = document.querySelector('.mobile-toc-control__toggle')
+        return Boolean(toggle?.disabled)
+      }),
+      true
+    )
+    assert.equal(
+      await page.evaluate(
+        () => getComputedStyle(document.querySelector('#to-top-button')).display
+      ),
+      'none'
+    )
   }
   const prefix = `${width}`
   // Downward child, same target again, upward parent, downward sibling, final section.
@@ -195,7 +224,7 @@ for (const width of [1440, 390, 320]) {
     [3, 'sibling'],
     [hashes.length - 1, 'bottom'],
   ]) {
-    if (width < 1200) await page.click('.mobile-toc-control__toggle')
+    if (width < 1200) await openMobileToc()
     const container = width < 1200 ? '#mobile-toc-panel' : '#toc-sidebar'
     await clickTocLink(container, hashes[index])
     await verify(hashes[index], `${prefix}/${label}`)

@@ -126,6 +126,12 @@ export default defineConfig({
     'i-ri-menu-2-fill',
     'i-ri-menu-3-fill',
 
+    /* PostMeta */
+    'i-ri-calendar-line',
+    'i-ri-history-fill',
+    'i-ri-pen-nib-line',
+    'i-ri-timer-line',
+
     /* Rose background */
     'z--1',
     'fixed',

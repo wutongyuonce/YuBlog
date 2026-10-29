@@ -1,5 +1,8 @@
 .prose {
   max-width: min(var(--blog-prose-width), 100%);
+  min-width: 0;
+  /* Plain long tokens (not only inline code) must wrap; html clip alone still lets some UAs widen layout. */
+  overflow-wrap: anywhere;
   font-size: var(--blog-reading-size);
   line-height: 1.75;
 }
@@ -500,8 +503,10 @@ main:has(.post-content) > footer.prose :is(a, span) {
 :root.dark .prose .media-card__date-value {
   color: #b7d0ae;
 }
-.prose a.media-card__title:is(:hover, :focus-visible) {
+.prose a.media-card__title:is(:hover, :focus-visible),
+.prose .media-cards--rail a.media-card__title:is(:hover, :focus-visible) {
   border-bottom: 0;
+  color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 0.16em;
 }

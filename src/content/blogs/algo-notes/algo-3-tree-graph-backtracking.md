@@ -8,7 +8,7 @@ toc: true
 search: true
 ---
 
-:::blog-link{slug="算法笔记/算法-2哈希表字符串双指针总结栈与队列" title="上一篇：算法 2（哈希表、字符串、双指针总结、栈与队列）"}
+:::blog-link{slug="algo-notes/algo-2-hash-string-two-pointer-stack-queue" title="上一篇：算法 2（哈希表、字符串、双指针总结、栈与队列）"}
 :::
 
 ## 六、二叉树
@@ -4160,5 +4160,5 @@ class Solution {
 }
 ```
 
-:::blog-link{slug="算法笔记/算法-4动态规划" title="下一篇：算法 4（动态规划）"}
+:::blog-link{slug="algo-notes/algo-4-dynamic-programming" title="下一篇：算法 4（动态规划）"}
 :::

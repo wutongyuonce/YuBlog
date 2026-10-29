@@ -65,6 +65,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 事实 | 权威 | 不要 |
 | :--- | :--- | :--- |
 | 站点 URL、标题、语言 | `src/config.ts` `SITE` | 在页面里写死域名 |
+| 中文作者展示名、正文默认许可 | `src/config.ts` `AUTHOR_DISPLAY_NAME`／`CONTENT_LICENSE` | 在名片、版权卡、页脚等处另写「梧桐雨」或 CC 文案／链接 |
 | 更多菜单及相册地址 | `src/config.ts` `MORE_LINKS`，图标自动加入 UnoCSS safelist | 在下拉组件中另写条目或手工复制图标 safelist |
 | 顶栏导航、顶栏 GitHub | `src/config.ts` `UI.internalNavs` / `UI.socialLinks` | 在 `NavBar` 里加死链接 |
 | 个人社交展示 | 首页 `config.ts` 的 `AUTHOR_LINKS`；关于页正文仅维护作者希望展示的联系方式 | 写入顶栏 `UI.socialLinks`，或在首页组件另写账号 |
@@ -74,13 +75,15 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 已发布文章列表、排序、按年分组 | `src/utils/data.ts` | 在视图里 `getCollection` 再 filter 一遍 |
 | 原值分类的动态入口、URL 的分类 hash／兼容 query、精确筛选、标签、页码 | `src/utils/blog-browser.js` | 写固定分类允许表、合并别名或在 `ListView` 里手写 `URLSearchParams` |
 | 单标签选中链接 | `src/utils/blog-browser.js` 的 `tagSelectionLinks`；`TagLinks` 只呈现 | 用 ` / ` 拼接标签，或在文章元信息、归档、列表卡片里手写 `?tag=` |
+| 文章头返回文稿与元信息排版 | `StandardLayout`（仅 `isArticle`）输出「← 返回文稿」（字号对齐正文 `1rem`；页顶普通文字，下滚固定为雾面 pill 且 top 随顶栏显隐同动）；`PostMeta` 独占两行：发布于；更新于（条件）与字数／时长／标签组为同一 flex-wrap 行且组间距一致、标签组内更紧；日期文案由 `post-meta-date.js`（上海时区）格式化；字数由 remark `wordCount` 经 `RenderPost` 传入 | 在拾趣／关于复用返回链；再引入 `postMetaStyle`；在视图里手写日期空格规则；另起模块管返回链滚动态 |
+| 文稿列表卡片顶部元信息 | `ListItem`；分类强调色；日历／钢笔／计时图标 + 短日期／字数／分钟；`wordCount`／`minutesRead` 由 `getBlogListItems` 提供 | 点号拼接分类·日期·阅读；列表另算字数或漏改标签筛选复用入口 |
 | 归档分类配色领取、唯一性、持久化与容量失败 | `src/utils/blog-category-colors.js`；预设及记录在 `src/data/blog-category-colors.json` | 在视图中推断颜色、循环复用或按分类顺序重排已有分配 |
 | 首页各板块标题、名片与居中布局样式 | `public/shell.css` | 通过 JS 重复测量或复制卡片模板 |
-| 标签 AND 匹配 | `src/utils/blog-tag-filter.js` | 在点击处理里写 `every`/`includes` |
+| 标签 AND 匹配、搜索标签包含过滤 | `src/utils/blog-tag-filter.js`（`matchesAllTags`／`filterTagsMatchingQuery`） | 在点击或搜索面板里另写 `every`/`includes`／大小写规则 |
 | 路径是否带 `base`、是否补尾斜杠 | `src/utils/path.ts` | 字符串拼接 `/tags` |
 | 顶栏、布局、归档线、分页的跨页 CSS | `public/shell.css` | 复制共享规则；需要局部覆盖时不检查作用域和层叠效果 |
 | 索引版心与文章阅读宽度 | `src/styles/main.css` 的 `--blog-shell-width` / `--blog-prose-width` | 在页面或目录组件另写宽度值 |
-| 链接常驻下划色的强度与交互色 | `src/styles/main.css` 的 `--link-underline`；标题族与正文族的分工见 [视觉不变量](./site.md#visuals) | 在组件里另写灰色下划线常量，或给导航、卡片、筛选芯片加文字下划线 |
+| 链接常驻下划色 token；首页板块次级入口样式 | `--link-underline` 在 `src/styles/main.css`；`.home-section-header` 次级入口只在 `public/shell.css`；三族契约见 [视觉不变量](./site.md#visuals) | 在组件另写灰色下划线常量；把首页次级入口规则复制到组件；给导航、卡片、筛选芯片加文字下划线 |
 | 文稿列表封面列宽 | `ListItem.astro` 的 250px／222px | 在 `main.css` 或列表页再写一份列宽 |
 | 拾趣分区与菜单名称、说明、顺序 | `src/content/interests/*.{md,mdx}` 的 `title`/`description`/`order`；集合范围在 `src/content.config.ts` | 在导航与页面各写一份或限制分类 ID／数量 |
 | 拾趣菜单可选图标 | `src/config.ts` 的 `INTEREST_ICONS`，键为文件名去掉扩展名；UnoCSS 自动加入 safelist | 为无图标分类补占位或重复维护图标 safelist |
@@ -119,7 +122,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 
 ### 4.2 列表数据 seam
 
-界面：`getFilteredPosts`、`getSortedPosts`、`getBlogListItems`、`getGroupedPostsByYear`、`getRecentBlogPosts`、`getPublishedBlogPosts`；上下篇／随便逛逛纯函数在 `post-nav.ts`（`getPostNeighbors`、`pickRandomOther`）。
+界面：`getFilteredPosts`、`getSortedPosts`、`getBlogListItems`、`getGroupedPostsByYear`、`getRecentBlogPosts`、`getPublishedBlogPosts`；上下篇／列表随机纯函数在 `post-nav.ts`（`getPostNeighbors`、`pickRandomOther`）。
 实现：草稿过滤、日期排序、渲染 `minutesRead`、按年 reduce；邻接与随机候选不在组件内重排。
 
 首页、文稿、顶部分类预览、标签、归档、RSS、名片、近期笔墨都应穿过这里取文章集合。顶部分类菜单和开发／生产 RSS 均只读取 `getPublishedBlogPosts`；开发网页列表／正文仍可预览草稿，不属于菜单排除草稿的设计边界。写作热力只从这里取已发布文章，按日聚合篇数，并按上海自然年汇总字数，规则在 `blog-heatmap.js`（`test/blog-heatmap.test.mjs`）。字数格式测试见 `test/blog-stats.test.mjs`。
@@ -130,11 +133,11 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | --- | --- | --- |
 | 排序 | `getSortedPosts`（`src/utils/data.ts`） | 在组件内另写排序 |
 | 邻接与随机纯函数 | `src/utils/post-nav.ts` | 在 Astro 模板内手算下标 |
-| 详情 UI | `src/components/blog/PostNav.astro` | 把按钮散落进 `RenderPost` 模板 |
-| 列表顶行 | `src/components/blog/RandomBrowse.astro` + `ListView.astro` | 把随机行塞进分页 HTML |
-| 首页入口 | `RecentWriting.astro` 复用 `RandomBrowse` | 另写一套随机逻辑 |
+| 详情版权卡 | `PostCopyright.astro`；作者／许可读 `config.ts`；中文发布日用 `formatPostMetaDate`（`post-meta-date.js`） | 把版权块塞进 `PostNav`；另写日期空格规则或魔法字符串 |
+| 详情邻接 UI | `src/components/blog/PostNav.astro`（只邻接，无随便逛逛） | 把按钮散落进 `RenderPost` 模板 |
+| 列表顶行 | `src/components/blog/RandomBrowse.astro` + `ListView.astro` | 把随机行塞进分页 HTML；不要在首页或文章底复用 |
 | 随机 `href` 重写 | `src/utils/post-nav-random.js` | 每页复制一份内联随机逻辑 |
-| 文稿 URL | 与列表一致：`redirect \|\| withBasePath(\`/blogs/${id}/\`)` | 自造路径编码 |
+| 文稿 URL | 与列表一致：`redirect \|\| withBasePath(\`/blogs/${id}/\`)`；绝对 URL 用 `new URL(path, SITE.website).href`（同 RSS） | 自造路径编码 |
 
 
 ### 4.3 浏览器状态 seam
@@ -161,9 +164,9 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 
 KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；版本与公式渲染依赖一致，浏览器按实际页面内容加载所需字体。
 
-静态防撑宽职责：`main.css` 维护 `html` 横向 `overflow-x: clip` 兜底与宽度变量；纵向滚动及 `scrollbar-gutter: stable` 留白统一归页面根节点，`body` 不另建滚动容器，使固定顶栏、正文与页脚共享居中基准。`prose.css` 维护正文限宽；`markdown.css` 维护行内 code 断行与块级公式局部横滚。弹层临时锁滚动仍由 `misc.lockScroll()` 维护：锁定根节点，已有稳定留白时不再补偿；释放只恢复同页的根节点和原 body 留白。版心与手机页脚四行居中由 `scripts/verify-shell-alignment.mjs` 浏览器验收。
+静态防撑宽职责：`main.css` 维护 `html` 横向 `overflow-x: clip` 兜底与宽度变量；纵向滚动及 `scrollbar-gutter: stable` 留白统一归页面根节点，`body` 不另建滚动容器，使固定顶栏、正文与页脚共享居中基准。`prose.css` 维护正文限宽，并对普通长无空格 token 使用 `overflow-wrap: anywhere`（含 `min-width: 0`）断行；`markdown.css` 维护行内 code 断行与块级公式／宽表局部横滚。弹层临时锁滚动仍由 `misc.lockScroll()` 维护：锁定根节点，已有稳定留白时不再补偿；释放只恢复同页的根节点和原 body 留白。版心与手机页脚四行居中由 `scripts/verify-shell-alignment.mjs` 浏览器验收。
 
-`--font-heading`（本地思源宋体 400 字重）用于页面大标题、文章顶部标题、作者名、写作热力与近期笔墨；文稿列表与归档文章标题使用同一宋体，字重分别为 700 与 400，分别由 `ListItem.astro` 的 `.post-preview h2` 和 `shell.css` 的 `.archive-post__title` 维护；标签筛选结果复用 `ListItem`。字体资源提供 400 字重，700 由浏览器合成加粗。Markdown 内部 h1–h6、正文和标签使用 Inter／系统无衬线字体。顶栏及下拉菜单文字使用宋体；品牌为「梧桐雨の博客」，使用桌面 16px、601–799px 为 14.72px、600px 及以下为 14.4px 思源宋体，行高 1；归档年份与日期也使用思源宋体。`PageHeading` 是标签、拾趣（含子页）、项目、关于的共享页头：标题 28px 宋体 400 字重，说明 14px 普通字体；友链分组标题为 24px 宋体。
+`--font-heading`（本地思源宋体 400 字重）用于页面大标题、文章顶部标题、作者名、写作热力与近期笔墨；文稿列表与归档文章标题使用同一宋体，字重分别为 700 与 400，分别由 `ListItem.astro` 的 `.post-preview h2` 和 `shell.css` 的 `.archive-post__title` 维护；文章头 `PostMeta` 同样使用宋体 700；标签筛选结果复用 `ListItem`。字体资源提供 400 字重，700 由浏览器合成加粗。Markdown 内部 h1–h6、正文和标签使用 Inter／系统无衬线字体。顶栏及下拉菜单文字使用宋体；品牌为「梧桐雨の博客」，使用桌面 16px、601–799px 为 14.72px、600px 及以下为 14.4px 思源宋体，行高 1；归档年份与日期也使用思源宋体。`PageHeading` 是标签、拾趣（含子页）、项目、关于的共享页头：标题 28px 宋体 400 字重，说明 14px 普通字体；友链分组标题为 24px 宋体。
 
 正文字体 Inter 和代码字体 Maple Mono 也在本地：`public/fonts/Inter-latin.woff2`、`public/fonts/MapleMono-latin.woff2`，与思源宋体一起由 `public/shell.css` 的 `@font-face` 引用。这些声明随 `site-styles` 跨页保留，避免已加载字体回退；不要把共享字体声明放进会被替换的组件样式。不要再接 Google Fonts 或 `presetWebFonts`。这两份只含拉丁字符，中文走字体栈后面的系统字体。保留的两种手写字体 `@font-face` 在 `public/shell.css` 中，优先引用构建结束后生成的 `*-title.woff2` 子集，再回退到完整字体；`plugins/astro-subset-title-fonts.ts` 在构建后检查每个子集引用和文件都存在。Vite 不会提前解析尚未生成的字体路径。开发服务器没有子集时会回退到同一次声明里的完整文件，那不是线上行为。
 
@@ -197,7 +200,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 全站没有个人右侧栏；`BlogProfile` 只在首页出现，其下依次是 `WritingHeatmap`、`ProgressStats`、`RecentWriting`、`ScreenTime`、`RecentMedia`、`RecentListening`。导航页统一通过 `BlogIndexLayout` 限制宽度。文章详情使用 `StandardLayout`，TOC 独立放在正文外侧。
 
-顶栏的 `--site-nav-width` 引用 `--blog-shell-width`，与内容版心共用 660px 目标；更多右侧保留剩余空白。内容宽度同时受 `100vw - 两侧外边距` 限制；1200px 及以上再减去 32rem，避免加宽正文时把目录从 208px 挤窄。顶栏与正文同步收窄，小屏两排导航仍受响应式外边距 `--site-gutter` 约束。`--blog-prose-width` 引用版心宽度，标题、正文与返回链接对齐；目录读取同一个 `--blog-prose-width`，在正文边缘与视口外边距之间的留白中线基础上向外移 16px，最大 208px、受视口剩余空间约束。文稿列表卡片的封面列固定为无图 222px、有图 250px，版心宽度变化只进入左侧文字；768px 及以上封面垂直居中，更窄时改为单列并隐藏空封面列。目录与正文读取同一版心宽度。小屏由可用视口宽度约束。
+顶栏的 `--site-nav-width` 引用 `--blog-shell-width`，与内容版心共用 660px 目标；更多右侧保留剩余空白。内容宽度同时受 `100vw - 两侧外边距` 限制；1200px 及以上再减去 32rem，避免加宽正文时把目录从 208px 挤窄。顶栏与正文同步收窄，小屏两排导航仍受响应式外边距 `--site-gutter` 约束。`--blog-prose-width` 引用版心宽度，标题、正文与文章头「← 返回文稿」对齐；目录读取同一个 `--blog-prose-width`，在正文边缘与视口外边距之间的留白中线基础上向外移 16px，最大 208px、受视口剩余空间约束。文稿列表卡片的封面列固定为无图 222px、有图 250px，版心宽度变化只进入左侧文字；768px 及以上封面垂直居中，更窄时改为单列并隐藏空封面列。目录与正文读取同一版心宽度。小屏由可用视口宽度约束。
 
 导航是一条有细边框、轻阴影和柔和当前态的居中悬浮条，品牌、页面入口、工具按钮分组。≥800px 为一排，更窄视口为品牌／工具和页面入口两排。用 `top` 与 opacity 隐藏，不在包含搜索面板的祖先上使用 transform 或 backdrop-filter，保证搜索弹窗仍相对于视口定位。
 
@@ -221,7 +224,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 `FEATURES.toc` 决定开不开、标题层级、左右。
 `RenderPost`、`InterestsView` 和 `AboutView` 把 Markdown 渲染返回的 `headings` 交给共享 `Toc`；文章另传 `frontmatter.toc` 作为单篇开关。`Toc` 统一根据全局功能开关、页面开关与标题级别调用 `generateToc` 一次，`generateToc` 拥有级别过滤与父子树生成，结果非空时 `Toc` 才挂载目录；桌面和移动端只呈现同一棵树。正文级别与页面顶部标题的行为约定见 [文章与目录](./site.md#article)。`TocSidebar` 负责高度（不超过 `min(50vh, 28rem)`）和内部滚动。
-`DesktopAside` 在 1200px 及以上始终显示目录，无顶部开关；宽度为侧边留白减 48px 与 208px 中的较小值，靠正文一侧至少留 40px、外侧至少留 8px（另有视口外边距）；在正文边缘与视口外边距之间的留白中线基础上向外移 16px，中心比视口中线高 32px。更窄视口继续使用 `MobileTocControl` 浮动入口，展开时通知共享目录逻辑将当前项滚入可视范围。
+`DesktopAside` 在 1200px 及以上始终显示目录，无顶部开关；宽度为侧边留白减 48px 与 208px 中的较小值，靠正文一侧至少留 40px、外侧至少留 8px（另有视口外边距）；在正文边缘与视口外边距之间的留白中线基础上向外移 16px，中心比视口中线高 32px。`MobileTocControl`（名沿用，桌面亦挂载）拥有右下角雾玻璃浮动条（收起为细线 `…`，展开含细线箭头＋仅已读进度弧回顶、list＋点目录、跳底、收起；无返回）；与 `DesktopAside` 同一 `min-width: 1200px` 断点下目录按钮 `disabled`，窄屏可开浮动面板；打开目录时仍通知共享逻辑将当前项滚入可视范围。组件挂载时所有宽度隐藏全局 `ToTopButton`（无 TOC 时不挂载，回顶钮保留），回顶／进度／跳底不另起模块。
 
 当前章节由 `src/utils/toc-active.js` 的 `pickActiveHeadingIndex()` 决定：激活线取标题的 `scrollMarginTop`，到页面底部时最后一个标题胜出。`Toc` 唯一维护 `--post-anchor-offset`：导航隐藏时 20px，显示时为导航顶部位置加实际高度再加 12px。`nav-scroll.js` 唯一保存累计滚动状态，`NavBar` 用 `updateNavVisibility()` 更新它；点击前 `Toc` 用 `predictNavVisibility()` 从同一状态预测导航显隐，不消耗累计距离，原生锚点直接消费对应距离；滚动、导航显隐、缩放和字体加载后重新核对同一基准。保留正常 fragment 与历史记录行为，不补播第二次滚动。正文标题仅使用透明度入场，锚点位置不随入场动画变化；无脚本时保留导航可见所需的静态距离。
 
@@ -235,7 +238,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 ### 4.9 评论 seam
 
-`GiscusComments.astro` 提供可选的 `title`／`description`，调用方只负责挂载位置：`RenderPost` 通过 `BaseLayout` 的 `after-content` slot 放在正文和 `PostNav` 之后、`FriendsView` 的申请说明之后、`InterestsView` 有 `entry` 的分类正文之后。`BaseLayout` 只提供正文之后的通用 slot，不判断评论范围。评论组件自身以 `width: 100%`／`max-width: var(--blog-prose-width)` 复用正文版心，不能依赖外层恰好套有 `BlogIndexLayout`；否则文章标题／正文虽然受 `.prose` 限制，默认 slot 里的评论仍会铺满 `<main>`。
+`GiscusComments.astro` 提供可选的 `title`／`description`，调用方只负责挂载位置：`RenderPost` 通过 `BaseLayout` 的 `after-content` slot 按版权卡 → `PostNav` → 评论挂载；`FriendsView` 在申请说明之后、`InterestsView` 在有 `entry` 的分类正文之后挂载评论。`BaseLayout` 只提供正文之后的通用 slot，不判断评论范围。评论组件自身以 `width: 100%`／`max-width: var(--blog-prose-width)` 复用正文版心，不能依赖外层恰好套有 `BlogIndexLayout`；否则文章标题／正文虽然受 `.prose` 限制，默认 slot 里的评论仍会铺满 `<main>`。
 
 | 规则／状态 | Authority | Interface／调用方 | 证据 |
 | --- | --- | --- | --- |
@@ -338,13 +341,15 @@ plugins/
 
 ### 全站搜索
 
-`SearchSwitch` 负责搜索、键盘选中、结果跳转与加载分页逻辑，`Backdrop` 负责关闭。搜索面板、输入框、结果、快捷键和遮罩的视觉样式统一放在静态加载的 `public/shell.css`，避免面板背景和阴影依赖未生效的工具类。面板使用主题的实色背景、边框和阴影；遮罩压暗并模糊页面，结果摘要与快捷键使用明确的次级文字颜色，选中结果有底色及左侧标记。手机端保留快捷键提示，长结果只在面板中间区域滚动；减少动画设置下关闭过渡。
+`SearchSwitch` 负责搜索、键盘选中、结果跳转与加载分页逻辑，`Backdrop` 负责关闭。搜索面板挂到 `document.body`（避免落在 `header.nav-bar` 的 stacking context 内）；遮罩叠在导航之上、面板之下（`z-index` 180，导航 160、面板 200），打开搜索时顶栏与页面一并变暗，只保留搜索面板明亮。搜索面板、输入框、结果、快捷键和遮罩的视觉样式统一放在静态加载的 `public/shell.css`，避免面板背景和阴影依赖未生效的工具类。面板使用主题的实色背景、边框和阴影；遮罩压暗并模糊页面，结果摘要与快捷键使用明确的次级文字颜色，选中结果有底色及左侧标记。手机端保留快捷键提示，长结果只在面板中间区域滚动；减少动画设置下关闭过渡。
+
+结果列表**最上方**可出现「标签」区：构建期用与 `/tags/` 相同的已发布集合（`getFilteredPosts` + `buildTagSummary`）嵌入标签名单；输入后由 `filterTagsMatchingQuery` 做包含匹配（查询 trim；拉丁字母不区分大小写，展示保留原 tag 文案）。无匹配时整块隐藏。标签项与文章结果共用 `role="option"` 键盘选中／`aria-activedescendant`；点击跳到 `withBasePath('/tags/')` + `tagSelectionLinks`／`serializeBlogQuery({ category:'', tags:[tag], page:1 })` 的单标签 URL。不改 Pagefind 索引，不另缓存标签 JSON。无脚本时不要求标签搜索（面板本就依赖 JS）。
 
 Pagefind **按需加载**：面板打开时调 `window.ensurePagefind()`（打开与输入两处触发，带 memo），否则不拉 `pagefind.js` 与 worker；`pagefind-highlight.js` 只在带 `?search=` 的页面加载于 `astro:page-load`。没打开过搜索的访问因此零 Pagefind 请求。
 
 面板声明了 `role="dialog" aria-modal="true"`，所以 Tab 在面板内循环（`SearchPanel.#handlePanelTab`），退出靠 Escape 或点击遮罩，两者都会把焦点还给搜索按钮。结果项是 `role="option" tabindex="-1"`，用方向键选择，并用 `aria-activedescendant` 把当前高亮项报给读屏器。
 
-开发模式搜索仍使用模拟数据；真实 Pagefind 搜索需先 build，再在 preview 中验证。
+开发模式文章结果仍使用模拟数据，标签区仍按嵌入名单真实过滤；真实 Pagefind 搜索需先 build，再在 preview 中验证。
 
 ### 归档 `/archives/`
 
@@ -372,9 +377,9 @@ Pagefind **按需加载**：面板打开时调 `window.ensurePagefind()`（打�
 
 ### 文章 `/blogs/[slug]/`
 
-`RenderPost` + 常驻右侧 TOC。最大高度 `min(50vh, 28rem)`，水平位置在侧边留白中线基础上向外移 16px、中心比视口中线高 32px，超出内部滚动；窄屏使用浮动目录按钮。文章主标题独立渲染，封面作者头像 40px。
+`RenderPost` + 常驻右侧 TOC。最大高度 `min(50vh, 28rem)`，水平位置在侧边留白中线基础上向外移 16px、中心比视口中线高 32px，超出内部滚动；各宽度使用 `MobileTocControl` 雾玻璃浮动控件（宽屏目录钮禁用）。文章主标题独立渲染，封面作者头像 40px。
 
-页脚由 `Footer.astro` 用宋体显示版权、Astro 与“萌ICP备20269668号”；启用 Oneko 时另有「隐藏小猫」按钮（左侧装饰性 `🐾`）。宽屏段间用次要字色 `·` 分隔，窄屏纵向堆叠并隐藏分隔符。作者名、Astro 和备案都是带下划线的链接：作者名指向站点首页，Astro 指向 `https://astro.build`，备案指向 `https://icp.gov.moe/?keyword=20269668` 并在新标签页打开。悬停或键盘焦点时链接变为强调色。窄屏纵向排列，备案入口不隐藏。
+页脚由 `Footer.astro` 用宋体显示版权、Astro 与“萌ICP备20269668号”；启用 Oneko 时另有「隐藏小猫」按钮（左侧装饰性 `🐾`）。宽屏段间用次要字色 `·` 分隔，窄屏纵向堆叠并隐藏分隔符。作者名、Astro 和备案都是链接：作者名指向站点首页，Astro 指向 `https://astro.build`，备案指向 `https://icp.gov.moe/?keyword=20269668` 并在新标签页打开；链接反馈见 [视觉不变量](./site.md#visuals)。窄屏纵向排列，备案入口不隐藏。
 
 <a id="utilities"></a>
 
@@ -386,7 +391,7 @@ Pagefind **按需加载**：面板打开时调 `window.ensurePagefind()`（打�
 | `blog-heatmap.js` | 上海日历日、强度、年份范围、年度字数与字数缺失／非法失败 |
 | `blog-browser.js` | 原值分类动态入口与预览、URL 兼容别名与精确筛选状态、分页 |
 | `blog-category-colors.js` | 预设校验、分类配色领取与持久化、耗尽失败 |
-| `blog-tag-filter.js` | 标签计数、AND |
+| `blog-tag-filter.js` | 标签计数、AND、搜索包含过滤 |
 | `blog-stats.js` | 可读字数统计与「万」格式 |
 | `progress-stats.js` | 年积日、年进度、日进度 |
 | `recent-post-date.js` | 「n 天前」 |

@@ -8,9 +8,6 @@ titleImage: ./_title-images/mygo-ogp.png
 titleImageAlt: BanG Dream! It's MyGO!!!!! 官方夜景宣传图，五人站在城市斑马线上
 ---
 
-> MyGo 与 Electron：从双击打开看进程  
-> 2026-10-28（Asia/Shanghai）
-
 ## TL;DR
 
 双击桌面应用时，操作系统启动的是一个**可执行文件**，并得到至少一个**进程**（一份正在跑的程序实例）。

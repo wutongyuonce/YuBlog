@@ -8,7 +8,7 @@ toc: true
 search: true
 ---
 
-:::blog-link{slug="算法笔记/算法-1数组链表" title="上一篇：算法 1（数组、链表）"}
+:::blog-link{slug="algo-notes/algo-1-array-linked-list" title="上一篇：算法 1（数组、链表）"}
 :::
 
 ## 三、哈希表/散列表Hash table
@@ -1218,23 +1218,23 @@ https://www.bilibili.com/video/BV1KQdDYiEgN
 
 数组篇
 
-* [27移除元素（快慢双指针）](/blogs/算法笔记/算法-1数组链表/#27)
-* [283移动零（快慢双指针）](/blogs/算法笔记/算法-1数组链表/#283)
-* [977有序数组的平方（相向双指针）](/blogs/算法笔记/算法-1数组链表/#977)
-* [11盛最多水的容器（相向双指针）](/blogs/算法笔记/算法-1数组链表/#11)
-* [75颜色分类（同向双指针维护边界）](/blogs/算法笔记/算法-1数组链表/#75)
+* [27移除元素（快慢双指针）](/blogs/algo-notes/algo-1-array-linked-list/#27)
+* [283移动零（快慢双指针）](/blogs/algo-notes/algo-1-array-linked-list/#283)
+* [977有序数组的平方（相向双指针）](/blogs/algo-notes/algo-1-array-linked-list/#977)
+* [11盛最多水的容器（相向双指针）](/blogs/algo-notes/algo-1-array-linked-list/#11)
+* [75颜色分类（同向双指针维护边界）](/blogs/algo-notes/algo-1-array-linked-list/#75)
 
 链表篇
 
-* [简 876链表的中间节点（快慢双指针）](/blogs/算法笔记/算法-1数组链表/#876)
-* [234回文链表（876链表的中间节点+206反转链表）](/blogs/算法笔记/算法-1数组链表/#234)
-* [141环形链表（快慢双指针）](/blogs/算法笔记/算法-1数组链表/#141)
-* [142环形链表II（快慢双指针+相向双指针）](/blogs/算法笔记/算法-1数组链表/#142)
-* [287寻找重复数（同142）](/blogs/算法笔记/算法-1数组链表/#287)
-* [19删除链表的倒数第N个节点（前后双指针迭代法）](/blogs/算法笔记/算法-1数组链表/#19)
-* [160相交链表（独立双指针迭代拼接链表法）](/blogs/算法笔记/算法-1数组链表/#160)
-* [21合并两个有序链表（独立双指针迭代法）](/blogs/算法笔记/算法-1数组链表/#21)
-* [2两数相加（独立双指针迭代法）](/blogs/算法笔记/算法-1数组链表/#2)
+* [简 876链表的中间节点（快慢双指针）](/blogs/algo-notes/algo-1-array-linked-list/#876)
+* [234回文链表（876链表的中间节点+206反转链表）](/blogs/algo-notes/algo-1-array-linked-list/#234)
+* [141环形链表（快慢双指针）](/blogs/algo-notes/algo-1-array-linked-list/#141)
+* [142环形链表II（快慢双指针+相向双指针）](/blogs/algo-notes/algo-1-array-linked-list/#142)
+* [287寻找重复数（同142）](/blogs/algo-notes/algo-1-array-linked-list/#287)
+* [19删除链表的倒数第N个节点（前后双指针迭代法）](/blogs/algo-notes/algo-1-array-linked-list/#19)
+* [160相交链表（独立双指针迭代拼接链表法）](/blogs/algo-notes/algo-1-array-linked-list/#160)
+* [21合并两个有序链表（独立双指针迭代法）](/blogs/algo-notes/algo-1-array-linked-list/#21)
+* [2两数相加（独立双指针迭代法）](/blogs/algo-notes/algo-1-array-linked-list/#2)
 
 N数之和
 
@@ -3000,5 +3000,5 @@ class Solution {
 
 中位数问题是Top K问题的变形，k=n/2
 
-:::blog-link{slug="算法笔记/算法-3二叉树图论回溯算法" title="下一篇：算法 3（二叉树、图论、回溯算法）"}
+:::blog-link{slug="algo-notes/algo-3-tree-graph-backtracking" title="下一篇：算法 3（二叉树、图论、回溯算法）"}
 :::

@@ -191,9 +191,9 @@ Avatar: ${friendInfo.avatar}`
       color 180ms ease;
   }
 
-  .friends-apply__pr:hover {
-    border-color: var(--friends-border-strong);
-    color: var(--c-text);
+  .friends-apply__pr:is(:hover, :focus-visible) {
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   .friends-apply__block {

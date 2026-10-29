@@ -9,8 +9,6 @@ interface Props {
   label?: string
   /** When false, render a plain wrapper (for nesting inside another nav). */
   landmark?: boolean
-  /** Smaller muted text for home section headers. */
-  compact?: boolean
   class?: string
 }
 
@@ -19,7 +17,6 @@ const {
   excludeId,
   label = '随便逛逛',
   landmark = true,
-  compact = false,
   class: className,
 } = Astro.props
 
@@ -33,11 +30,7 @@ const Tag = landmark ? 'nav' : 'div'
 
 {fallback && hrefList.length > 0 && (
   <Tag
-    class:list={[
-      'random-browse',
-      className,
-      { 'random-browse--compact': compact },
-    ]}
+    class:list={['random-browse', className]}
     aria-label={landmark ? label : undefined}
     data-random-browse
   >
@@ -71,7 +64,9 @@ const Tag = landmark ? 'nav' : 'div'
     line-height: 1.5;
     text-decoration: none;
     border-bottom: 1px solid var(--link-underline);
-    transition: border-bottom-color 0.3s ease-in-out;
+    transition:
+      color 0.3s ease-in-out,
+      border-bottom-color 0.3s ease-in-out;
   }
 
   .random-browse__link:hover,
@@ -82,22 +77,6 @@ const Tag = landmark ? 'nav' : 'div'
   .random-browse__wave {
     color: color-mix(in srgb, var(--c-text) 42%, transparent);
     font-weight: 400;
-  }
-
-  .random-browse--compact .random-browse__link {
-    color: color-mix(in srgb, var(--c-text) 60%, var(--c-bg));
-    font-size: 0.75rem;
-    border-bottom-color: var(--link-underline);
-  }
-
-  .random-browse--compact .random-browse__link:is(:hover, :focus-visible) {
-    color: var(--accent);
-    border-bottom-color: var(--accent);
-  }
-
-  .random-browse--compact .random-browse__wave {
-    color: inherit;
-    opacity: 0.72;
   }
 
   @media (prefers-reduced-motion: reduce) {
