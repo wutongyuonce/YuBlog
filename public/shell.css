@@ -192,6 +192,8 @@ header.nav-bar :is(a, button):focus-visible {
 }
 
 #backdrop {
+  /* Above nav (160), below search panel (200): dim the whole chrome while searching. */
+  z-index: 180;
   background: #0006;
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
