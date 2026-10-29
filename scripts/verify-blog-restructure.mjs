@@ -807,20 +807,14 @@ test('playlist page ships fixed config and noscript links', async () => {
   assert.equal(details.length, playlists.length, 'each card ships details')
   assert.equal(
     skeletons.length,
-    playlists.length,
-    'each card keeps a skeleton node'
+    0,
+    'static-first cards ship no loading skeleton'
   )
   for (const node of details) {
     assert.equal(
       node.properties.hidden,
       undefined,
       'static details stay visible before the API returns'
-    )
-  }
-  for (const node of skeletons) {
-    assert.ok(
-      node.properties.hidden === true || node.properties.hidden === '',
-      'skeleton starts hidden so it does not cover the static card'
     )
   }
   const noscript = elements(panel, (node) => node.tagName === 'noscript')[0]

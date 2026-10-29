@@ -123,18 +123,6 @@ const runtimeConfig = config.map(({ cover, ...entry }) => entry)
               </button>
             </div>
           </div>
-
-          <div
-            class="playlists-panel__panel"
-            data-skeleton
-            hidden
-            aria-hidden="true"
-          >
-            <span class="playlists-panel__bone playlists-panel__bone--meta" />
-            <span class="playlists-panel__bone playlists-panel__bone--title" />
-            <span class="playlists-panel__bone playlists-panel__bone--desc" />
-            <span class="playlists-panel__bone playlists-panel__bone--desc-short" />
-          </div>
         </article>
       ))}
     </div>
@@ -422,42 +410,7 @@ const runtimeConfig = config.map(({ cover, ...entry }) => entry)
     text-decoration: underline;
     text-underline-offset: 3px;
   }
-  .playlists-panel__bone {
-    display: block;
-    border-radius: 0.2rem;
-    background: color-mix(in srgb, var(--playlist-poster-ink) 12%, transparent);
-    animation: playlist-pulse 1.8s ease-in-out infinite;
-  }
-  .playlists-panel__bone--meta {
-    width: 7rem;
-    height: 0.625rem;
-  }
-  .playlists-panel__bone--title {
-    width: 70%;
-    height: 1.0625rem;
-    margin-top: 0.5rem;
-  }
-  .playlists-panel__bone--desc,
-  .playlists-panel__bone--desc-short {
-    width: 92%;
-    height: 0.625rem;
-    margin-top: 0.375rem;
-  }
-  .playlists-panel__bone--desc {
-    margin-top: 0.625rem;
-  }
-  .playlists-panel__bone--desc-short {
-    width: 64%;
-  }
-  @keyframes playlist-pulse {
-    50% {
-      opacity: 0.45;
-    }
-  }
   @media (prefers-reduced-motion: reduce) {
-    .playlists-panel__bone {
-      animation: none;
-    }
     .playlists-panel__play,
     button {
       transition: none;
