@@ -1,8 +1,66 @@
 ---
-title: 书
+title: 书网文
 description: 翻过的扉页
 order: 8
 ---
+
+### 网文
+
+:::card{layout="portrait" title="我在俄国当文豪" meta="卡拉马佐夫" href="https://book.qidian.com/info/1044119887/"}
+![我在俄国当文豪封面](./book/russian-literati.jpg)
+:::
+
+:::card{layout="portrait" title="玄鉴仙族" meta="季越人" href="https://book.qidian.com/info/1035420986/"}
+![玄鉴仙族封面](./book/xuanjian-clan.jpg)
+:::
+
+:::card{layout="portrait" title="东京医途" meta="睡醒了会饿" href="https://book.qidian.com/info/1046431588/"}
+![东京医途封面](./book/tokyo-medicine.jpg)
+:::
+
+:::card{layout="portrait" title="冬日重现" meta="雪梨炖茶" href="https://book.qidian.com/info/1044572097/"}
+![冬日重现封面](./book/winter-return.jpg)
+:::
+
+:::card{layout="portrait" title="现实编程协会" meta="木也马" href="https://book.qidian.com/info/1047535456/"}
+![现实编程协会封面](./book/real-coding-club.jpg)
+:::
+
+:::card{layout="portrait" title="钢铁火药和施法者" meta="尹紫电" href="https://book.qidian.com/info/1021263756/"}
+![钢铁火药和施法者封面](./book/steel-powder-mage.jpg)
+:::
+
+:::card{layout="portrait" title="保卫南山公园" meta="天瑞说符" href="https://book.qidian.com/info/1034833260/"}
+![保卫南山公园封面](./book/nanshan-park.jpg)
+:::
+
+:::card{layout="portrait" title="捞尸人" meta="纯洁滴小龙" href="https://book.qidian.com/info/1041637443/"}
+![捞尸人封面](./book/corpse-diver.jpg)
+:::
+
+:::card{layout="portrait" title="绍宋" meta="榴弹怕水" href="https://book.qidian.com/info/1017281778/"}
+![绍宋封面](./book/shaosong.jpg)
+:::
+
+:::card{layout="portrait" title="死在火星上" meta="天瑞说符" href="https://book.qidian.com/info/1013489123/"}
+![死在火星上封面](./book/die-on-mars.jpg)
+:::
+
+:::card{layout="portrait" title="深海余烬" meta="远瞳" href="https://book.qidian.com/info/1034360760/"}
+![深海余烬封面](./book/deep-sea-embers.jpg)
+:::
+
+:::card{layout="portrait" title="我们生活在南京" meta="天瑞说符" href="https://book.qidian.com/info/1025325277/"}
+![我们生活在南京封面](./book/living-in-nanjing.jpg)
+:::
+
+:::card{layout="portrait" title="诡秘之主" meta="爱潜水的乌贼" href="https://book.qidian.com/info/1010868264/"}
+![诡秘之主封面](./book/lord-of-mysteries.jpg)
+:::
+
+:::card{layout="portrait" title="我真没想重生啊" meta="柳岸花又明" href="https://book.qidian.com/info/1015648531/"}
+![我真没想重生啊封面](./book/accidental-rebirth.jpg)
+:::
 
 ### 现实与时代
 
