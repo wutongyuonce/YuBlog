@@ -31,7 +31,7 @@ PlaylistsPanel.astro：按配置静态生成 N 张卡片（首屏可见封面／
 
 只接受无查询参数的 `GET /api/playlists`，响应为 `{ updatedAt, playlists: [{ id, platform, sourceId, title, author, description, songCount, url, songs: [{ title, artist, album }] }] }`。`updatedAt` 是本次抓取时间。其它方法返回 405 和 `Allow: GET`；包括 `?id=` 在内的查询参数返回 400，不访问上游。它不是任意 URL 转换器或开放代理。
 
-成功返回 200，缓存一天：`public, max-age=0, s-maxage=86400, stale-while-revalidate=3600, stale-if-error=604800`。歌单变动很少，逐日刷新足够，也避免频繁回源上游。上游失败返回 502、`{ error: 'upstream_unavailable' }`；所有错误均为 `no-store`。没有跨请求进程缓存，旧数据由 CDN 管理。`.github/workflows/warm-playlists-cdn.yml` 每天一次（UTC 03:17）请求正式站无查询参数地址，检查 200 与响应形状，不提交数据；上游连续失败时，过期缓存最多再顶 7 天（`stale-if-error`）。
+成功返回 200，缓存一天：`public, max-age=0, s-maxage=86400, stale-while-revalidate=3600, stale-if-error=604800`。歌单变动很少，逐日刷新足够，也避免频繁回源上游。上游失败返回 502、`{ error: 'upstream_unavailable' }`；所有错误均为 `no-store`。没有跨请求进程缓存，旧数据由 CDN 管理。`.github/workflows/warm-playlists-cdn.yml` 每天一次（UTC 03:17）请求正式站无查询参数地址，检查 200 与响应形状，失败再请求一次，不提交数据；上游连续失败时，过期缓存最多再顶 7 天（`stale-if-error`）。
 
 Vercel 沿用现有 `vercel.json` 的 Other 预设收集根目录 `api/` 函数。`pnpm dev` 通过 `plugins/astro-playlists-endpoint.ts` 调用同一处理函数；`pnpm preview` 只服务静态文件。接口固定在 `/api/playlists`，不随站点 base 改变。页面元素断开时取消请求和事件监听，旧页面请求不能覆盖新页面。
 
