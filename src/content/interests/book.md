@@ -64,143 +64,143 @@ order: 8
 
 ### 现实与时代
 
-:::card{layout="portrait" title="活着" meta="余华"}
+:::card{layout="portrait" title="活着" meta="余华" href="https://book.douban.com/subject/4913064/"}
 ![活着封面](./book/to-live.jpg)
 :::
 
-:::card{layout="portrait" title="许三观卖血记" meta="余华"}
+:::card{layout="portrait" title="许三观卖血记" meta="余华" href="https://book.douban.com/subject/4760224/"}
 ![许三观卖血记封面](./book/blood-merchant.jpg)
 :::
 
-:::card{layout="portrait" title="兄弟" meta="余华"}
+:::card{layout="portrait" title="兄弟" meta="余华" href="https://book.douban.com/subject/20441957/"}
 ![兄弟封面](./book/brothers.jpg)
 :::
 
-:::card{layout="portrait" title="额尔古纳河右岸" meta="迟子建"}
+:::card{layout="portrait" title="额尔古纳河右岸" meta="迟子建" href="https://book.douban.com/subject/34432750/"}
 ![额尔古纳河右岸封面](./book/ergun-river.jpg)
 :::
 
-:::card{layout="portrait" title="围城" meta="钱钟书"}
+:::card{layout="portrait" title="围城" meta="钱钟书" href="https://book.douban.com/subject/11524204/"}
 ![围城封面](./book/fortress.jpg)
 :::
 
-:::card{layout="portrait" title="平凡的世界" meta="路遥"}
+:::card{layout="portrait" title="平凡的世界" meta="路遥" href="https://book.douban.com/subject/10517238/"}
 ![平凡的世界封面](./book/ordinary-world.jpg)
 :::
 
-:::card{layout="portrait" title="草房子" meta="曹文轩"}
+:::card{layout="portrait" title="草房子" meta="曹文轩" href="https://book.douban.com/subject/25953676/"}
 ![草房子封面](./book/straw-house.jpg)
 :::
 
-:::card{layout="portrait" title="尘埃落定" meta="阿来"}
+:::card{layout="portrait" title="尘埃落定" meta="阿来" href="https://book.douban.com/subject/35051822/"}
 ![尘埃落定封面](./book/red-poppies.jpg)
 :::
 
-:::card{layout="portrait" title="丰乳肥臀" meta="莫言"}
+:::card{layout="portrait" title="丰乳肥臀" meta="莫言" href="https://book.douban.com/subject/26904658/"}
 ![丰乳肥臀封面](./book/big-breasts.jpg)
 :::
 
-:::card{layout="portrait" title="白鹿原" meta="陈忠实"}
+:::card{layout="portrait" title="白鹿原" meta="陈忠实" href="https://book.douban.com/subject/27047454/"}
 ![白鹿原封面](./book/white-deer.jpg)
 :::
 
-:::card{layout="portrait" title="房思琪的初恋乐园" meta="林奕含"}
+:::card{layout="portrait" title="房思琪的初恋乐园" meta="林奕含" href="https://book.douban.com/subject/27614904/"}
 ![房思琪的初恋乐园封面](./book/fang-siqi.jpg)
 :::
 
 ### 悬疑与推理
 
-:::card{layout="portrait" title="白夜行" meta="东野圭吾"}
+:::card{layout="portrait" title="白夜行" meta="东野圭吾" href="https://book.douban.com/subject/10554308/"}
 ![白夜行封面](./book/white-night.jpg)
 :::
 
-:::card{layout="portrait" title="恶意" meta="东野圭吾"}
+:::card{layout="portrait" title="恶意" meta="东野圭吾" href="https://book.douban.com/subject/26877752/"}
 ![恶意封面](./book/malice.jpg)
 :::
 
-:::card{layout="portrait" title="嫌疑人X的献身" meta="东野圭吾"}
+:::card{layout="portrait" title="嫌疑人X的献身" meta="东野圭吾" href="https://book.douban.com/subject/3211779/"}
 ![嫌疑人X的献身封面](./book/devotion-x.jpg)
 :::
 
-:::card{layout="portrait" title="绝叫" meta="叶真中显"}
+:::card{layout="portrait" title="绝叫" meta="叶真中显" href="https://book.douban.com/subject/35031587/"}
 ![绝叫封面](./book/outcry.jpg)
 :::
 
-:::card{layout="portrait" title="无证之罪" meta="紫金陈"}
+:::card{layout="portrait" title="无证之罪" meta="紫金陈" href="https://book.douban.com/subject/25799686/"}
 ![无证之罪封面](./book/burning-ice.jpg)
 :::
 
-:::card{layout="portrait" title="坏小孩" meta="紫金陈"}
+:::card{layout="portrait" title="坏小孩" meta="紫金陈" href="https://book.douban.com/subject/25955474/"}
 ![坏小孩封面](./book/bad-kids.jpg)
 :::
 
-:::card{layout="portrait" title="长夜难明" meta="紫金陈"}
+:::card{layout="portrait" title="长夜难明" meta="紫金陈" href="https://book.douban.com/subject/26923390/"}
 ![长夜难明封面](./book/long-night.jpg)
 :::
 
 ### 世界文学与成长
 
-:::card{layout="portrait" title="霍乱时期的爱情" meta="马尔克斯"}
+:::card{layout="portrait" title="霍乱时期的爱情" meta="马尔克斯" href="https://book.douban.com/subject/10594787/"}
 ![霍乱时期的爱情封面](./book/cholera-love.jpg)
 :::
 
-:::card{layout="portrait" title="百年孤独" meta="马尔克斯"}
+:::card{layout="portrait" title="百年孤独" meta="马尔克斯" href="https://book.douban.com/subject/6082808/"}
 ![百年孤独封面](./book/solitude.jpg)
 :::
 
-:::card{layout="portrait" title="金阁寺" meta="三岛由纪夫"}
+:::card{layout="portrait" title="金阁寺" meta="三岛由纪夫" href="https://book.douban.com/subject/35324326/"}
 ![金阁寺封面](./book/golden-pavilion.jpg)
 :::
 
-:::card{layout="portrait" title="追风筝的人" meta="卡勒德·胡赛尼"}
+:::card{layout="portrait" title="追风筝的人" meta="卡勒德·胡赛尼" href="https://book.douban.com/subject/1770782/"}
 ![追风筝的人封面](./book/kite-runner.jpg)
 :::
 
-:::card{layout="portrait" title="灿烂千阳" meta="卡勒德·胡赛尼"}
+:::card{layout="portrait" title="灿烂千阳" meta="卡勒德·胡赛尼" href="https://book.douban.com/subject/2143732/"}
 ![灿烂千阳封面](./book/thousand-suns.jpg)
 :::
 
-:::card{layout="portrait" title="挪威的森林" meta="村上春树"}
+:::card{layout="portrait" title="挪威的森林" meta="村上春树" href="https://book.douban.com/subject/27200257/"}
 ![挪威的森林封面](./book/norwegian-wood.jpg)
 :::
 
-:::card{layout="portrait" title="杀死一只知更鸟" meta="哈珀·李"}
+:::card{layout="portrait" title="杀死一只知更鸟" meta="哈珀·李" href="https://book.douban.com/subject/26879778/"}
 ![杀死一只知更鸟封面](./book/mockingbird.jpg)
 :::
 
 ### 科幻与奇幻
 
-:::card{layout="portrait" title="三体" meta="刘慈欣"}
+:::card{layout="portrait" title="三体" meta="刘慈欣" href="https://book.douban.com/subject/2567698/"}
 ![三体封面](./book/three-body.jpg)
 :::
 
-:::card{layout="portrait" title="解忧杂货店" meta="东野圭吾"}
+:::card{layout="portrait" title="解忧杂货店" meta="东野圭吾" href="https://book.douban.com/subject/25862578/"}
 ![解忧杂货店封面](./book/miracles-store.jpg)
 :::
 
-:::card{layout="portrait" title="摆渡人" meta="克莱尔·麦克福尔"}
+:::card{layout="portrait" title="摆渡人" meta="克莱尔·麦克福尔" href="https://book.douban.com/subject/26356948/"}
 ![摆渡人封面](./book/ferryman.jpg)
 :::
 
 ### 散文与自我探索
 
-:::card{layout="portrait" title="当下的力量" meta="埃尔哈特·托利"}
+:::card{layout="portrait" title="当下的力量" meta="埃尔哈特·托利" href="https://book.douban.com/subject/26815948/"}
 ![当下的力量封面](./book/power-of-now.jpg)
 :::
 
-:::card{layout="portrait" title="撒哈拉的故事" meta="三毛"}
+:::card{layout="portrait" title="撒哈拉的故事" meta="三毛" href="https://book.douban.com/subject/1060068/"}
 ![撒哈拉的故事封面](./book/sahara.jpg)
 :::
 
-:::card{layout="portrait" title="梦里花落知多少" meta="三毛"}
+:::card{layout="portrait" title="梦里花落知多少" meta="三毛" href="https://book.douban.com/subject/2070844/"}
 ![梦里花落知多少封面](./book/dream-flowers.jpg)
 :::
 
-:::card{layout="portrait" title="孤独六讲" meta="蒋勋"}
+:::card{layout="portrait" title="孤独六讲" meta="蒋勋" href="https://book.douban.com/subject/4124727/"}
 ![孤独六讲封面](./book/loneliness.jpg)
 :::
 
-:::card{layout="portrait" title="我与地坛" meta="史铁生"}
+:::card{layout="portrait" title="我与地坛" meta="史铁生" href="https://book.douban.com/subject/5910656/"}
 ![我与地坛封面](./book/earth-temple.jpg)
 :::
 
