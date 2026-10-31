@@ -504,10 +504,13 @@ main:has(.post-content) > footer.prose :is(a, span) {
   color: #b7d0ae;
 }
 .prose a.media-card__title:is(:hover, :focus-visible),
-.prose .media-cards--rail a.media-card__title:is(:hover, :focus-visible) {
+.prose .media-cards--rail a.media-card__title:is(:hover, :focus-visible),
+:root.dark .prose a.media-card__title:is(:hover, :focus-visible),
+:root.dark .prose .media-cards--rail a.media-card__title:is(:hover, :focus-visible) {
   border-bottom: 0;
   color: var(--accent);
   text-decoration: underline;
+  text-decoration-color: var(--accent);
   text-underline-offset: 0.16em;
 }
 .prose a.media-card__title .new-tab-icon {
