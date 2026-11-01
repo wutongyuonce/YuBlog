@@ -242,7 +242,7 @@ CSS 中 url 不改写也不校验，相对背景地址可能失效；使用 Mark
 src/<rel> → public/_media/<rel> → 带 SITE.base 的 /_media/<rel>
 ```
 
-镜像范围由 `MEDIA_EXTENSIONS`（音视频）和 `DRAWING_EXTENSIONS`（.excalidraw／.excalidrawlib）合成 `MIRROR_EXTENSIONS`。
+镜像范围由 `MEDIA_EXTENSIONS`（音视频）、`DRAWING_EXTENSIONS`（.excalidraw／.excalidrawlib）与 `HTML_EXTENSIONS`（演示 HTML）合成 `MIRROR_EXTENSIONS`。
 图片及预览图不镜像，避免与 `_astro` 重复；.excalidrawlib 只可镜像／下载，不能直接嵌入；需要展示素材库内容时，先在 Excalidraw 中导入素材到画布，再导出为 .excalidraw 场景。
 字幕 .vtt 不在范围，`<track src="./sub.vtt">` 被拒绝；放 public 后用带实际 base 的绝对路径。
 poster 不走图片优化也不镜像，允许合法 HTTP(S)／协议相对外链和站内绝对路径；本地 poster 自放 public，不能放派生 `_media`，不能用相对路径。

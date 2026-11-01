@@ -534,10 +534,10 @@ test('every media reference in the built site is servable', async () => {
   )
   assert.ok(pages.length > 0, 'the built site must contain pages')
 
-  // 标签集合从规则模块取，避免这里漏掉某个标签（例如 track）。
-  // `iframe`／`embed`／`object` 不在媒体插件的管理范围内（它只管视频/音频），
-  // 但同样只能在站上取到绝对地址，所以一并扫。
-  const srcTags = ['img', 'iframe', 'embed', ...MEDIA_SRC_ELEMENTS]
+  // 标签集合从规则模块取，避免这里漏掉某个标签（例如 track、iframe）。
+  // `img`／`embed` 不在媒体插件的 src 改写范围内，但同样只能在站上取到
+  // 绝对地址，所以一并扫。
+  const srcTags = ['img', 'embed', ...MEDIA_SRC_ELEMENTS]
   // `poster` 与 `data` 不是 `src` 属性，单独列出来
   const otherAttributes = [
     ['video', 'poster'],

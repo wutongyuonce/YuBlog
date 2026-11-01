@@ -244,7 +244,7 @@ test('演示 HTML 与音视频同样镜像，iframe 的相对路径被改写', a
   const html = await renderHtml(`
 <iframe src="./wave.html" title="演示" sandbox="allow-scripts"></iframe>
 <iframe src="https://example.com/demo.html" title="外链"></iframe>
-<iframe src="/demos/static.html" title="站内"></iframe>
+<iframe src="/static/demo.html" title="站内"></iframe>
 
 [单独打开演示](./wave.html)
 `)
@@ -253,7 +253,7 @@ test('演示 HTML 与音视频同样镜像，iframe 的相对路径被改写', a
   // iframe 的 src 与指向 .html 的文字链接都改写，外链与站内绝对路径原样
   assert.equal(html.split(rewritten).length - 1, 2)
   assert.match(html, /src="https:\/\/example\.com\/demo\.html"/)
-  assert.match(html, /src="\/demos\/static\.html"/)
+  assert.match(html, /src="\/static\/demo\.html"/)
 })
 
 test('缺失的演示 HTML 让构建失败，而不是静默 404', async () => {
