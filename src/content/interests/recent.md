@@ -2,6 +2,11 @@
 ![影之刃零海报](./game/shadowblade.jpg)
 :::
 
+:::card{layout="portrait" title="Doctor X：白色黑手党时代" href="https://zh.wikipedia.org/wiki/Doctor_X：白色黑手黨時代" meta="正在看。"}
+![Doctor X：白色黑手党时代海报](./tv/doctor-x.jpg)
+
+:::
+
 :::card{layout="portrait" title="FX战士久留美" href="https://zh.wikipedia.org/wiki/FX战士久留美" meta="人-稿子-钻石。"}
 ![FX战士久留美海报](./anime/fx-kurumi.jpg)
 :::
