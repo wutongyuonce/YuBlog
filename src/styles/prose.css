@@ -725,7 +725,7 @@ main:has(.post-content) > footer.prose :is(a, span) {
 .prose .image-gallery__viewport > .image-gallery--scroll {
   margin: 0;
 }
-.image-gallery__arrow {
+.image-gallery__viewport .image-gallery__arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -733,16 +733,23 @@ main:has(.post-content) > footer.prose :is(a, span) {
   place-items: center;
   width: 2.5rem;
   height: 2.5rem;
+  padding: 0;
+  border: 0;
   border-radius: 50%;
-  background: #fff;
-  color: #262626;
-  box-shadow: 0 1px 6px rgb(0 0 0 / 18%);
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: rgb(255 255 255 / 0.92);
+  background-image: none;
+  color: #1f1f1f;
+  box-shadow:
+    0 1px 6px rgb(0 0 0 / 18%),
+    0 0 0 1px rgb(0 0 0 / 0.08);
   cursor: pointer;
 }
 .image-gallery__arrow::before {
   content: '';
-  width: 0.5rem;
-  height: 0.5rem;
+  width: 0.55rem;
+  height: 0.55rem;
   border-top: 2px solid currentColor;
   border-right: 2px solid currentColor;
 }
