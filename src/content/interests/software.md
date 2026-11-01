@@ -9,7 +9,8 @@ order: 1
 | 类型 | 名称 | 时间 | 价格 | 描述 |
 | --- | --- | --- | --- | --- |
 | AI | [GPT Plus](https://chatgpt.com) | 2026.7.12-至今 | 120 ¥/月 | 专门办了个招行万事达的卡来开通 |
-| AI | [Gemini Pro](https://gemini.google.com/) | 2026.10.29-2027.1.29 | 6¥ 3个月 | coursera薅羊毛 |
+| AI | [Google Pro](https://gemini.google.com/) | 2026.10.29-2027.1.29 | 6¥ 3个月 | coursera薅羊毛 |
+| AI | [Google Pro](https://gemini.google.com/) | 2026.11.1-2030.11.1 | 720日元/月 | sheerid 学生认证优惠 |
 | AI | [Supergrok](https://accounts.x.ai/) | 2026.9.4-2026.12.3 | 230¥ 3个月 | |
 | AI | [Deepseek API](https://platform.deepseek.com/usage) | | 320¥+ | |
 | 代码 | [阿里云云服务2核2GB](https://ecs.console.aliyun.com/) | 2027.10.25 到期 | 大学生 300 元优惠劵 | |
@@ -28,7 +29,7 @@ order: 1
 | AI&Agent | [ChatGPT](https://chatgpt.com/) | |
 | AI&Agent | [Grok Bot](https://x.ai/news/introducing-grok-bot) | |
 | AI&Agent | [Ghostty](https://ghostty.org/) + [herdr](https://github.com/herdrdev/herdr) + [pi](https://github.com/earendil-works/pi) | herdr 插件 [herdr-sidebar](https://github.com/alexarthurs/herdr-sidebar)；pi 插件 [我的 pi-extensions](https://github.com/wutongyuonce/pi-extensions) |
-| AI&Agent | [Magpie](https://usemagpie.ai/) | 模型路由 |
+| AI&Agent | [Magpie](https://usemagpie.ai/) | 模型路由与反代 |
 | AI&Agent | [LM Studio](https://lmstudio.ai/) | 本地运行大模型 |
 | AI&Agent | [Nowdex](https://nowdex.app/) | token 额度统计 |
 | AI&Agent | [Trajex](https://github.com/wutongyuonce/Trajex) | |
