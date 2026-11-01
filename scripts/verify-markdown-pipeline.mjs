@@ -606,7 +606,7 @@ test('every media reference in the built site is servable', async () => {
 })
 
 test('the custom-style demo preserves fenced code metadata through raw HTML parsing', async () => {
-  const page = fromHtml(await html('blogs/image-layout-demo/index.html'))
+  const page = fromHtml(await html('blogs/content-style-guide/index.html'))
   const frames = elements(page, 'figure').filter((node) =>
     node.properties.className?.includes('frame')
   )

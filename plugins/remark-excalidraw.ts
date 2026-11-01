@@ -11,7 +11,7 @@ import { classifyMediaRef, isMirrorableFile } from './media-paths.ts'
  * Excalidraw 嵌入。博客／拾趣／关于共用 Markdown 管线：
  *
  * ```md
- * :::excalidraw{src="./post-img/diagram.excalidraw" alt="说明"}
+ * :::excalidraw{src="./my-post/diagram.excalidraw" alt="说明"}
  * :::
  * ```
  *

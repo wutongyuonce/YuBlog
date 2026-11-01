@@ -87,7 +87,7 @@ draft: true
 
 作者操作与 AI 内容维护使用仓库内可独立安装的 [内容发布 skill](../../blog-content-publisher-skill/SKILL.md)。将整个 `blog-content-publisher-skill/` 复制到 Agent 的 skills 目录，保留 `SKILL.md`、脚本等依赖；可以直接提出“发博客”“新增拾趣分类”“换封面”“加友链”。skill 负责内容与配置，新博客在未明确发布时保留草稿；提交、推送和部署需有用户授权。
 
-公式写 `$…$` 或独立行 `$$`，不使用 `\(...\)`／`\[...\]`。复杂排版、卡片日期和媒体参数见 [正文与媒体](../design/content.md)，可运行示例及完整可复制语法见 [正文样式指南文章](../../src/content/blogs/image-layout-demo.md)。
+公式写 `$…$` 或独立行 `$$`，不使用 `\(...\)`／`\[...\]`。复杂排版、卡片日期和媒体参数见 [正文与媒体](../design/content.md)，可运行示例及完整可复制语法见 [正文样式指南文章](../../src/content/blogs/content-style-guide.md)。
 
 <a id="services"></a>
 

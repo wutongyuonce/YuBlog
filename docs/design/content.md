@@ -3,7 +3,7 @@
 本文是正文内容的现役写法、行为契约与实现入口，适用于博客、拾趣、关于及首页通过共享 Markdown 管线渲染的内容。
 作者按任务阅读前半部分，修改插件或浏览器交互时再看模块职责和验证入口。
 页面范围与行为边界见 [站点契约](./site.md)，整体架构见 [架构导览](./architecture.md)。
-发布操作见 [作者 skill](../../blog-content-publisher-skill/SKILL.md)，可复制语法见 [内容演示](../../src/content/blogs/image-layout-demo.md)。
+发布操作见 [作者 skill](../../blog-content-publisher-skill/SKILL.md)，可复制语法见 [内容演示](../../src/content/blogs/content-style-guide.md)。
 RSS 的清洗白名单、地址与身份规则统一见 [RSS 全文表达](./distribution.md#rss-content)；本文只保留内容侧必须维持的顺序与资源义务。
 文中的 `src/`、`plugins/`、`public/`、`test/`、`scripts/` 路径均相对仓库根目录。
 
@@ -26,17 +26,17 @@ RSS 的清洗白名单、地址与身份规则统一见 [RSS 全文表达](./dis
 ## 图片目录、写法与宽度
 
 内容图片放在 `src/content/`，相对于文章文件引用，由 Astro 图片管线生成 WebP、响应式资源、宽高与懒加载属性。
-`public/` 放站点图标、头像、字体、默认 OG 图和独立 HTML 演示；正文配图仍优先放内容目录。
+`public/` 放站点图标、头像、字体和默认 OG 图；正文配图与可运行的演示 HTML 仍优先放内容目录。
 图片路径、文章 URL 与 slug 各自维护，不靠改文章路由解决图片路径问题。
 
 ```text
 src/content/blogs/
   codebase-search.md
-  codebase-search-img/       本篇正文图
+  codebase-search/       本篇正文图、本地媒体与演示 HTML
   _title-images/        文章封面
   algo-notes/
     algo-1-array-linked-list.md
-    algo-img/           同组文章共享正文图
+    assets/             同组文章共享资源
 src/content/interests/
   device.md             分类正文，也支持 .mdx
   device/               与正文文件同级的配图目录
@@ -47,7 +47,7 @@ src/content/interests/
 
 | 场景 | 作者写法 | 资源处理 |
 | --- | --- | --- |
-| 本篇正文图 | `![说明](./codebase-search-img/file.png)` | 相对文章文件解析，进入图片管线 |
+| 本篇正文图 | `![说明](./codebase-search/file.png)` | 相对文章文件解析，进入图片管线 |
 | 上层共享图 | `![说明](../共享图/file.png)` | 同样进入管线，文件必须存在 |
 | 限制宽度 | `![说明\|w310](./图.png)` | alt 尾部标记转成图片节点 width |
 | 顶层文章封面 | `titleImage: ./_title-images/foo.webp` | schema 的图片字段解析 |
@@ -94,25 +94,25 @@ gallery／figure 保持 660px 版心，不 breakout，静止时完整显示、�
 
 ```md
 :::gallery
-![第一张](./文章-img/a.png)
+![第一张](./my-post/a.png)
 
-![第二张](./文章-img/b.png)
+![第二张](./my-post/b.png)
 :::
 
 :::gallery{layout="grid" columns="3" widths="1fr 2fr 1fr"}
-![第一张|w330](./文章-img/a.png) ![第二张](./文章-img/b.png)
+![第一张|w330](./my-post/a.png) ![第二张](./my-post/b.png)
 
-![第三张](./文章-img/c.png)
+![第三张](./my-post/c.png)
 :::
 
 :::gallery{layout="scroll"}
-![横图](./文章-img/a.png)
+![横图](./my-post/a.png)
 
-![竖图](./文章-img/b.png)
+![竖图](./my-post/b.png)
 :::
 
 :::figure{side="left"}
-![图示|w240](./文章-img/detail.png)
+![图示|w240](./my-post/detail.png)
 
 这段文字在桌面围绕图片阅读，后面还可继续写正文块。
 :::
@@ -259,29 +259,28 @@ RSS 删除嵌入控件及子树，作者应在控件外紧邻补说明和普通�
 ### 本地 HTML 交互演示
 
 普通 `.md` 可用 iframe 嵌入运行 CSS、JS、Canvas 的独立完整 HTML，不要求 MDX 或 Sketch 组件。
-统一放 `public/demos/<稳定文章短名>/`，跨文复用放 `public/demos/shared/`，不为演示改名或迁移现有文章。
-当前 base 为 `/`，示例：
+演示 HTML 与其它资源一样放进文章的同名目录（`src/content/blogs/<id>/wave.html`），正文写相对路径：
 
 ```html
 <div data-pagefind-ignore>
 <iframe
-  src="/demos/image-layout-demo/wave.html"
+  src="./my-post/wave.html"
   title="正弦波动画演示"
   sandbox="allow-scripts"
   loading="lazy"
   style="display: block; width: 100%; height: 420px; border: 0;"
 ></iframe>
 </div>
-<a href="/demos/image-layout-demo/wave.html">单独打开正弦波演示</a>
+<a href="./my-post/wave.html">单独打开正弦波演示</a>
 ```
 
-HTML 不在媒体镜像范围，文章旁 `./wave.html` 不会自动发布；iframe 使用可服务站内绝对路径或外链，子路径部署手写 src 和链接须含实际 base，插件不补。
+`iframe` 的 `src` 与指向 `.html` 的 `a` 都在媒体层规则内：相对路径校验后改写成 `/_media/…`，文件缺失让构建失败；外链 iframe 原样保留。
 sandbox 允许脚本但不加 allow-same-origin，避免脚本取得父页 DOM、cookie、localStorage 同源权限；沙箱仍允许网络请求，不等于离线。
-推荐内联 CSS／JS／数据；内部资源不经博客管线，本地资源放 public 用站内绝对路径，外链用完整 URL，受 CORS 等限制。
+推荐内联 CSS／JS／数据；镜像只复制 HTML 本身，它引用的图片等资源不经博客管线，需内联或用站内绝对路径（子路径部署时手写地址须含实际 base）。
 演示自行定义配色与响应式宽度，不继承博客 CSS／主题变量；当前手动指定高度，无自动高度或主题消息同步。
 data-pagefind-ignore 排除嵌入区域索引，文字说明和独立链接放外面；RSS 删除 iframe，但保留外部普通文字链接。
-public 文件随构建公开，不受文章 draft 控制，草稿演示放进去后文件本身也会公开。
-可运行内容见 [演示文章的 HTML 交互动画](../../src/content/blogs/image-layout-demo.md#html-交互动画)。
+镜像产物随构建公开，不受文章 draft 控制，草稿里的演示文件同样会公开。
+可运行内容见 [演示文章的 HTML 交互动画](../../src/content/blogs/content-style-guide.md#html-交互动画)。
 
 <a id="paths"></a>
 
@@ -326,7 +325,7 @@ Astro 内容加载器可能吞单条渲染异常后留下空 Content；RSS endpo
 ## Excalidraw：作者入口与只读视口
 
 ```md
-:::excalidraw{src="./文章-img/diagram.excalidraw" preview="./文章-img/diagram.svg" alt="结构图"}
+:::excalidraw{src="./my-post/diagram.excalidraw" preview="./my-post/diagram.svg" alt="结构图"}
 :::
 ```
 

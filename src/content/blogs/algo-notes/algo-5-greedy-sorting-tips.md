@@ -26,7 +26,7 @@ search: true
 
 本题采取的贪心策略如下图所示。给定目标金额，**我们贪心地选择不大于且最接近它的硬币**，不断循环该步骤，直至凑出目标金额为止
 
-![image-20260413204514755|w355](./algo-img/image-20260413204514755.png)
+![image-20260413204514755|w355](./assets/image-20260413204514755.png)
 
 ```java
 /* 零钱兑换：贪心 */
@@ -51,7 +51,7 @@ int coinChangeGreedy(int[] coins, int amt) {
 
 然而，**对于某些硬币面值组合，贪心算法并不能找到最优解**
 
-![image-20260413205850040|w432](./algo-img/image-20260413205850040.png)
+![image-20260413205850040|w432](./assets/image-20260413205850040.png)
 
 相较于动态规划，贪心算法的使用条件更加苛刻，其主要关注问题的两个性质
 
@@ -83,7 +83,7 @@ int coinChangeGreedy(int[] coins, int amt) {
 
 可以尝试使用贪心策略，先将饼干数组和小孩数组排序，然后从后向前遍历小孩数组，用大饼干优先满足胃口大的，并统计满足小孩数量
 
-![image-20260413213317855|w240](./algo-img/image-20260413213317855.png)
+![image-20260413213317855|w240](./assets/image-20260413213317855.png)
 
 ```java
 public int findContentChildren(int[] g, int[] s) {
@@ -173,7 +173,7 @@ for (int i = 1; i < ratings.size(); i++) {
 }
 ```
 
-![image-20260413215952372|w433](./algo-img/image-20260413215952372.png)
+![image-20260413215952372|w433](./assets/image-20260413215952372.png)
 
 2、再确定左孩子大于右孩子的情况（从后向前遍历）
 
@@ -226,7 +226,7 @@ public int candy(int[] ratings) {
 
 2、再优先按身高高的 people 的 k 来插入，后序插入节点也不会影响前面已经插入的节点，最终按照 k 的规则完成了队列
 
-![image-20260414110025469|w319](./algo-img/image-20260414110025469.png)
+![image-20260414110025469|w319](./assets/image-20260414110025469.png)
 
 排序完的people： [[7,0], [7,1], [6,1], [5,0], [5,2], [4,4]]
 
@@ -286,7 +286,7 @@ public int[][] reconstructQueue(int[][] people) {
 
 **贪心算法局部最优解：每次取最大跳跃步数（取最大覆盖范围）；整体最优解：最后得到整体最大覆盖范围，看是否能到终点**
 
-![image-20260414151859302|w606](./algo-img/image-20260414151859302.png)
+![image-20260414151859302|w606](./assets/image-20260414151859302.png)
 
 i 每次移动只能在 cover 的范围内移动，每移动一个元素，cover 得到该元素数值（新的覆盖范围）的补充，让 i 继续移动下去
 
@@ -429,7 +429,7 @@ public List<Integer> partitionLabels(String S) {
 
 注意图中区间已经按照左边界排序：
 
-![image-20260414163548342|w335](./algo-img/image-20260414163548342.png)
+![image-20260414163548342|w335](./assets/image-20260414163548342.png)
 
 判断重复之后，如何去模拟合并区间呢？
 
@@ -588,7 +588,7 @@ void selectionSort(int[] nums) {
 
 - **非稳定排序**：如下图所示，元素 `nums[i]` 有可能被交换至与其相等的元素的右边，导致两者的相对顺序发生改变
 
-  ![image-20260417192837664|w217](./algo-img/image-20260417192837664.png)
+  ![image-20260417192837664|w217](./assets/image-20260417192837664.png)
 
 ### 冒泡排序
 
@@ -599,7 +599,7 @@ void selectionSort(int[] nums) {
 3. 以此类推，经过 n-1 轮“冒泡”后，**前 大的元素都被交换至正确位置**
 4. 仅剩的一个元素必定是最小元素，无须排序，因此数组排序完成
 
-![image-20260417193115311|w405](./algo-img/image-20260417193115311.png)
+![image-20260417193115311|w405](./assets/image-20260417193115311.png)
 
 ```java
 /* 冒泡排序 */
@@ -714,7 +714,7 @@ void insertionSort(int[] nums) {
 2. 设置一个循环，在每轮中使用 `i`（`j`）分别寻找第一个比基准数大（小）的元素，然后交换这两个元素。
 3. 循环执行步骤 `2.` ，直到 `i` 和 `j` 相遇时停止，最后将基准数交换至两个子数组的分界线
 
-![PixPin_2026-04-16_21-44-59|w218](./algo-img/PixPin_2026-04-16_21-44-59.gif)
+![PixPin_2026-04-16_21-44-59|w218](./assets/PixPin_2026-04-16_21-44-59.gif)
 
 ```java
 /* 元素交换 */
@@ -748,7 +748,7 @@ int partition(int[] nums, int left, int right) {
 2. 然后，对左子数组和右子数组分别递归执行“哨兵划分”
 3. 持续递归，直至子数组长度为 1 时终止，从而完成整个数组的排序
 
-![image-20260416214717351|w526](./algo-img/image-20260416214717351.png)
+![image-20260416214717351|w526](./assets/image-20260416214717351.png)
 
 ```java
 /* 快速排序 */
@@ -891,7 +891,7 @@ void mergeSort(int[] nums, int left, int right) {
 
 > 给你链表的头结点 `head` ，请将其按 **升序** 排列并返回 **排序后的链表** 。
 >
-> ![img|w225](./algo-img/sort_list_1.jpg)
+> ![img|w225](./assets/sort_list_1.jpg)
 
 时间复杂度是 O(nlogn) 的排序算法包括归并排序、堆排序和快速排序（快速排序的最差时间复杂度是 O(n^2^)，其中最适合链表的排序算法是归并排序
 
@@ -1033,7 +1033,7 @@ void heapSort(int[] nums) {
 
 > 给定一个整数数组 `temperatures` ，表示每天的温度，返回一个数组 `answer` ，其中 `answer[i]` 是指对于第 `i` 天，下一个更高温度出现在几天后。如果气温在这之后都不会升高，请在该位置用 `0` 来代替。
 
-![image-20260415195748199|w316](./algo-img/image-20260415195748199.png)
+![image-20260415195748199|w316](./assets/image-20260415195748199.png)
 
 **从左到右遍历+下一个更高—用单调递减栈**
 
@@ -1068,7 +1068,7 @@ public int[] dailyTemperatures(int[] temperatures) {
 
 > 给定 `n` 个非负整数表示每个宽度为 `1` 的柱子的高度图，计算按此排列的柱子，下雨之后能接多少雨水。
 >
-> ![img|w247](./algo-img/rainwatertrap.png)
+> ![img|w247](./assets/rainwatertrap.png)
 >
 > ```
 > 输入：height = [0,1,0,2,1,0,1,3,2,1,2,1]
@@ -1105,7 +1105,7 @@ public int trap(int[] height) {
 >
 > 求在该柱状图中，能够勾勒出来的矩形的最大面积。
 >
-> ![img|w261](./algo-img/histogram.jpg)
+> ![img|w261](./assets/histogram.jpg)
 >
 > ```
 > 输入：heights = [2,1,5,6,2,3]
@@ -1205,7 +1205,7 @@ public int largestRectangleArea(int[] heights) {
 
 对于数组 a，计算它的长为 n+1 的前缀和数组 s，即 a 的前 0 个数的和，前 1 个数的和，前 2 个数的和……前 n 个数的和
 
-![image-20260419221600045|w302](./algo-img/image-20260419221600045.png)
+![image-20260419221600045|w302](./assets/image-20260419221600045.png)
 
 *这里定义 s[0] 是为了让 s[1]=s[0]+a[0] 满足 s[i + 1] = s[i] + nums[i] 的公式，同时在后面计算子数组和 left=0 时能直接减去 s[0]*
 
@@ -1249,7 +1249,7 @@ class NumArray {
 
 以 nums=[1,1,−1,1,−1]，k=1 为例，其前缀和数组为 s=[0,1,2,1,2,1]。画出前缀和数组的折线图，如下：
 
-![lc560-2c.png|w264](./algo-img/1748326975-svBnhu-lc560-2c.png)
+![lc560-2c.png|w264](./assets/1748326975-svBnhu-lc560-2c.png)
 
 如果用二重循环暴力枚举有多少个 s[j]−s[i]=k，时间复杂度是 O(n^2^)，太慢了。如何加速？
 
@@ -1259,7 +1259,7 @@ class NumArray {
 
 用这个视角，再来算算上图中的那 6 个和为 1 的子数组
 
-![image-20260420151029428|w346](./algo-img/image-20260420151029428.png)
+![image-20260420151029428|w346](./assets/image-20260420151029428.png)
 
 一共有 0+1+1+1+2+1=6 个和为 k=1 的子数组
 
@@ -1297,7 +1297,7 @@ cnt.merge(sj, 1, Integer::sum);
 >
 > **路径** 不需要从根节点开始，也不需要在叶子节点结束，但是路径方向必须是向下的（只能从父节点到子节点）。
 >
-> ![img|w288](./algo-img/pathsum3-1-tree.jpg)
+> ![img|w288](./assets/pathsum3-1-tree.jpg)
 >
 > ```
 > 输入：root = [10,5,-3,3,2,null,11,3,-2,null,1], targetSum = 8

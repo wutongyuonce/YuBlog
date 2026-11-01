@@ -10,7 +10,7 @@ import remarkExcalidraw from '../plugins/remark-excalidraw.ts'
 
 const postPath = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  '../src/content/blogs/image-layout-demo.md'
+  '../src/content/blogs/content-style-guide.md'
 )
 
 const render = async (source) => {
@@ -22,24 +22,24 @@ const render = async (source) => {
 
 test(':::excalidraw renders host and static source link', async () => {
   const { code } = await render(
-    ':::excalidraw{src="./image-layout-demo-img/verify.excalidraw" preview="./image-layout-demo-img/verify.svg" alt="示意"}\n:::'
+    ':::excalidraw{src="./content-style-guide/verify.excalidraw" preview="./content-style-guide/verify.svg" alt="示意"}\n:::'
   )
   assert.match(code, /class="[^"]*excalidraw-embed/)
   assert.match(code, /data-excalidraw-viewer/)
   assert.match(code, /data-excalidraw-host/)
-  assert.match(code, /href="\.\/image-layout-demo-img\/verify\.excalidraw"/)
+  assert.match(code, /href="\.\/content-style-guide\/verify\.excalidraw"/)
   assert.match(code, /download="/)
   assert.doesNotMatch(code, /blob:/)
   assert.match(code, /Excalidraw 源文件/)
-  assert.match(code, /image-layout-demo-img\/verify\.svg/)
+  assert.match(code, /content-style-guide\/verify\.svg/)
 })
 
 test(':::excalidraw works with src only when same-basename preview exists', async () => {
   const { code } = await render(
-    ':::excalidraw{src="./image-layout-demo-img/verify.excalidraw"}\n:::'
+    ':::excalidraw{src="./content-style-guide/verify.excalidraw"}\n:::'
   )
   assert.match(code, /data-excalidraw-host/)
-  assert.match(code, /image-layout-demo-img\/verify\.svg/)
+  assert.match(code, /content-style-guide\/verify\.svg/)
 })
 
 test(':::excalidraw allows src-only without any preview image', async () => {
@@ -88,7 +88,7 @@ test(':::excalidraw rejects blob src and missing files', async () => {
   )
   await assert.rejects(
     render(
-      ':::excalidraw{src="./image-layout-demo-img/missing.excalidraw"}\n:::'
+      ':::excalidraw{src="./content-style-guide/missing.excalidraw"}\n:::'
     ),
     /missing|mirrorable|relative path/i
   )

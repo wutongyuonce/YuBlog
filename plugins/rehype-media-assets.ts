@@ -25,6 +25,7 @@ import type { VFile } from 'vfile'
  * | 位置 | http(s) / `//` / `/…` | 相对路径 | `data:` / 其它协议 |
  * |---|---|---|---|
  * | `video/audio/source/track` 的 `src` | 原样 | 校验后改写为 `/_media/…` | 报错 |
+ * | `iframe` 的 `src`（演示 HTML） | 原样 | 校验后改写为 `/_media/…` | 报错 |
  * | 指向媒体文件的 `a` 的 `href` | 原样 | 校验后改写为 `/_media/…` | 不动 |
  * | `img` 的 `src`（非 Astro 拥有） | 原样 | 报错，提示改用 Markdown 语法 | 报错 |
  * | `video` 的 `poster` | 原样 | 报错，提示改用站内绝对路径 | 报错 |

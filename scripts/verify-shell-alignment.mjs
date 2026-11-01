@@ -15,7 +15,7 @@ const paths = [
   'projects/',
   'about/',
   'friends/',
-  'blogs/image-layout-demo/',
+  'blogs/content-style-guide/',
 ]
 
 for (const width of [1440, 768, 390, 320]) {

@@ -4,7 +4,7 @@ description: 本站正文样式与交互组件的用法指南，涵盖卡片、�
 pubDate: 2026-10-07
 category: 博客开发
 tags: [Markdown, 自定义样式]
-titleImage: ./_title-images/image-layout-demo-cover.jpg
+titleImage: ./_title-images/content-style-guide-cover.jpg
 titleImageAlt: 夜间街头戴墨镜的人像
 draft: false
 ---
@@ -164,16 +164,16 @@ draft: false
 相册区域随屏幕尺寸调整，翻页时高度不变。横竖图均按中心对齐、按原比例完整显示，空余位置留白；可用 `|w` 限制单张图片宽度。
 
 :::gallery{layout="scroll"}
-![街边横图](./image-layout-demo-img/street-landscape.jpg)
+![街边横图](./content-style-guide/street-landscape.jpg)
 
-![餐桌横图](./image-layout-demo-img/table-landscape.jpg)
+![餐桌横图](./content-style-guide/table-landscape.jpg)
 :::
 
 ```md
 :::gallery{layout="scroll"}
-![街边横图](./image-layout-demo-img/street-landscape.jpg)
+![街边横图](./content-style-guide/street-landscape.jpg)
 
-![餐桌横图](./image-layout-demo-img/table-landscape.jpg)
+![餐桌横图](./content-style-guide/table-landscape.jpg)
 :::
 ```
 
@@ -182,16 +182,16 @@ draft: false
 `columns="2"` 把可用列宽等分，间距由布局统一留出。两张竖图的原始比例相同，适合这种对称并排；省略属性写 `:::gallery` 也是默认两列。
 
 :::gallery{layout="grid" columns="2"}
-![街边竖图](./image-layout-demo-img/street-portrait.jpg)
+![街边竖图](./content-style-guide/street-portrait.jpg)
 
-![室内竖图](./image-layout-demo-img/indoor-portrait.jpg)
+![室内竖图](./content-style-guide/indoor-portrait.jpg)
 :::
 
 ```md
 :::gallery{layout="grid" columns="2"}
-![街边竖图](./image-layout-demo-img/street-portrait.jpg)
+![街边竖图](./content-style-guide/street-portrait.jpg)
 
-![室内竖图](./image-layout-demo-img/indoor-portrait.jpg)
+![室内竖图](./content-style-guide/indoor-portrait.jpg)
 :::
 ```
 
@@ -200,16 +200,16 @@ draft: false
 同样的两列写法也能放横图。横图会更矮，不会为了填满方形格子而裁掉画面；比例不同的照片允许底边不齐。
 
 :::gallery{layout="grid" columns="2"}
-![街边横图](./image-layout-demo-img/street-landscape.jpg)
+![街边横图](./content-style-guide/street-landscape.jpg)
 
-![餐桌横图](./image-layout-demo-img/table-landscape.jpg)
+![餐桌横图](./content-style-guide/table-landscape.jpg)
 :::
 
 ```md
 :::gallery{layout="grid" columns="2"}
-![街边横图](./image-layout-demo-img/street-landscape.jpg)
+![街边横图](./content-style-guide/street-landscape.jpg)
 
-![餐桌横图](./image-layout-demo-img/table-landscape.jpg)
+![餐桌横图](./content-style-guide/table-landscape.jpg)
 :::
 ```
 
@@ -218,20 +218,20 @@ draft: false
 三张竖图用 `columns="3"`。没有 masonry 或自动重排，始终保持 Markdown 的源顺序；手机上恢复为单列。
 
 :::gallery{layout="grid" columns="3"}
-![街边竖图](./image-layout-demo-img/street-portrait.jpg)
+![街边竖图](./content-style-guide/street-portrait.jpg)
 
-![室内竖图](./image-layout-demo-img/indoor-portrait.jpg)
+![室内竖图](./content-style-guide/indoor-portrait.jpg)
 
-![近景竖图](./image-layout-demo-img/closeup-portrait.jpg)
+![近景竖图](./content-style-guide/closeup-portrait.jpg)
 :::
 
 ```md
 :::gallery{layout="grid" columns="3"}
-![街边竖图](./image-layout-demo-img/street-portrait.jpg)
+![街边竖图](./content-style-guide/street-portrait.jpg)
 
-![室内竖图](./image-layout-demo-img/indoor-portrait.jpg)
+![室内竖图](./content-style-guide/indoor-portrait.jpg)
 
-![近景竖图](./image-layout-demo-img/closeup-portrait.jpg)
+![近景竖图](./content-style-guide/closeup-portrait.jpg)
 :::
 ```
 
@@ -240,16 +240,16 @@ draft: false
 可以控制占据的比例。`widths="1fr 2fr"` 表示扣除间距后，第一列占 1/3、第二列占 2/3。这里把竖图放窄列、横图放宽列。想左右等宽用 `1fr 1fr`；想左宽右窄用 `2fr 1fr`。`fr` 是剩余空间的份数，不是源图片缩放倍数。
 
 :::gallery{layout="grid" widths="1fr 2fr"}
-![街边竖图](./image-layout-demo-img/street-portrait.jpg)
+![街边竖图](./content-style-guide/street-portrait.jpg)
 
-![街边横图](./image-layout-demo-img/street-landscape.jpg)
+![街边横图](./content-style-guide/street-landscape.jpg)
 :::
 
 ```md
 :::gallery{layout="grid" widths="1fr 2fr"}
-![街边竖图](./image-layout-demo-img/street-portrait.jpg)
+![街边竖图](./content-style-guide/street-portrait.jpg)
 
-![街边横图](./image-layout-demo-img/street-landscape.jpg)
+![街边横图](./content-style-guide/street-landscape.jpg)
 :::
 ```
 
@@ -258,16 +258,16 @@ draft: false
 `widths="3fr 2fr"` 对应大约 60% / 40% 的可用列宽；写 `7fr 3fr` 就是 70% / 30%。不用直接写百分比，这样列间距也不会额外撑出正文。图仍完整显示，不保证底边对齐。
 
 :::gallery{layout="grid" widths="3fr 2fr"}
-![餐桌横图](./image-layout-demo-img/table-landscape.jpg)
+![餐桌横图](./content-style-guide/table-landscape.jpg)
 
-![近景竖图](./image-layout-demo-img/closeup-portrait.jpg)
+![近景竖图](./content-style-guide/closeup-portrait.jpg)
 :::
 
 ```md
 :::gallery{layout="grid" widths="3fr 2fr"}
-![餐桌横图](./image-layout-demo-img/table-landscape.jpg)
+![餐桌横图](./content-style-guide/table-landscape.jpg)
 
-![近景竖图](./image-layout-demo-img/closeup-portrait.jpg)
+![近景竖图](./content-style-guide/closeup-portrait.jpg)
 :::
 ```
 
@@ -276,16 +276,16 @@ draft: false
 这就是“第一张占指定宽度，第二张占剩下”的写法：`widths="240px 1fr"`。这里的 240px 是第一列的目标宽度，而非原始文件宽度；容器不足时可以收窄。不要把固定列设得大于正文可用空间，避免把弹性列挤得过窄。手机上仍是单列。
 
 :::gallery{layout="grid" widths="240px 1fr"}
-![室内竖图](./image-layout-demo-img/indoor-portrait.jpg)
+![室内竖图](./content-style-guide/indoor-portrait.jpg)
 
-![餐桌横图](./image-layout-demo-img/table-landscape.jpg)
+![餐桌横图](./content-style-guide/table-landscape.jpg)
 :::
 
 ```md
 :::gallery{layout="grid" widths="240px 1fr"}
-![室内竖图](./image-layout-demo-img/indoor-portrait.jpg)
+![室内竖图](./content-style-guide/indoor-portrait.jpg)
 
-![餐桌横图](./image-layout-demo-img/table-landscape.jpg)
+![餐桌横图](./content-style-guide/table-landscape.jpg)
 :::
 ```
 
@@ -294,16 +294,16 @@ draft: false
 调换轨道顺序，就能固定右侧的列宽：`widths="1fr 200px"`。适合左侧横图为主、右侧竖图为辅。
 
 :::gallery{layout="grid" widths="1fr 200px"}
-![街边横图](./image-layout-demo-img/street-landscape.jpg)
+![街边横图](./content-style-guide/street-landscape.jpg)
 
-![近景竖图](./image-layout-demo-img/closeup-portrait.jpg)
+![近景竖图](./content-style-guide/closeup-portrait.jpg)
 :::
 
 ```md
 :::gallery{layout="grid" widths="1fr 200px"}
-![街边横图](./image-layout-demo-img/street-landscape.jpg)
+![街边横图](./content-style-guide/street-landscape.jpg)
 
-![近景竖图](./image-layout-demo-img/closeup-portrait.jpg)
+![近景竖图](./content-style-guide/closeup-portrait.jpg)
 :::
 ```
 
@@ -312,20 +312,20 @@ draft: false
 `widths` 也可以写三个值。下面是 1:2:1；没有写 `columns` 时，从 `widths` 的数量得出列数。如同时写 `columns="3"`，就必须恰好给出三个宽度值。
 
 :::gallery{layout="grid" widths="1fr 2fr 1fr"}
-![街边竖图](./image-layout-demo-img/street-portrait.jpg)
+![街边竖图](./content-style-guide/street-portrait.jpg)
 
-![餐桌横图](./image-layout-demo-img/table-landscape.jpg)
+![餐桌横图](./content-style-guide/table-landscape.jpg)
 
-![近景竖图](./image-layout-demo-img/closeup-portrait.jpg)
+![近景竖图](./content-style-guide/closeup-portrait.jpg)
 :::
 
 ```md
 :::gallery{layout="grid" widths="1fr 2fr 1fr"}
-![街边竖图](./image-layout-demo-img/street-portrait.jpg)
+![街边竖图](./content-style-guide/street-portrait.jpg)
 
-![餐桌横图](./image-layout-demo-img/table-landscape.jpg)
+![餐桌横图](./content-style-guide/table-landscape.jpg)
 
-![近景竖图](./image-layout-demo-img/closeup-portrait.jpg)
+![近景竖图](./content-style-guide/closeup-portrait.jpg)
 :::
 ```
 
@@ -334,16 +334,16 @@ draft: false
 `|w` 和 `widths` 是两回事。下面仍是等宽两列，但第一张图只显示到 160px，第二张到 260px，各自在自己的列内居中。**第一张小图空出来的位置不会自动让给第二列。** 若要让出列宽，应使用上面的 `widths`。`|w` 还参与 Astro 的资源生成；`widths` 只管排版，也可以把两者结合。
 
 :::gallery{layout="grid" columns="2"}
-![街边竖图|w160](./image-layout-demo-img/street-portrait.jpg)
+![街边竖图|w160](./content-style-guide/street-portrait.jpg)
 
-![餐桌横图|w260](./image-layout-demo-img/table-landscape.jpg)
+![餐桌横图|w260](./content-style-guide/table-landscape.jpg)
 :::
 
 ```md
 :::gallery{layout="grid" columns="2"}
-![街边竖图|w160](./image-layout-demo-img/street-portrait.jpg)
+![街边竖图|w160](./content-style-guide/street-portrait.jpg)
 
-![餐桌横图|w260](./image-layout-demo-img/table-landscape.jpg)
+![餐桌横图|w260](./content-style-guide/table-landscape.jpg)
 :::
 ```
 
@@ -352,7 +352,7 @@ draft: false
 `figure` 适合一张图配连续文字，不是固定高度双栏。第一段只放一张图，后面写正常 Markdown 段落。
 
 :::figure{side="right"}
-![右侧近景竖图|w200](./image-layout-demo-img/closeup-portrait.jpg)
+![右侧近景竖图|w200](./content-style-guide/closeup-portrait.jpg)
 
 图片放在右侧，正文从左侧开始阅读。这里用竖图展示较长的绕排区域：画面保持完整，没有为了对齐文字而裁成方形。显示宽度通过图片说明里的 `|w200` 限制，不改变源文件；点击后仍能查看同源的原尺寸大图。
 
@@ -365,7 +365,7 @@ draft: false
 
 ```md
 :::figure{side="right"}
-![右侧近景竖图|w200](./image-layout-demo-img/closeup-portrait.jpg)
+![右侧近景竖图|w200](./content-style-guide/closeup-portrait.jpg)
 
 图片放在右侧，正文从左侧开始阅读。这里用竖图展示较长的绕排区域：画面保持完整，没有为了对齐文字而裁成方形。显示宽度通过图片说明里的 `|w200` 限制，不改变源文件；点击后仍能查看同源的原尺寸大图。
 
@@ -382,7 +382,7 @@ draft: false
 左侧用 `side="left"`，其他结构相同；不写 `side` 默认是右侧。
 
 :::figure{side="left"}
-![左侧街边横图|w220](./image-layout-demo-img/street-landscape.jpg)
+![左侧街边横图|w220](./content-style-guide/street-landscape.jpg)
 
 这一组把横图放在左侧，文字从右侧开始。由于横图更矮，正文较快就会回到整行，方便与上一组竖图比较。图片不裁切、不强制拉伸；这里的文字只说明布局，不增加照片之外的信息。
 
@@ -391,7 +391,7 @@ draft: false
 
 ```md
 :::figure{side="left"}
-![左侧街边横图|w220](./image-layout-demo-img/street-landscape.jpg)
+![左侧街边横图|w220](./content-style-guide/street-landscape.jpg)
 
 这一组把横图放在左侧，文字从右侧开始。由于横图更矮，正文较快就会回到整行，方便与上一组竖图比较。图片不裁切、不强制拉伸；这里的文字只说明布局，不增加照片之外的信息。
 
@@ -403,10 +403,10 @@ draft: false
 
 单张图不用布局指令。`|w330` 把正文显示宽度限制到 330px；可以聚焦图片按 Enter / 空格打开大图，也可以直接点图。
 
-![室内竖图|w330](./image-layout-demo-img/indoor-portrait.jpg)
+![室内竖图|w330](./content-style-guide/indoor-portrait.jpg)
 
 ```md
-![室内竖图|w330](./image-layout-demo-img/indoor-portrait.jpg)
+![室内竖图|w330](./content-style-guide/indoor-portrait.jpg)
 ```
 
 
@@ -465,17 +465,17 @@ draft: false
 `:::image-figure` 可给单张图片加说明文字；普通 Markdown 图片链接则点击跳转，独立的大图入口只在键盘焦点时出现。
 
 :::image-figure[街边横图，保留原始比例]
-![街边横图|w330](./image-layout-demo-img/street-landscape.jpg)
+![街边横图|w330](./content-style-guide/street-landscape.jpg)
 :::
 
-[![餐桌横图|w330](./image-layout-demo-img/table-landscape.jpg)](/interests/)
+[![餐桌横图|w330](./content-style-guide/table-landscape.jpg)](/interests/)
 
 ```md
 :::image-figure[街边横图，保留原始比例]
-![街边横图|w330](./image-layout-demo-img/street-landscape.jpg)
+![街边横图|w330](./content-style-guide/street-landscape.jpg)
 :::
 
-[![餐桌横图|w330](./image-layout-demo-img/table-landscape.jpg)](/interests/)
+[![餐桌横图|w330](./content-style-guide/table-landscape.jpg)](/interests/)
 ```
 
 ## 数学公式
@@ -612,15 +612,15 @@ function total(values) {
 
 ## Excalidraw 图
 
-把 `.excalidraw` 源文件放在文章旁的 `*-img/` 目录即可。画布默认是 **16∶9** 固定卡片，保留源文件配色；右下角胶囊包含缩小／比例／放大、适配、当页展开与源文件下载。点击缩放时中心不动，拖动后以新中心缩放；鼠标或单指可拖动，双指或 Ctrl/Cmd＋滚轮可缩放。展开后仍可在固定窗口里上下左右移动，按 Esc、点遮罩或关闭按钮返回，正文保留原来的视图。源文件从静态 `/_media/…` 地址下载，可继续在 Excalidraw 中编辑。
+把 `.excalidraw` 源文件放在文章的同名资源目录即可。画布默认是 **16∶9** 固定卡片，保留源文件配色；右下角胶囊包含缩小／比例／放大、适配、当页展开与源文件下载。点击缩放时中心不动，拖动后以新中心缩放；鼠标或单指可拖动，双指或 Ctrl/Cmd＋滚轮可缩放。展开后仍可在固定窗口里上下左右移动，按 Esc、点遮罩或关闭按钮返回，正文保留原来的视图。源文件从静态 `/_media/…` 地址下载，可继续在 Excalidraw 中编辑。
 
 可选 `preview`（SVG／PNG）仅作无 JS／失败回退。
 
-:::excalidraw{src="./image-layout-demo-img/verify.excalidraw" alt="Verify 页：离线 UI 目录示意"}
+:::excalidraw{src="./content-style-guide/verify.excalidraw" alt="Verify 页：离线 UI 目录示意"}
 :::
 
 ```md
-:::excalidraw{src="./image-layout-demo-img/verify.excalidraw" alt="Verify 页：离线 UI 目录示意"}
+:::excalidraw{src="./content-style-guide/verify.excalidraw" alt="Verify 页：离线 UI 目录示意"}
 :::
 ```
 
@@ -653,7 +653,7 @@ function total(values) {
 
 <div data-pagefind-ignore>
 <iframe
-  src="/demos/image-layout-demo/wave.html"
+  src="./content-style-guide/wave.html"
   title="正弦波动画演示"
   sandbox="allow-scripts"
   loading="lazy"
@@ -661,14 +661,14 @@ function total(values) {
 ></iframe>
 </div>
 
-[单独打开正弦波演示](/demos/image-layout-demo/wave.html)
+[单独打开正弦波演示](./content-style-guide/wave.html)
 
 对应的 Markdown 写法：
 
 ```html
 <div data-pagefind-ignore>
 <iframe
-  src="/demos/image-layout-demo/wave.html"
+  src="./content-style-guide/wave.html"
   title="正弦波动画演示"
   sandbox="allow-scripts"
   loading="lazy"
@@ -676,22 +676,20 @@ function total(values) {
 ></iframe>
 </div>
 
-<a href="/demos/image-layout-demo/wave.html">单独打开正弦波演示</a>
+<a href="./content-style-guide/wave.html">单独打开正弦波演示</a>
 ```
 
-**文件按文章分目录管理，统一放在 `public/demos/` 下：**
+**演示 HTML 和其他资源一样，放在文章的同名目录里：**
 
 ```text
-src/content/blogs/image-layout-demo.md
-public/demos/image-layout-demo/
+src/content/blogs/content-style-guide.md
+src/content/blogs/content-style-guide/
   wave.html
   sort.html       # 同一篇的另一个演示，按需添加
 ```
 
-`public/` 不写进 URL，所以 `public/demos/image-layout-demo/wave.html` 对应 `/demos/image-layout-demo/wave.html`。文件夹名用稳定的文章短名，多个演示分别命名；跨文章复用的演示可以放在 `public/demos/shared/`。不要把所有文章的 HTML 都平铺在 `demos/` 根目录。
+正文写相对路径即可：`src="./content-style-guide/wave.html"` 与 `<a href="./content-style-guide/wave.html">` 都会在构建时改写成 `/_media/…` 站内地址，和视频／音频、Excalidraw 源文件同一条镜像规则；文件缺失会直接让构建失败，不会静默 404。多条演示分别命名，跨文章复用的演示可以放在公共资源目录用相对路径引用；不需要把文章改成 `.mdx`，当前也没有 `<Sketch>` 组件。
 
-**这条写法需要 HTML 位于 `public/`。** 把 `wave.html` 放在 `src/content/` 的文章旁边，再写 `src="./wave.html"`，站上会找不到文件：HTML 没有视频／音频那样的自动镜像。这里也不需要把文章改为 `.mdx`，当前没有 `<Sketch>` 组件。
-
-iframe 内的文档与正文样式隔离；`sandbox="allow-scripts"` 允许动画脚本运行，同时不授予读取父页面 DOM、cookie 或 localStorage 的同源权限。演示推荐把 CSS、JS 和数据直接写在 HTML 内；需要本地图片等资源时，同样放进 `public/` 并用 `/demos/…` 路径引用。iframe 里面的资源不会经过博客图片或媒体管线。
+iframe 内的文档与正文样式隔离；`sandbox="allow-scripts"` 允许动画脚本运行，同时不授予读取父页面 DOM、cookie 或 localStorage 的同源权限。演示推荐把 CSS、JS 和数据直接写在 HTML 内；镜像只复制这个 HTML 本身，它引用的图片不走 Astro 图片管线，需要内联或用站内绝对路径引用。
 
 这里的高度手动指定为 `420px`，没有自动测量内容高度。演示本身应适应容器宽度；亮暗配色需要在演示里定义，本例跟随系统的 `prefers-color-scheme`，不自动同步博客主题按钮。RSS 会移除 iframe，旁边的普通文字链接会保留，订阅者仍能打开演示。

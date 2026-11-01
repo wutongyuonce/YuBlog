@@ -115,7 +115,7 @@ GRPO 的代价：
 
 GRPO 的变体有 DAPO、GSPO、Dr.GRPO 等，都是对 GRPO 的改进。
 
-![DeepSeek-R1 核心强化学习算法 GRPO 详解_gpro算法-CSDN博客](./post-training-chain-of-thought-img/3c8d644a78ac5da7e8bb684a13aad4cf.png)
+![DeepSeek-R1 核心强化学习算法 GRPO 详解_gpro算法-CSDN博客](./post-training-chain-of-thought/3c8d644a78ac5da7e8bb684a13aad4cf.png)
 
 ## 七、RLVR 是什么，和 GRPO 什么关系
 

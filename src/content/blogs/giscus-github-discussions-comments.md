@@ -176,9 +176,9 @@ Astro 的 ClientRouter 会交换页面内容。共享组件在断开时停止可
 下面两张截图展示同一个评论区的浅色与深色局部，评论宽度与正文保持一致。
 
 :::gallery
-![本站浅色评论区：评论与正文同宽](./giscus-img/blog-comments-light.png)
+![本站浅色评论区：评论与正文同宽](./giscus-github-discussions-comments/blog-comments-light.png)
 
-![本站深色评论区：同一讨论与测试留言随主题切换](./giscus-img/blog-comments-dark.png)
+![本站深色评论区：同一讨论与测试留言随主题切换](./giscus-github-discussions-comments/blog-comments-dark.png)
 :::
 
 ## 遇到问题先分清是哪一层

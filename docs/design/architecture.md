@@ -415,7 +415,7 @@ Pagefind **按需加载**：面板打开时调 `window.ensurePagefind()`（打�
 
 | 你想… | 动哪里 | 不要 |
 | :--- | :--- | :--- |
-| 新写一篇文章 | `src/content/blogs/`；正文图 `src/content/blogs/<名>-img/`；标题图 `src/content/blogs/_title-images/`；本地视频／音频放文章旁用相对路径 | 改路由；把图片放进 `public/`；手工复制视频到 `public/` |
+| 新写一篇文章 | `src/content/blogs/`；正文图 `src/content/blogs/<名>/`；标题图 `src/content/blogs/_title-images/`；本地视频／音频放文章旁用相对路径 | 改路由；把图片放进 `public/`；手工复制视频到 `public/` |
 | 新增／修改拾趣分区 | `src/content/interests/<id>.md`（或 `.mdx`），填写 `title`／`description`／`order`，重新构建 | 改导航数组、手写路由或在组件里复制文案 |
 | 为拾趣分类补图标 | `src/config.ts` 的 `INTEREST_ICONS`；不配置即纯文字菜单 | 给无图标分类补占位或手工复制 safelist |
 | 改顶栏链接或顶栏 GitHub | `src/config.ts` | `NavBar.astro` |

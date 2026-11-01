@@ -301,7 +301,7 @@ try {
       '/projects/',
       '/about/',
       '/friends/',
-      '/blogs/image-layout-demo/',
+      '/blogs/content-style-guide/',
     ]),
   ]
   for (const path of paths) {
@@ -363,14 +363,14 @@ try {
     ['/', '.writing-heatmap__cell[data-level="1"]', 'backgroundColor'],
     ['/archives/', '.archive-post__category', 'color'],
     [
-      '/blogs/image-layout-demo/',
+      '/blogs/content-style-guide/',
       '.markdown-content ul > li',
       'backgroundColor',
       '::before',
     ],
     ['/friends/', '.friend-card', 'borderColor'],
     [
-      '/blogs/image-layout-demo/',
+      '/blogs/content-style-guide/',
       '#toc-sidebar a[aria-current="true"]',
       'backgroundColor',
       '::before',

@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | 本地运行、预览、部署到自己的域名 | [开发与部署指南](./guides/development.md#local) | [部署](./guides/development.md#deployment)、[SEO 与地址](./design/distribution.md#canonical) |
 | 替换作者、导航、头像、备案或外部账号 | [个性化配置](./guides/development.md#personalization) | [外部服务](./guides/development.md#services) |
-| 写文章、加拾趣、维护友链或项目 | [内容维护](./guides/development.md#content) | [内容发布 skill](../blog-content-publisher-skill/SKILL.md)、[正文样式指南文章](../src/content/blogs/image-layout-demo.md) |
+| 写文章、加拾趣、维护友链或项目 | [内容维护](./guides/development.md#content) | [内容发布 skill](../blog-content-publisher-skill/SKILL.md)、[正文样式指南文章](../src/content/blogs/content-style-guide.md) |
 | 写图片排版、卡片日期、视频或绘图 | [正文与媒体](./design/content.md) | [源码与管线](./design/content.md#pipeline)、[组件验证](./design/content.md#verification) |
 | 理解一个页面应如何工作 | [站点与页面](./design/site.md) | [模块属主](./design/architecture.md#ownership) |
 | 修改导航、分类筛选、分页或上下篇 | [页面契约](./design/site.md#browsing) | [上下篇](./design/site.md#post-navigation)、[实现边界](./design/architecture.md#boundaries) |

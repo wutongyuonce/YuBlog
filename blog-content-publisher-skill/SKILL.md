@@ -18,7 +18,7 @@ description: >
 
 | 用户在说 | 页面 | 改哪里 |
 | :--- | :--- | :--- |
-| 发文章、改正文、改封面/标题图、改分类标签、草稿 | 首页近期笔墨 + 文稿 + 标签 + 归档 + 详情 + 全文 RSS | 文：`src/content/blogs/`；正文图：`src/content/blogs/<名>-img/`；封面：`src/content/blogs/_title-images/` + `titleImage` |
+| 发文章、改正文、改封面/标题图、改分类标签、草稿 | 首页近期笔墨 + 文稿 + 标签 + 归档 + 详情 + 全文 RSS | 文：`src/content/blogs/`；正文图：`src/content/blogs/<名>/`；封面：`src/content/blogs/_title-images/` + `titleImage` |
 | 改标签展示（标签名来自文章） | 标签页 | 改各篇 `tags:`，不要手写标签页数组 |
 | 归档多一条/少一条 | 归档 | 同上，靠 `pubDate` |
 | 项目卡片 | 项目 | `src/content/projects/data.json` |
@@ -45,12 +45,12 @@ description: >
 3. 用户没说发布就 `draft: true`。只有明确要上线才 `false` 或删掉。
 4. `category` 必填，任意非空字符串；不写或写空会构建失败。首页、菜单、列表和归档使用原值，不合并任何别名，没有默认分类；首页／列表／归档直接读 `data.category`。分类名以作者选择为准，未经要求不改已有值。动态入口、URL 与精确筛选的唯一权威是 `src/utils/blog-browser.js`，不维护固定分类允许表；归档配色由 `src/utils/blog-category-colors.js` 负责。发布文章并重新构建后，菜单按已发布文章的分类篇数降序、同数按名称的 `zh-Hans-CN` 排序，每类最多四篇最近文章，发布日期顺序不变；草稿不参与入口、计数或预览，仅含草稿的分类不出现，已发布集合为空时只保留“查看全部文稿”链接。分类统一使用名称编码 URL 片段（如 `/blogs/#旅行`）；旧 `#tech`、`#thought`、`#diary` 仅为 URL 兼容别名，分别精确定位“技术”“思考”“日记”，英文原值 `tech` 等用 `#category=tech` 逃逸。旧 `?category=` 始终按原值精确筛选，启用脚本后转换为等价片段。归档分类从 `src/data/blog-category-colors.json` 的 16 色预设池自动领取未用颜色，已有映射不变，删除分类不释放占位。本地打开归档或构建后，要将自动更新的配色记录与新分类文章一起提交；开发归档展示的草稿分类也会领取颜色。池用尽时报错，补充 `palette` 后再构建；无需改 CSS 或在页面复制分类判断。`tags` 是独立话题数组。
 5. `description` 短、事实。极短文才 `toc: false`。不进搜索才 `search: false`。
-6. 正文图：放到 `src/content/blogs/<短名>-img/`（与文章同级；分组文章放同组目录下，例如 `src/content/blogs/algo-notes/algo-img/`）。Markdown 用**相对路径**：`![说明](./<短名>-img/文件.png)`。
+6. 正文图：放到 `src/content/blogs/<短名>/`（与文章同级；分组文章放同组目录下，例如 `src/content/blogs/algo-notes/assets/`）。Markdown 用**相对路径**：`![说明](./<短名>/文件.png)`。
 
    - 推荐图片与文章同目录或放在子目录，写 `./`；上层共享图可写 `../`，同样进管线。先确认相对路径对应的文件存在。
    - 作者交来的图由你**搬进去**：桌面上、别的文件夹里或截图里的图片都先复制到该目录，文件名用短 ASCII（如 `street-landscape.jpg`），再把正文引用改写成相对路径；已经在正确位置的图不用再动。不要压缩、改尺寸或转格式，也不要让正文留下仓库外路径或 `file:` 链接。多图先建好目录。
    - 图片一律走 Astro 图片管线：自动转 WebP、生成 `srcset`、注入宽高、懒加载。**不要手工压缩源图**，也不要再放进 `public/`。已经在 `public/` 里的站点级图（图标、头像等）可以直接用以 `/` 开头的绝对路径引用，如 `![说明](/avatar.webp)`，但它不进管线、不做优化，正文配图仍应放进文章目录。
-   - 必要时用 alt 后缀声明显示宽度：`![说明|w480](./<短名>-img/文件.png)`。只支持像素，不支持百分比；桌面正文列宽 660px，所以「半宽」可写 `|w330`（窄屏仍受实际列宽限制）。**不要把 `|w480` 写进图片 URL**，它会被当作文件名；缺失文件构建失败，未解析的占位图由产物检查拒绝。不写标记就是原图宽度（超过列宽时按列宽显示）；源图本身就比目标更窄时不必写标记。
+   - 必要时用 alt 后缀声明显示宽度：`![说明|w480](./<短名>/文件.png)`。只支持像素，不支持百分比；桌面正文列宽 660px，所以「半宽」可写 `|w330`（窄屏仍受实际列宽限制）。**不要把 `|w480` 写进图片 URL**，它会被当作文件名；缺失文件构建失败，未解析的占位图由产物检查拒绝。不写标记就是原图宽度（超过列宽时按列宽显示）；源图本身就比目标更窄时不必写标记。
    - **不要用原始 `<img>` 标签**：本地相对路径会在构建期直接报错并提示改用 Markdown 语法，不会静默 404。代码块里的示例除外。
    - 外链图片（别的站上的图）Markdown 与原始 `<img>` 两种写法等价，都不进管线。**外链默认保持外链，不下载进仓库**；保持时要提醒作者它没有优化、对方删图后正文会开天窗，作者要求搬进仓库时再抓取落盘。`data:` 内联图片（从 Notion／Word／部分网页粘贴时会带出来）构建期报错，先把图存成文件。
 
@@ -100,7 +100,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 - `<style>` 块、`style="…"`、`class` 都生效；`<style>` 是**整页全局**的，会影响顶栏和目录，用带前缀的类名或 UnoCSS 工具类。`<div>`、`<span>`、`<br>`、`<details>` 原样透传。
 - 图片尺寸写 alt 的 `|w` 标记，例如 `![说明|w330](./x.png)`；不要用 `style="zoom:50%"`（Typora 拖拽缩放、LeetCode 粘贴会自带）。外链图 Markdown 与 `<img>` 两种写法等价。
 - 视频：外链平台用 `<iframe>`；本地文件用 `<video src="./demo.mp4">`，文件放文章旁边或子目录，构建与 dev 启动时镜像到 `public/_media/`，Typora 与站点两边都能播；dev 中增删或替换媒体文件后重启服务器。
-- HTML 动画／交互演示：文件放进 `public/demos/<文章短名>/`，在普通 `.md` 里用 `<iframe src="/demos/<文章短名>/<文件>.html" title="演示说明" sandbox="allow-scripts" loading="lazy" style="width: 100%; height: 420px; border: 0;"></iframe>` 嵌入，按内容手动调整高度，并在旁边补同地址的普通文字链接供 RSS 阅读者打开。HTML 不会从 `src/content/` 自动镜像；子路径部署时 `src` 与链接需带实际 `SITE.base`。保持沙箱不授予 `allow-same-origin`；演示不继承博客样式，内部资源不走内容管线。`public/` 文件不受文章 `draft` 控制，构建后也会公开。
+- HTML 动画／交互演示：文件放进该文的同名资源目录（如 `src/content/blogs/<短名>/wave.html`），在普通 `.md` 里用 `<iframe src="./<短名>/wave.html" title="演示说明" sandbox="allow-scripts" loading="lazy" style="width: 100%; height: 420px; border: 0;"></iframe>` 嵌入，并在旁边补 `[打开演示](./<短名>/wave.html)` 供 RSS 阅读者点开。构建时与音视频一样镜像到 `/_media/…`，文件缺失直接报错；子路径部署由插件补 base。保持沙箱不授予 `allow-same-origin`；演示不继承博客样式，镜像只复制 HTML 本身，它引用的图片需内联或用站内绝对路径。镜像产物不受文章 `draft` 控制，草稿里的演示也会公开。
 - 相对媒体引用允许 query／fragment 后缀，如 `./demo.mp4#t=10`、`./demo.mp4?download=1`；改写时保留后缀，它们不属于文件名。
 - 视频旁建议补一行文字链接（否则订阅者在 RSS 里只看到空白），指向同一个文件即可：`[本视频](./demo.mp4)`。指向本地媒体文件的链接会和 `src` 一起被改写。
 - 下面这些会**构建期报错**（带文件路径与行号），不会静默 404：原生 `<img>` 写相对路径（改用 Markdown 语法；处于 `.mdx` 页面或同一路径也被 Markdown 图片语法引用时例外）、`<video poster="…">` 写相对路径（poster 是图片，不进管线也不被镜像，请把图片放进 `public/`、不要放 `public/_media/`，再用 `/…` 引用）、`data:` 内联内容（先存成文件）、`file:` 等浏览器打不开的协议、相对路径逃出 `src/` 目录、媒体文件不存在或指向的是目录／符号链接、扩展名不在支持列表、解码后的文件名或目录名含 `#` 或 `?`（如 `%23`／`%3F`，本站取不到，改名即可）。报错给出的是**源文件**行号与作者写的原始路径，可以直接照着改。
@@ -112,7 +112,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 行内公式写 `$…$`；块级公式用独立行的 `$$` 包围公式正文。本站使用 remark-math，`\(...\)` 与 `\[...\]` 不会被解析为数学分隔符。
 
-代码围栏可用 Expressive Code 的 `diff`／`ins`／`del` 等 text-markers；演示见 `src/content/blogs/image-layout-demo.md`。
+代码围栏可用 Expressive Code 的 `diff`／`ins`／`del` 等 text-markers；演示见 `src/content/blogs/content-style-guide.md`。
 
 ## 正文图片排版选择
 
@@ -120,31 +120,31 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 ```md
 :::gallery
-![第一张](./文章-img/a.png)
+![第一张](./my-post/a.png)
 
-![第二张](./文章-img/b.png)
+![第二张](./my-post/b.png)
 :::
 
 :::gallery{layout="grid" columns="3"}
-![第一张|w330](./文章-img/a.png) ![第二张|w330](./文章-img/b.png)
+![第一张|w330](./my-post/a.png) ![第二张|w330](./my-post/b.png)
 
-![第三张|w330](./文章-img/c.png)
+![第三张|w330](./my-post/c.png)
 :::
 
 :::gallery{widths="240px 1fr"}
-![固定列](./文章-img/a.png)
+![固定列](./my-post/a.png)
 
-![剩余列](./文章-img/b.png)
+![剩余列](./my-post/b.png)
 :::
 
 :::gallery{layout="scroll"}
-![第一张](./文章-img/a.png)
+![第一张](./my-post/a.png)
 
-![第二张](./文章-img/b.png)
+![第二张](./my-post/b.png)
 :::
 
 :::figure{side="left"}
-![图示|w240](./文章-img/detail.png)
+![图示|w240](./my-post/detail.png)
 
 至少一块正文，桌面围绕图片阅读。
 :::
@@ -160,17 +160,17 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 作者发来架构图／手绘流程图时用 `:::excalidraw`，**不要**把完整 JSON 塞进 ` ```excalidraw ` 围栏，也不要写 `blob:` 链接。
 
-1. 把 `.excalidraw` 源文件放进该文的 `*-img/`，文件名短 ASCII，例如 `verify.excalidraw`。
-2. **首选工作流**：只要有 `.excalidraw` 即可 → 复制进 `*-img/` → 正文写相对路径指令。构建时源文件镜像到 `/_media/…`；页面用官方 SVG exporter 和独立只读视口渲染场景，下载按钮指向静态 `/_media` URL。
+1. 把 `.excalidraw` 源文件放进该文的同名资源目录，文件名短 ASCII，例如 `verify.excalidraw`。
+2. **首选工作流**：只要有 `.excalidraw` 即可 → 复制进同名资源目录 → 正文写相对路径指令。构建时源文件镜像到 `/_media/…`；页面用官方 SVG exporter 和独立只读视口渲染场景，下载按钮指向静态 `/_media` URL。
 3. `preview`（同主名或显式路径的 SVG／PNG）**可选**，仅作无 JS／画布加载失败时的回退；没有预览也能构建与发布。
 4. 属性：`src` 必填（相对路径的 `.excalidraw` 画布；`.excalidrawlib` 素材库需先导入画布再导出，不可直接嵌入）；`preview`／`alt`／`height` 可选（默认 16∶9 固定卡片；`height` 可覆盖）。指令体必须为空。
 
 ```md
-:::excalidraw{src="./image-layout-demo-img/verify.excalidraw" alt="Verify 页：离线 UI 目录示意"}
+:::excalidraw{src="./content-style-guide/verify.excalidraw" alt="Verify 页：离线 UI 目录示意"}
 :::
 ```
 
-下载打开的是站点上的静态 `/_media/…/*.excalidraw`，不是临时 `blob:`。完整演示见 `src/content/blogs/image-layout-demo.md`。
+下载打开的是站点上的静态 `/_media/…/*.excalidraw`，不是临时 `blob:`。完整演示见 `src/content/blogs/content-style-guide.md`。
 
 ### 博文链接卡片（双向）
 

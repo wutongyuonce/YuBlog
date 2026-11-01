@@ -238,6 +238,31 @@ test('相对路径的视频/音频与媒体链接被改写，外链与站内绝�
   assert.match(html, /href="https:another\.md"/)
 })
 
+test('演示 HTML 与音视频同样镜像，iframe 的相对路径被改写', async () => {
+  scratch('wave.html', '<!doctype html><canvas></canvas>')
+
+  const html = await renderHtml(`
+<iframe src="./wave.html" title="演示" sandbox="allow-scripts"></iframe>
+<iframe src="https://example.com/demo.html" title="外链"></iframe>
+<iframe src="/demos/static.html" title="站内"></iframe>
+
+[单独打开演示](./wave.html)
+`)
+
+  const rewritten = `${MEDIA_URL_PREFIX}content/blogs/wave.html`
+  // iframe 的 src 与指向 .html 的文字链接都改写，外链与站内绝对路径原样
+  assert.equal(html.split(rewritten).length - 1, 2)
+  assert.match(html, /src="https:\/\/example\.com\/demo\.html"/)
+  assert.match(html, /src="\/demos\/static\.html"/)
+})
+
+test('缺失的演示 HTML 让构建失败，而不是静默 404', async () => {
+  await assert.rejects(
+    renderHtml('<iframe src="./missing.html"></iframe>'),
+    /不是一个可镜像的文件/
+  )
+})
+
 test('媒体片段与查询串在改写后原样保留', async () => {
   scratch('demo.mp4')
 
@@ -754,4 +779,7 @@ test('drawing extensions are mirrored but separate from media-only set', () => {
   assert.ok(MIRROR_EXTENSIONS.has('.excalidraw'))
   assert.equal(MEDIA_EXTENSIONS.has('.excalidraw'), false)
   assert.ok(MIRROR_EXTENSIONS.has('.mp4'))
+  // 演示 HTML 进镜像集，但不属于媒体扩展名
+  assert.ok(MIRROR_EXTENSIONS.has('.html'))
+  assert.equal(MEDIA_EXTENSIONS.has('.html'), false)
 })

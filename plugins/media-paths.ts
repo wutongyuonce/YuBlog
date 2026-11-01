@@ -20,8 +20,8 @@ import { SITE } from '../src/config.ts'
  *
  * 为什么音视频与绘图源走镜像、图片不走：图片有 Markdown 语法 `![](./x.png)`，由 Astro 图片管线
  * 处理（优化 + srcset），源文件在 `dist/_astro/` 里已有一份。镜像整棵 `src/`
- * 的图片到 `public/_media/` 会重复产物。镜像覆盖视频/音频与 `.excalidraw`／`.excalidrawlib`，供 HTML、链接与 Excalidraw
- * 源文件引用；图片继续交给 Astro 图片管线，预览图不进 `_media`。
+ * 的图片到 `public/_media/` 会重复产物。镜像覆盖视频/音频、`.excalidraw`／`.excalidrawlib`
+ * 与演示 HTML，供 HTML、iframe 与链接引用；图片继续交给 Astro 图片管线，预览图不进 `_media`。
  */
 
 /** 需要镜像到 `public/_media/` 的音视频扩展名。图片不在其中，见模块注释。 */
@@ -45,21 +45,37 @@ export const MEDIA_EXTENSIONS = new Set([
  */
 export const DRAWING_EXTENSIONS = new Set(['.excalidraw', '.excalidrawlib'])
 
-/** 实际镜像到 `public/_media/` 的全部扩展名（音视频 + 绘图源）。不含图片。 */
+/**
+ * 演示 HTML 扩展名。iframe 嵌的动画页不是图片也不是媒体，只能作为静态文件服务；
+ * 与音视频一样镜像到 `/_media/`，这样演示可以和文章的其他资源放在同一个目录。
+ */
+export const HTML_EXTENSIONS = new Set(['.html'])
+
+/** 实际镜像到 `public/_media/` 的全部扩展名（音视频 + 绘图源 + 演示 HTML）。不含图片。 */
 export const MIRROR_EXTENSIONS = new Set([
   ...MEDIA_EXTENSIONS,
   ...DRAWING_EXTENSIONS,
+  ...HTML_EXTENSIONS,
 ])
 
 /**
  * `src` 必须可服务的元素。渲染期改写与产物校验都从这里取，
  * 避免两边各自维护一份列表而漏掉某个标签。
  *
+ * `iframe` 也在列表里：演示 HTML 与音视频一样镜像到 `/_media/…`，相对路径同样
+ * 要改写；外链 iframe 原样保留。
+ *
  * 注意 `track` 也在列表里，但字幕文件（`.vtt`）不能被镜像 —— 它的扩展名不在
- * `MEDIA_EXTENSIONS` 里，所以相对路径的字幕会报错，要放进 `public/` 用站内绝对路径
+ * `MIRROR_EXTENSIONS` 里，所以相对路径的字幕会报错，要放进 `public/` 用站内绝对路径
  * 引用。放在这里是为了让 `file:` 这类地址至少会被拦下。
  */
-export const MEDIA_SRC_ELEMENTS = ['video', 'audio', 'source', 'track']
+export const MEDIA_SRC_ELEMENTS = [
+  'video',
+  'audio',
+  'source',
+  'track',
+  'iframe',
+]
 
 /** 镜像源：项目根下的 `src/` */
 const MEDIA_SOURCE_ROOT = fileURLToPath(new URL('../src/', import.meta.url))
