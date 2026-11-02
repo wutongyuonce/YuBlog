@@ -20,6 +20,12 @@ order: 3
 
 ### 看过
 
+:::card{title="空枪" href="https://zh.wikipedia.org/wiki/空枪" score="3.5" date="2026-11-03" label="电影"}
+![空枪海报](./movie/kong-qiang.png)
+
+视觉画面上挺不错的，具体剧情还差点意思
+:::
+
 :::card{title="无人区" href="https://zh.wikipedia.org/wiki/无人区_(电影)" score="5" date="2026-10-29" label="电影"}
 ![无人区海报](./movie/no-mans-land.jpg)
 
