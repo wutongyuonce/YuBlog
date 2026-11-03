@@ -167,7 +167,9 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 `--font-heading`（本地思源宋体 400 字重）用于页面大标题、文章顶部标题、作者名、写作热力与近期笔墨；只有文章顶部大标题与文章底上一篇／下一篇标题使用同一宋体加粗（700），分别由 `main.css` 的 `.prose.post-header h1.page-title` 和 `PostNav.astro` 的 `.post-nav__title` 维护；文稿列表与标签筛选结果的列表标题（`ListItem.astro` 的 `.post-preview h2`）和归档文章标题（`shell.css` 的 `.archive-post__title`）保持宋体常规字重（400）；文章头 `PostMeta` 同样使用宋体 700；标签筛选结果复用 `ListItem`。字体资源提供 400 字重，700 由浏览器合成加粗，相关规则显式写 `font-synthesis: weight`。Markdown 内部 h1–h6、正文和标签使用 Inter／系统无衬线字体。顶栏及下拉菜单文字使用宋体；品牌为「梧桐雨の博客」，字号随桌面／中部／手机三档收小，行高 1；归档年份与日期也使用思源宋体。`PageHeading` 是标签、拾趣（含子页）、项目、关于的共享页头：宋体标题配普通字体说明；友链分组标题用更小号的宋体。
 
-正文字体 Inter 和代码字体 Maple Mono 也在本地：`public/fonts/Inter-latin.woff2`、`public/fonts/MapleMono-latin.woff2`，与思源宋体一起由 `public/shell.css` 的 `@font-face` 引用。这些声明随 `site-styles` 跨页保留，避免已加载字体回退；不要把共享字体声明放进会被替换的组件样式。不要再接 Google Fonts 或 `presetWebFonts`。这两份只含拉丁字符，中文走字体栈后面的系统字体。保留的两种手写字体 `@font-face` 在 `public/shell.css` 中，优先引用构建结束后生成的 `*-title.woff2` 子集，再回退到完整字体；`plugins/astro-subset-title-fonts.ts` 在构建后检查每个子集引用和文件都存在。Vite 不会提前解析尚未生成的字体路径。开发服务器没有子集时会回退到同一次声明里的完整文件，那不是线上行为。
+正文字体 Inter 和代码字体 Maple Mono 也在本地：`public/fonts/Inter-latin.woff2`、`public/fonts/MapleMono-latin.woff2`，与思源宋体一起由 `public/shell.css` 的 `@font-face` 引用。这些声明随 `site-styles` 跨页保留，避免已加载字体回退；不要把共享字体声明放进会被替换的组件样式。不要再接 Google Fonts 或 `presetWebFonts`。Inter／Maple 只含拉丁字符，正文中文走字体栈后面的系统无衬线。
+
+思源宋体 `@font-face` 优先引用构建结束后生成的 `SourceHanSerifCN-title.woff2`（标题／导航／品牌等实际用字子集，百 KB 级），再回退到全量 `SourceHanSerifCN-Regular.woff2`；`plugins/astro-subset-title-fonts.ts` 按产物 HTML 中使用思源的节点收字，并在构建后检查 `shell.css` 的子集引用与文件都存在。`Head.astro` 仅 preload 该 title 子集；`--font-heading` 在自定义族名后接 `Source Han Serif SC`／`Noto Serif CJK SC`／`Songti SC`／`SimSun` 等系统衬线，硬开时子集未到齐仍立刻可读。`vercel.json` 对 `/fonts/*` 使用一周缓存加一天 SWR（非 immutable），便于以后换子集。Vite 不会提前解析尚未生成的子集路径。开发服务器没有子集时会回退到同一次声明里的完整文件，那不是线上行为。`public/fonts` 里的 LXGW 仍供 OG 封面脚本使用，不作为页面 `@font-face`。
 
 主题、搜索、回顶、遮罩的点击在脚本执行时就绑定，不等第一次 `window` `load`。`astro:page-load` 只负责换页后的新节点，并用元素上的 `dataset` 避免重复绑定。
 

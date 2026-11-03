@@ -48,31 +48,15 @@
     U+2215, U+2200-22FF, U+FEFF, U+FFFD;
 }
 
+/* Title subset is generated after Vite builds CSS; keep the subset URL in
+   the static sheet so Vite does not try to resolve a file that does not exist
+   yet. Prefer the subset; fall back to the full face if the subset request
+   fails. Dev server has no subset and uses the full face from the same rule. */
 @font-face {
   font-family: 'SourceHanSerifCN-Regular';
-  src: url('/fonts/SourceHanSerifCN-Regular.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* Title subsets are generated after Vite builds CSS; keep these font URLs in
-   the static sheet so Vite does not try to resolve files that do not exist yet. */
-@font-face {
-  font-family: 'WoHuiBaNiJiaoZuoAiQing-2';
   src:
-    url('/fonts/WoHuiBaNiJiaoZuoAiQing-title.woff2') format('woff2'),
-    url('/fonts/WoHuiBaNiJiaoZuoAiQing-2.woff2') format('woff2');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'LXGWWenKai-Regular';
-  src:
-    url('/fonts/LXGWWenKai-title.woff2') format('woff2'),
-    url('/fonts/LXGWWenKai-Regular.woff2') format('woff2');
+    url('/fonts/SourceHanSerifCN-title.woff2') format('woff2'),
+    url('/fonts/SourceHanSerifCN-Regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
