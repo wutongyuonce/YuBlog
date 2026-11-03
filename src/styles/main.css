@@ -6,7 +6,9 @@
   --c-text: #000;
   /* 常驻下划线弱色 token；三族规则见 docs/design/site.md#visuals。 */
   --link-underline: color-mix(in srgb, var(--c-text) 30%, transparent);
-  --font-heading: 'SourceHanSerifCN-Regular', serif;
+  --font-heading:
+    'SourceHanSerifCN-Regular', 'Source Han Serif SC', 'Noto Serif CJK SC',
+    'Songti SC', 'SimSun', serif;
   --site-nav-width: var(--blog-shell-width);
   --site-gutter: 28px;
   /* Shared content target; images use the matching ARTICLE_COLUMN_WIDTH. */

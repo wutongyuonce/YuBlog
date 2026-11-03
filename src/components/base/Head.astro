@@ -173,6 +173,15 @@ const webPageData = {
   href={withBasePath('/rss.xml')}
 />
 
+<!-- Title subset only; full CJK face stays a runtime fallback, not a default download. -->
+<link
+  rel="preload"
+  href={withBasePath('/fonts/SourceHanSerifCN-title.woff2')}
+  as="font"
+  type="font/woff2"
+  crossorigin
+/>
+
 <!-- Identical processed CSS is retained by ClientRouter across page swaps. -->
 <style id="site-styles" is:inline set:html={sharedCss}></style>
 
