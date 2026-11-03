@@ -26,9 +26,7 @@ const TARGETS = [
  * 元素自身带这些 class、且可见文字走 `--font-heading`／思源族名。
  * 新增思源用途时同步这里，否则缺字会落到系统衬线回退。
  */
-const SELF_CLASS_TAGS: ReadonlyArray<
-  readonly [tag: string, className: string]
-> = [
+const SELF_CLASS_TAGS: readonly (readonly [tag: string, className: string])[] = [
   ['p', 'post-hero__title'],
   ['a', 'archive-post__title'],
   ['span', 'post-nav__title'],
@@ -47,9 +45,7 @@ const SELF_CLASS_TAGS: ReadonlyArray<
  * 父级 class 内的子标签文字走思源（子标签自身未必有 class）。
  * 不要用裸 `h2`：正文 Markdown 标题是 Inter，收进去会无谓撑大子集。
  */
-const NESTED_CLASS_TAGS: ReadonlyArray<
-  readonly [parentClass: string, childTag: string]
-> = [
+const NESTED_CLASS_TAGS: readonly (readonly [parentClass: string, childTag: string])[] = [
   ['post-preview', 'h2'],
   ['archive-year__head', 'h2'],
   ['home-section-header', 'h2'],
