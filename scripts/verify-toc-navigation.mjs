@@ -99,7 +99,9 @@ const verify = async (hash, label, landing = true) => {
   const state = await page.evaluate((hash) => {
     const target = document.getElementById(decodeURIComponent(hash.slice(1)))
     const header = document.querySelector('[data-site-header]')
-    const hidden = header.hasAttribute('data-scroll-hidden')
+    const hidden =
+      !header.getClientRects().length ||
+      header.hasAttribute('data-scroll-hidden')
     const expected = hidden
       ? 20
       : parseFloat(
@@ -250,52 +252,8 @@ for (const width of [1440, 390, 320]) {
   )
   await verify(hashes[2], `${prefix}/direct-hash`)
 }
-// A nearby fragment must include travel accumulated before the click, in both
-// directions. Resetting a fresh prediction state would fail these landings.
-await page.goto(base)
-await setViewport(1440)
-await page.waitForLoadState()
-await page.waitForFunction(() => document.fonts.status === 'loaded')
+// Without JS, articles keep the same reading edge without a global nav.
 const nearbyHash = firstHash
-const headingY = await page.evaluate((hash) => {
-  const heading = document.getElementById(decodeURIComponent(hash.slice(1)))
-  return heading.getBoundingClientRect().top + scrollY
-}, nearbyHash)
-await page.focus('.nav-bar__brand')
-await page.evaluate(
-  (top) => scrollTo({ top, behavior: 'instant' }),
-  headingY - 96
-)
-await settle()
-await page.mouse.click(100, 100)
-await page.evaluate(() => scrollBy({ top: 14, behavior: 'instant' }))
-await settle()
-assert.equal(
-  await page.evaluate(() =>
-    document
-      .querySelector('[data-site-header]')
-      .hasAttribute('data-scroll-hidden')
-  ),
-  false
-)
-await clickTocLink('#toc-sidebar', nearbyHash)
-await verify(nearbyHash, 'nearby/downward-accumulated-travel')
-await page.evaluate((top) => scrollTo({ top, behavior: 'instant' }), headingY)
-await settle()
-await page.evaluate(() => scrollBy({ top: -14, behavior: 'instant' }))
-await settle()
-assert.equal(
-  await page.evaluate(() =>
-    document
-      .querySelector('[data-site-header]')
-      .hasAttribute('data-scroll-hidden')
-  ),
-  true
-)
-await clickTocLink('#toc-sidebar', nearbyHash)
-await verify(nearbyHash, 'nearby/upward-accumulated-travel')
-
-// Without JS, the static margin must cover the same two-row navigation range.
 await page.cdp('Emulation.setScriptExecutionDisabled', { value: true })
 try {
   for (const width of [780, 799, 800]) {
@@ -308,6 +266,7 @@ try {
       const heading = document.getElementById(decodeURIComponent(hash.slice(1)))
       return {
         top: heading.getBoundingClientRect().top,
+        margin: parseFloat(getComputedStyle(heading).scrollMarginTop),
         bottom: document
           .querySelector('[data-site-header]')
           .getBoundingClientRect().bottom,
@@ -315,6 +274,7 @@ try {
       }
     }, nearbyHash)
     assert.equal(state.script, false)
+    assert.equal(state.margin, 20)
     assert.ok(
       state.top >= state.bottom + 10,
       `${width}: ${JSON.stringify(state)}`

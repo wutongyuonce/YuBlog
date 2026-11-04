@@ -75,7 +75,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 已发布文章列表、排序、按年分组 | `src/utils/data.ts` | 在视图里 `getCollection` 再 filter 一遍 |
 | 原值分类的动态入口、URL 的分类 hash／兼容 query、精确筛选、标签、页码 | `src/utils/blog-browser.js` | 写固定分类允许表、合并别名或在 `ListView` 里手写 `URLSearchParams` |
 | 单标签选中链接 | `src/utils/blog-browser.js` 的 `tagSelectionLinks`；`TagLinks` 只呈现 | 用 ` / ` 拼接标签，或在文章元信息、归档、列表卡片里手写 `?tag=` |
-| 文章头返回文稿与元信息排版 | `StandardLayout`（仅 `isArticle`）输出「← 返回文稿」（字号对齐正文 `1rem`；页顶普通文字，下滚固定为雾面 pill 且 top 随顶栏显隐同动）；`PostMeta` 独占日期与统计／标签排版，显示与对齐契约见[文章页](./site.md#article)；日期文案由 `post-meta-date.js`（上海时区）格式化；字数由 remark `wordCount` 经 `RenderPost` 传入 | 在拾趣／关于复用返回链；再引入 `postMetaStyle`；在视图里手写日期空格规则；另起模块管返回链滚动态 |
+| 文章头返回文稿与元信息排版 | `StandardLayout`（仅 `isArticle`）输出「← 返回文稿」（字号对齐正文 `1rem`；页顶普通文字，下滚固定为雾面 pill，距屏顶 12px；始终返回全部文稿）；`PostMeta` 独占日期与统计／标签排版，显示与对齐契约见[文章页](./site.md#article)；日期文案由 `post-meta-date.js`（上海时区）格式化；字数由 remark `wordCount` 经 `RenderPost` 传入 | 在拾趣／关于复用返回链；再引入 `postMetaStyle`；在视图里手写日期空格规则；另起模块管返回链滚动态 |
 | 文稿列表卡片顶部元信息 | `ListItem`；分类强调色；日历／钢笔／计时图标 + 短日期／字数／分钟；`wordCount`／`minutesRead` 由 `getBlogListItems` 提供 | 点号拼接分类·日期·阅读；列表另算字数或漏改标签筛选复用入口 |
 | 归档分类配色领取、唯一性、持久化与容量失败 | `src/utils/blog-category-colors.js`；预设及记录在 `src/data/blog-category-colors.json` | 在视图中推断颜色、循环复用或按分类顺序重排已有分配 |
 | 首页各板块标题、名片与居中布局样式 | `public/shell.css` | 通过 JS 重复测量或复制卡片模板 |
@@ -205,7 +205,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 导航是一条有细边框、轻阴影和柔和当前态的居中悬浮条，品牌、页面入口、工具按钮分组。≥800px 为一排，更窄视口为品牌／工具和页面入口两排。用 `top` 与 opacity 隐藏，不在包含搜索面板的祖先上使用 transform 或 backdrop-filter，保证搜索弹窗仍相对于视口定位。
 
-所有页面的初始顶部位置由 `shell.css` 的 `.site-main` 统一维护：桌面与 799px 及以下两档顶部内边距，扣除顶栏占位后留出固定空白。目录点击后的锚点间距仍由 TOC 单独维护，不用初始页面留白推断滚动落点。
+页面初始顶部位置由 `shell.css` 维护：普通页面的 `.site-main` 为顶栏预留桌面／799px 及以下两档内边距；文章页通过 `.post-header` 标记隐藏顶栏，顶部内边距改为 40px／24px，并以 `--post-anchor-offset` 固定预留 20px 锚点间距。顶栏组件保留在 DOM 中，让搜索落地高亮继续初始化；`display: none` 同时移除其键盘和读屏入口。TOC 将不参与布局的导航视为不可见，普通页面仍按导航显隐计算锚点间距，不用初始留白推断滚动落点。
 
 ### 4.6 导航与首页 seam
 

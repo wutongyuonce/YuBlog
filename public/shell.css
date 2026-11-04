@@ -151,6 +151,15 @@ header.nav-bar :is(a, button):focus-visible {
   padding-top: 104px;
 }
 
+body:has(.post-header) > header.nav-bar {
+  display: none;
+}
+
+.site-main:has(> .post-header) {
+  --post-anchor-offset: 20px;
+  padding-top: 40px;
+}
+
 #search-panel {
   --search-muted: color-mix(in srgb, var(--c-text) 65%, var(--c-bg));
   position: fixed;
@@ -508,6 +517,9 @@ accent-switch[hidden],
 @media (max-width: 799px) {
   .site-main {
     padding-top: 136px;
+  }
+  .site-main:has(> .post-header) {
+    padding-top: 24px;
   }
   header.nav-bar,
   header.nav-bar:has(:focus-visible) {
