@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg viewBox="0 0 960 556" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="deerflow-topology-title deerflow-topology-desc" id="deerflow-topology-root">
+<svg width="960" height="556" viewBox="0 0 960 556" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="deerflow-topology-title deerflow-topology-desc" id="deerflow-topology-root">
         <title id="deerflow-topology-title">DeerFlow 默认运行形态</title>
         <desc id="deerflow-topology-desc">浏览器经 Nginx 分发到前端和 Gateway，Agent 运行时内嵌在 Gateway 进程里，读写 checkpoint 存储、调用沙箱和模型服务；IM 渠道也进入同一个 Gateway；Provisioner 只在 Kubernetes 沙箱模式下启用。</desc>
         <defs>

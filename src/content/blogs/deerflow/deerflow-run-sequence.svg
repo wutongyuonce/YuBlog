@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg viewBox="0 0 1000 696" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="deerflow-run-sequence-title deerflow-run-sequence-desc" id="deerflow-run-sequence-root">
+<svg width="1000" height="696" viewBox="0 0 1000 696" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="deerflow-run-sequence-title deerflow-run-sequence-desc" id="deerflow-run-sequence-root">
         <title id="deerflow-run-sequence-title">一次网页对话的完整链路</title>
         <desc id="deerflow-run-sequence-desc">前端提交 run，Gateway 鉴权登记后立刻建立 SSE 并在后台启动 run_agent；worker 恢复 checkpoint、驱动 graph 的模型工具循环、每步写 checkpoint 并把增量推给前端；结束时写 run 终态，长期记忆异步入队。</desc>
         <defs>

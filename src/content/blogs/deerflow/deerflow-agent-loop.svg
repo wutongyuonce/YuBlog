@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg viewBox="0 0 880 504" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="deerflow-agent-loop-title deerflow-agent-loop-desc" id="deerflow-agent-loop-root">
+<svg width="880" height="504" viewBox="0 0 880 504" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="deerflow-agent-loop-title deerflow-agent-loop-desc" id="deerflow-agent-loop-root">
         <title id="deerflow-agent-loop-title">Lead Agent 的执行循环</title>
         <desc id="deerflow-agent-loop-desc">create_agent 生成的模型与工具循环被 DeerFlow 的 middleware 链包住，工具调用落到 Sandbox、MCP 或子 Agent，每一步状态合并进 ThreadState 并写入 checkpoint，没有工具调用时输出最终回答。</desc>
         <defs>
