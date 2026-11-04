@@ -186,8 +186,14 @@ test('publisher requires pixel width and height on SVG images in the body', asyn
   await svg('<svg viewBox="0 0 960 556" xmlns="http://www.w3.org/2000/svg"/>')
   const missing = validate(root)
   assert.equal(missing.status, 1, missing.stderr)
-  assert.match(missing.stderr, /没有以像素计的 width\/height/)
+  assert.match(missing.stderr, /没有像素级的 width\/height/)
   assert.match(missing.stderr, /width="960" height="556"/)
+
+  // 注释里的示例不提供根 SVG 的固有尺寸，不能让缺少宽高的图通过。
+  await svg(
+    '<!-- <svg width="960" height="556"> -->\n<svg viewBox="0 0 960 556"/>'
+  )
+  assert.equal(validate(root).status, 1)
 
   // 100% 不是固有尺寸，等价于缺失；构建同样不报错，必须在预检拦住。
   await svg('<svg width="100%" viewBox="0 0 960 556"/>')

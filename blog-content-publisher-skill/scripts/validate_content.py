@@ -143,16 +143,11 @@ def check_body_links(relative_path: str, invalid_links: list[str]) -> None:
 
 
 SVG_TAG = re.compile(r"<svg\b[^>]*>", re.IGNORECASE)
-SVG_LENGTH = re.compile(r"^(?:\d+(?:\.\d+)?)(?:px)?$")
+SVG_PIXEL = re.compile(r"^\d+(?:\.\d+)?(?:px)?$")
 
 
 def svg_root_tag(path: Path) -> str:
-    """取根 `<svg …>` 开标签。
-
-    XML 禁止在根标签前出现注释或文本以外的内容，所以按根标签语义取：
-    跳过 XML 声明、DOCTYPE 与前导注释／空白后，第一个元素就是根。
-    只读文件开头一段，几 MB 的绘图文件不必整个读进内存。
-    """
+    """跳过 XML 声明、DOCTYPE 和前导注释，只取根 SVG 的开标签。"""
     head = path.read_text(encoding="utf-8", errors="replace")[:4096]
     rest = re.sub(r"^\s*(?:<\?[^>]*\?>)?", "", head)
     while True:
@@ -174,44 +169,34 @@ def svg_root_tag(path: Path) -> str:
     return match.group(0) if match else ""
 
 
-def check_svg_sources(
-    relative_path: str, root: Path, svg_sources: list[str]
-) -> None:
-    """正文引用的相对 .svg 必须有像素固有大小的根标签。
+def check_svg_sources(relative_path: str, root: Path, sources: list[str]) -> None:
+    """正文引用的相对 .svg 必须在根标签上写像素 width/height。
 
-    只写 viewBox 的 SVG 在浏览器里没有固有像素尺寸，图片节点退化成 300×150 的
-    默认框，正文里看着正常（容器限宽），灯箱放大时却按这个假尺寸显示，
-    图上的字糊成一片。构建不会报错，产物检查也看不出来——只有真去点开才暴露，
-    所以在这里拦一次，提醒补上与应用 viewBox 一致的 width/height。
+    只有 viewBox 的 SVG 缺少固有像素尺寸，Astro 生成的 <img> 会把它当成
+    300×150 的默认框；灯箱按这个假尺寸显示，图就只有一百多像素宽（仍清晰，
+    但小到读不出字）。写 width="100%" 的图同理，在灯箱里也失去固有尺寸。
     """
-    article_path = root / relative_path
-    base = article_path.parent
-    for src in svg_sources:
-        if src.startswith(("http://", "https://", "//")):
-            continue
-        target = (base / src.split("#", 1)[0].split("?", 1)[0]).resolve()
+    base = (root / relative_path).parent
+    for src in sources:
+        target = (base / src.split("#")[0].split("?")[0]).resolve()
         if not target.is_file():
-            continue  # 文件是否存在由构建与产物检查判定，不在预检重复。
+            continue  # 文件是否存在由构建与产物检查判定。
         tag = svg_root_tag(target)
         if not tag:
             continue
-        width = re.search(r"\bwidth\s*=\s*[\"']([^\"']*)[\"']", tag)
-        height = re.search(r"\bheight\s*=\s*[\"']([^\"']*)[\"']", tag)
-        values = [m.group(1).strip() if m else "" for m in (width, height)]
-        if all(values) and all(SVG_LENGTH.match(value) for value in values):
+        sizes = [
+            re.search(rf"\b{name}\s*=\s*[\"']([^\"']*)[\"']", tag)
+            for name in ("width", "height")
+        ]
+        if all(m and SVG_PIXEL.match(m.group(1).strip()) for m in sizes):
             continue
-        view_box = re.search(r"\bviewBox\s*=\s*[\"']([^\"']*)[\"']", tag)
-        hint = ""
-        if view_box:
-            parts = view_box.group(1).split()
-            if len(parts) == 4:
-                hint = f"，例如 width=\"{parts[2]}\" height=\"{parts[3]}\""
+        box = re.search(r"\bviewBox\s*=\s*[\"']([^\"']*)[\"']", tag)
+        parts = box.group(1).split() if box else []
+        hint = f'，例如 width="{parts[2]}" height="{parts[3]}"' if len(parts) == 4 else ""
         fail(
-            f"{relative_path}: 正文引用的 SVG {src} 没有以像素计的 width/height"
-            f"（当前 width={values[0] or '缺失'!r} height={values[1] or '缺失'!r}）。"
-            "只写 viewBox 的 SVG 在浏览器里没有固有像素尺寸，灯箱会把图当成 300×150 "
-            f"的默认框显示，放大后依旧很小很糊。请给根 <svg> 补上与 viewBox 一致、"
-            f"不带单位的像素宽高{hint}。"
+            f"{relative_path}: {src} 的根 <svg> 没有像素级的 width/height。"
+            "只写 viewBox 或 width=\"100%\" 时这张图没有固有像素尺寸，"
+            f"灯箱里会缩成一百多像素宽，字读不出来。请补上{hint}。"
         )
 
 
