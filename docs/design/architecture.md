@@ -75,7 +75,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 已发布文章列表、排序、按年分组 | `src/utils/data.ts` | 在视图里 `getCollection` 再 filter 一遍 |
 | 原值分类的动态入口、URL 的分类 hash／兼容 query、精确筛选、标签、页码 | `src/utils/blog-browser.js` | 写固定分类允许表、合并别名或在 `ListView` 里手写 `URLSearchParams` |
 | 单标签选中链接 | `src/utils/blog-browser.js` 的 `tagSelectionLinks`；`TagLinks` 只呈现 | 用 ` / ` 拼接标签，或在文章元信息、归档、列表卡片里手写 `?tag=` |
-| 文章头返回文稿与元信息排版 | `StandardLayout`（仅 `isArticle`）输出「← 返回文稿」（字号对齐正文 `1rem`；页顶普通文字，下滚固定为雾面 pill 且 top 随顶栏显隐同动）；`PostMeta` 独占日期与统计／标签排版，显示与对齐契约见[文章页](./site.md#article)；日期文案由 `post-meta-date.js`（上海时区）格式化；字数由 remark `wordCount` 经 `RenderPost` 传入 | 在拾趣／关于复用返回链；再引入 `postMetaStyle`；在视图里手写日期空格规则；另起模块管返回链滚动态 |
+| 文章头返回文稿与元信息排版 | `StandardLayout`（仅 `isArticle`）输出「← 返回文稿」（字号对齐正文 `1rem`；页顶普通文字，下滚固定为雾面 pill，距屏顶 12px；始终返回全部文稿）；`PostMeta` 独占日期与统计／标签排版，显示与对齐契约见[文章页](./site.md#article)；日期文案由 `post-meta-date.js`（上海时区）格式化；字数由 remark `wordCount` 经 `RenderPost` 传入 | 在拾趣／关于复用返回链；再引入 `postMetaStyle`；在视图里手写日期空格规则；另起模块管返回链滚动态 |
 | 文稿列表卡片顶部元信息 | `ListItem`；分类强调色；日历／钢笔／计时图标 + 短日期／字数／分钟；`wordCount`／`minutesRead` 由 `getBlogListItems` 提供 | 点号拼接分类·日期·阅读；列表另算字数或漏改标签筛选复用入口 |
 | 归档分类配色领取、唯一性、持久化与容量失败 | `src/utils/blog-category-colors.js`；预设及记录在 `src/data/blog-category-colors.json` | 在视图中推断颜色、循环复用或按分类顺序重排已有分配 |
 | 首页各板块标题、名片与居中布局样式 | `public/shell.css` | 通过 JS 重复测量或复制卡片模板 |
@@ -205,11 +205,11 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 导航是一条有细边框、轻阴影和柔和当前态的居中悬浮条，品牌、页面入口、工具按钮分组。≥800px 为一排，更窄视口为品牌／工具和页面入口两排。用 `top` 与 opacity 隐藏，不在包含搜索面板的祖先上使用 transform 或 backdrop-filter，保证搜索弹窗仍相对于视口定位。
 
-所有页面的初始顶部位置由 `shell.css` 的 `.site-main` 统一维护：桌面与 799px 及以下两档顶部内边距，扣除顶栏占位后留出固定空白。目录点击后的锚点间距仍由 TOC 单独维护，不用初始页面留白推断滚动落点。
+页面初始顶部位置由 `shell.css` 维护：普通页面的 `.site-main` 为顶栏预留桌面／799px 及以下两档内边距；文章页通过 `.post-header` 标记隐藏顶栏，顶部内边距改为 40px／24px，并以 `--post-anchor-offset` 固定预留 20px 锚点间距。顶栏组件保留在 DOM 中，让搜索落地高亮继续初始化；`display: none` 同时移除其键盘和读屏入口。TOC 将不参与布局的导航视为不可见，普通页面仍按导航显隐计算锚点间距，不用初始留白推断滚动落点。
 
 ### 4.6 导航与首页 seam
 
-`nav-scroll.js` 负责滚动方向与阈值：顶部 80px 内始终显示；同方向累计 18px 后下滑隐藏、上滑显示。`NavBar` 将其结果呈现到 `data-scroll-hidden`，每帧最多处理一次，菜单展开、键盘焦点或搜索打开时保持可见，跨页导航重置。无脚本时导航保持显示；减少动态效果时关闭过渡。
+`nav-scroll.js` 负责滚动方向与阈值：顶部 80px 内始终显示；同方向累计 18px 后下滑隐藏、上滑显示。`NavBar` 将其结果呈现到 `data-scroll-hidden`，每帧最多处理一次，菜单展开、键盘焦点或搜索打开时保持可见，跨页导航重置。普通页面无脚本时导航保持显示，文章页由 §4.5 的 CSS 始终隐藏；减少动态效果时关闭过渡。
 
 部署层保留 `/blogs/` 的静态列表路由，`vercel.json` 不配置将 `/blogs` 或 `/blogs/` 指向首页的重定向。名称编码分类片段及旧 `#tech`／`#thought`／`#diary` 兼容链接共用此路由，因此部署重定向会同时破坏菜单入口和分类筛选；本地 Astro preview 不读取 Vercel 重定向，构建回归另检查部署配置。
 
@@ -227,7 +227,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 `RenderPost`、`InterestsView` 和 `AboutView` 把 Markdown 渲染返回的 `headings` 交给共享 `Toc`；文章另传 `frontmatter.toc` 作为单篇开关。`Toc` 统一根据全局功能开关、页面开关与标题级别调用 `generateToc` 一次，`generateToc` 拥有级别过滤与父子树生成，结果非空时 `Toc` 才挂载目录；桌面和移动端只呈现同一棵树。正文级别与页面顶部标题的行为约定见 [文章与目录](./site.md#article)。`TocSidebar` 负责高度上限和内部滚动。
 `DesktopAside` 在 1200px 及以上始终显示目录，无顶部开关；宽度、与正文的间距及垂直位置由组件自身维护，不在页面或全局样式里另写。`MobileTocControl`（名沿用，桌面亦挂载）拥有右下角雾玻璃浮动条（收起为细线 `…`，展开含细线箭头＋仅已读进度弧回顶、list＋点目录、跳底、收起；无返回）；与 `DesktopAside` 同一 `min-width: 1200px` 断点下目录按钮 `disabled`，窄屏可开浮动面板；打开目录时仍通知共享逻辑将当前项滚入可视范围。组件挂载时所有宽度隐藏全局 `ToTopButton`（无 TOC 时不挂载，回顶钮保留），回顶／进度／跳底不另起模块。
 
-当前章节由 `src/utils/toc-active.js` 的 `pickActiveHeadingIndex()` 决定：激活线取标题的 `scrollMarginTop`，到页面底部时最后一个标题胜出。`Toc` 唯一维护 `--post-anchor-offset`：导航隐藏时用固定小偏移，显示时为导航顶部位置加实际高度再加一段间隙。`nav-scroll.js` 唯一保存累计滚动状态，`NavBar` 用 `updateNavVisibility()` 更新它；点击前 `Toc` 用 `predictNavVisibility()` 从同一状态预测导航显隐，不消耗累计距离，原生锚点直接消费对应距离；滚动、导航显隐、缩放和字体加载后重新核对同一基准。保留正常 fragment 与历史记录行为，不补播第二次滚动。正文标题仅使用透明度入场，锚点位置不随入场动画变化；无脚本时保留导航可见所需的静态距离。
+当前章节由 `src/utils/toc-active.js` 的 `pickActiveHeadingIndex()` 决定：激活线取标题的 `scrollMarginTop`，到页面底部时最后一个标题胜出。文章页的 `--post-anchor-offset` 由 `shell.css` 固定为 20px；其他页面由 `Toc` 动态维护：导航隐藏时用固定小偏移，显示时为导航顶部位置加实际高度再加一段间隙。`nav-scroll.js` 唯一保存累计滚动状态，`NavBar` 用 `updateNavVisibility()` 更新它；点击前 `Toc` 用 `predictNavVisibility()` 从同一状态预测导航显隐，不消耗累计距离，原生锚点直接消费对应距离；滚动、导航显隐、缩放和字体加载后重新核对同一基准。保留正常 fragment 与历史记录行为，不补播第二次滚动。正文标题仅使用透明度入场，锚点位置不随入场动画变化；无脚本时文章仍使用 20px 阅读边缘，其他页面保留导航可见所需的静态距离。
 
 桌面目录各级标题完整换行；当前项超出内部区域时，`Toc` 将其滚回可视范围。
 

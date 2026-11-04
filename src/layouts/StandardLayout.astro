@@ -115,14 +115,13 @@ const blogsHref = withBasePath('/blogs/')
 
   .post-back-link,
   :global(.prose) .post-back-link {
-    /* Glass strength 0→1 while scrolling; ::before paints FAB-matched milk pill.
-       Padding tracks glass so morph outline never exceeds the pinned pill. */
+    /* Inline padding tracks the surface; block padding stays stable so
+       becoming a floating link cannot shift fragment targets. */
     --post-back-glass: 0;
     position: relative;
     display: inline-block;
     margin: 0;
-    padding: calc(0.2rem + 0.15rem * var(--post-back-glass))
-      calc(0.15rem + 0.7rem * var(--post-back-glass));
+    padding: 0.2rem calc(0.15rem + 0.7rem * var(--post-back-glass));
     color: inherit;
     font-family: inherit;
     /* Same root-relative 1rem as .prose.post-content paragraphs (not
@@ -167,7 +166,7 @@ const blogsHref = withBasePath('/blogs/')
 
   .post-back-link.is-pinned {
     position: fixed;
-    top: var(--post-back-top, 4.5rem);
+    top: var(--post-back-top, 12px);
     left: var(--post-back-left, 1.25rem);
     margin: 0;
     /* Slightly roomier hit target once pinned as a pill. */
@@ -203,23 +202,14 @@ const blogsHref = withBasePath('/blogs/')
   class PostBackLink extends HTMLElement {
     #link: HTMLAnchorElement | null = null
     #spacer: HTMLElement | null = null
-    #header: HTMLElement | null = null
     #pinned = false
     #left = 0
     /** In-flow top at scroll≈0; glass fades by travel from here. */
     #restingNatural = 0
     #frame = 0
-    #chaseFrame = 0
-    #chaseUntil = 0
     #reduceMotion = false
     #mq: MediaQueryList | null = null
-    #headerObserver: MutationObserver | null = null
-
-    /** Match shell.css `header.nav-bar` top transition (220ms). */
-    static #NAV_TOP_MS = 220
-    static #GAP = 10
-    static #MIN_TOP = 12
-    static #FALLBACK_TOP = 72
+    static #PIN_TOP = 12
 
     #onScroll = () => {
       this.#scheduleUpdate()
@@ -242,53 +232,17 @@ const blogsHref = withBasePath('/blogs/')
       })
     }
 
-    /** Keep sampling while the nav `top` CSS transition runs. */
-    #chaseNavTop = () => {
-      if (this.#chaseFrame) cancelAnimationFrame(this.#chaseFrame)
-      const tick = () => {
-        this.#update()
-        if (performance.now() < this.#chaseUntil) {
-          this.#chaseFrame = requestAnimationFrame(tick)
-        } else {
-          this.#chaseFrame = 0
-        }
-      }
-      this.#chaseUntil =
-        performance.now() +
-        PostBackLink.#NAV_TOP_MS +
-        32 /* one extra frame past the transition */
-      this.#chaseFrame = requestAnimationFrame(tick)
-    }
-
-    #onHeaderAttr = (records: MutationRecord[]) => {
-      for (const record of records) {
-        if (record.attributeName === 'data-scroll-hidden') {
-          this.#chaseNavTop()
-          return
-        }
-      }
-    }
-
     connectedCallback() {
       this.#link = this.querySelector('.post-back-link')
       this.#spacer = this.querySelector('.post-back-link__spacer')
       if (!this.#link || !this.#spacer) return
 
-      this.#header = document.querySelector('[data-site-header]')
       this.#mq = window.matchMedia('(prefers-reduced-motion: reduce)')
       this.#reduceMotion = this.#mq.matches
       this.#mq.addEventListener('change', this.#onMotion)
 
       window.addEventListener('scroll', this.#onScroll, { passive: true })
       window.addEventListener('resize', this.#onResize)
-
-      if (this.#header) {
-        this.#headerObserver = new MutationObserver(this.#onHeaderAttr)
-        this.#headerObserver.observe(this.#header, {
-          attributes: true,
-          attributeFilter: ['data-scroll-hidden'],
-        })
-      }
 
       this.#update(true)
     }
@@ -297,39 +251,8 @@ const blogsHref = withBasePath('/blogs/')
       window.removeEventListener('scroll', this.#onScroll)
       window.removeEventListener('resize', this.#onResize)
       this.#mq?.removeEventListener('change', this.#onMotion)
-      this.#headerObserver?.disconnect()
-      this.#headerObserver = null
       if (this.#frame) cancelAnimationFrame(this.#frame)
-      if (this.#chaseFrame) cancelAnimationFrame(this.#chaseFrame)
       this.#frame = 0
-      this.#chaseFrame = 0
-    }
-
-    /** Live placement under the moving nav (tracks hide/show transition). */
-    #fixedTop() {
-      const header = this.#header
-      if (!header) return PostBackLink.#FALLBACK_TOP
-      return Math.max(
-        PostBackLink.#MIN_TOP,
-        header.getBoundingClientRect().bottom + PostBackLink.#GAP
-      )
-    }
-
-    /**
-     * Pin/unpin against the *resting* visible nav bottom so a hide transition
-     * (live bottom collapsing toward ≤0) does not flap pin state mid-scroll.
-     * Placement still uses live `#fixedTop()`.
-     */
-    #pinLine() {
-      const header = this.#header
-      if (!header) return PostBackLink.#FALLBACK_TOP
-      const styles = getComputedStyle(header)
-      const visibleTop =
-        parseFloat(styles.getPropertyValue('--nav-visible-top')) || 18
-      return Math.max(
-        PostBackLink.#MIN_TOP,
-        visibleTop + header.offsetHeight + PostBackLink.#GAP
-      )
     }
 
     #update = (remeasure = false) => {
@@ -337,26 +260,12 @@ const blogsHref = withBasePath('/blogs/')
       const spacer = this.#spacer
       if (!link || !spacer) return
 
-      // Header may be swapped by ClientRouter; refresh each update cheaply.
-      if (!this.#header || !this.#header.isConnected) {
-        this.#header = document.querySelector('[data-site-header]')
-        if (this.#header && !this.#headerObserver) {
-          this.#headerObserver = new MutationObserver(this.#onHeaderAttr)
-          this.#headerObserver.observe(this.#header, {
-            attributes: true,
-            attributeFilter: ['data-scroll-hidden'],
-          })
-        }
-      }
-
-      const fixedTop = this.#fixedTop()
-      const pinLine = this.#pinLine()
+      const pinLine = PostBackLink.#PIN_TOP
       const naturalTop = this.#pinned
         ? spacer.getBoundingClientRect().top
         : link.getBoundingClientRect().top
 
-      // Record the page-top in-flow top so glass is travel-based (avoids a
-      // half-glass pill on short mobile clearance under a two-row nav).
+      // Fade the surface by travel from the page-top position.
       if (!this.#pinned && window.scrollY <= 1) {
         this.#restingNatural = naturalTop
       }
@@ -396,7 +305,7 @@ const blogsHref = withBasePath('/blogs/')
 
       link.style.setProperty('--post-back-glass', String(glass))
       if (this.#pinned) {
-        link.style.setProperty('--post-back-top', `${fixedTop}px`)
+        link.style.setProperty('--post-back-top', `${pinLine}px`)
         link.style.setProperty(
           '--post-back-left',
           `${Math.max(12, this.#left)}px`

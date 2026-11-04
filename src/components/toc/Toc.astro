@@ -125,7 +125,8 @@ const tocHeadings =
 
     #visibleHeaderOffset = () => {
       const header = document.querySelector('[data-site-header]')
-      if (!(header instanceof HTMLElement)) return 20
+      if (!(header instanceof HTMLElement) || !header.getClientRects().length)
+        return 20
       const top =
         parseFloat(
           getComputedStyle(header).getPropertyValue('--nav-visible-top')
