@@ -29,6 +29,7 @@ order: 1
 | AI&Agent | [ChatGPT](https://chatgpt.com/) | |
 | AI&Agent | [Grok Bot](https://x.ai/news/introducing-grok-bot) | |
 | AI&Agent | [Ghostty](https://ghostty.org/) + [herdr](https://github.com/herdrdev/herdr) + [pi](https://github.com/earendil-works/pi) | herdr 插件 [herdr-sidebar](https://github.com/alexarthurs/herdr-sidebar)；pi 插件 [我的 pi-extensions](https://github.com/wutongyuonce/pi-extensions) |
+| AI&Agent | [Rex](https://www.superlogical.com/rex/) | ghostty 作者新作 |
 | AI&Agent | [Magpie](https://usemagpie.ai/) | 模型路由与反代 |
 | AI&Agent | [LM Studio](https://lmstudio.ai/) | 本地运行大模型 |
 | AI&Agent | [Nowdex](https://nowdex.app/) | token 额度统计 |
