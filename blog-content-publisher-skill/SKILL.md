@@ -99,6 +99,16 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 - `<style>` 块、`style="…"`、`class` 都生效；`<style>` 是**整页全局**的，会影响顶栏和目录，用带前缀的类名或 UnoCSS 工具类。`<div>`、`<span>`、`<br>`、`<details>` 原样透传。
 - 图片尺寸写 alt 的 `|w` 标记，例如 `![说明|w330](./x.png)`；不要用 `style="zoom:50%"`（Typora 拖拽缩放、LeetCode 粘贴会自带）。外链图 Markdown 与 `<img>` 两种写法等价。
+- **SVG 配图必须在根 `<svg>` 上写像素级的 `width` 和 `height`**，且与应用 `viewBox` 的比例一致：
+
+  ```xml
+  <svg width="960" height="556" viewBox="0 0 960 556" xmlns="http://www.w3.org/2000/svg">
+  ```
+
+  只写 `viewBox`（或只写 `width="100%"`）时，浏览器算不出这张图的固有像素尺寸，图片退化成默认的 300×150 逻辑框：正文里因为容器限宽看着正常，点开大图时**灯箱仍按这个假尺寸显示**，图上的字糊成一片。灯箱只会等比缩小到视口内，不会放大超过图的固有尺寸，所以这不是 CSS 能补的。`width`/`height` 写不带单位的像素值（`556` 或 `556px` 都可），不要写百分比。
+
+  这条会被 `validate_content.py` 拦住：正文引用的相对 `.svg` 若根标签缺少像素宽高，预检直接失败并给出应填的值。外链 SVG 与 `public/` 下的站内绝对路径不在检查范围。
+- 从 Markdown 导出的 SVG（Excalidraw、各类示意图工具）常只有 `viewBox`，粘进文章前先补上这两个属性。
 - 视频：外链平台用 `<iframe>`；本地文件用 `<video src="./demo.mp4">`，文件放文章旁边或子目录，构建与 dev 启动时镜像到 `public/_media/`，Typora 与站点两边都能播；dev 中增删或替换媒体文件后重启服务器。
 - HTML 动画／交互演示：文件放进该文的同名资源目录（如 `src/content/blogs/<短名>/wave.html`），在普通 `.md` 里用 `<iframe src="./<短名>/wave.html" title="演示说明" sandbox="allow-scripts" loading="lazy" style="width: 100%; height: 420px; border: 0;"></iframe>` 嵌入，并在旁边补 `[打开演示](./<短名>/wave.html)` 供 RSS 阅读者点开。构建时与音视频一样镜像到 `/_media/…`，文件缺失直接报错；子路径部署由插件补 base。保持沙箱不授予 `allow-same-origin`；演示不继承博客样式，镜像只复制 HTML 本身，它引用的图片需内联或用站内绝对路径。镜像产物不受文章 `draft` 控制，草稿里的演示也会公开。
 - 相对媒体引用允许 query／fragment 后缀，如 `./demo.mp4#t=10`、`./demo.mp4?download=1`；改写时保留后缀，它们不属于文件名。

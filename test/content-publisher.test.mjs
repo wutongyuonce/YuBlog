@@ -63,7 +63,7 @@ tags: [Astro, YAML]
 import json, runpy, sys
 from pathlib import Path
 module = runpy.run_path(sys.argv[1])
-data, _links = module["article"](Path(sys.argv[2]), Path(sys.argv[3]))
+data, _links, _svg = module["article"](Path(sys.argv[2]), Path(sys.argv[3]))
 print(json.dumps(data))
 `,
       validator,
@@ -172,6 +172,44 @@ test('publisher finds real links through the Markdown parser, not by regex', asy
   assert.equal(invalid.status, 1, invalid.stderr)
   assert.match(invalid.stderr, /链接解析失败/)
   assert.doesNotMatch(invalid.stderr, /YAML parsing failed/)
+})
+
+test('publisher requires pixel width and height on SVG images in the body', async (t) => {
+  const { root, path } = await fixture(t, '')
+  const front = '---\ntitle: 测试\ncategory: 技术\npubDate: 2026-09-21\n---\n'
+  const svg = (source) =>
+    writeFile(join(root, 'src/content/blogs/post/diagram.svg'), source)
+  await mkdir(join(root, 'src/content/blogs/post'), { recursive: true })
+  await writeFile(path, `${front}\n![图示](./post/diagram.svg)\n`)
+
+  // viewBox 有比例但没有固有像素尺寸：灯箱会按 300×150 的默认框显示。
+  await svg('<svg viewBox="0 0 960 556" xmlns="http://www.w3.org/2000/svg"/>')
+  const missing = validate(root)
+  assert.equal(missing.status, 1, missing.stderr)
+  assert.match(missing.stderr, /没有以像素计的 width\/height/)
+  assert.match(missing.stderr, /width="960" height="556"/)
+
+  // 100% 不是固有尺寸，等价于缺失；构建同样不报错，必须在预检拦住。
+  await svg('<svg width="100%" viewBox="0 0 960 556"/>')
+  assert.equal(validate(root).status, 1)
+
+  await svg('<svg width="960" height="556" viewBox="0 0 960 556"/>')
+  const fixed = validate(root)
+  assert.equal(fixed.status, 0, fixed.stderr)
+
+  // 宽高写在 viewBox 前面、带 px 后缀或前面有 XML 声明与注释都应放行。
+  await svg(
+    '<?xml version="1.0"?>\n<!-- 说明 -->\n<svg width="960px" height="556px" viewBox="0 0 960 556"/>'
+  )
+  assert.equal(validate(root).status, 0)
+
+  // 外链 SVG 与 public 根路径不属于仓库正文资源，不在这里判。
+  await writeFile(
+    path,
+    `${front}\n![外链](https://example.com/a.svg) ![站内](/diagram.svg)\n`
+  )
+  const remote = validate(root)
+  assert.equal(remote.status, 0, remote.stderr)
 })
 
 test('the skill package stands alone instead of pointing at repository docs', async () => {

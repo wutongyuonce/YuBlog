@@ -31,6 +31,8 @@ def is_http_url(value: object) -> bool:
 # - Markdown 阶段把代码块里的示例转义成文本，所以不用猜围栏、行内代码和引用块；
 # - HTML 阶段取真正的 <a> 元素，所以 `data-href` 不会冒充 `href`、注释里的标签不算
 #   链接、实体（`&amp;`、`&#x26;`）会被还原成真实字符——正则这三件事全都会做错。
+# - 同一个遍历也取 <img> 的相对 .svg 地址：图片指令那一步会把源路径解析成
+#   图片节点，所以只要写对了，这里看到的就是真实文件名而不是字符串猜测。
 #
 # 内容按文件路径传入而不是 stdin：`node -e` 要先完成 import 才会读 stdin，
 # 而 `readFileSync(0)` 读管道时超过管道缓冲区就全 EAGAIN（实测 ~20KB），
@@ -54,7 +56,17 @@ try {
   const pageBase = new URL('__preflight__/entry/', siteBase);
   stage = 'link parsing';
   const invalidLinks = [];
+  const svgSources = [];
   visit(fromHtml(code, { fragment: true }), 'element', (node) => {
+    if (node.tagName === 'img') {
+      const src = node.properties?.src;
+      if (typeof src !== 'string') return;
+      const value = src.replace(/^[\x00-\x20]+|[\x00-\x20]+$/g, '').replace(/[\t\r\n]/g, '');
+      // 只挑相对路径的 .svg：外链与 public 根路径不归本仓库正文资源管。
+      if (/^(?:[a-z][a-z0-9+.-]*:|\/)/i.test(value)) return;
+      if (/\.svg(?:[?#].*)?$/i.test(value)) svgSources.push(value);
+      return;
+    }
     if (node.tagName !== 'a') return;
     const href = node.properties?.href;
     if (typeof href !== 'string') return;
@@ -72,7 +84,7 @@ try {
       throw new Error(`链接解析失败：${JSON.stringify(href)} (${error.message})`);
     }
   });
-  console.log(JSON.stringify({ frontmatter, invalidLinks }));
+  console.log(JSON.stringify({ frontmatter, invalidLinks, svgSources }));
 } catch (error) {
   console.error(`${stage} failed: ${error.message}`);
   process.exitCode = 1;
@@ -80,8 +92,8 @@ try {
 """
 
 
-def article(path: Path, root: Path) -> tuple[dict[str, object], list[str]]:
-    """返回 (frontmatter, Node 已判定指向 Markdown 源文件的相对链接列表)。"""
+def article(path: Path, root: Path) -> tuple[dict[str, object], list[str], list[str]]:
+    """返回 (frontmatter, 指向 Markdown 源文件的相对链接, 正文引用的相对 .svg)。"""
     text = path.read_text(encoding="utf-8")
     if not re.match(r"^---\s*\n(.*?)\n---\s*(?:\n|$)", text, re.DOTALL):
         fail(f"{path}: expected YAML frontmatter fenced by ---")
@@ -108,7 +120,12 @@ def article(path: Path, root: Path) -> tuple[dict[str, object], list[str]]:
         fail(f"{path}: YAML frontmatter must be a mapping")
 
     invalid_links = payload.get("invalidLinks") or []
-    return values, [href for href in invalid_links if isinstance(href, str)]
+    svg_sources = payload.get("svgSources") or []
+    return (
+        values,
+        [href for href in invalid_links if isinstance(href, str)],
+        [src for src in svg_sources if isinstance(src, str)],
+    )
 
 
 def check_body_links(relative_path: str, invalid_links: list[str]) -> None:
@@ -125,6 +142,79 @@ def check_body_links(relative_path: str, invalid_links: list[str]) -> None:
         )
 
 
+SVG_TAG = re.compile(r"<svg\b[^>]*>", re.IGNORECASE)
+SVG_LENGTH = re.compile(r"^(?:\d+(?:\.\d+)?)(?:px)?$")
+
+
+def svg_root_tag(path: Path) -> str:
+    """取根 `<svg …>` 开标签。
+
+    XML 禁止在根标签前出现注释或文本以外的内容，所以按根标签语义取：
+    跳过 XML 声明、DOCTYPE 与前导注释／空白后，第一个元素就是根。
+    只读文件开头一段，几 MB 的绘图文件不必整个读进内存。
+    """
+    head = path.read_text(encoding="utf-8", errors="replace")[:4096]
+    rest = re.sub(r"^\s*(?:<\?[^>]*\?>)?", "", head)
+    while True:
+        rest = rest.lstrip()
+        if rest.startswith("<!--"):
+            end = rest.find("-->")
+            if end == -1:
+                return ""
+            rest = rest[end + 3 :]
+            continue
+        if re.match(r"<!doctype", rest, re.IGNORECASE):
+            end = rest.find(">")
+            if end == -1:
+                return ""
+            rest = rest[end + 1 :]
+            continue
+        break
+    match = SVG_TAG.match(rest)
+    return match.group(0) if match else ""
+
+
+def check_svg_sources(
+    relative_path: str, root: Path, svg_sources: list[str]
+) -> None:
+    """正文引用的相对 .svg 必须有像素固有大小的根标签。
+
+    只写 viewBox 的 SVG 在浏览器里没有固有像素尺寸，图片节点退化成 300×150 的
+    默认框，正文里看着正常（容器限宽），灯箱放大时却按这个假尺寸显示，
+    图上的字糊成一片。构建不会报错，产物检查也看不出来——只有真去点开才暴露，
+    所以在这里拦一次，提醒补上与应用 viewBox 一致的 width/height。
+    """
+    article_path = root / relative_path
+    base = article_path.parent
+    for src in svg_sources:
+        if src.startswith(("http://", "https://", "//")):
+            continue
+        target = (base / src.split("#", 1)[0].split("?", 1)[0]).resolve()
+        if not target.is_file():
+            continue  # 文件是否存在由构建与产物检查判定，不在预检重复。
+        tag = svg_root_tag(target)
+        if not tag:
+            continue
+        width = re.search(r"\bwidth\s*=\s*[\"']([^\"']*)[\"']", tag)
+        height = re.search(r"\bheight\s*=\s*[\"']([^\"']*)[\"']", tag)
+        values = [m.group(1).strip() if m else "" for m in (width, height)]
+        if all(values) and all(SVG_LENGTH.match(value) for value in values):
+            continue
+        view_box = re.search(r"\bviewBox\s*=\s*[\"']([^\"']*)[\"']", tag)
+        hint = ""
+        if view_box:
+            parts = view_box.group(1).split()
+            if len(parts) == 4:
+                hint = f"，例如 width=\"{parts[2]}\" height=\"{parts[3]}\""
+        fail(
+            f"{relative_path}: 正文引用的 SVG {src} 没有以像素计的 width/height"
+            f"（当前 width={values[0] or '缺失'!r} height={values[1] or '缺失'!r}）。"
+            "只写 viewBox 的 SVG 在浏览器里没有固有像素尺寸，灯箱会把图当成 300×150 "
+            f"的默认框显示，放大后依旧很小很糊。请给根 <svg> 补上与 viewBox 一致、"
+            f"不带单位的像素宽高{hint}。"
+        )
+
+
 def validate_blog(root: Path, relative_path: str) -> None:
     path = (root / relative_path).resolve()
     content_root = (root / "src/content/blogs").resolve()
@@ -133,7 +223,7 @@ def validate_blog(root: Path, relative_path: str) -> None:
     if path.suffix not in {".md", ".mdx"}:
         fail(f"{relative_path}: expected a .md or .mdx file")
 
-    data, invalid_links = article(path, root)
+    data, invalid_links, svg_sources = article(path, root)
     title = data.get("title")
     if not isinstance(title, str) or not title:
         fail(f"{relative_path}: title is required")
@@ -153,6 +243,7 @@ def validate_blog(root: Path, relative_path: str) -> None:
         fail(f"{relative_path}: category is required")
 
     check_body_links(relative_path, invalid_links)
+    check_svg_sources(relative_path, root, svg_sources)
 
     for key in ("redirect",):
         value = data.get(key)
