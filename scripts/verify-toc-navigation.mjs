@@ -209,10 +209,8 @@ for (const width of [1440, 390, 320]) {
       true
     )
     assert.equal(
-      await page.evaluate(
-        () => getComputedStyle(document.querySelector('#to-top-button')).display
-      ),
-      'none'
+      await page.evaluate(() => document.querySelector('#to-top-button')),
+      null
     )
   }
   const prefix = `${width}`

@@ -7,109 +7,131 @@ interface Props {
 }
 
 const { headings } = Astro.props
+const hasToc = headings.length > 0
+const railId = hasToc ? 'mobile-toc-rail' : 'mobile-toc-rail-fallback'
+const panelId = hasToc ? 'mobile-toc-panel' : 'mobile-toc-panel-fallback'
 ---
 
-{headings.length > 0 && (
-  <mobile-toc-control class="mobile-toc-control print:hidden">
+<mobile-toc-control
+  class="mobile-toc-control print:hidden"
+  data-has-toc={hasToc ? '' : undefined}
+>
+  <button
+    type="button"
+    class="mobile-toc-control__fab"
+    aria-expanded="false"
+    aria-controls={railId}
+    aria-label="Open reading controls"
+    title="Reading controls"
+  >
+    <span u-i-ri-more-line aria-hidden="true"></span>
+  </button>
+
+  <div
+    id={railId}
+    class="mobile-toc-control__rail"
+    role="toolbar"
+    aria-label="Reading controls"
+    hidden
+  >
     <button
       type="button"
-      class="mobile-toc-control__fab"
-      aria-expanded="false"
-      aria-controls="mobile-toc-rail"
-      aria-label="Open reading controls"
-      title="Reading controls"
+      class="mobile-toc-control__action mobile-toc-control__top"
+      aria-label="Scroll to top"
+      title="Scroll to top"
     >
-      <span u-i-ri-more-line aria-hidden="true"></span>
+      <svg
+        class="mobile-toc-control__ring"
+        viewBox="0 0 36 36"
+        aria-hidden="true"
+      >
+        <!-- Progress arc only — no full track circle. -->
+        <circle
+          class="mobile-toc-control__ring-value"
+          cx="18"
+          cy="18"
+          r="15"
+          fill="none"
+          pathLength="100"
+        ></circle>
+      </svg>
+      <span u-i-ri-arrow-up-s-line aria-hidden="true"></span>
     </button>
 
-    <div
-      id="mobile-toc-rail"
-      class="mobile-toc-control__rail"
-      role="toolbar"
-      aria-label="Reading controls"
-      hidden
+    <button
+      type="button"
+      class="mobile-toc-control__action mobile-toc-control__toggle"
+      aria-expanded="false"
+      aria-controls={panelId}
+      aria-label="Toggle table of contents"
+      title="Table of contents"
     >
-      <button
-        type="button"
-        class="mobile-toc-control__action mobile-toc-control__top"
-        aria-label="Scroll to top"
-        title="Scroll to top"
-      >
-        <svg
-          class="mobile-toc-control__ring"
-          viewBox="0 0 36 36"
-          aria-hidden="true"
-        >
-          <!-- Progress arc only — no full track circle. -->
-          <circle
-            class="mobile-toc-control__ring-value"
-            cx="18"
-            cy="18"
-            r="15"
-            fill="none"
-            pathLength="100"
-          ></circle>
-        </svg>
-        <span u-i-ri-arrow-up-s-line aria-hidden="true"></span>
-      </button>
+      <span u-i-ri-list-unordered aria-hidden="true"></span>
+    </button>
 
-      <button
-        type="button"
-        class="mobile-toc-control__action mobile-toc-control__toggle"
-        aria-expanded="false"
-        aria-controls="mobile-toc-panel"
-        aria-label="Toggle table of contents"
-        title="Table of contents"
-      >
-        <span u-i-ri-list-unordered aria-hidden="true"></span>
-      </button>
-
-      <button
-        type="button"
-        class="mobile-toc-control__action mobile-toc-control__bottom"
-        aria-label="Scroll to bottom"
-        title="Scroll to bottom"
-      >
-        <span u-i-ri-arrow-down-s-line aria-hidden="true"></span>
-      </button>
-
-      <button
-        type="button"
-        class="mobile-toc-control__action mobile-toc-control__close"
-        aria-label="Collapse reading controls"
-        title="Collapse"
-      >
-        <span u-i-ri-close-line aria-hidden="true"></span>
-      </button>
-    </div>
-
-    <nav
-      id="mobile-toc-panel"
-      class="mobile-toc-control__panel"
-      aria-label="Table of contents"
-      hidden
+    <button
+      type="button"
+      class="mobile-toc-control__action mobile-toc-control__bottom"
+      aria-label="Scroll to bottom"
+      title="Scroll to bottom"
     >
-      <div class="mobile-toc-control__header">Table of Contents</div>
-      <ul class="mobile-toc-control__list">
-        {headings.map((heading) => (
-          <TocItem {heading} />
-        ))}
-      </ul>
-    </nav>
-  </mobile-toc-control>
-)}
+      <span u-i-ri-arrow-down-s-line aria-hidden="true"></span>
+    </button>
+
+    <button
+      type="button"
+      class="mobile-toc-control__action mobile-toc-control__close"
+      aria-label="Collapse reading controls"
+      title="Collapse"
+    >
+      <span u-i-ri-close-line aria-hidden="true"></span>
+    </button>
+  </div>
+
+  <nav
+    id={panelId}
+    class="mobile-toc-control__panel"
+    aria-label="Table of contents"
+    hidden
+  >
+    <div class="mobile-toc-control__header">Table of Contents</div>
+    <ul class="mobile-toc-control__list">
+      {headings.map((heading) => (
+        <TocItem {heading} />
+      ))}
+    </ul>
+  </nav>
+</mobile-toc-control>
 
 <style>
   /*
-   * Also used on desktop (≥1200px, same as DesktopAside). Name kept; only the
-   * TOC toggle is disabled while the right sidebar is visible.
+   * Sitewide reading control (name kept). On desktop (≥1200px, same as
+   * DesktopAside) the TOC toggle is disabled while the right sidebar owns TOC;
+   * with no headings the toggle stays disabled on every width.
    */
   .mobile-toc-control {
     display: contents;
   }
 
-  /* Own the corner whenever this control is mounted (article with TOC). */
-  :global(body:has(mobile-toc-control) #to-top-button) {
+  /*
+   * Prefer the capable (has-toc) instance when both are mounted: BaseLayout
+   * always mounts a fallback; Toc mounts a second host with data-has-toc.
+   */
+  :global(
+    body:has(mobile-toc-control[data-has-toc])
+      mobile-toc-control:not([data-has-toc])
+      .mobile-toc-control__fab
+  ),
+  :global(
+    body:has(mobile-toc-control[data-has-toc])
+      mobile-toc-control:not([data-has-toc])
+      .mobile-toc-control__rail
+  ),
+  :global(
+    body:has(mobile-toc-control[data-has-toc])
+      mobile-toc-control:not([data-has-toc])
+      .mobile-toc-control__panel
+  ) {
     display: none !important;
   }
 
@@ -408,6 +430,8 @@ const { headings } = Astro.props
 </style>
 
 <script>
+  import { resolveTocToggleState } from '~/utils/mobile-toc-toggle.js'
+
   class MobileTocControl extends HTMLElement {
     #fab: HTMLButtonElement | null = null
     #rail: HTMLElement | null = null
@@ -440,11 +464,7 @@ const { headings } = Astro.props
     }
 
     #onResize = () => {
-      // Same breakpoint as DesktopAside: sidebar visible ⇒ disable TOC toggle.
-      // Keep the rail; only close the floating panel when crossing into desktop.
-      if (this.#sidebarVisible()) {
-        this.#closePanel()
-      }
+      // Keep the rail; sync closes the panel when the toggle becomes disabled.
       this.#syncTocToggle()
     }
 
@@ -517,13 +537,16 @@ const { headings } = Astro.props
 
     #syncTocToggle = () => {
       if (!this.#toggle) return
-      const desktop = this.#sidebarVisible()
-      this.#toggle.disabled = desktop
-      this.#toggle.setAttribute('aria-disabled', desktop ? 'true' : 'false')
-      this.#toggle.title = desktop
-        ? 'Table of contents (sidebar)'
-        : 'Table of contents'
-      if (desktop) this.#closePanel()
+      const hasToc = this.hasAttribute('data-has-toc')
+      const sidebarOwnsToc = hasToc && this.#sidebarVisible()
+      const { disabled, title } = resolveTocToggleState({
+        hasToc,
+        sidebarOwnsToc,
+      })
+      this.#toggle.disabled = disabled
+      this.#toggle.setAttribute('aria-disabled', disabled ? 'true' : 'false')
+      this.#toggle.title = title
+      if (disabled) this.#closePanel()
     }
 
     #expandRail = () => {

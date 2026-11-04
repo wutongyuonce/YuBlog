@@ -171,7 +171,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 思源宋体 `@font-face` 优先引用构建结束后生成的 `SourceHanSerifCN-title.woff2`（标题／导航／品牌等实际用字子集，百 KB 级），再回退到全量 `SourceHanSerifCN-Regular.woff2`；`plugins/astro-subset-title-fonts.ts` 按产物 HTML 中使用思源的节点收字，并在构建后检查 `shell.css` 的子集引用与文件都存在。`Head.astro` 仅 preload 该 title 子集；`--font-heading` 在自定义族名后接 `Source Han Serif SC`／`Noto Serif CJK SC`／`Songti SC`／`SimSun` 等系统衬线，硬开时子集未到齐仍立刻可读。`vercel.json` 对 `/fonts/*` 使用一周缓存加一天 SWR（非 immutable），便于以后换子集。Vite 不会提前解析尚未生成的子集路径。开发服务器没有子集时会回退到同一次声明里的完整文件，那不是线上行为。`public/fonts` 里的 LXGW 仍供 OG 封面脚本使用，不作为页面 `@font-face`。
 
-主题、搜索、回顶、遮罩的点击在脚本执行时就绑定，不等第一次 `window` `load`。`astro:page-load` 只负责换页后的新节点，并用元素上的 `dataset` 避免重复绑定。
+主题、搜索、遮罩的点击在脚本执行时就绑定，不等第一次 `window` `load`。`astro:page-load` 只负责换页后的新节点，并用元素上的 `dataset` 避免重复绑定。
 
 主题由根元素的 `dark` class 表示；`Head.astro` 仅恢复合法的 `light`／`dark` 保存值，缺失或非法时回退系统，`ThemeSwitch.astro` 负责手动切换及系统模式变化。两处的 `color-scheme` meta 只声明当前方案；存储读写失败不打断显示和切换，但不保证跨导航／刷新保留选择。`main.css` 的根元素规则同步 `only light`／`only dark`，声明原生控件和页面画布的当前配色，禁用浏览器常规自动暗化；外部暗化工具仍可能覆盖实际样式，页面不保证其覆盖后的配色与主题按钮一致。
 
@@ -225,7 +225,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 `FEATURES.toc` 决定开不开、标题层级、左右。
 `RenderPost`、`InterestsView` 和 `AboutView` 把 Markdown 渲染返回的 `headings` 交给共享 `Toc`；文章另传 `frontmatter.toc` 作为单篇开关。`Toc` 统一根据全局功能开关、页面开关与标题级别调用 `generateToc` 一次，`generateToc` 拥有级别过滤与父子树生成，结果非空时 `Toc` 才挂载目录；桌面和移动端只呈现同一棵树。正文级别与页面顶部标题的行为约定见 [文章与目录](./site.md#article)。`TocSidebar` 负责高度上限和内部滚动。
-`DesktopAside` 在 1200px 及以上始终显示目录，无顶部开关；宽度、与正文的间距及垂直位置由组件自身维护，不在页面或全局样式里另写。`MobileTocControl`（名沿用，桌面亦挂载）拥有右下角雾玻璃浮动条（收起为细线 `…`，展开含细线箭头＋仅已读进度弧回顶、list＋点目录、跳底、收起；无返回）；与 `DesktopAside` 同一 `min-width: 1200px` 断点下目录按钮 `disabled`，窄屏可开浮动面板；打开目录时仍通知共享逻辑将当前项滚入可视范围。组件挂载时所有宽度隐藏全局 `ToTopButton`（无 TOC 时不挂载，回顶钮保留），回顶／进度／跳底不另起模块。
+`DesktopAside` 在 1200px 及以上始终显示目录，无顶部开关；宽度、与正文的间距及垂直位置由组件自身维护，不在页面或全局样式里另写。`MobileTocControl`（名沿用）是全站右下角雾玻璃浮动条（收起为细线 `…`，展开含细线箭头＋仅已读进度弧回顶、list＋点目录、跳底、收起；无返回）：`BaseLayout` 始终挂载空目录回退实例，有 TOC 时 `Toc` 再挂载可开目录的实例并由 CSS 隐藏回退 FAB；无目录或与 `DesktopAside` 同一 `min-width: 1200px` 断点下侧栏占用目录时，目录按钮 `disabled`（仍显示）；打开目录时仍通知共享逻辑将当前项滚入可视范围。已移除全局 `ToTopButton`，回顶／进度／跳底不另起模块。
 
 当前章节由 `src/utils/toc-active.js` 的 `pickActiveHeadingIndex()` 决定：激活线取标题的 `scrollMarginTop`，到页面底部时最后一个标题胜出。文章页的 `--post-anchor-offset` 由 `shell.css` 固定为 20px；其他页面由 `Toc` 动态维护：导航隐藏时用固定小偏移，显示时为导航顶部位置加实际高度再加一段间隙。`nav-scroll.js` 唯一保存累计滚动状态，`NavBar` 用 `updateNavVisibility()` 更新它；点击前 `Toc` 用 `predictNavVisibility()` 从同一状态预测导航显隐，不消耗累计距离，原生锚点直接消费对应距离；滚动、导航显隐、缩放和字体加载后重新核对同一基准。保留正常 fragment 与历史记录行为，不补播第二次滚动。正文标题仅使用透明度入场，锚点位置不随入场动画变化；无脚本时文章仍使用 20px 阅读边缘，其他页面保留导航可见所需的静态距离。
 

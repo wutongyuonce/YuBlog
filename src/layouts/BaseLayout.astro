@@ -4,7 +4,7 @@ import Background from '~/components/backgrounds/Background.astro'
 import Link from '~/components/base/Link.astro'
 import NavBar from '~/components/nav/NavBar.astro'
 import Footer from '~/components/base/Footer.astro'
-import ToTopButton from '~/components/widgets/ToTopButton.astro'
+import MobileTocControl from '~/components/toc/MobileTocControl.astro'
 import Backdrop from '~/components/base/Backdrop.astro'
 import ImageInteractions from '~/components/widgets/ImageInteractions.astro'
 import CardScrollbars from '~/components/widgets/CardScrollbars.astro'
@@ -95,7 +95,7 @@ if (hasCustomCursor) style['--external-link-cursor'] = cursorType
 
     <!-- Footer -->
     <Footer />
-    <ToTopButton />
+    <MobileTocControl headings={[]} />
 
     <!-- Panel Backdrop (on mobile) -->
     <Backdrop />
