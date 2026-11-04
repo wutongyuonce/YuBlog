@@ -138,6 +138,54 @@ for (const width of [1440, 768, 390, 320]) {
     }
   }
 }
+// Exercise ClientRouter swaps as well as the hard navigations above.
+await page.goto(new URL('blogs/#技术', base).href)
+await page.waitForSelector('[data-blog-item] h2 a')
+const dark = await page.evaluate(() => {
+  window.__readingStyles = document.getElementById('site-styles')
+  return document.documentElement.classList.contains('dark')
+})
+await page.click('[data-blog-item] h2 a >> nth=0')
+await page.waitForSelector('.post-header')
+for (let index = 0; index < 4; index++) {
+  await page.keyboard.press('Tab')
+  assert.equal(
+    await page.evaluate(() =>
+      document
+        .querySelector('[data-site-header]')
+        .contains(document.activeElement)
+    ),
+    false,
+    'keyboard focus skips the hidden navigation'
+  )
+}
+assert.equal(
+  await page.evaluate(
+    () => document.querySelector('[data-site-header]').getClientRects().length
+  ),
+  0,
+  'ClientRouter entry hides the article navigation'
+)
+await page.click('.post-back-link')
+await page.waitForURL(new URL('blogs/', base).href)
+await page.waitForSelector('[data-blog-item] h2 a')
+assert.deepEqual(
+  await page.evaluate(() => ({
+    navVisible:
+      document.querySelector('[data-site-header]').getClientRects().length > 0,
+    dark: document.documentElement.classList.contains('dark'),
+    sharedStyles:
+      document.getElementById('site-styles') === window.__readingStyles,
+    article: Boolean(document.querySelector('.post-header')),
+  })),
+  { navVisible: true, dark, sharedStyles: true, article: false },
+  'return restores the global navigation and preserves theme and shared CSS'
+)
+await page.evaluate(() => {
+  delete window.__readingStyles
+})
+await page.goto(new URL('blogs/rex-architecture/?search=Rex', base).href)
+await page.waitForSelector('mark.pagefind-highlight')
 console.log(
-  'PASS: reading navigation, nav/content edges and footer alignment across 10 pages and 4 widths'
+  'PASS: reading navigation, nav/content edges and footer alignment across 10 pages and 4 widths; ClientRouter return, keyboard, theme and search highlighting'
 )

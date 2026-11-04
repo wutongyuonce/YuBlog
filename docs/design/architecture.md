@@ -209,7 +209,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 ### 4.6 导航与首页 seam
 
-`nav-scroll.js` 负责滚动方向与阈值：顶部 80px 内始终显示；同方向累计 18px 后下滑隐藏、上滑显示。`NavBar` 将其结果呈现到 `data-scroll-hidden`，每帧最多处理一次，菜单展开、键盘焦点或搜索打开时保持可见，跨页导航重置。无脚本时导航保持显示；减少动态效果时关闭过渡。
+`nav-scroll.js` 负责滚动方向与阈值：顶部 80px 内始终显示；同方向累计 18px 后下滑隐藏、上滑显示。`NavBar` 将其结果呈现到 `data-scroll-hidden`，每帧最多处理一次，菜单展开、键盘焦点或搜索打开时保持可见，跨页导航重置。普通页面无脚本时导航保持显示，文章页由 §4.5 的 CSS 始终隐藏；减少动态效果时关闭过渡。
 
 部署层保留 `/blogs/` 的静态列表路由，`vercel.json` 不配置将 `/blogs` 或 `/blogs/` 指向首页的重定向。名称编码分类片段及旧 `#tech`／`#thought`／`#diary` 兼容链接共用此路由，因此部署重定向会同时破坏菜单入口和分类筛选；本地 Astro preview 不读取 Vercel 重定向，构建回归另检查部署配置。
 
@@ -227,7 +227,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 `RenderPost`、`InterestsView` 和 `AboutView` 把 Markdown 渲染返回的 `headings` 交给共享 `Toc`；文章另传 `frontmatter.toc` 作为单篇开关。`Toc` 统一根据全局功能开关、页面开关与标题级别调用 `generateToc` 一次，`generateToc` 拥有级别过滤与父子树生成，结果非空时 `Toc` 才挂载目录；桌面和移动端只呈现同一棵树。正文级别与页面顶部标题的行为约定见 [文章与目录](./site.md#article)。`TocSidebar` 负责高度上限和内部滚动。
 `DesktopAside` 在 1200px 及以上始终显示目录，无顶部开关；宽度、与正文的间距及垂直位置由组件自身维护，不在页面或全局样式里另写。`MobileTocControl`（名沿用，桌面亦挂载）拥有右下角雾玻璃浮动条（收起为细线 `…`，展开含细线箭头＋仅已读进度弧回顶、list＋点目录、跳底、收起；无返回）；与 `DesktopAside` 同一 `min-width: 1200px` 断点下目录按钮 `disabled`，窄屏可开浮动面板；打开目录时仍通知共享逻辑将当前项滚入可视范围。组件挂载时所有宽度隐藏全局 `ToTopButton`（无 TOC 时不挂载，回顶钮保留），回顶／进度／跳底不另起模块。
 
-当前章节由 `src/utils/toc-active.js` 的 `pickActiveHeadingIndex()` 决定：激活线取标题的 `scrollMarginTop`，到页面底部时最后一个标题胜出。`Toc` 唯一维护 `--post-anchor-offset`：导航隐藏时用固定小偏移，显示时为导航顶部位置加实际高度再加一段间隙。`nav-scroll.js` 唯一保存累计滚动状态，`NavBar` 用 `updateNavVisibility()` 更新它；点击前 `Toc` 用 `predictNavVisibility()` 从同一状态预测导航显隐，不消耗累计距离，原生锚点直接消费对应距离；滚动、导航显隐、缩放和字体加载后重新核对同一基准。保留正常 fragment 与历史记录行为，不补播第二次滚动。正文标题仅使用透明度入场，锚点位置不随入场动画变化；无脚本时保留导航可见所需的静态距离。
+当前章节由 `src/utils/toc-active.js` 的 `pickActiveHeadingIndex()` 决定：激活线取标题的 `scrollMarginTop`，到页面底部时最后一个标题胜出。文章页的 `--post-anchor-offset` 由 `shell.css` 固定为 20px；其他页面由 `Toc` 动态维护：导航隐藏时用固定小偏移，显示时为导航顶部位置加实际高度再加一段间隙。`nav-scroll.js` 唯一保存累计滚动状态，`NavBar` 用 `updateNavVisibility()` 更新它；点击前 `Toc` 用 `predictNavVisibility()` 从同一状态预测导航显隐，不消耗累计距离，原生锚点直接消费对应距离；滚动、导航显隐、缩放和字体加载后重新核对同一基准。保留正常 fragment 与历史记录行为，不补播第二次滚动。正文标题仅使用透明度入场，锚点位置不随入场动画变化；无脚本时文章仍使用 20px 阅读边缘，其他页面保留导航可见所需的静态距离。
 
 桌面目录各级标题完整换行；当前项超出内部区域时，`Toc` 将其滚回可视范围。
 
