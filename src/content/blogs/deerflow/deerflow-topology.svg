@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 960 556" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="deerflow-topology-title deerflow-topology-desc" id="deerflow-topology-root">
+        <title id="deerflow-topology-title">DeerFlow 默认运行形态</title>
+        <desc id="deerflow-topology-desc">浏览器经 Nginx 分发到前端和 Gateway，Agent 运行时内嵌在 Gateway 进程里，读写 checkpoint 存储、调用沙箱和模型服务；IM 渠道也进入同一个 Gateway；Provisioner 只在 Kubernetes 沙箱模式下启用。</desc>
+        <defs>
+      <style>#deerflow-topology-root { --color-paper: #f5f5f5; --color-ink: #2d3142; --color-muted: #4f5d75; --color-accent: #bf4520;
+      --font-sans: 'Geist', 'PingFang SC', 'Noto Sans SC', system-ui, sans-serif; --font-serif: 'Instrument Serif', 'Noto Serif', serif; --font-mono: 'Geist Mono', ui-monospace, monospace; }
+      #deerflow-topology-root { font-family: var(--font-sans); color: var(--color-ink); }
+      #deerflow-topology-root .diagram-container { width: 100%; overflow-x: auto; }
+      @media print {
+#deerflow-topology-root .diagram-container { overflow-x: visible; }
+}</style>
+          <marker id="deerflow-topology-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+          <marker id="deerflow-topology-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#bf4520"/></marker>
+          <marker id="deerflow-topology-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker>
+        </defs>
+        <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+        <!-- ============ Arrows ============ -->
+        <!-- Browser -> Nginx -->
+        <line x1="200" y1="124" x2="246" y2="124" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#deerflow-topology-arrow-link)"/>
+        <!-- Nginx -> Frontend -->
+        <path d="M 408 112 L 422 112 Q 428 112 428 106 Q 428 100 434 100 L 454 100" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#deerflow-topology-arrow)"/>
+        <!-- Nginx -> Gateway -->
+        <path d="M 408 136 L 420 136 Q 428 136 428 144 L 428 192 Q 428 200 436 200 L 454 200" fill="none" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#deerflow-topology-arrow-link)"/>
+        <!-- IM -> Gateway -->
+        <path d="M 200 284 L 434 284 Q 442 284 442 292 L 442 304 Q 442 312 450 312 L 454 312" fill="none" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#deerflow-topology-arrow)"/>
+        <!-- Gateway -> stores / sandbox / model -->
+        <line x1="728" y1="204" x2="774" y2="204" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#deerflow-topology-arrow)"/>
+        <line x1="728" y1="292" x2="774" y2="292" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#deerflow-topology-arrow)"/>
+        <path d="M 728 348 L 744 348 Q 752 348 752 356 L 752 372 Q 752 380 760 380 L 774 380" fill="none" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#deerflow-topology-arrow-link)"/>
+        <!-- Gateway -> Provisioner (optional) -->
+        <line x1="592" y1="368" x2="592" y2="438" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#deerflow-topology-arrow)"/>
+
+        <!-- arrow labels -->
+        <rect x="430" y="80" width="20" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="440" y="89" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">/</text>
+        <rect x="376" y="162" width="44" height="12" rx="2" fill="#f5f5f5"/>
+        <text x="398" y="171" fill="#2e5aa8" font-size="8" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle" letter-spacing="0.06em">/API/*</text>
+        <rect x="246" y="262" width="96" height="16" rx="2" fill="#f5f5f5"/>
+        <text x="250" y="274" fill="#4f5d75" font-size="12" font-weight="500" font-family="'Geist', 'PingFang SC', 'Noto Sans SC', sans-serif">渠道适配后提交</text>
+
+        <rect x="600" y="396" width="112" height="16" rx="2" fill="#f5f5f5"/>
+        <text x="604" y="408" fill="#4f5d75" font-size="12" font-weight="500" font-family="'Geist', 'PingFang SC', 'Noto Sans SC', sans-serif">仅 K8s 沙箱模式</text>
+
+        <!-- ============ Nodes ============ -->
+        <!-- Browser -->
+        <rect x="32" y="96" width="168" height="56" rx="6" fill="#f5f5f5"/>
+        <rect x="32" y="96" width="168" height="56" rx="6" fill="#4f5d75" stroke="#5a6580" stroke-width="1" fill-opacity="0.10"/>
+        <text x="116" y="120" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'PingFang SC', 'Noto Sans SC', sans-serif" text-anchor="middle">浏览器</text>
+        <text x="116" y="138" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">localhost:2026</text>
+
+        <!-- IM -->
+        <rect x="32" y="256" width="168" height="56" rx="6" fill="#f5f5f5"/>
+        <rect x="32" y="256" width="168" height="56" rx="6" fill="#4f5d75" stroke="#5a6580" stroke-width="1" fill-opacity="0.10"/>
+        <text x="116" y="280" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'PingFang SC', 'Noto Sans SC', sans-serif" text-anchor="middle">IM 渠道 / 定时任务</text>
+        <text x="116" y="298" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">Feishu · Slack · cron</text>
+
+        <!-- Nginx -->
+        <rect x="248" y="96" width="160" height="56" rx="6" fill="#f5f5f5"/>
+        <rect x="248" y="96" width="160" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="328" y="120" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'PingFang SC', 'Noto Sans SC', sans-serif" text-anchor="middle">Nginx</text>
+        <text x="328" y="138" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">:2026 · SSE no-buffer</text>
+
+        <!-- Frontend -->
+        <rect x="456" y="72" width="272" height="56" rx="6" fill="#f5f5f5"/>
+        <rect x="456" y="72" width="272" height="56" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+        <text x="592" y="96" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'PingFang SC', 'Noto Sans SC', sans-serif" text-anchor="middle">Frontend</text>
+        <text x="592" y="114" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">Next.js :3000 · langgraph-sdk useStream</text>
+
+        <!-- Gateway (focal container) -->
+        <rect x="456" y="160" width="272" height="208" rx="8" fill="#f5f5f5"/>
+        <rect x="456" y="160" width="272" height="208" rx="8" fill="#bf4520" stroke="#bf4520" stroke-width="1.2" fill-opacity="0.08"/>
+        <text x="472" y="184" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'PingFang SC', 'Noto Sans SC', sans-serif">Gateway（唯一的 Agent 后端进程）</text>
+        <text x="472" y="200" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">FastAPI :8001</text>
+        <line x1="472" y1="212" x2="712" y2="212" stroke="#bf4520" stroke-width="0.8" stroke-opacity="0.25"/>
+        <text x="472" y="236" fill="#2d3142" font-size="12" font-family="'Geist', 'PingFang SC', 'Noto Sans SC', sans-serif">REST + LangGraph 兼容 runs API</text>
+        <text x="472" y="264" fill="#2d3142" font-size="12" font-family="'Geist', 'PingFang SC', 'Noto Sans SC', sans-serif">RunManager → run_agent() 后台 task</text>
+        <text x="472" y="292" fill="#2d3142" font-size="12" font-family="'Geist', 'PingFang SC', 'Noto Sans SC', sans-serif">Lead Agent graph（LangGraph）</text>
+        <text x="472" y="320" fill="#2d3142" font-size="12" font-family="'Geist', 'PingFang SC', 'Noto Sans SC', sans-serif">StreamBridge → SSE</text>
+        <text x="472" y="352" fill="#bf4520" font-size="9" font-family="'Geist Mono', ui-monospace, monospace">no separate LangGraph Server</text>
+
+        <!-- Checkpoint / store -->
+        <rect x="776" y="176" width="160" height="56" rx="6" fill="#f5f5f5"/>
+        <rect x="776" y="176" width="160" height="56" rx="6" fill="#2d3142" stroke="#4f5d75" stroke-width="1" fill-opacity="0.05"/>
+        <text x="856" y="200" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'PingFang SC', 'Noto Sans SC', sans-serif" text-anchor="middle">持久化</text>
+        <text x="856" y="218" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">checkpoint · runs · memory</text>
+
+        <!-- Sandbox -->
+        <rect x="776" y="264" width="160" height="56" rx="6" fill="#f5f5f5"/>
+        <rect x="776" y="264" width="160" height="56" rx="6" fill="#bf4520" stroke="#bf4520" stroke-width="1.2" stroke-dasharray="4,4" fill-opacity="0.05" stroke-opacity="0.50"/>
+        <text x="856" y="288" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'PingFang SC', 'Noto Sans SC', sans-serif" text-anchor="middle">Sandbox</text>
+        <text x="856" y="306" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">local · docker · k8s pod</text>
+
+        <!-- Model provider -->
+        <rect x="776" y="352" width="160" height="56" rx="6" fill="#f5f5f5"/>
+        <rect x="776" y="352" width="160" height="56" rx="6" fill="#2d3142" stroke="#2d3142" stroke-width="1" fill-opacity="0.03" stroke-opacity="0.30"/>
+        <text x="856" y="376" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'PingFang SC', 'Noto Sans SC', sans-serif" text-anchor="middle">模型 / MCP / 搜索</text>
+        <text x="856" y="394" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">external APIs</text>
+
+        <!-- Provisioner (optional) -->
+        <rect x="512" y="440" width="160" height="56" rx="6" fill="#f5f5f5"/>
+        <rect x="512" y="440" width="160" height="56" rx="6" fill="#2d3142" stroke="#2d3142" stroke-width="1" stroke-dasharray="4,3" fill-opacity="0.02" stroke-opacity="0.22"/>
+        <text x="592" y="464" fill="#2d3142" font-size="12" font-weight="600" font-family="'Geist', 'PingFang SC', 'Noto Sans SC', sans-serif" text-anchor="middle">Provisioner</text>
+        <text x="592" y="482" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, monospace" text-anchor="middle">:8002 · creates sandbox pods</text>
+
+        <!-- ============ Legend ============ -->
+        <line x1="32" y1="516" x2="936" y2="516" stroke="#2d3142" stroke-width="0.8" stroke-opacity="0.10"/>
+        <rect x="32" y="532" width="16" height="12" rx="2" fill="#bf4520" stroke="#bf4520" stroke-width="1" fill-opacity="0.08"/>
+        <text x="56" y="542" fill="#4f5d75" font-size="12" font-family="'Geist', 'PingFang SC', 'Noto Sans SC', sans-serif">Agent 运行所在进程</text>
+        <rect x="200" y="532" width="16" height="12" rx="2" fill="#2d3142" stroke="#2d3142" stroke-width="1" stroke-dasharray="4,3" fill-opacity="0.02" stroke-opacity="0.22"/>
+        <text x="224" y="542" fill="#4f5d75" font-size="12" font-family="'Geist', 'PingFang SC', 'Noto Sans SC', sans-serif">可选服务</text>
+        <line x1="312" y1="538" x2="340" y2="538" stroke="#2e5aa8" stroke-width="1.2" marker-end="url(#deerflow-topology-arrow-link)"/>
+        <text x="348" y="542" fill="#4f5d75" font-size="12" font-family="'Geist', 'PingFang SC', 'Noto Sans SC', sans-serif">HTTP / SSE / 外部 API</text>
+        <line x1="512" y1="538" x2="540" y2="538" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#deerflow-topology-arrow)"/>
+        <text x="548" y="542" fill="#4f5d75" font-size="12" font-family="'Geist', 'PingFang SC', 'Noto Sans SC', sans-serif">条件路径</text>
+      </svg>
