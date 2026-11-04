@@ -1,7 +1,7 @@
 ---
 title: Computer Use：GUI Agent 的闭环与边界
 description: Observe→Decide→Act→Verify 闭环、Grounding 三级降级、坐标换算与安全边界，讲清一个可上线的 CUA 怎样运行。
-pubDate: 2026-11-02
+pubDate: 2026-09-21
 category: 技术
 tags: [Agent, Computer Use]
 titleImage: ./_title-images/computer-use-loop.png

@@ -1,7 +1,7 @@
 ---
 title: 看懂 DeerFlow：从 LangGraph 运行时到 Super Agent 应用
 description: 沿一次真实请求拆解 DeerFlow 2.0：Agent 运行时内嵌在 Gateway、Middleware 链、Sandbox、Memory 与 Sub-Agent 如何协作。
-pubDate: 2026-11-03
+pubDate: 2026-09-03
 category: 技术
 tags: [Agent, deerflow]
 titleImage: ./_title-images/deerflow-topology.png
