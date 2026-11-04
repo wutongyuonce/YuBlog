@@ -4,8 +4,8 @@ title: About
 一些自我介绍：
 
 * he/him，网名梧桐雨
-* mbti: INTJ
-* MS IT @[HKUST](https://hkust.edu.hk)
+* MBTI: INTJ
+* MS IT @[HKUST](https://hkust.edu.hk) '27
 * 最近在找 Agent 方向的 Intern
 * 喜欢研究设计优雅、极简的软件系统
 * 最近研究的领域：Long-horizon Harness、Agent Memory、Computer Use
