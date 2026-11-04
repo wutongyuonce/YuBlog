@@ -223,7 +223,7 @@ Excalidraw 嵌入及其预览／导出图始终排除；作者另写独立 Markd
 
 同一 `.markdown-content` 根下已经参与放大的 `.image-view` 构成相册，含首页近期书影游、专辑陈列架源封面，不另外发现图片。
 仅排除 `data-marquee-clone` 副本，不排除整个陈列架；从副本打开时按 template 原尺寸 src、缺失时可见 src 对齐回源张，打开即定位该张。
-图与 alt 说明下方是一行控件：左侧“当前/总数”、中间前后箭头、右侧关闭；说明随图更新。
+灯箱面板占满视口内留白后的区域，以 Grid 分配图片区、alt 说明和底部控件；图片等比居中且不放大超过固有尺寸，说明随图更新、最多三行高，超出可滚动，支持 Tab 聚焦后用上下键阅读。底部控件固定在面板底部、水平居中，不随图片尺寸或说明长度移动：左侧“当前/总数”、中间前后箭头、右侧关闭；图片和说明不遮挡控件。
 首尾禁用相应方向，不循环；打开期间左右键翻页，边界 no-op；单张仍显示 1/1 与禁用双箭头。
 相册箭头默认半透明，可用时为全亮、不可用时更暗，不用粘滞 hover 暗态；键盘 focus-visible 仅 outline。
 大图光标 zoom-out，点图、Esc、遮罩或关闭按钮退出；浅色遮罩灰白，深色暗色，控件与说明随主题可读。
@@ -452,7 +452,7 @@ disconnect 用 AbortController 清监听、释放 dialog 和页面资源；Excal
 | --- | --- |
 | `test/remark-image-layouts.test.mjs` | 默认值、结构、同段多图、widths 单位／数量／列数推导、非法输入／嵌套与源位置 |
 | `test/image-lightbox-gallery.test.mjs` | 同根参与者、源卡／clone 对齐、Excalidraw 排除与索引边界 |
-| `scripts/verify-image-layouts.mjs` | 无 JS、窄屏、列宽、箭头／点与长分页、混合比例高度、作者链接、悬浮／减少动态、主题、dialog 四种退出、键盘／焦点／清理；实际原尺寸、无占位符、打开前无请求，不锁视觉像素 |
+| `scripts/verify-image-layouts.mjs` | 无 JS、窄屏、列宽、箭头／点与长分页、混合比例高度、作者链接、悬浮／减少动态、主题、灯箱不同尺寸图片／长短说明切换时控件位置固定且不遮挡、dialog 四种退出、键盘／焦点／清理；实际原尺寸、无占位符、打开前无请求，不锁视觉像素 |
 | `test/scroll-lock.test.mjs` | 补偿、旧样式恢复与不污染替换 body |
 | `test/remark-media-card.test.mjs` | 卡片语法、评分／日期、额外媒体拒绝及分组 |
 | `test/card-rail-marquee.test.mjs`／`test/card-scrollbars.test.mjs` | 循环条件、复制／暂停／销毁，以及两区独立、滚动续期与收尾 |

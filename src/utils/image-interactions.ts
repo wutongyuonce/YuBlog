@@ -36,7 +36,7 @@ export class ImageInteractions extends HTMLElement {
     dialog.setAttribute('aria-label', '图片大图')
     dialog.innerHTML = `<div class="image-lightbox__panel">
       <img alt="">
-      <p class="image-lightbox__caption"></p>
+      <p class="image-lightbox__caption" tabindex="0"></p>
       <div class="image-lightbox__toolbar" role="group" aria-label="大图相册">
         <span class="image-lightbox__index" aria-live="polite"></span>
         <div class="image-lightbox__arrows">

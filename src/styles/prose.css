@@ -1022,17 +1022,23 @@ main:has(.post-content) > footer.prose :is(a, span) {
   background: rgb(0 0 0 / 88%);
 }
 .image-lightbox__panel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  max-width: 100%;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  justify-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  pointer-events: none;
+}
+.image-lightbox__panel > * {
+  pointer-events: auto;
 }
 .image-lightbox img {
   display: block;
   width: auto;
   height: auto;
   max-width: 100%;
-  max-height: calc(100dvh - 9rem);
+  max-height: 100%;
   margin: auto;
   cursor: zoom-out;
   object-fit: contain;
@@ -1083,10 +1089,15 @@ main:has(.post-content) > footer.prose :is(a, span) {
   cursor: default;
 }
 .image-lightbox__caption {
-  margin-top: 0.75rem;
+  margin: 0.75rem 0 0;
   max-width: 80ch;
+  max-height: 3lh;
+  overflow-y: auto;
   text-align: center;
   overflow-wrap: anywhere;
+}
+.image-lightbox__caption:empty {
+  display: none;
 }
 .image-lightbox__toolbar {
   display: grid;
@@ -1113,6 +1124,7 @@ main:has(.post-content) > footer.prose :is(a, span) {
 .image-gallery__controls button:focus-visible,
 .image-gallery__arrow:focus-visible,
 .image-gallery--scroll:focus-visible,
+.image-lightbox__caption:focus-visible,
 .image-lightbox button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;

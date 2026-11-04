@@ -27,7 +27,9 @@ const url = new URL(
 const scrollTo = (selector) =>
   page.evaluate(
     (target) =>
-      document.querySelector(target).scrollIntoView({ block: 'center' }),
+      document
+        .querySelector(target)
+        .scrollIntoView({ block: 'center', behavior: 'instant' }),
     selector
   )
 
@@ -45,8 +47,13 @@ try {
     path.join(directory, 'images', 'detail.svg'),
     '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800"><rect width="1200" height="800" fill="#719477"/></svg>'
   )
+  await writeFile(
+    path.join(directory, 'images', 'tiny.svg'),
+    '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="64"><rect width="96" height="64" fill="#719477"/></svg>'
+  )
   const image = '![横图](./images/landscape.svg)'
   const portrait = '![竖图](./images/portrait.svg)'
+  const longCaption = '长说明需要可读，但不能挤走底部切换按钮。'.repeat(30)
   const longGallery = Array.from({ length: 12 }, (_, index) =>
     index % 2 ? portrait : image
   ).join('\n\n')
@@ -118,6 +125,16 @@ ${longGallery}
 [![链接图片](./images/portrait.svg)](https://example.com/)
 
 [![复杂链接](./images/portrait.svg) 文字链接](https://example.com/)
+
+## 灯箱定位
+
+![灯箱横图](./images/landscape.svg)
+
+![灯箱竖图](./images/portrait.svg)
+
+![](./images/tiny.svg)
+
+![${longCaption}](./images/tiny.svg)
 `
   )
   // Wait for the content watcher, not an assumed fixed synchronization delay.
@@ -386,6 +403,75 @@ ${longGallery}
         0,
         'zoom buttons must not be nested inside authored links'
       )
+
+      // The pointer must stay over the same control across different image sizes.
+      await page.focus('img[alt="灯箱横图"]')
+      await page.keyboard.press('Enter')
+      let controls
+      for (let slide = 0; slide < 4; slide++) {
+        await page.evaluate(async () => {
+          await document.querySelector('.image-lightbox img').decode()
+          await new Promise(requestAnimationFrame)
+        })
+        const layout = await page.evaluate(() => {
+          const dialog = document.querySelector('.image-lightbox')
+          const image = dialog.querySelector('img').getBoundingClientRect()
+          const caption = dialog
+            .querySelector('.image-lightbox__caption')
+            .getBoundingClientRect()
+          const toolbar = dialog
+            .querySelector('.image-lightbox__toolbar')
+            .getBoundingClientRect()
+          return {
+            alt: dialog.querySelector('img').alt,
+            controls: [...dialog.querySelectorAll('button')].map((button) => {
+              const rect = button.getBoundingClientRect()
+              return [rect.x, rect.y]
+            }),
+            inside:
+              toolbar.bottom <= innerHeight &&
+              toolbar.left >= 0 &&
+              toolbar.right <= innerWidth,
+            separate:
+              image.bottom <= toolbar.top + 1 &&
+              (caption.height === 0 ||
+                (image.bottom <= caption.top + 1 &&
+                  caption.bottom <= toolbar.top + 1)),
+          }
+        })
+        assert.equal(
+          layout.alt,
+          ['灯箱横图', '灯箱竖图', '', longCaption][slide],
+          'each next click must reach the intended image and caption'
+        )
+        assert.ok(layout.inside, 'lightbox controls stay inside the viewport')
+        assert.ok(
+          layout.separate,
+          'image and caption do not cover the controls'
+        )
+        controls ??= layout.controls
+        assert.deepEqual(
+          layout.controls,
+          controls,
+          `${width}/${dark}: switching image sizes or captions must not move the controls`
+        )
+        if (slide < 3) await page.click('.image-lightbox__next')
+        else {
+          await page.focus('.image-lightbox__prev')
+          await page.keyboard.press('Shift+Tab')
+          assert.equal(
+            await page.evaluate(() => document.activeElement.className),
+            'image-lightbox__caption',
+            'long captions are reachable through the modal tab order'
+          )
+          await page.keyboard.press('ArrowDown')
+          await page.waitForFunction(
+            () =>
+              document.querySelector('.image-lightbox__caption').scrollTop > 0
+          )
+        }
+      }
+      await page.keyboard.press('Escape')
     }
   }
 
@@ -561,7 +647,13 @@ ${longGallery}
       -ideal,
       ideal - (gallery.scrollWidth - gallery.clientWidth)
     )
-    return Math.abs(img.left + img.width / 2 - view) < gap + 3
+    return (
+      Math.abs(img.left + img.width / 2 - view) < gap + 3 &&
+      gallery
+        .closest('.image-gallery__viewport')
+        .querySelector('.image-gallery__dot[aria-current="true"]')
+        ?.getAttribute('aria-label') === `显示第 ${items.length} 张图片`
+    )
   })
   const skipped = await readScroll()
   assert.equal(skipped.active, skipped.n - 1, 'dot skip reaches the last slide')
@@ -750,7 +842,7 @@ ${longGallery}
   )
   await scrollTo('.image-view:has(> img[alt="缩略图"])')
   await page.click('img[alt="缩略图"]')
-  await page.evaluate(() => document.querySelector('dialog').click())
+  await page.mouse.click(30, 30, { label: '点击图片外遮罩关闭' })
   assert.equal(
     await page.evaluate(() => document.querySelector('dialog').open),
     false
@@ -902,7 +994,7 @@ ${longGallery}
         document.querySelector('.image-gallery--scroll').scrollWidth >
         document.querySelector('.image-gallery--scroll').clientWidth,
     }))
-    assert.equal(state.images, 27, 'all authored images survive without JS')
+    assert.equal(state.images, 31, 'all authored images survive without JS')
     assert.equal(state.controls, 0)
     assert.ok(state.stageHeight > 0, 'the stage remains visible without JS')
     assert.equal(state.scrollable, true)
