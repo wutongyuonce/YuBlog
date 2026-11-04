@@ -115,14 +115,13 @@ const blogsHref = withBasePath('/blogs/')
 
   .post-back-link,
   :global(.prose) .post-back-link {
-    /* Glass strength 0→1 while scrolling; ::before paints FAB-matched milk pill.
-       Padding tracks glass so morph outline never exceeds the pinned pill. */
+    /* Inline padding tracks the surface; block padding stays stable so
+       becoming a floating link cannot shift fragment targets. */
     --post-back-glass: 0;
     position: relative;
     display: inline-block;
     margin: 0;
-    padding: calc(0.2rem + 0.15rem * var(--post-back-glass))
-      calc(0.15rem + 0.7rem * var(--post-back-glass));
+    padding: 0.2rem calc(0.15rem + 0.7rem * var(--post-back-glass));
     color: inherit;
     font-family: inherit;
     /* Same root-relative 1rem as .prose.post-content paragraphs (not
