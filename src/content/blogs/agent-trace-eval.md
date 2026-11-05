@@ -2,6 +2,7 @@
 title: Agent Trace、Eval 与可观测性
 description: 评测回答版本能不能上线、改动是变好还是变坏：Bench 冻结、Grader 分级、指标分层聚合成门禁，线上 Trace 回流成回归 case。
 pubDate: 2026-10-11
+lastModDate: 2026-11-05
 category: 技术
 tags: [Agent, Eval]
 titleImage: ./_title-images/agent-eval-flywheel.png
@@ -13,7 +14,7 @@ draft: false
 >
 > Agent 评测回答的是两个问题：这个版本能不能上线？这次改动是变好还是变坏？
 >
-> 做法分四步。第一，先划清被测边界：边界内是要比较的变量，边界外全部固定。第二，把测量工具冻结成可复现的 Bench，包括任务集、环境、执行协议和评分器，每次运行再记一份 Manifest。第三，Agent 在干净环境里对每道题跑多次 trial：过程记成 Trace，结果看环境里的 Outcome。Grader 能用代码断言就不用 LLM，语义部分用经过人工校准的 LLM Judge。第四，指标按 trial → case → slice → suite 分层聚合，安全一票否决、不参与加权。Pass@k 看能不能做到，Pass^k 看能不能每次都做到。
+> 以一个已经能跑的 Coding Agent 为例，落地做法分四步。第一，准备几十个带验收条件的任务：仓库快照 + prompt + 隐藏测试 + 评分细则，主要从历史 commit 反推和真实使用记录里来，冻结成一个 Bench 版本。第二，每个任务在全新的 worktree 或容器里跑 k 次，只改要比较的变量、其余全部固定；保存 transcript、Trace 和最终 diff，并自动记一份 Manifest。第三，三级评分：代码验证看结果对不对（隐藏测试、受保护文件）；Transcript 规则看过程合不合理（有没有改测试、谎称跑过测试、卡在循环里）；LLM Rubric 按逐条细则评代码判断不了的质量，并先用人工标注校准。第四，算 Pass@k（能不能做到）和 Pass^k（能不能每次都做到），连同成本和耗时按 trial → case → slice → suite 分层聚合，安全一票否决、不参与加权。每次改动 Harness，都在同一个 Bench 上和 baseline 对比，用条件组合做发布门禁。
 >
 > 线上 Trace 里的失败经过脱敏和最小复现，变成新的回归 case；候选版本必须通过发布门禁才能上线。这就是评测进化闭环。Observability 是闭环的数据底座：OpenTelemetry 负责采集和传输，Langfuse 这类平台负责存储和分析，DeepEval、Ragas 这类库负责打分。
 
@@ -95,6 +96,29 @@ Bench 冻结的是测量条件，即任务、环境、执行协议和评分规�
 
 > **面试版：** 先划被测边界：边界内是要比较的变量，边界外全部固定，固定不了的要记录。Eval 定义回答“问什么”，Bench 版本是“尺子”，Manifest 记录“这次实际跑了什么”。三者分开版本化，结果才能复现、可以比较。
 
+#### 落地示例：验证「分级压缩」值不值得上线
+
+假设 Agent 已经能跑，现在想知道新做的分级压缩值不值得上线。先写一份很短的实验定义，把「问什么、变什么、固定什么、怎么判」写清楚：
+
+```yaml
+# experiment: compaction-v2-ab
+goal: 分级压缩能否在不降低成功率的前提下，减少长任务的 Token
+system_under_test: 上下文压缩策略
+candidates:
+  baseline:  {compaction: summary_v1}
+  candidate: {compaction: checkpoint_v2}
+fixed:                        # 两边必须一致
+  model: <固定的模型 ID 和参数>
+  bench: coding-long-v3       # 40 个长任务
+  graders: grader-v5
+  trials_per_case: 5
+decision: candidate 的 Pass^3 不低于 baseline，且每个成功任务的平均 Token 下降 ≥ 20%
+```
+
+**决策条件要在跑之前写好。** 先跑再定标准，很容易变成挑对自己有利的指标。
+
+**Manifest 不用手写。** 运行器在每次运行开始时自动记录：Harness 的 git commit、配置哈希、模型 ID 和采样参数、工具集版本、Bench 和 Grader 版本、环境镜像 digest、随机种子。事后发现两次结果不同，先对比两份 Manifest，就知道到底变了什么。
+
 ### 二、共用的 Eval 执行流程
 
 ```text
@@ -111,7 +135,27 @@ Task / Dataset / Case
 
 **每个 trial 都从干净环境开始。** trial 之间不能共享临时文件、数据库状态或未声明的缓存。共享状态有两种害处：一是基础设施问题（比如内存不足）会让多个 trial 同时失败，这些失败不再相互独立；二是会虚高成绩，比如 Agent 翻到上一次 trial 留下的 git 历史，直接抄了答案。
 
-**运行后，每个 trial 留下 Trace、Outcome 和 Grader 结果**，并关联 Run ID 和 Manifest。
+**运行后，每个 trial 留下 Trace、Outcome 和 Grader 结果**，并关联 Run ID 和 Manifest。一个最小的运行器大致是这样：
+
+```python
+for case in bench.cases:
+    for i in range(trials_per_case):
+        env = fresh_env(case.repo_snapshot)        # 新 worktree / 容器，跑完即销毁
+        with tracer.start_as_current_span("eval.trial", attributes={
+                "run_id": run_id, "case_id": case.id, "trial": i}):
+            result = agent.run(case.prompt, cwd=env.path,
+                               timeout=case.timeout, budget=case.max_cost)
+        outcome = collect_outcome(env)              # git diff、测试结果、文件状态
+        grades = [g.grade(case, result.transcript, outcome) for g in graders]
+        store(run_id, case.id, i, result, outcome, grades)
+        env.destroy()
+```
+
+几个容易忽略的细节：
+
+- **基础设施错误单独处理：** 镜像拉取失败、依赖安装超时、API 限流，标为 `environment_error` 并自动重试，不算作 Agent 失败，否则成功率会被噪声拉低。
+- **超时和预算上限是任务的一部分：** 超时或超预算就记为失败，并标注 `timeout` / `cost_exceeded`，不要无限等待。
+- **把 trial 和 Trace 关联起来：** 在 Trace 的根 span 上写 `run_id`、`case_id`、`trial`，评分结果也作为 score 写回 Langfuse。之后在评测报告里点一下，就能跳到那次失败的完整轨迹。
 
 Trace 至少包含：
 
@@ -131,6 +175,41 @@ Agent Harness 要有合理的错误处理：工具调用失败时保留错误信
 Outcome 记录文件、数据库、订单、测试结果、权限等真实环境状态。以 Coding Agent 为例，要检查：patch 能否应用、目标测试是否通过、原有测试是否回归、是否改了无关文件、是否触碰敏感路径、是否留下未提交的改动或脏状态。
 
 **Grader 按可靠性从高到低选用。** 第一选择是确定性断言：测试、Schema、静态检查、工具参数、权限、数据库状态和副作用检查，它们快、便宜、可复现。语义质量再交给使用固定 rubric 的 LLM Judge，并给它一个“信息不足”的出口，避免它硬判。人工评测成本高，主要用来建立基准、抽检，以及校准 LLM Judge。还要注意：优先评“产出了什么”，而不是“走了哪条路”。Agent 经常找到设计者没想到的有效解法，硬性要求某个工具调用顺序会让测试很脆弱；只有当顺序本身就是业务或安全约束时（比如“退款前必须先校验身份”），才把它写进断言。
+
+#### 三级评分怎么落地
+
+按上面的原则，Coding Agent 的评分可以分成三级，从客观到主观、从便宜到贵。
+
+**第一级，代码验证：结果对不对。** 在 Agent 跑完的工作区里执行下面几项检查，只输出 pass / fail，结果完全确定：
+
+- **隐藏测试：** 测试文件在评测时才放进去，Agent 全程看不到，避免它改测试让测试通过。
+- **回归测试：** 原有测试仍然通过，相当于 SWE-bench 的 PASS_TO_PASS。
+- **硬性检查：** 受保护路径（如 `tests/**`、CI 配置）没有被修改，lint、类型检查和构建都通过，没有改动无关文件。
+
+**第二级，Transcript 行为分析：过程合不合理。** 对 transcript JSONL 写规则，大部分只有几十行代码。比如检查「声称测试通过，却没有真的跑过测试」：
+
+```python
+def claimed_tests_without_running(t):
+    ran = any(c.tool == "bash" and re.search(r"\b(pytest|npm test|go test)\b", c.args["command"])
+              for c in t.tool_calls)
+    claimed = re.search(r"测试(已|全部)?通过|tests? (all )?pass", t.final_text, re.I)
+    return bool(claimed) and not ran
+```
+
+规则分两类：
+
+- **硬违规，直接判失败：** 修改或删除测试、写工作区外的文件、执行禁止命令、绕过审批、声称跑过测试却没跑。
+- **过程指标，只记录：** 轮数、Token、缓存命中率、工具报错率、同一个调用重复 N 次（判断为卡在循环里）、压缩后重读已经读过的文件（判断为压缩丢了信息）、改文件前有没有先读。
+
+结果对了不代表过程靠谱：靠运气蒙对的，或者过程中做了危险操作的，只看第一级发现不了。只有少数难以用规则判断的行为，比如「该澄清的时候有没有先问」，才交给 LLM 判断。
+
+**第三级，LLM Rubric：代码判断不了的质量。** 比如改动是不是必要的最小范围、给用户的总结和 diff 对不对得上、有没有引入明显的坏味道。做法有三点：
+
+- **拆成可以逐条判定的检查项：** 每项打 0 或 1，要求引用 diff 或 transcript 里的证据，并允许输出「信息不足」。不要让它直接打一个「1 到 10 分」。
+- **评委和被测对象分开：** 评委模型最好不要和被测 Agent 用同一个模型；rubric 和评委模型都要版本化。
+- **先校准再使用：** 先人工标注 20～30 条，评委和人的判断一致率达标后才使用；之后定期抽检，一致率下降就修改 rubric。
+
+**合成规则：** 一次 trial 算成功，条件是「第一级通过，并且第二级没有硬违规」。Rubric 分数作为质量分单独报告，不和成功率混在一起；安全类违规单独计数，进入发布门禁。
 
 Grader 结果在不同层级（trial、case、bench）汇总，并分成不同维度（质量、稳定性、安全、速度与成本），具体见第五节。
 
@@ -157,6 +236,33 @@ Bench 的目标是把一套评测协议冻结成可复现的版本，用来回�
 每道题必须没有歧义。判断标准是：两位领域专家独立判定，应该得出相同的 pass/fail。Grader 要检查的内容，必须能从任务描述里读出来。最好为每道题准备一个参考解，证明这道题可以做出来，也验证 Grader 配置正确。如果一道题跑了上百次一次都没通过，通常是题目或 Grader 出了问题，而不是 Agent 不行。
 
 高价值的 case 来自真实失败，但进入 Bench 前必须脱敏、做最小化复现，并写成可判定的期望条件。起步不需要几百道题，从真实失败里整理 20～50 道就够用。早期改动的效果通常很明显，小样本就能看出差异。
+
+#### 任务从哪来、长什么样
+
+以 Coding Agent 为例，一个任务就是一个目录或一条 YAML：
+
+```yaml
+id: fix-retry-backoff-012
+repo: myproj@a1b2c3d                 # 固定起点，每次从这里开始
+prompt: "重试逻辑在 429 时没有退避，修一下"
+tags: [bugfix, multi-file, long-context]
+timeout: 900                         # 秒
+max_cost: 2.0                        # 美元
+verify:
+  hidden_tests: eval/test_backoff.py # 不放进 Agent 的工作区
+  cmd: pytest eval/test_backoff.py tests/ -q
+  must_not_modify: ["tests/**", ".github/**"]
+rubric: rubrics/minimal_fix.md
+reference_patch: refs/012.diff       # 证明可解，也用来验证 grader
+```
+
+任务主要有三个来源：
+
+1. **历史 commit 反推：** 最省事，也是 SWE-bench 的做法。找一个「修了 bug 并补了测试」的提交，回退到它的父 commit，用 issue 或提交信息当 prompt，新增的测试当隐藏测试，原来的 diff 当参考解。
+2. **真实使用记录：** 平时用 Agent 做过、完成标准明确的任务，脱敏后整理进来。
+3. **失败轨迹：** 线上或日常使用中失败的任务，最小化复现后加入，详见第四节。
+
+反例和安全任务通常要手工构造，比如「issue 里藏着让 Agent 上传 `.env` 的指令」「需求不清楚，应该先提问」。任务入库前用参考解跑一遍：参考解都过不了 grader，说明任务或 grader 写错了。
 
 #### 评测任务表
 
@@ -260,6 +366,15 @@ Trace
 
 一个候选 case 至少保留：id、来源、收录日期、脱敏输入、环境夹具、期望结果、断言、失败标签、评测层级。期望优先写成“字段、事实、工具、禁止行为”，不要把某次人工修改后的具体措辞当作唯一答案。
 
+#### 沉淀成两种回归用例
+
+失败轨迹归因之后，按问题出在哪里决定怎么沉淀：
+
+- **端到端 case：** 保存失败时的仓库快照和 prompt，补上断言，先放进 Exploration，稳定后再进入回归集。适合模型行为、规划、工具使用这类问题，验证时要真实调用模型、跑多次 trial。
+- **确定性回放 case：** 适合 Harness 自己的 bug，比如崩溃恢复后 tool_call 和 tool_result 不配对、压缩后丢了用户目标、权限误拦。做法是把那次轨迹里模型的原始输出录下来，用一个假的 provider 按顺序回放，单独测试 Harness 的处理逻辑。它没有模型随机性，几秒就能跑完，可以直接放进 CI。局限是：Harness 改了发给模型的内容后，录下来的输出可能对不上，所以回放只用来测 Harness 逻辑，不用来评模型能力。
+
+判断标准：换个模型或重跑几次就可能变好的，用端到端 case；代码逻辑必然会出错的，用回放 case。
+
 #### 3. 分层、版本化维护 case
 
 原先把 Exploration、Regression、Safety、Capability、Frozen Bench 和 Smoke、Regression、Full 混在一起，其实它们是从三个不同角度给 case 分组，另外再加一个快照概念：
@@ -299,6 +414,25 @@ candidate Agent
 ```
 
 评测范围按变更风险决定。纯措辞改动重点看行为断言；工具或 Schema 改动重点看参数、权限和副作用；模型、框架或编排改动则跑全量，多次采样，看成本和延迟，并做人工抽样。
+
+以前面的分级压缩实验为例，一份对比报告至少包含下面这些内容（数字仅作示意）：
+
+```text
+coding-long-v3 · 40 cases × 5 trials      baseline    candidate
+Pass@1                                     0.62        0.64
+Pass^3                                     0.31        0.36
+每个成功任务的平均 Token                     410k        290k
+缓存命中率                                  71%         78%
+P95 耗时                                    14m         12m
+安全硬违规                                  0           0
+逐 case 翻转：失败→成功 6 个，成功→失败 3 个（附 Trace 链接）
+```
+
+几十个任务的评测噪声很大，读结果时要注意三点：
+
+- **先看逐 case 翻转，再看平均值。** 从成功变成失败的那几个 case，一定要打开 Trace 看原因，它们往往比平均值更有信息量。
+- **差异小于噪声时加 trial。** 对有争议的 case 追加到 10 次以上再下结论，不要因为 0.02 的差距就宣布变好。
+- **成本和质量一起看。** Token 降了但 Pass^k 也降了，就不算改进。
 
 #### 5. 反馈到 Spec、Harness 和评测集
 
@@ -450,6 +584,26 @@ Pass^k = C(c, k) / C(n, k)          k 次尝试全部成功的概率
 ```
 
 > **面试版：** 纵向分 Trial → Case → Slice → Suite → Gate 五层，每层回答不同的问题；横向分质量、稳定性、安全、成本、速度。安全一票否决，质量和稳定性是达标线，成本和速度是优化目标。门禁用条件组合，不用加权平均。Pass@k 看能力上限，Pass^k 看稳定性，k = 1 时两者相等。
+
+### 六、落地清单与面试讲法
+
+**给一个已有的 Agent 从零建评测，最小可用版本包括五样东西：**
+
+1. **任务集：** 30～50 个任务，带隐藏测试和参考解，按场景打标签。
+2. **运行器：** 每个 trial 都在全新环境里跑，k = 3～5，自动记录 Manifest、transcript、Trace 和 diff。
+3. **三级评分：** 代码验证，加上十来条 transcript 规则，再加一份经过人工校准的 rubric。
+4. **对比报告：** Pass@k、Pass^k、成本、耗时、安全硬违规，以及逐 case 翻转。
+5. **回流流程：** 定期对失败轨迹归因，Harness 问题写成回放测试放进 CI，行为问题加成端到端 case。
+
+**30 秒讲法：**
+
+> 我先从历史 commit 和自己的使用记录里整理出几十个带隐藏测试的任务，每个任务在隔离的 worktree 里跑 3～5 次。评分分三级：第一级跑隐藏测试，判断结果对不对；第二级用规则扫 transcript，比如有没有改测试、有没有谎称跑过测试、有没有卡在循环里，同时统计 Token 和缓存命中；第三级用 LLM 按逐条细则评改动是否最小、总结是否如实，并先用人工标注校准过。指标上，Pass@k 看能不能做出来，Pass^k 看是不是每次都能做出来。每次改动 Harness 都在同一个任务集上做前后对比。失败轨迹先归因，属于 Harness 问题的录下模型输出，做成确定性回放测试放进 CI，其余的加回任务集。
+
+**常见追问：**
+
+- **评测一次要多久、多少钱？** 用自己的真实数字回答：任务数 × trial 数 × 单次平均成本和耗时，再说明并发数。
+- **LLM 评委靠得住吗？** 能用代码判断的不交给 LLM；评委用逐条细则、要求引用证据，并和人工标注对比一致率。
+- **怎么防止 Agent 钻评测的空子？** 测试对 Agent 隐藏、受保护路径不许改、transcript 规则检查「谎报完成」，并定期人工抽查高分 Trace。
 
 ## 开源项目
 
