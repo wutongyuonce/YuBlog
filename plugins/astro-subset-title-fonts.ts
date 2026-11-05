@@ -32,6 +32,8 @@ const SELF_CLASS_TAGS: readonly (readonly [tag: string, className: string])[] =
     ['a', 'archive-post__title'],
     ['span', 'post-nav__title'],
     ['a', 'nav-bar__brand'],
+    ['a', 'nav-dropdown__category-link'],
+    ['a', 'nav-dropdown__all'],
     ['a', 'recent-writing__link'],
     ['time', 'recent-writing__date'],
     ['span', 'recent-writing__number'],
@@ -62,6 +64,11 @@ const NESTED_CLASS_TAGS: readonly (readonly [
   ['interests-page__index', 'span'],
   ['archive-post', 'time'],
   ['writing-heatmap__tip', 'p'],
+  ['nav-dropdown__interests', 'strong'],
+  ['nav-dropdown__interests', 'small'],
+  ['nav-dropdown__preview', 'a'],
+  ['nav-dropdown__preview', 'h2'],
+  ['nav-dropdown__preview', 'time'],
 ]
 
 // 可打印 ASCII 一律保留：标题里混着拉丁词、数字和标点，代价很小。

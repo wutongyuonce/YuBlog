@@ -71,3 +71,18 @@ test('subset plugin targets Source Han title only', async () => {
   assert.doesNotMatch(plugin, /LXGWWenKai-Regular\.woff2/)
   assert.doesNotMatch(plugin, /WoHuiBaNiJiaoZuoAiQing/)
 })
+
+test('subset plugin collects nav dropdown heading-font captions', async () => {
+  const plugin = await read('plugins/astro-subset-title-fonts.ts')
+  for (const needle of [
+    "['a', 'nav-dropdown__category-link']",
+    "['a', 'nav-dropdown__all']",
+    "['nav-dropdown__interests', 'strong']",
+    "['nav-dropdown__interests', 'small']",
+    "['nav-dropdown__preview', 'a']",
+    "['nav-dropdown__preview', 'h2']",
+    "['nav-dropdown__preview', 'time']",
+  ]) {
+    assert.ok(plugin.includes(needle), `missing collector: ${needle}`)
+  }
+})
