@@ -169,7 +169,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 正文字体 Inter 和代码字体 Maple Mono 也在本地：`public/fonts/Inter-latin.woff2`、`public/fonts/MapleMono-latin.woff2`，与思源宋体一起由 `public/shell.css` 的 `@font-face` 引用。这些声明随 `site-styles` 跨页保留，避免已加载字体回退；不要把共享字体声明放进会被替换的组件样式。不要再接 Google Fonts 或 `presetWebFonts`。Inter／Maple 只含拉丁字符，正文中文走字体栈后面的系统无衬线。
 
-思源宋体 `@font-face` 优先引用构建结束后生成的 `SourceHanSerifCN-title.woff2`（标题／导航／品牌等实际用字子集，百 KB 级），再回退到全量 `SourceHanSerifCN-Regular.woff2`；`plugins/astro-subset-title-fonts.ts` 按产物 HTML 中使用思源的节点收字（含顶栏下拉说明与文稿分类预览），并在构建后检查 `shell.css` 的子集引用与文件都存在。`Head.astro` 仅 preload 该 title 子集；`--font-heading` 在自定义族名后接 `Source Han Serif SC`／`Noto Serif CJK SC`／`Songti SC`／`SimSun` 等系统衬线，硬开时子集未到齐仍立刻可读。`vercel.json` 对 `/fonts/*` 使用一周缓存加一天 SWR（非 immutable），便于以后换子集。Vite 不会提前解析尚未生成的子集路径。开发服务器没有子集时会回退到同一次声明里的完整文件，那不是线上行为。`public/fonts` 里的 LXGW 仍供 OG 封面脚本使用，不作为页面 `@font-face`。
+思源宋体 `@font-face` 优先引用构建结束后生成的 `SourceHanSerifCN-title.woff2`（标题／导航／品牌等实际用字子集，百 KB 级），再回退到全量 `SourceHanSerifCN-Regular.woff2`；`plugins/astro-subset-title-fonts.ts` 按产物 HTML 中使用思源的节点收字（含顶栏下拉说明、文稿分类预览与配色菜单名），并补上屏幕时间／热力提示等运行时固定壳层用字，并在构建后检查 `shell.css` 的子集引用与文件都存在。`Head.astro` 仅 preload 该 title 子集；`--font-heading` 在自定义族名后接 `Source Han Serif SC`／`Noto Serif CJK SC`／`Songti SC`／`SimSun` 等系统衬线，硬开时子集未到齐仍立刻可读。`vercel.json` 对 `/fonts/*` 使用一周缓存加一天 SWR（非 immutable），便于以后换子集。Vite 不会提前解析尚未生成的子集路径。开发服务器没有子集时会回退到同一次声明里的完整文件，那不是线上行为。`public/fonts` 里的 LXGW 仍供 OG 封面脚本使用，不作为页面 `@font-face`。
 
 主题、搜索、遮罩的点击在脚本执行时就绑定，不等第一次 `window` `load`。`astro:page-load` 只负责换页后的新节点，并用元素上的 `dataset` 避免重复绑定。
 

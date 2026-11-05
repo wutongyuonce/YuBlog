@@ -86,3 +86,19 @@ test('subset plugin collects nav dropdown heading-font captions', async () => {
     assert.ok(plugin.includes(needle), `missing collector: ${needle}`)
   }
 })
+
+test('subset plugin collects accent palette and runtime heading chrome', async () => {
+  const plugin = await read('plugins/astro-subset-title-fonts.ts')
+  assert.ok(
+    plugin.includes('data-palette'),
+    'missing data-palette button collector'
+  )
+  for (const needle of [
+    'EXTRA_TITLE_CHARS',
+    '暂无记录',
+    '没有文章',
+    '年月日星期一二三四五六日',
+  ]) {
+    assert.ok(plugin.includes(needle), `missing: ${needle}`)
+  }
+})

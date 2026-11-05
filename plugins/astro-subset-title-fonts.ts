@@ -76,6 +76,19 @@ const BASE_CHARS = Array.from({ length: 95 }, (_, i) =>
   String.fromCharCode(32 + i)
 ).join('')
 
+/**
+ * 构建期 HTML 收不到、但运行时仍以 `--font-heading` 呈现的固定壳层用字。
+ * 只放常量文案（屏幕时间数值、热力提示日期／空态），不收动态应用名。
+ */
+const EXTRA_TITLE_CHARS = [
+  '暂无记录',
+  '分钟',
+  '不到',
+  '小时',
+  '没有文章',
+  '年月日星期一二三四五六日',
+].join('')
+
 const ENTITIES: Record<string, string> = {
   '&amp;': '&',
   '&lt;': '<',
@@ -153,6 +166,7 @@ function collectNested(
 
 async function collectTitleChars(distDir: string) {
   const chars = new Set(BASE_CHARS)
+  addChars(chars, EXTRA_TITLE_CHARS)
 
   for await (const file of walkHtml(distDir, join(distDir, 'pagefind'))) {
     const html = await readFile(file, 'utf8')
@@ -163,6 +177,12 @@ async function collectTitleChars(distDir: string) {
 
     for (const [, inner] of html.matchAll(
       /<a\b[^>]*\bdata-nav-link\b[^>]*>([\s\S]*?)<\/a>/gi
+    )) {
+      addChars(chars, stripTags(inner))
+    }
+
+    for (const [, inner] of html.matchAll(
+      /<button\b[^>]*\bdata-palette\b[^>]*>([\s\S]*?)<\/button>/gi
     )) {
       addChars(chars, stripTags(inner))
     }
