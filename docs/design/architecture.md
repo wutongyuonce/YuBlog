@@ -100,6 +100,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 屏幕时间日期、公开形状与缺失值；Blob 地址与上传；柱高刻度与失败文案 | `src/utils/screen-time.js`、`src/utils/screen-time-store.mjs`、`src/utils/screen-time-view.js`；本机采集在 `scripts/sync-screen-time.mjs`，运行时接口在 `api/screen-time.js`，详见 [设计](./screen-time.md) | 在组件内推断活跃状态或连接本机 API |
 | Last.fm 查询、统计、专辑匹配、资料缺失与请求上限 | `src/utils/lastfm.mjs`；缓存与失败语义在 `api/lastfm.js` | 在视图中重新调用 API 或推断排行／周总数 |
 | 拾趣固定歌单、平台资料归一化、运行时快照 | `src/data/playlists.json`、`src/utils/qq-playlist.mjs`／`netease-playlist.mjs` 与 `playlists.mjs`；缓存在 `api/playlists.js`，见 [拾趣歌单](./playlists.md) | 提交全量曲目、在页面抓远程封面或接受任意来源 URL |
+| 影音书游条目 | `src/data/media/items.json`；合页 `MediaHub`；排序／统计 `src/utils/media-hub.js` | 在 Markdown `:::card` 目录页再维护一份电影／动漫／剧／游戏／书清单 |
 | 写作热力统计与失败语义 | `blog-heatmap.js` | 在组件重算年度字数、将缺失字数当 0 |
 | 热力提示交互与页面清理 | `WritingHeatmap.astro` | 用旧根节点的定时器关闭新页面的提示层 |
 | 内容图片的路径与写入规则 | `src/content/**` 里的相对路径；正文宽度标记由 `plugins/remark-image-width.ts` 解析 | 把图片放进 `public/`、在正文写原始 `<img>`（相对路径会构建报错）、手写 `_astro` 地址 |
@@ -332,7 +333,7 @@ plugins/
 
 `InterestsView` 在 `/interests/<id>/` 只渲染该分类的内容，页面标题直接使用分类名。入口和顶部下拉菜单读取同一份集合元数据，内容无需 JS 即可阅读。`NavDropdown` 仅在 `INTEREST_ICONS` 自身含该 ID 且图标非空时输出图标节点，不读取原型链，无图标分类保留文字与链接、不留占位；`unocss.config.ts` 自动将映射值加入 safelist。分类增加后仍需检查菜单换行、窄屏边界与内部滚动。
 
-入口与子页均使用点状背景。当前内容包括设备、动漫、电影、电视剧、游戏、书与 Kpop，分类列表和说明可以随内容调整。电影、电视剧、动漫、游戏的条目用默认 `:::card`，按容器宽度自动分列，当前版心最多两列。作者可按需填写 `score`，不由观看／游玩状态决定；未填写时不生成评分。书页使用竖卡，原作者姓名放在 `meta`、不显示评分；内容按类型用三级标题分组，每类独立一排横滑栏，组内保留原顺序，封面位于 `src/content/interests/book/`；当前版心大约四本半显示并继续横滑。封面放在对应分类子目录，仍走图片管线。
+入口与子页均使用点状背景。当前分类包括设备、软件、影音书游、歌单、Kpop 等，列表和说明可随内容调整。电影／动漫／电视剧／游戏／书合并为 `/interests/media/` 合页，条目权威在 `src/data/media/items.json`，封面仍放 `src/content/interests/{movie,anime,tv,game,book}/`；旧五条路径永久跳转到合页对应 hash。首页近期书影游与关于等正文仍可用 `:::card`。
 
 ### 标签 `/tags/`
 

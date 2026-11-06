@@ -5,6 +5,56 @@
   "outputDirectory": "dist",
   "redirects": [
     {
+      "source": "/interests/book/",
+      "destination": "/interests/media/#book",
+      "permanent": true
+    },
+    {
+      "source": "/interests/book",
+      "destination": "/interests/media/#book",
+      "permanent": true
+    },
+    {
+      "source": "/interests/game/",
+      "destination": "/interests/media/#game",
+      "permanent": true
+    },
+    {
+      "source": "/interests/game",
+      "destination": "/interests/media/#game",
+      "permanent": true
+    },
+    {
+      "source": "/interests/tv/",
+      "destination": "/interests/media/#tv",
+      "permanent": true
+    },
+    {
+      "source": "/interests/tv",
+      "destination": "/interests/media/#tv",
+      "permanent": true
+    },
+    {
+      "source": "/interests/anime/",
+      "destination": "/interests/media/#anime",
+      "permanent": true
+    },
+    {
+      "source": "/interests/anime",
+      "destination": "/interests/media/#anime",
+      "permanent": true
+    },
+    {
+      "source": "/interests/movie/",
+      "destination": "/interests/media/#movie",
+      "permanent": true
+    },
+    {
+      "source": "/interests/movie",
+      "destination": "/interests/media/#movie",
+      "permanent": true
+    },
+    {
       "source": "/blogs/lm-studio-本地模型部署",
       "destination": "/blogs/lm-studio-local-models/",
       "permanent": true

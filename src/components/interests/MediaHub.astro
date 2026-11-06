@@ -1,0 +1,743 @@
+---
+import items from '~/data/media/items.json'
+import { withBasePath } from '~/utils/path'
+import {
+  MEDIA_CATEGORIES,
+  sortMediaItems,
+  mediaStats,
+} from '~/utils/media-hub.js'
+
+const coverModules = import.meta.glob<string>(
+  '/src/content/interests/{movie,anime,tv,game,book}/*.{jpg,jpeg,png,webp,avif,gif,JPG,JPEG,PNG,WEBP,AVIF,GIF}',
+  { eager: true, query: '?url', import: 'default' }
+)
+
+const coverByLower = new Map(
+  Object.entries(coverModules).map(([key, url]) => [key.toLowerCase(), url])
+)
+
+const resolveCover = (cover: string): string => {
+  const key = `/src/content/interests/${cover}`
+  const url = coverModules[key] || coverByLower.get(key.toLowerCase())
+  if (!url) throw new Error(`MediaHub: 找不到封面 ${cover}`)
+  return withBasePath(url)
+}
+
+const enriched = items.map((item) => ({
+  ...item,
+  coverUrl: resolveCover(item.cover),
+}))
+
+const panels = MEDIA_CATEGORIES.map((cat) => {
+  const list = sortMediaItems(
+    enriched.filter((item) => item.category === cat.id)
+  )
+  return {
+    ...cat,
+    items: list,
+    stats: mediaStats(list),
+  }
+})
+
+const peekBits = (item: (typeof enriched)[number]) => {
+  const bits: string[] = []
+  if (item.label) bits.push(item.label)
+  if (item.meta) bits.push(item.meta)
+  if (item.score != null) bits.push(`${item.score} 分`)
+  if (item.date) bits.push(item.date)
+  return bits
+}
+
+const defaultId = 'movie'
+---
+
+<section class="media-hub" data-media-hub aria-label="影音书游">
+  <div class="media-hub__toolbar" role="tablist" aria-label="分类">
+    {
+      panels.map((cat, index) => (
+        <button
+          type="button"
+          class="media-hub__tab"
+          role="tab"
+          id={`media-tab-${cat.id}`}
+          data-tab={cat.id}
+          aria-selected={cat.id === defaultId ? 'true' : 'false'}
+          aria-controls={`media-panel-${cat.id}`}
+          tabindex={cat.id === defaultId ? 0 : -1}
+          style={`--i: ${index}`}
+        >
+          {cat.label}
+        </button>
+      ))
+    }
+  </div>
+
+  {
+    panels.map((cat) => (
+      <div
+        class="media-hub__panel"
+        id={`media-panel-${cat.id}`}
+        role="tabpanel"
+        data-panel={cat.id}
+        aria-labelledby={`media-tab-${cat.id}`}
+        hidden={cat.id !== defaultId}
+      >
+        {cat.noteHtml ? (
+          <p class="media-hub__note" set:html={cat.noteHtml} />
+        ) : null}
+
+        <div class="media-hub__stats" aria-label={`${cat.label}统计`}>
+          <div class="media-hub__stat media-hub__stat--todo">
+            <span class="media-hub__stat-value">{cat.stats.todo}</span>
+            <span class="media-hub__stat-label">{cat.todoLabel}</span>
+          </div>
+          <div class="media-hub__stat media-hub__stat--month">
+            <span class="media-hub__stat-value">{cat.stats.doneMonth}</span>
+            <span class="media-hub__stat-label">{cat.doneMonthLabel}</span>
+          </div>
+          <div class="media-hub__stat media-hub__stat--year">
+            <span class="media-hub__stat-value">{cat.stats.doneYear}</span>
+            <span class="media-hub__stat-label">{cat.doneYearLabel}</span>
+          </div>
+          <div class="media-hub__stat media-hub__stat--total">
+            <span class="media-hub__stat-value">{cat.stats.total}</span>
+            <span class="media-hub__stat-label">总数</span>
+          </div>
+        </div>
+
+        <div class="media-hub__wall">
+          {cat.items.length === 0 ? (
+            <p class="media-hub__empty">这一类暂时还空着。</p>
+          ) : (
+            cat.items.map((item, index) => (
+              <button
+                type="button"
+                class:list={[
+                  'media-hub__card',
+                  item.status === 'todo' && 'media-hub__card--todo',
+                ]}
+                data-media-open={item.id}
+                aria-label={item.title}
+                style={`--i: ${index}`}
+              >
+                <span class="media-hub__cover">
+                  <img
+                    src={item.coverUrl}
+                    alt=""
+                    width="300"
+                    height="450"
+                    loading={index < 12 ? 'eager' : 'lazy'}
+                    decoding="async"
+                  />
+                  {item.status === 'todo' && (
+                    <span class="media-hub__badge">待</span>
+                  )}
+                  {item.score != null && (
+                    <span class="media-hub__score">{item.score}</span>
+                  )}
+                  <span class="media-hub__peek" aria-hidden="true">
+                    <strong>{item.title}</strong>
+                    {peekBits(item).map((bit) => (
+                      <span>{bit}</span>
+                    ))}
+                    {item.review && (
+                      <em>
+                        {item.review.slice(0, 72)}
+                        {item.review.length > 72 ? '…' : ''}
+                      </em>
+                    )}
+                  </span>
+                </span>
+                <span class="media-hub__caption">{item.title}</span>
+              </button>
+            ))
+          )}
+        </div>
+      </div>
+    ))
+  }
+
+  <dialog class="media-hub__lightbox" data-media-lightbox aria-label="条目详情">
+    <div class="media-hub__lightbox-inner">
+      <button
+        type="button"
+        class="media-hub__lightbox-close"
+        data-media-close
+        aria-label="关闭"
+      >
+        ×
+      </button>
+      <div class="media-hub__lightbox-cover">
+        <img data-lb-cover alt="" />
+      </div>
+      <div class="media-hub__lightbox-body">
+        <p class="media-hub__lightbox-kicker" data-lb-kicker></p>
+        <h2 data-lb-title></h2>
+        <p class="media-hub__lightbox-meta" data-lb-meta></p>
+        <p class="media-hub__lightbox-review" data-lb-review></p>
+        <a
+          class="media-hub__lightbox-link"
+          data-lb-link
+          href="#"
+          target="_blank"
+          rel="noopener noreferrer"
+          hidden
+        >
+          查看详情 ↗
+        </a>
+      </div>
+    </div>
+  </dialog>
+</section>
+
+<script
+  type="application/json"
+  id="media-hub-data"
+  set:html={JSON.stringify(
+    Object.fromEntries(
+      enriched.map((item) => [
+        item.id,
+        {
+          id: item.id,
+          status: item.status,
+          title: item.title,
+          coverUrl: item.coverUrl,
+          href: item.href || '',
+          score: item.score ?? null,
+          date: item.date || '',
+          label: item.label || '',
+          meta: item.meta || '',
+          tags: item.tags || [],
+          review: item.review || '',
+        },
+      ])
+    )
+  )}
+/>
+
+<script>
+  type MediaItem = {
+    id: string
+    status: string
+    title: string
+    coverUrl: string
+    href: string
+    score: number | null
+    date: string
+    label: string
+    meta: string
+    tags: string[]
+    review: string
+  }
+
+  const root = document.querySelector<HTMLElement>('[data-media-hub]')
+  const dataEl = document.getElementById('media-hub-data')
+  if (!root || !dataEl) throw new Error('MediaHub mount failed')
+  const catalog = JSON.parse(dataEl.textContent || '{}') as Record<
+    string,
+    MediaItem
+  >
+
+  const tabs = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-tab]')
+  )
+  const panels = Array.from(
+    root.querySelectorAll<HTMLElement>('[data-panel]')
+  )
+  const dialog = root.querySelector<HTMLDialogElement>('[data-media-lightbox]')!
+
+  const activate = (id: string, pushHash: boolean) => {
+    const exists = panels.some((panel) => panel.dataset.panel === id)
+    if (!exists) return
+    tabs.forEach((tab) => {
+      const on = tab.dataset.tab === id
+      tab.setAttribute('aria-selected', String(on))
+      tab.tabIndex = on ? 0 : -1
+    })
+    panels.forEach((panel) => {
+      panel.hidden = panel.dataset.panel !== id
+    })
+    if (pushHash) {
+      const next = `#${id}`
+      if (location.hash !== next) history.replaceState(null, '', next)
+    }
+  }
+
+  const openLightbox = (item: MediaItem) => {
+    const cover = dialog.querySelector<HTMLImageElement>('[data-lb-cover]')!
+    const title = dialog.querySelector<HTMLElement>('[data-lb-title]')!
+    const kicker = dialog.querySelector<HTMLElement>('[data-lb-kicker]')!
+    const meta = dialog.querySelector<HTMLElement>('[data-lb-meta]')!
+    const review = dialog.querySelector<HTMLElement>('[data-lb-review]')!
+    const link = dialog.querySelector<HTMLAnchorElement>('[data-lb-link]')!
+    cover.src = item.coverUrl
+    cover.alt = `${item.title}封面`
+    title.textContent = item.title
+    kicker.textContent = [
+      item.status === 'todo' ? '待看／玩' : '已看／玩',
+      item.label,
+    ]
+      .filter(Boolean)
+      .join(' · ')
+    meta.textContent = [
+      item.meta,
+      ...(item.tags || []),
+      item.score != null ? `评分 ${item.score}` : '',
+      item.date ? `日期 ${item.date}` : '',
+    ]
+      .filter(Boolean)
+      .join(' · ')
+    review.textContent = item.review || ''
+    review.hidden = !item.review
+    if (item.href) {
+      link.hidden = false
+      link.href = item.href
+    } else {
+      link.hidden = true
+      link.removeAttribute('href')
+    }
+    if (!dialog.open) dialog.showModal()
+  }
+
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => activate(tab.dataset.tab!, true))
+  })
+
+  root.addEventListener('click', (event) => {
+    const btn = (event.target as Element).closest<HTMLElement>(
+      '[data-media-open]'
+    )
+    if (!btn) return
+    const item = catalog[btn.dataset.mediaOpen || '']
+    if (item) openLightbox(item)
+  })
+
+  dialog
+    .querySelector('[data-media-close]')
+    ?.addEventListener('click', () => dialog.close())
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) dialog.close()
+  })
+
+  window.addEventListener('hashchange', () => {
+    const id = (location.hash || '').replace(/^#/, '').split(/[/?]/)[0]
+    if (id) activate(id, false)
+  })
+
+  const live = (location.hash || '').replace(/^#/, '').split(/[/?]/)[0]
+  if (live) activate(live, false)
+  else if (!location.hash) history.replaceState(null, '', '#movie')
+</script>
+
+<style>
+  .media-hub {
+    margin-top: 0.5rem;
+  }
+
+  .media-hub__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 1.75rem;
+    padding: 0.35rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--c-text) 5%, var(--c-bg));
+    border: 1px solid color-mix(in srgb, var(--c-text) 10%, transparent);
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  .media-hub__tab {
+    appearance: none;
+    border: 0;
+    margin: 0;
+    padding: 0.45rem 0.95rem;
+    border-radius: 999px;
+    background: transparent;
+    color: color-mix(in srgb, var(--c-text) 65%, var(--c-bg));
+    font: inherit;
+    font-size: 0.875rem;
+    line-height: 1.3;
+    cursor: pointer;
+    transition:
+      background 0.18s ease,
+      color 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+
+  .media-hub__tab[aria-selected='true'] {
+    background: var(--c-bg);
+    color: var(--c-text);
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--c-text) 12%, transparent);
+    font-family: var(--font-heading);
+  }
+
+  .media-hub__tab:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .media-hub__panel[hidden] {
+    display: none;
+  }
+
+  .media-hub__note {
+    margin: 0.9rem 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: color-mix(in srgb, var(--c-text) 55%, var(--c-bg));
+  }
+
+  .media-hub__note :global(a) {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.16em;
+  }
+
+  .media-hub__note :global(a:hover),
+  .media-hub__note :global(a:focus-visible) {
+    color: var(--accent);
+  }
+
+  .media-hub__stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+  }
+
+  .media-hub__stat {
+    position: relative;
+    padding: 0.95rem 1rem 0.85rem;
+    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--c-text) 10%, transparent);
+    background: linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--accent) 8%, var(--c-bg)),
+      var(--c-bg) 55%
+    );
+    overflow: hidden;
+  }
+
+  .media-hub__stat::after {
+    content: '';
+    position: absolute;
+    inset: auto -20% -40% auto;
+    width: 5.5rem;
+    height: 5.5rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    pointer-events: none;
+  }
+
+  .media-hub__stat--todo {
+    background: linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--accent) 16%, var(--c-bg)),
+      var(--c-bg) 60%
+    );
+    border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+  }
+
+  .media-hub__stat-value {
+    display: block;
+    font-family: var(--font-heading);
+    font-size: 1.65rem;
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: 0.02em;
+  }
+
+  .media-hub__stat-label {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.75rem;
+    color: color-mix(in srgb, var(--c-text) 55%, var(--c-bg));
+  }
+
+  .media-hub__wall {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+    gap: 0.85rem 0.7rem;
+    margin-top: 1.5rem;
+  }
+
+  .media-hub__empty {
+    grid-column: 1 / -1;
+    margin: 1rem 0;
+    color: color-mix(in srgb, var(--c-text) 55%, var(--c-bg));
+    font-size: 0.875rem;
+  }
+
+  .media-hub__card {
+    appearance: none;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    border-radius: 10px;
+  }
+
+  .media-hub__card:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .media-hub__cover {
+    position: relative;
+    display: block;
+    aspect-ratio: 2 / 3;
+    border-radius: 10px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--c-text) 6%, var(--c-bg));
+    box-shadow: 0 8px 20px -12px
+      color-mix(in srgb, var(--c-text) 45%, transparent);
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .media-hub__cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .media-hub__card--todo .media-hub__cover {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--accent) 75%, transparent),
+      0 10px 24px -12px color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+
+  .media-hub__badge {
+    position: absolute;
+    top: 0.45rem;
+    left: 0.45rem;
+    z-index: 1;
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 92%, #000);
+    color: #fff;
+    font-size: 0.6875rem;
+    line-height: 1.3;
+    letter-spacing: 0.04em;
+  }
+
+  .media-hub__score {
+    position: absolute;
+    right: 0.4rem;
+    bottom: 0.4rem;
+    z-index: 1;
+    min-width: 1.6rem;
+    padding: 0.12rem 0.35rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--c-bg) 82%, transparent);
+    backdrop-filter: blur(8px);
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  .media-hub__peek {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 0.2rem;
+    padding: 0.7rem 0.65rem 0.75rem;
+    background: linear-gradient(
+      180deg,
+      transparent 20%,
+      color-mix(in srgb, #000 72%, transparent) 100%
+    );
+    color: #fff;
+    opacity: 0;
+    transform: translateY(4px);
+    transition:
+      opacity 0.18s ease,
+      transform 0.18s ease;
+    pointer-events: none;
+  }
+
+  .media-hub__peek strong {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  .media-hub__peek span,
+  .media-hub__peek em {
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    opacity: 0.88;
+    font-style: normal;
+  }
+
+  .media-hub__peek em {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    opacity: 0.8;
+  }
+
+  .media-hub__card:is(:hover, :focus-visible) .media-hub__peek {
+    opacity: 1;
+    transform: none;
+  }
+
+  .media-hub__card:is(:hover, :focus-visible) .media-hub__cover {
+    transform: translateY(-2px) scale(1.015);
+    box-shadow: 0 14px 28px -14px
+      color-mix(in srgb, var(--c-text) 55%, transparent);
+  }
+
+  .media-hub__card--todo:is(:hover, :focus-visible) .media-hub__cover {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--accent) 85%, transparent),
+      0 14px 28px -12px color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+
+  .media-hub__caption {
+    font-size: 0.75rem;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    color: color-mix(in srgb, var(--c-text) 78%, var(--c-bg));
+  }
+
+  .media-hub__lightbox {
+    padding: 0;
+    border: 0;
+    max-width: min(52rem, calc(100vw - 2rem));
+    width: 100%;
+    background: transparent;
+  }
+
+  .media-hub__lightbox::backdrop {
+    background: color-mix(in srgb, #000 55%, transparent);
+    backdrop-filter: blur(6px);
+  }
+
+  .media-hub__lightbox-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--c-bg);
+    border: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
+    box-shadow: 0 24px 60px -24px color-mix(in srgb, #000 55%, transparent);
+    position: relative;
+  }
+
+  .media-hub__lightbox-close {
+    position: absolute;
+    top: 0.55rem;
+    right: 0.55rem;
+    z-index: 2;
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--c-bg) 80%, transparent);
+    color: var(--c-text);
+    cursor: pointer;
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  .media-hub__lightbox-cover {
+    background: color-mix(in srgb, var(--c-text) 6%, var(--c-bg));
+    min-height: 18rem;
+  }
+
+  .media-hub__lightbox-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .media-hub__lightbox-body {
+    padding: 1.4rem 1.35rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .media-hub__lightbox-kicker {
+    margin: 0;
+    font-size: 0.75rem;
+    color: color-mix(in srgb, var(--c-text) 55%, var(--c-bg));
+  }
+
+  .media-hub__lightbox-body h2 {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .media-hub__lightbox-meta {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: color-mix(in srgb, var(--c-text) 60%, var(--c-bg));
+  }
+
+  .media-hub__lightbox-review {
+    margin: 0.35rem 0 0;
+    font-size: 0.875rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+
+  .media-hub__lightbox-link {
+    margin-top: auto;
+    align-self: flex-start;
+    font-size: 0.875rem;
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .media-hub__lightbox-link:is(:hover, :focus-visible) {
+    text-decoration: underline;
+    text-underline-offset: 0.16em;
+  }
+
+  @media (max-width: 720px) {
+    .media-hub__stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .media-hub__wall {
+      grid-template-columns: repeat(auto-fill, minmax(6.4rem, 1fr));
+      gap: 0.7rem 0.55rem;
+    }
+    .media-hub__lightbox-inner {
+      grid-template-columns: 1fr;
+    }
+    .media-hub__lightbox-cover {
+      max-height: 16rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .media-hub__card:is(:hover, :focus-visible) .media-hub__cover,
+    .media-hub__peek {
+      transition: none;
+    }
+  }
+</style>
