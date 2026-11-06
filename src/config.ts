@@ -180,11 +180,7 @@ export const FEATURES: Features = {
 export const INTEREST_ICONS: Record<string, string> = {
   device: 'i-ri-computer-line',
   software: 'i-ri-apps-2-line',
-  anime: 'i-ri-sparkling-line',
-  movie: 'i-ri-film-line',
-  tv: 'i-ri-tv-line',
-  game: 'i-ri-gamepad-line',
-  book: 'i-ri-book-open-line',
+  media: 'i-ri-film-line',
   kpop: 'i-ri-music-2-line',
   playlists: 'i-ri-play-list-line',
 }

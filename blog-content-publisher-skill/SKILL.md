@@ -3,7 +3,7 @@ name: blog-content-publisher
 description: >
   维护 YuBlog（Wutong-Yu Astro 站）所有可改内容。按页面改：文稿与配图、首页近期笔墨和标签/归档所依赖的文章元数据、
   项目 JSON、关于作者介绍、拾趣分类（可新增、图标可选）与个人社交、歌单配置与封面、友链 JSON、顶栏导航与顶栏 GitHub、友链申请模板文案。
-  触发：发博客、改文章、改封面、改 titleImage、改分类、改关于、改拾趣、新增拾趣分类、给拾趣分类补图标、改设备、改动漫、改影视、改游戏、改书、改 Kpop、加歌单、新增歌单、改歌单、换歌单封面、改友链、改项目、改导航、改顶栏 GitHub、改关于页社交、改名片站名。
+  触发：发博客、改文章、改封面、改 titleImage、改分类、改关于、改拾趣、新增拾趣分类、给拾趣分类补图标、改设备、改影音书游、改 Kpop、加歌单、新增歌单、改歌单、换歌单封面、改友链、改项目、改导航、改顶栏 GitHub、改关于页社交、改名片站名。
   能把作者交来的稿子落地：本地图片复制进文章配图目录并改写引用（外链保持外链）、按内容自动排版（grid／横滚／绕排）、把书影视条目生成卡片（可联网补链接与封面）、落地 Excalidraw 图与博文链接卡，含排版／卡片／Excalidraw／博文链接卡时默认启动或复用同一 worktree 的 dev 并核实文章预览链接。
   不要用来做布局实现、CSS 或交互重构。
 ---
@@ -23,7 +23,8 @@ description: >
 | 归档多一条/少一条 | 归档 | 同上，靠 `pubDate` |
 | 项目卡片 | 项目 | `src/content/projects/data.json` |
 | 作者介绍 | 关于 `/about/` | `src/content/about/about.md` |
-| 改拾趣内容、新增或重排拾趣分类（如设备、动漫、旅行） | 拾趣入口和对应子页 | `src/content/interests/<id>.md`，图放对应 `<id>/` |
+| 改拾趣内容、新增或重排拾趣分类（如设备、旅行） | 拾趣入口和对应子页 | `src/content/interests/<id>.md`，图放对应 `<id>/` |
+| 改影音书游（电影／动漫／剧／游戏／书） | 拾趣「影音书游」合页 | 条目 `src/data/media/items.json`；封面 `src/content/interests/{movie,anime,tv,game,book}/` |
 | 加歌单、换歌单封面 | 拾趣「歌单」子页 | 配置 `src/data/playlists.json`；封面放 `src/content/interests/playlists/` |
 | 友链增删改、申请模板里的站名/链接 | 友链 | `data.json` 或 `FriendsApplyPanel.astro` 的 `friendInfo` |
 | 顶栏页面名、顶栏 GitHub | 全站顶栏 | `src/config.ts` 的 `UI` |
@@ -264,6 +265,8 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 图片放在对应子目录，例如 `src/content/interests/device/`，Markdown 用 `![说明](./device/file.png)`，需要限宽时写 alt 的 `|w300`。共享图也可用 `../`；引用按 Markdown 文件所在位置解析。拾趣内容和图片统一维护在 `src/content/interests/`。
 
 入口页只展示分类列表。首页近期书影游只改 `recent.md`；该文件不进分类集合，不写 `order`，不加入顶部菜单。分类子页与关于页自动按全局目录配置收录正文标题，没有符合级别的标题时隐藏目录；页面顶部标题不参与目录。拾趣正文以三级标题分组，需要细分时使用四级标题。
+
+影音书游条目写在 `src/data/media/items.json`（字段：`id`、`category`、`status`（`todo`｜`done`）、`title`、`cover`，以及可选 `href`／`score`／`date`／`label`／`tags`／`review`／`meta`），不要再为电影／动漫／剧／游戏／书单独维护 Markdown 目录页。文章、关于、首页近期书影游仍可用 `:::card`。
 
 电影、电视剧、动漫、游戏的条目使用默认横卡。作者可按需填写评分 `score` 和日期 `date`，两者都与观看／游玩状态无关；没有作者提供的值时省略对应属性：
 
