@@ -12,7 +12,7 @@ export function getNavSection(pathname, home = '/') {
   const root = normalizeNavPath(home)
   if (path === `${root}blogs/`) return 'blogs'
   if (path === `${root}interests/`) return 'interests'
-  if (path === `${root}friends/`) return 'more'
+  if (path === `${root}friends/` || path === `${root}resume/`) return 'more'
   return null
 }
 
@@ -25,6 +25,9 @@ export function isCurrentNav(pathname, target, home = '/') {
   const path = normalizeNavPath(pathname)
   const href = normalizeNavPath(target)
   return (
-    path === href || Boolean(getNavSection(href, home) && path.startsWith(href))
+    path === href ||
+    Boolean(getNavSection(href, home) && path.startsWith(href)) ||
+    (getNavSection(href, home) === 'more' &&
+      getNavSection(path, home) === 'more')
   )
 }

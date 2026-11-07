@@ -1,0 +1,37 @@
+---
+import BaseLayout from '~/layouts/BaseLayout.astro'
+import BlogIndexLayout from '~/layouts/BlogIndexLayout.astro'
+import PageHeading from '~/components/base/PageHeading.astro'
+import { withBasePath } from '~/utils/path'
+---
+
+<BaseLayout title="简历" description="个人经历与项目实践" bgType="dot">
+  <BlogIndexLayout>
+    <section class="resume-page">
+      <PageHeading title="简历" subtitle="个人经历与项目实践。" />
+      <div class="resume-document">
+        <iframe src={withBasePath('/resume.html')} title="简历内容" />
+      </div>
+    </section>
+  </BlogIndexLayout>
+</BaseLayout>
+
+<style>
+  .resume-page {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .resume-document {
+    overflow-x: auto;
+  }
+
+  iframe {
+    display: block;
+    width: 100%;
+    min-width: 660px;
+    height: 80vh;
+    border: 0;
+    color-scheme: only light;
+  }
+</style>

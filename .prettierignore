@@ -11,6 +11,9 @@ GithubItem.astro
 releases.mdx
 prs.mdx
 
+# preserve the supplied resume HTML
+public/resume.html
+
 # avoid whitespace affecting style
 Link.astro
 
