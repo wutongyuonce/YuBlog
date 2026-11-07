@@ -42,9 +42,9 @@ const SELF_CLASS_TAGS: readonly (readonly [tag: string, className: string])[] =
     ['p', 'writing-heatmap__single-year'],
     ['details', 'writing-heatmap__years'],
     ['p', 'screen-time__value'],
-    ['span', 'media-hub__stat-value'],
-    ['span', 'media-hub__score'],
-    ['button', 'media-hub__tab'],
+    ['dd', 'media-hub__stat-value'],
+    ['button', 'interest-tabs__tab'],
+    ['h2', 'media-hub__group-title'],
   ]
 
 /**

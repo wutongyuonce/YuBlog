@@ -25,6 +25,7 @@ description: >
 | 作者介绍 | 关于 `/about/` | `src/content/about/about.md` |
 | 改拾趣内容、新增或重排拾趣分类（如设备、旅行） | 拾趣入口和对应子页 | `src/content/interests/<id>.md`，图放对应 `<id>/` |
 | 改影音书游（电影／动漫／剧／游戏／书） | 拾趣「影音书游」合页 | 条目 `src/data/media/items.json`；封面 `src/content/interests/{movie,anime,tv,game,book}/` |
+| 改设备、配件、订阅、Mac／手机软件 | 拾趣「设备与软件」合页 | `src/content/interests/gear/<页签>.md`，配图同放 `gear/` |
 | 加歌单、换歌单封面 | 拾趣「歌单」子页 | 配置 `src/data/playlists.json`；封面放 `src/content/interests/playlists/` |
 | 友链增删改、申请模板里的站名/链接 | 友链 | `data.json` 或 `FriendsApplyPanel.astro` 的 `friendInfo` |
 | 顶栏页面名、顶栏 GitHub | 全站顶栏 | `src/config.ts` 的 `UI` |
@@ -222,18 +223,13 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 `/about/` 只渲染 `src/content/about/about.md`。保持作者原文，仅做必要 Markdown 结构，不编造经历或人设。页面标题／说明由 `src/pages/about.mdx` 配合 `PageHeading` 渲染，不由内容 frontmatter 创建按钮。关于内容仅维护这一个 Markdown 文件。
 
-兴趣内容位于 `src/content/interests/`，入口 `/interests/`，子页 `/interests/<id>/`。分类来自该目录顶层的 `.md` / `.mdx` 文件，排除 `recent.md`；**不固定分类 ID 或数量**。下表是现有分类示例，不是允许列表：
+兴趣内容位于 `src/content/interests/`，入口 `/interests/`，子页 `/interests/<id>/`。分类来自该目录顶层的 `.md` / `.mdx` 文件；**不固定分类 ID 或数量**。下表是现有分类示例，不是允许列表：
 
 | ID | 内容 |
 | :--- | :--- |
-| `device` | 日常设备、配件与订阅 |
-| `anime` | 动漫，含国漫 |
-| `movie` | 电影，含动画电影 |
-| `tv` | 电视剧与综艺 |
-| `game` | 游戏 |
-| `book` | 书 |
+| `gear` | 设备与软件合页；页签为 `gear/` 下的 `device`、`accessory`、`subscription`、`mac`、`mobile` |
+| `media` | 影音书游合页；条目在 `src/data/media/items.json` |
 | `kpop` | 喜欢的团体与 idle |
-| `software` | Mac 与手机软件 |
 | `playlists` | 固定歌单的运行时列表；资料配置在 `src/data/playlists.json`，封面在 `src/content/interests/playlists/` |
 
 「歌单」的 `playlists.md` 只维护页面标题、说明和顺序；曲目由运行时接口取得，不把完整歌曲数组写进仓库。新增固定歌单见下节，不把它改为手写 Markdown 曲目表。
@@ -262,9 +258,11 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 ### 正文与配图
 
-图片放在对应子目录，例如 `src/content/interests/device/`，Markdown 用 `![说明](./device/file.png)`，需要限宽时写 alt 的 `|w300`。共享图也可用 `../`；引用按 Markdown 文件所在位置解析。拾趣内容和图片统一维护在 `src/content/interests/`。
+图片放在对应子目录，例如 `src/content/interests/kpop/`，Markdown 用 `![说明](./kpop/file.png)`，需要限宽时写 alt 的 `|w300`。共享图也可用 `../`；引用按 Markdown 文件所在位置解析。拾趣内容和图片统一维护在 `src/content/interests/`。
 
-入口页只展示分类列表。首页近期书影游只改 `recent.md`；该文件不进分类集合，不写 `order`，不加入顶部菜单。分类子页与关于页自动按全局目录配置收录正文标题，没有符合级别的标题时隐藏目录；页面顶部标题不参与目录。拾趣正文以三级标题分组，需要细分时使用四级标题。
+入口页只展示分类列表。首页近期书影游自动展示 `items.json` 中 `status: todo` 的条目，改待看状态即可，不另写文件。分类子页与关于页自动按全局目录配置收录正文标题，没有符合级别的标题时隐藏目录；页面顶部标题不参与目录。拾趣正文以三级标题分组，需要细分时使用四级标题。
+
+分类需要页签时，把各页写成同名子目录里的 `<id>/<页签>.md`（frontmatter 只有 `title` 页签名与 `order`），顶层 `<id>.md` 只留元数据；页签文件名即 hash（如 `/interests/gear/#mac`），配图与页签文件同目录，用 `./file.png` 引用。页签内不再写与页签同名的标题。
 
 影音书游条目写在 `src/data/media/items.json`（字段：`id`、`category`、`status`（`todo`｜`done`）、`title`、`cover`，以及可选 `href`／`score`／`date`／`label`／`tags`／`review`／`meta`），不要再为电影／动漫／剧／游戏／书单独维护 Markdown 目录页。文章、关于、首页近期书影游仍可用 `:::card`。
 

@@ -178,8 +178,7 @@ export const FEATURES: Features = {
 
 /** Dropdown icons also feed UnoCSS's dynamic-class safelist. */
 export const INTEREST_ICONS: Record<string, string> = {
-  device: 'i-ri-computer-line',
-  software: 'i-ri-apps-2-line',
+  gear: 'i-ri-computer-line',
   media: 'i-ri-film-line',
   kpop: 'i-ri-music-2-line',
   playlists: 'i-ri-play-list-line',

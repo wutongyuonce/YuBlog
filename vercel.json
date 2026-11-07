@@ -55,6 +55,26 @@
       "permanent": true
     },
     {
+      "source": "/interests/device/",
+      "destination": "/interests/gear/#device",
+      "permanent": true
+    },
+    {
+      "source": "/interests/device",
+      "destination": "/interests/gear/#device",
+      "permanent": true
+    },
+    {
+      "source": "/interests/software/",
+      "destination": "/interests/gear/#mac",
+      "permanent": true
+    },
+    {
+      "source": "/interests/software",
+      "destination": "/interests/gear/#mac",
+      "permanent": true
+    },
+    {
       "source": "/blogs/lm-studio-本地模型部署",
       "destination": "/blogs/lm-studio-local-models/",
       "permanent": true

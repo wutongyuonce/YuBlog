@@ -1,0 +1,277 @@
+---
+/**
+ * 拾趣合页的页签外壳：页签按钮 + 滑动指示条 + hash 同步 + 方向键；面板用 InterestTabPanel。
+ * 影音书游与设备与软件共用，面板内容各自渲染。
+ */
+interface Props {
+  tabs: { id: string; label: string; count?: number }[]
+  label: string
+}
+const { tabs, label } = Astro.props
+---
+
+<interest-tabs class="interest-tabs">
+  <div class="interest-tabs__list" role="tablist" aria-label={label}>
+    {tabs.map((tab, index) => (
+      <button
+        type="button"
+        class="interest-tabs__tab"
+        role="tab"
+        id={`interest-tab-${tab.id}`}
+        data-tab={tab.id}
+        aria-selected={index === 0 ? 'true' : 'false'}
+        aria-controls={`interest-panel-${tab.id}`}
+        tabindex={index === 0 ? 0 : -1}
+      >
+        {tab.label}
+        {tab.count != null && (
+          <span class="interest-tabs__count">{tab.count}</span>
+        )}
+      </button>
+    ))}
+    <span class="interest-tabs__indicator" aria-hidden="true"></span>
+  </div>
+  <slot />
+</interest-tabs>
+
+<noscript>
+  <style>
+    .interest-tabs__list {
+      display: none !important;
+    }
+    .interest-tabs__panel[hidden] {
+      display: block !important;
+    }
+    .interest-tabs__panel::before {
+      content: attr(data-label);
+      display: block;
+      margin: 2.5rem 0 1rem;
+      font-family: var(--font-heading);
+      font-size: 1.25rem;
+    }
+  </style>
+</noscript>
+
+<script>
+  import { placeSlidingIndicator } from '~/utils/sliding-indicator.js'
+
+  const hashId = () => (location.hash || '').replace(/^#/, '').split(/[/?]/)[0]
+
+  function mount(root: HTMLElement, signal: AbortSignal) {
+    const list = root.querySelector<HTMLElement>(':scope > [role="tablist"]')
+    const indicator = list?.querySelector<HTMLElement>(
+      '.interest-tabs__indicator'
+    )
+    if (!list || !indicator) return
+    const tabs = Array.from(
+      list.querySelectorAll<HTMLButtonElement>(':scope > [data-tab]')
+    )
+    const panels = Array.from(
+      root.querySelectorAll<HTMLElement>(':scope > [data-panel]')
+    )
+    const current = () =>
+      tabs.find((tab) => tab.getAttribute('aria-selected') === 'true')
+    const place = (animate: boolean) =>
+      placeSlidingIndicator({ indicator, target: current(), animate })
+
+    const activate = (id: string, syncHash: boolean) => {
+      if (!panels.some((panel) => panel.dataset.panel === id)) return false
+      tabs.forEach((tab) => {
+        const on = tab.dataset.tab === id
+        tab.setAttribute('aria-selected', String(on))
+        tab.tabIndex = on ? 0 : -1
+      })
+      panels.forEach((panel) => {
+        panel.hidden = panel.dataset.panel !== id
+      })
+      place(true)
+      // 窄屏页签可横滑：把当前页签带进可视区，不牵动页面纵向滚动。
+      const tab = current()
+      if (tab && list.scrollWidth > list.clientWidth)
+        list.scrollTo({
+          left: tab.offsetLeft - (list.clientWidth - tab.offsetWidth) / 2,
+          behavior: 'smooth',
+        })
+      if (syncHash && location.hash !== `#${id}`)
+        history.replaceState(history.state, '', `#${id}`)
+      return true
+    }
+
+    tabs.forEach((tab) =>
+      tab.addEventListener('click', () => activate(tab.dataset.tab!, true), {
+        signal,
+      })
+    )
+
+    list.addEventListener(
+      'keydown',
+      (event) => {
+        const { key } = event as KeyboardEvent
+        const index = tabs.findIndex((tab) => tab === document.activeElement)
+        if (index < 0) return
+        const targets: Record<string, number> = {
+          ArrowRight: (index + 1) % tabs.length,
+          ArrowLeft: (index - 1 + tabs.length) % tabs.length,
+          Home: 0,
+          End: tabs.length - 1,
+        }
+        if (!(key in targets)) return
+        event.preventDefault()
+        const tab = tabs[targets[key]]
+        activate(tab.dataset.tab!, true)
+        tab.focus()
+      },
+      { signal }
+    )
+
+    window.addEventListener('hashchange', () => activate(hashId(), false), {
+      signal,
+    })
+
+    // 首次定位、字体就绪与尺寸变化只对齐、不播滑动。
+    activate(hashId(), false)
+    place(false)
+    const resize = new ResizeObserver(() => place(false))
+    resize.observe(list)
+    signal.addEventListener('abort', () => resize.disconnect())
+    document.fonts?.ready.then(() => {
+      if (!signal.aborted) place(false)
+    })
+  }
+
+  // ClientRouter 换页会替换整棵 DOM：随元素挂载／卸载，回到本页时重新绑定。
+  class InterestTabsElement extends HTMLElement {
+    private controller?: AbortController
+    connectedCallback() {
+      this.controller = new AbortController()
+      mount(this, this.controller.signal)
+    }
+    disconnectedCallback() {
+      this.controller?.abort()
+    }
+  }
+  if (!customElements.get('interest-tabs'))
+    customElements.define('interest-tabs', InterestTabsElement)
+</script>
+
+<style>
+  .interest-tabs {
+    display: block;
+    --tabs-ease: cubic-bezier(0.22, 0.8, 0.24, 1);
+  }
+
+  /* 页签行：底线画成内阴影，指示条压在其上且完全落在行内，不被横滑容器裁切。 */
+  .interest-tabs__list {
+    position: relative;
+    display: flex;
+    gap: 1.75rem;
+    margin-top: 2rem;
+    box-shadow: inset 0 -1px color-mix(in srgb, var(--c-text) 10%, transparent);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .interest-tabs__list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .interest-tabs__tab {
+    position: relative;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    flex: none;
+    margin: 0;
+    padding: 0.25rem 0 0.8rem;
+    border: 0;
+    background: none;
+    color: color-mix(in srgb, var(--c-text) 50%, var(--c-bg));
+    font-family: var(--font-heading);
+    font-size: 1.0625rem;
+    line-height: 1.3;
+    cursor: pointer;
+    transition: color 0.25s ease;
+  }
+
+  .interest-tabs__tab:hover {
+    color: color-mix(in srgb, var(--c-text) 75%, var(--c-bg));
+  }
+
+  .interest-tabs__tab[aria-selected='true'] {
+    color: var(--c-text);
+  }
+
+  .interest-tabs__tab:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+
+  .interest-tabs__count {
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    color: color-mix(in srgb, var(--c-text) 45%, var(--c-bg));
+  }
+
+  .interest-tabs__indicator {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 0;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--accent);
+    pointer-events: none;
+    transition:
+      transform 0.38s var(--tabs-ease),
+      width 0.38s var(--tabs-ease);
+  }
+
+  /* 脚本定位前用静态条占位，避免首屏没有选中标记。 */
+  .interest-tabs__indicator:not([data-ready='true']) {
+    opacity: 0;
+  }
+
+  .interest-tabs__list:not(:has(.interest-tabs__indicator[data-ready='true']))
+    .interest-tabs__tab[aria-selected='true']::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+
+  /* 面板切换：轻微上浮淡入，display 由 hidden 切回时自动重播。 */
+  .interest-tabs :global(.interest-tabs__panel:not([hidden])) {
+    animation: interest-tabs-in 0.32s var(--tabs-ease);
+  }
+
+  @keyframes interest-tabs-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .interest-tabs__list {
+      gap: 1.35rem;
+    }
+
+    .interest-tabs__tab {
+      font-size: 1rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .interest-tabs__indicator,
+    .interest-tabs__tab {
+      transition: none;
+    }
+
+    .interest-tabs :global(.interest-tabs__panel:not([hidden])) {
+      animation: none;
+    }
+  }
+</style>

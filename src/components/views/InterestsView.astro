@@ -6,6 +6,7 @@ import GiscusComments from '~/components/base/GiscusComments.astro'
 import Toc from '~/components/toc/Toc.astro'
 import PlaylistsPanel from '~/components/interests/PlaylistsPanel.astro'
 import MediaHub from '~/components/interests/MediaHub.astro'
+import MarkdownTabs from '~/components/interests/MarkdownTabs.astro'
 import type { CollectionEntry } from 'astro:content'
 
 interface Props {
@@ -20,6 +21,14 @@ const entries = entry
 const { Content, headings } = entry
   ? await render(entry)
   : { Content: null, headings: [] }
+// 合页（组件或页签渲染）的顶层 Markdown 正文作为页头引言，空正文不输出。
+const hasIntro = Boolean(entry?.body?.trim())
+// 同名子目录里有 Markdown 时，该分类渲染为页签合页。
+const tabEntries = entry
+  ? (await getCollection('interestTabs'))
+      .filter((tab) => tab.id.startsWith(`${entry.id}/`))
+      .sort((a, b) => a.data.order - b.data.order)
+  : []
 ---
 
 <div class="interests-page">
@@ -33,9 +42,18 @@ const { Content, headings } = entry
     <div data-interest={entry.id}>
       <PlaylistsPanel />
     </div>
-  ) : entry?.id === 'media' ? (
+  ) : entry?.id === 'media' || (entry && tabEntries.length > 0) ? (
     <div data-interest={entry.id}>
-      <MediaHub />
+      {hasIntro && Content && (
+        <div class="prose markdown-content interests-page__intro">
+          <Content />
+        </div>
+      )}
+      {entry.id === 'media' ? (
+        <MediaHub />
+      ) : (
+        <MarkdownTabs label={entry.data.title} entries={tabEntries} />
+      )}
     </div>
   ) : entry && Content ? (
     <article
@@ -61,6 +79,10 @@ const { Content, headings } = entry
 </div>
 
 <style>
+  /* 引言就是 Markdown 正文，字体、字号与链接全部沿用 prose，只管与页头的间距。 */
+  .interests-page__intro {
+    margin-top: 1.5rem;
+  }
   .interests-page__content {
     margin-top: 2rem;
   }

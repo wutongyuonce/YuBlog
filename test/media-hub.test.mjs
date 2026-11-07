@@ -1,10 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import {
-  sortMediaItems,
-  mediaStats,
-  categoryFromHash,
-} from '../src/utils/media-hub.js'
+import { sortMediaItems, mediaStats } from '../src/utils/media-hub.js'
 
 test('todo first, dated done before undated, undated by title', () => {
   const sorted = sortMediaItems([
@@ -31,10 +27,4 @@ test('stats use Shanghai calendar month/year', () => {
     now
   )
   assert.deepEqual(stats, { todo: 1, doneMonth: 1, doneYear: 2, total: 4 })
-})
-
-test('categoryFromHash falls back to movie', () => {
-  assert.equal(categoryFromHash('#anime'), 'anime')
-  assert.equal(categoryFromHash('#nope'), 'movie')
-  assert.equal(categoryFromHash(''), 'movie')
 })

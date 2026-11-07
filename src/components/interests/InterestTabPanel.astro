@@ -1,0 +1,21 @@
+---
+/** InterestTabs 的一个面板；首个面板默认可见，其余由脚本按页签／hash 切换。 */
+interface Props {
+  id: string
+  label: string
+  active?: boolean
+}
+const { id, label, active = false } = Astro.props
+---
+
+<div
+  class="interest-tabs__panel"
+  id={`interest-panel-${id}`}
+  role="tabpanel"
+  data-panel={id}
+  data-label={label}
+  aria-labelledby={`interest-tab-${id}`}
+  hidden={!active}
+>
+  <slot />
+</div>

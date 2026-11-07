@@ -1,223 +1,279 @@
 ---
+import InterestTabs from '~/components/interests/InterestTabs.astro'
+import InterestTabPanel from '~/components/interests/InterestTabPanel.astro'
 import items from '~/data/media/items.json'
-import { withBasePath } from '~/utils/path'
+import { mediaCoverUrl } from '~/utils/media-covers'
 import {
   MEDIA_CATEGORIES,
   sortMediaItems,
   mediaStats,
 } from '~/utils/media-hub.js'
 
-const coverModules = import.meta.glob<string>(
-  '/src/content/interests/{movie,anime,tv,game,book}/*.{jpg,jpeg,png,webp,avif,gif,JPG,JPEG,PNG,WEBP,AVIF,GIF}',
-  { eager: true, query: '?url', import: 'default' }
-)
-
-const coverByLower = new Map(
-  Object.entries(coverModules).map(([key, url]) => [key.toLowerCase(), url])
-)
-
-const resolveCover = (cover: string): string => {
-  const key = `/src/content/interests/${cover}`
-  const url = coverModules[key] || coverByLower.get(key.toLowerCase())
-  if (!url) throw new Error(`MediaHub: 找不到封面 ${cover}`)
-  return withBasePath(url)
+// 封面墙与灯箱各取一档 WebP，沿用 Astro 图片管线，不直出原图。
+const resolveCover = async (cover: string) => {
+  const [thumbUrl, coverUrl] = await Promise.all([
+    mediaCoverUrl(cover, 360),
+    mediaCoverUrl(cover, 720),
+  ])
+  return { thumbUrl, coverUrl }
 }
 
-const enriched = items.map((item) => ({
-  ...item,
-  coverUrl: resolveCover(item.cover),
-}))
+const labelsById = new Map(MEDIA_CATEGORIES.map((cat) => [cat.id, cat]))
+
+const enriched = await Promise.all(
+  items.map(async (item) => {
+    const cat = labelsById.get(item.category)!
+    return {
+      ...item,
+      ...(await resolveCover(item.cover)),
+      kind: cat.label,
+      statusLabel: item.status === 'todo' ? cat.todoLabel : cat.doneLabel,
+    }
+  })
+)
 
 const panels = MEDIA_CATEGORIES.map((cat) => {
   const list = sortMediaItems(
     enriched.filter((item) => item.category === cat.id)
   )
-  return {
-    ...cat,
-    items: list,
-    stats: mediaStats(list),
-  }
+  const groups = [
+    {
+      id: 'todo',
+      label: cat.todoLabel,
+      items: list.filter((item) => item.status === 'todo'),
+    },
+    {
+      id: 'done',
+      label: cat.doneLabel,
+      items: list.filter((item) => item.status !== 'todo'),
+    },
+  ].filter((group) => group.items.length > 0)
+  return { ...cat, total: list.length, groups, stats: mediaStats(list) }
 })
 
-const peekBits = (item: (typeof enriched)[number]) => {
-  const bits: string[] = []
-  if (item.label) bits.push(item.label)
-  if (item.meta) bits.push(item.meta)
-  if (item.score != null) bits.push(`${item.score} 分`)
-  if (item.date) bits.push(item.date)
-  return bits
-}
+// 书显示作者；其它显示细分类型，与分类同名（如「电影」）时省略。
+const subline = (item: (typeof enriched)[number]) =>
+  item.meta || (item.label !== item.kind ? item.label : '')
 
-const defaultId = 'movie'
+const star =
+  'M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z'
 ---
 
-<section class="media-hub" data-media-hub aria-label="影音书游">
-  <div class="media-hub__toolbar" role="tablist" aria-label="分类">
-    {
-      panels.map((cat, index) => (
-        <button
-          type="button"
-          class="media-hub__tab"
-          role="tab"
-          id={`media-tab-${cat.id}`}
-          data-tab={cat.id}
-          aria-selected={cat.id === defaultId ? 'true' : 'false'}
-          aria-controls={`media-panel-${cat.id}`}
-          tabindex={cat.id === defaultId ? 0 : -1}
-          style={`--i: ${index}`}
-        >
-          {cat.label}
-        </button>
-      ))
-    }
-  </div>
-
-  {
-    panels.map((cat) => (
-      <div
-        class="media-hub__panel"
-        id={`media-panel-${cat.id}`}
-        role="tabpanel"
-        data-panel={cat.id}
-        aria-labelledby={`media-tab-${cat.id}`}
-        hidden={cat.id !== defaultId}
-      >
-        {cat.noteHtml ? (
-          <p class="media-hub__note" set:html={cat.noteHtml} />
-        ) : null}
-
-        <div class="media-hub__stats" aria-label={`${cat.label}统计`}>
-          <div class="media-hub__stat media-hub__stat--todo">
-            <span class="media-hub__stat-value">{cat.stats.todo}</span>
-            <span class="media-hub__stat-label">{cat.todoLabel}</span>
-          </div>
-          <div class="media-hub__stat media-hub__stat--month">
-            <span class="media-hub__stat-value">{cat.stats.doneMonth}</span>
-            <span class="media-hub__stat-label">{cat.doneMonthLabel}</span>
-          </div>
-          <div class="media-hub__stat media-hub__stat--year">
-            <span class="media-hub__stat-value">{cat.stats.doneYear}</span>
-            <span class="media-hub__stat-label">{cat.doneYearLabel}</span>
-          </div>
-          <div class="media-hub__stat media-hub__stat--total">
-            <span class="media-hub__stat-value">{cat.stats.total}</span>
-            <span class="media-hub__stat-label">总数</span>
-          </div>
-        </div>
-
-        <div class="media-hub__wall">
-          {cat.items.length === 0 ? (
-            <p class="media-hub__empty">这一类暂时还空着。</p>
-          ) : (
-            cat.items.map((item, index) => (
-              <button
-                type="button"
+<media-hub class="media-hub" aria-label="影音书游">
+  <InterestTabs
+    label="分类"
+    tabs={panels.map((cat) => ({
+      id: cat.id,
+      label: cat.label,
+      count: cat.total,
+    }))}
+  >
+    {panels.map((cat, index) => (
+      <InterestTabPanel id={cat.id} label={cat.label} active={index === 0}>
+        <div class="media-hub__summary">
+          <dl class="media-hub__stats">
+            {[
+              { label: cat.todoLabel, value: cat.stats.todo, todo: true },
+              { label: cat.doneMonthLabel, value: cat.stats.doneMonth },
+              { label: cat.doneYearLabel, value: cat.stats.doneYear },
+              { label: '总数', value: cat.stats.total },
+            ].map((stat) => (
+              <div
                 class:list={[
-                  'media-hub__card',
-                  item.status === 'todo' && 'media-hub__card--todo',
+                  'media-hub__stat',
+                  stat.value === 0 && 'media-hub__stat--zero',
+                  stat.todo && stat.value > 0 && 'media-hub__stat--todo',
                 ]}
-                data-media-open={item.id}
-                aria-label={item.title}
-                style={`--i: ${index}`}
               >
-                <span class="media-hub__cover">
-                  <img
-                    src={item.coverUrl}
-                    alt=""
-                    width="300"
-                    height="450"
-                    loading={index < 12 ? 'eager' : 'lazy'}
-                    decoding="async"
-                  />
-                  {item.status === 'todo' && (
-                    <span class="media-hub__badge">待</span>
-                  )}
-                  {item.score != null && (
-                    <span class="media-hub__score">{item.score}</span>
-                  )}
-                  <span class="media-hub__peek" aria-hidden="true">
-                    <strong>{item.title}</strong>
-                    {peekBits(item).map((bit) => (
-                      <span>{bit}</span>
-                    ))}
-                    {item.review && (
-                      <em>
-                        {item.review.slice(0, 72)}
-                        {item.review.length > 72 ? '…' : ''}
-                      </em>
-                    )}
-                  </span>
-                </span>
-                <span class="media-hub__caption">{item.title}</span>
-              </button>
-            ))
-          )}
+                <dt>{stat.label}</dt>
+                <dd class="media-hub__stat-value">
+                  {stat.value}
+                  <span class="media-hub__stat-unit">{cat.unit}</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
         </div>
-      </div>
-    ))
-  }
 
-  <dialog class="media-hub__lightbox" data-media-lightbox aria-label="条目详情">
-    <div class="media-hub__lightbox-inner">
-      <button
-        type="button"
-        class="media-hub__lightbox-close"
-        data-media-close
-        aria-label="关闭"
-      >
-        ×
-      </button>
-      <div class="media-hub__lightbox-cover">
-        <img data-lb-cover alt="" />
+        {cat.groups.length === 0 ? (
+          <p class="media-hub__empty">这一类暂时还空着。</p>
+        ) : (
+          cat.groups.map((group) => (
+            <section
+              class="media-hub__group"
+              aria-labelledby={`media-group-${cat.id}-${group.id}`}
+            >
+              <h2
+                class="media-hub__group-title"
+                id={`media-group-${cat.id}-${group.id}`}
+              >
+                {group.label}
+                <span class="media-hub__group-count">{group.items.length}</span>
+              </h2>
+              <ul class="media-hub__wall">
+                {group.items.map((item, index) => (
+                  <li>
+                    <button
+                      type="button"
+                      class="media-hub__card"
+                      data-media-open={item.id}
+                      aria-haspopup="dialog"
+                    >
+                      <span class="media-hub__cover">
+                        <img
+                          src={item.thumbUrl}
+                          alt=""
+                          width="240"
+                          height="360"
+                          loading={index < 10 ? 'eager' : 'lazy'}
+                          decoding="async"
+                        />
+                        {item.review && (
+                          <span class="media-hub__peek" aria-hidden="true">
+                            <span>{item.review}</span>
+                          </span>
+                        )}
+                      </span>
+                      <span class="media-hub__caption">
+                        <span class="media-hub__title">{item.title}</span>
+                        <span class="media-hub__sub">
+                          <span class="media-hub__sub-text">
+                            {subline(item)}
+                          </span>
+                          {item.score != null && (
+                            <span class="media-hub__score">
+                              <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d={star} />
+                              </svg>
+                              <span class="media-hub__sr">评分</span>
+                              {item.score}
+                            </span>
+                          )}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))
+        )}
+      </InterestTabPanel>
+    ))}
+  </InterestTabs>
+
+  <dialog
+    class="media-hub__lightbox"
+    data-media-lightbox
+    aria-labelledby="media-lb-title"
+  >
+    <div class="media-hub__sheet">
+      <div class="media-hub__ambient" aria-hidden="true">
+        <img data-lb-ambient alt="" />
       </div>
-      <div class="media-hub__lightbox-body">
-        <p class="media-hub__lightbox-kicker" data-lb-kicker></p>
-        <h2 data-lb-title></h2>
-        <p class="media-hub__lightbox-meta" data-lb-meta></p>
-        <p class="media-hub__lightbox-review" data-lb-review></p>
+      <figure class="media-hub__lb-cover">
+        <img data-lb-cover alt="" />
+      </figure>
+      <header class="media-hub__lb-head">
+        <p class="media-hub__lb-kicker" data-lb-kicker></p>
+        <h2 id="media-lb-title">
+          <span data-lb-title></span>
+        </h2>
+        <p class="media-hub__lb-rating" data-lb-rating hidden>
+          <span
+            class="media-hub__stars"
+            data-lb-stars
+            aria-hidden="true"
+          ></span>
+          <span data-lb-score></span>
+        </p>
+        <p class="media-hub__lb-meta" data-lb-meta></p>
+      </header>
+      <blockquote
+        class="media-hub__lb-review"
+        data-lb-review
+        hidden
+      ></blockquote>
+      <footer class="media-hub__lb-foot">
         <a
-          class="media-hub__lightbox-link"
+          class="media-hub__lb-link"
           data-lb-link
-          href="#"
+          href={Astro.url.pathname}
           target="_blank"
           rel="noopener noreferrer"
           hidden
         >
-          查看详情 ↗
+          查看详情
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M16 8.4 7.4 17 6 15.6 14.6 7H7.1V5H18v10.9h-2z"></path>
+          </svg>
         </a>
-      </div>
+        <span class="media-hub__lb-pager">
+          <button
+            type="button"
+            class="media-hub__lb-step"
+            data-lb-step="-1"
+            aria-label="上一部"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m10.8 12 4.95 4.95-1.41 1.41L7.98 12l6.36-6.36 1.41 1.41z"></path>
+            </svg>
+          </button>
+          <span class="media-hub__lb-pos" data-lb-pos></span>
+          <button
+            type="button"
+            class="media-hub__lb-step"
+            data-lb-step="1"
+            aria-label="下一部"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m13.2 12-4.95-4.95 1.41-1.41L16.02 12l-6.36 6.36-1.41-1.41z"></path>
+            </svg>
+          </button>
+        </span>
+      </footer>
+      <button
+        type="button"
+        class="media-hub__lb-close"
+        data-media-close
+        aria-label="关闭"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m12 10.6 4.95-4.95 1.41 1.41L13.41 12l4.95 4.95-1.41 1.41L12 13.41l-4.95 4.95-1.41-1.41L10.59 12 5.64 7.05l1.41-1.41z"></path>
+        </svg>
+      </button>
     </div>
   </dialog>
-</section>
 
-<script
-  type="application/json"
-  id="media-hub-data"
-  set:html={JSON.stringify(
-    Object.fromEntries(
-      enriched.map((item) => [
-        item.id,
-        {
-          id: item.id,
-          status: item.status,
-          title: item.title,
-          coverUrl: item.coverUrl,
-          href: item.href || '',
-          score: item.score ?? null,
-          date: item.date || '',
-          label: item.label || '',
-          meta: item.meta || '',
-          tags: item.tags || [],
-          review: item.review || '',
-        },
-      ])
-    )
-  )}
-/>
+  <script
+    type="application/json"
+    data-media-catalog
+    set:html={JSON.stringify(
+      Object.fromEntries(
+        enriched.map((item) => [
+          item.id,
+          {
+            status: item.status,
+            title: item.title,
+            coverUrl: item.coverUrl,
+            href: item.href || '',
+            score: item.score ?? null,
+            date: item.date || '',
+            label: item.label || '',
+            meta: item.meta || '',
+            tags: item.tags || [],
+            review: item.review || '',
+            kind: item.kind,
+            statusLabel: item.statusLabel,
+          },
+        ])
+      )
+    ).replace(/</g, '\\u003c')}
+  />
+</media-hub>
 
 <script>
-  type MediaItem = {
-    id: string
+  interface MediaItem {
     status: string
     title: string
     coverUrl: string
@@ -228,514 +284,803 @@ const defaultId = 'movie'
     meta: string
     tags: string[]
     review: string
+    kind: string
+    statusLabel: string
   }
 
-  const root = document.querySelector<HTMLElement>('[data-media-hub]')
-  const dataEl = document.getElementById('media-hub-data')
-  if (!root || !dataEl) throw new Error('MediaHub mount failed')
-  const catalog = JSON.parse(dataEl.textContent || '{}') as Record<
-    string,
-    MediaItem
-  >
-
-  const tabs = Array.from(
-    root.querySelectorAll<HTMLButtonElement>('[data-tab]')
-  )
-  const panels = Array.from(
-    root.querySelectorAll<HTMLElement>('[data-panel]')
-  )
-  const dialog = root.querySelector<HTMLDialogElement>('[data-media-lightbox]')!
-
-  const activate = (id: string, pushHash: boolean) => {
-    const exists = panels.some((panel) => panel.dataset.panel === id)
-    if (!exists) return
-    tabs.forEach((tab) => {
-      const on = tab.dataset.tab === id
-      tab.setAttribute('aria-selected', String(on))
-      tab.tabIndex = on ? 0 : -1
-    })
-    panels.forEach((panel) => {
-      panel.hidden = panel.dataset.panel !== id
-    })
-    if (pushHash) {
-      const next = `#${id}`
-      if (location.hash !== next) history.replaceState(null, '', next)
-    }
-  }
-
-  const openLightbox = (item: MediaItem) => {
-    const cover = dialog.querySelector<HTMLImageElement>('[data-lb-cover]')!
-    const title = dialog.querySelector<HTMLElement>('[data-lb-title]')!
-    const kicker = dialog.querySelector<HTMLElement>('[data-lb-kicker]')!
-    const meta = dialog.querySelector<HTMLElement>('[data-lb-meta]')!
-    const review = dialog.querySelector<HTMLElement>('[data-lb-review]')!
-    const link = dialog.querySelector<HTMLAnchorElement>('[data-lb-link]')!
-    cover.src = item.coverUrl
-    cover.alt = `${item.title}封面`
-    title.textContent = item.title
-    kicker.textContent = [
-      item.status === 'todo' ? '待看／玩' : '已看／玩',
-      item.label,
-    ]
-      .filter(Boolean)
-      .join(' · ')
-    meta.textContent = [
-      item.meta,
-      ...(item.tags || []),
-      item.score != null ? `评分 ${item.score}` : '',
-      item.date ? `日期 ${item.date}` : '',
-    ]
-      .filter(Boolean)
-      .join(' · ')
-    review.textContent = item.review || ''
-    review.hidden = !item.review
-    if (item.href) {
-      link.hidden = false
-      link.href = item.href
-    } else {
-      link.hidden = true
-      link.removeAttribute('href')
-    }
-    if (!dialog.open) dialog.showModal()
-  }
-
-  tabs.forEach((tab) => {
-    tab.addEventListener('click', () => activate(tab.dataset.tab!, true))
-  })
-
-  root.addEventListener('click', (event) => {
-    const btn = (event.target as Element).closest<HTMLElement>(
-      '[data-media-open]'
+  function mount(root: HTMLElement, signal: AbortSignal) {
+    const catalogEl = root.querySelector('[data-media-catalog]')
+    const dialog = root.querySelector<HTMLDialogElement>(
+      '[data-media-lightbox]'
     )
-    if (!btn) return
-    const item = catalog[btn.dataset.mediaOpen || '']
-    if (item) openLightbox(item)
-  })
+    if (!catalogEl || !dialog) return
+    const catalog = JSON.parse(catalogEl.textContent || '{}') as Record<
+      string,
+      MediaItem
+    >
+    const pick = <T extends HTMLElement>(selector: string) =>
+      dialog.querySelector<T>(selector)!
+    const lb = {
+      ambient: pick<HTMLImageElement>('[data-lb-ambient]'),
+      cover: pick<HTMLImageElement>('[data-lb-cover]'),
+      kicker: pick('[data-lb-kicker]'),
+      title: pick('[data-lb-title]'),
+      rating: pick('[data-lb-rating]'),
+      stars: pick('[data-lb-stars]'),
+      score: pick('[data-lb-score]'),
+      meta: pick('[data-lb-meta]'),
+      review: pick('[data-lb-review]'),
+      link: pick<HTMLAnchorElement>('[data-lb-link]'),
+      pos: pick('[data-lb-pos]'),
+      prev: pick<HTMLButtonElement>('[data-lb-step="-1"]'),
+      next: pick<HTMLButtonElement>('[data-lb-step="1"]'),
+    }
 
-  dialog
-    .querySelector('[data-media-close]')
-    ?.addEventListener('click', () => dialog.close())
-  dialog.addEventListener('click', (event) => {
-    if (event.target === dialog) dialog.close()
-  })
+    let sequence: string[] = []
+    let cursor = -1
 
-  window.addEventListener('hashchange', () => {
-    const id = (location.hash || '').replace(/^#/, '').split(/[/?]/)[0]
-    if (id) activate(id, false)
-  })
+    const render = () => {
+      const item = catalog[sequence[cursor]]
+      if (!item) return
+      lb.cover.src = item.coverUrl
+      lb.cover.alt = `${item.title}封面`
+      lb.ambient.src = item.coverUrl
+      lb.kicker.textContent = `${item.kind} · ${item.statusLabel}`
+      lb.kicker.dataset.status = item.status
+      lb.title.textContent = item.title
+      lb.rating.hidden = item.score == null
+      if (item.score != null) {
+        lb.stars.style.setProperty('--score', String(item.score))
+        lb.score.textContent = `${item.score} / 5`
+      }
+      lb.meta.replaceChildren(
+        ...[item.label, item.meta, ...item.tags, item.date]
+          .filter((text) => text && text !== item.kind)
+          .map((text) => {
+            const chip = document.createElement('span')
+            chip.textContent = text
+            return chip
+          })
+      )
+      lb.meta.hidden = lb.meta.childElementCount === 0
+      lb.review.textContent = item.review
+      lb.review.hidden = !item.review
+      lb.link.hidden = !item.href
+      if (item.href) lb.link.href = item.href
+      else lb.link.removeAttribute('href')
+      lb.pos.textContent = `${cursor + 1} / ${sequence.length}`
+      lb.prev.disabled = cursor <= 0
+      lb.next.disabled = cursor >= sequence.length - 1
+    }
 
-  const live = (location.hash || '').replace(/^#/, '').split(/[/?]/)[0]
-  if (live) activate(live, false)
-  else if (!location.hash) history.replaceState(null, '', '#movie')
+    const open = (id: string, from: HTMLElement) => {
+      const panel = from.closest<HTMLElement>('[data-panel]')
+      sequence = Array.from(
+        panel?.querySelectorAll<HTMLElement>('[data-media-open]') ?? []
+      ).map((el) => el.dataset.mediaOpen || '')
+      cursor = sequence.indexOf(id)
+      render()
+      if (!dialog.open) dialog.showModal()
+    }
+
+    const step = (delta: number) => {
+      const next = cursor + delta
+      if (next < 0 || next >= sequence.length) return
+      cursor = next
+      render()
+    }
+
+    root.addEventListener(
+      'click',
+      (event) => {
+        const target = event.target as Element
+        const card = target.closest<HTMLElement>('[data-media-open]')
+        if (card) open(card.dataset.mediaOpen || '', card)
+      },
+      { signal }
+    )
+
+    dialog.addEventListener(
+      'click',
+      (event) => {
+        const target = event.target as Element
+        if (target === dialog || target.closest('[data-media-close]')) {
+          dialog.close()
+          return
+        }
+        const stepper = target.closest<HTMLElement>('[data-lb-step]')
+        if (stepper) step(Number(stepper.dataset.lbStep))
+      },
+      { signal }
+    )
+
+    dialog.addEventListener(
+      'keydown',
+      (event) => {
+        if (event.key === 'ArrowLeft') step(-1)
+        else if (event.key === 'ArrowRight') step(1)
+      },
+      { signal }
+    )
+  }
+
+  // 页签由 InterestTabs 管；这里只绑灯箱，同样随 ClientRouter 换页重绑。
+  class MediaHubElement extends HTMLElement {
+    private controller?: AbortController
+    connectedCallback() {
+      this.controller = new AbortController()
+      mount(this, this.controller.signal)
+    }
+    disconnectedCallback() {
+      this.controller?.abort()
+    }
+  }
+  if (!customElements.get('media-hub'))
+    customElements.define('media-hub', MediaHubElement)
 </script>
 
 <style>
   .media-hub {
-    margin-top: 0.5rem;
+    --mh-line: color-mix(in srgb, var(--c-text) 10%, transparent);
+    --mh-muted: color-mix(in srgb, var(--c-text) 52%, var(--c-bg));
+    --mh-soft: color-mix(in srgb, var(--c-text) 72%, var(--c-bg));
+    --mh-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+    display: block;
   }
 
-  .media-hub__toolbar {
+  /* 统计：雾玻璃卡片挡住点状背景，四格等分；0 值降级为弱色。 */
+  /* 统计：无框无分隔线，只靠字号与留白分层；数字在上、标签在下。 */
+  .media-hub__summary {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.4rem;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem 2rem;
     margin-top: 1.75rem;
-    padding: 0.35rem;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--c-text) 5%, var(--c-bg));
-    border: 1px solid color-mix(in srgb, var(--c-text) 10%, transparent);
-    width: fit-content;
-    max-width: 100%;
-  }
-
-  .media-hub__tab {
-    appearance: none;
-    border: 0;
-    margin: 0;
-    padding: 0.45rem 0.95rem;
-    border-radius: 999px;
-    background: transparent;
-    color: color-mix(in srgb, var(--c-text) 65%, var(--c-bg));
-    font: inherit;
-    font-size: 0.875rem;
-    line-height: 1.3;
-    cursor: pointer;
-    transition:
-      background 0.18s ease,
-      color 0.18s ease,
-      box-shadow 0.18s ease;
-  }
-
-  .media-hub__tab[aria-selected='true'] {
-    background: var(--c-bg);
-    color: var(--c-text);
-    box-shadow: 0 1px 2px color-mix(in srgb, var(--c-text) 12%, transparent);
-    font-family: var(--font-heading);
-  }
-
-  .media-hub__tab:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-
-  .media-hub__panel[hidden] {
-    display: none;
-  }
-
-  .media-hub__note {
-    margin: 0.9rem 0 0;
-    font-size: 0.8125rem;
-    line-height: 1.6;
-    color: color-mix(in srgb, var(--c-text) 55%, var(--c-bg));
-  }
-
-  .media-hub__note :global(a) {
-    color: inherit;
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.16em;
-  }
-
-  .media-hub__note :global(a:hover),
-  .media-hub__note :global(a:focus-visible) {
-    color: var(--accent);
   }
 
   .media-hub__stats {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.75rem;
-    margin-top: 1.25rem;
+    grid-template-columns: repeat(4, max-content);
+    column-gap: 2.75rem;
+    margin: 0;
   }
 
   .media-hub__stat {
-    position: relative;
-    padding: 0.95rem 1rem 0.85rem;
-    border-radius: 14px;
-    border: 1px solid color-mix(in srgb, var(--c-text) 10%, transparent);
-    background: linear-gradient(
-      160deg,
-      color-mix(in srgb, var(--accent) 8%, var(--c-bg)),
-      var(--c-bg) 55%
-    );
-    overflow: hidden;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 0.45rem;
+    min-width: 0;
   }
 
-  .media-hub__stat::after {
+  .media-hub__stat dt {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    line-height: 1.2;
+    letter-spacing: 0.04em;
+    color: var(--mh-muted);
+    white-space: nowrap;
+  }
+
+  .media-hub__stat--todo dt::before {
     content: '';
-    position: absolute;
-    inset: auto -20% -40% auto;
-    width: 5.5rem;
-    height: 5.5rem;
+    flex: none;
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
-    pointer-events: none;
-  }
-
-  .media-hub__stat--todo {
-    background: linear-gradient(
-      160deg,
-      color-mix(in srgb, var(--accent) 16%, var(--c-bg)),
-      var(--c-bg) 60%
-    );
-    border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+    background: var(--accent);
   }
 
   .media-hub__stat-value {
-    display: block;
+    display: flex;
+    align-items: baseline;
+    gap: 0.2rem;
+    margin: 0;
     font-family: var(--font-heading);
-    font-size: 1.65rem;
-    font-weight: 400;
-    line-height: 1.1;
-    letter-spacing: 0.02em;
+    font-size: 2rem;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
   }
 
-  .media-hub__stat-label {
-    display: block;
-    margin-top: 0.35rem;
+  .media-hub__stat-unit {
     font-size: 0.75rem;
-    color: color-mix(in srgb, var(--c-text) 55%, var(--c-bg));
+    letter-spacing: 0;
+    color: var(--mh-muted);
+  }
+
+  .media-hub__stat--todo .media-hub__stat-value {
+    color: var(--accent);
+  }
+
+  .media-hub__stat--zero .media-hub__stat-value {
+    color: color-mix(in srgb, var(--c-text) 25%, var(--c-bg));
+  }
+
+  .media-hub__empty {
+    margin: 2.5rem 0;
+    font-size: 0.875rem;
+    color: var(--mh-muted);
+  }
+
+  /* 分组：待看／已看各一段，标题右侧延伸细线。 */
+  .media-hub__group {
+    margin-top: 2.5rem;
+  }
+
+  .media-hub__group-title {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 0 0 1.125rem;
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.4;
+  }
+
+  .media-hub__group-title::after {
+    content: '';
+    flex: 1;
+    align-self: center;
+    height: 1px;
+    margin-left: 0.25rem;
+    background: var(--mh-line);
+  }
+
+  .media-hub__group-count {
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--mh-muted);
   }
 
   .media-hub__wall {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
-    gap: 0.85rem 0.7rem;
-    margin-top: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(7.25rem, 1fr));
+    gap: 1.75rem 0.9rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
 
-  .media-hub__empty {
-    grid-column: 1 / -1;
-    margin: 1rem 0;
-    color: color-mix(in srgb, var(--c-text) 55%, var(--c-bg));
-    font-size: 0.875rem;
+  .media-hub__wall > li {
+    margin: 0;
+    padding: 0;
+  }
+
+  .media-hub__wall > li::before {
+    content: none;
   }
 
   .media-hub__card {
-    appearance: none;
-    border: 0;
-    padding: 0;
-    margin: 0;
-    background: transparent;
-    color: inherit;
-    text-align: left;
-    cursor: pointer;
-    font: inherit;
     display: flex;
     flex-direction: column;
-    gap: 0.45rem;
-    border-radius: 10px;
-  }
-
-  .media-hub__card:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 3px;
+    gap: 0.65rem;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
   }
 
   .media-hub__cover {
     position: relative;
     display: block;
     aspect-ratio: 2 / 3;
-    border-radius: 10px;
     overflow: hidden;
+    border-radius: 6px;
     background: color-mix(in srgb, var(--c-text) 6%, var(--c-bg));
-    box-shadow: 0 8px 20px -12px
-      color-mix(in srgb, var(--c-text) 45%, transparent);
+    box-shadow:
+      0 1px 2px color-mix(in srgb, #000 8%, transparent),
+      0 8px 18px -10px color-mix(in srgb, #000 35%, transparent);
     transition:
-      transform 0.2s ease,
-      box-shadow 0.2s ease;
+      transform 0.35s var(--mh-ease),
+      box-shadow 0.35s var(--mh-ease);
+  }
+
+  /* 内描边让浅色封面在白底、深色封面在黑底都有边界。 */
+  .media-hub__cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px
+      color-mix(in srgb, var(--c-text) 9%, transparent);
+    pointer-events: none;
   }
 
   .media-hub__cover img {
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    display: block;
-  }
-
-  .media-hub__card--todo .media-hub__cover {
-    box-shadow:
-      0 0 0 2px color-mix(in srgb, var(--accent) 75%, transparent),
-      0 10px 24px -12px color-mix(in srgb, var(--accent) 55%, transparent);
-  }
-
-  .media-hub__badge {
-    position: absolute;
-    top: 0.45rem;
-    left: 0.45rem;
-    z-index: 1;
-    padding: 0.15rem 0.45rem;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--accent) 92%, #000);
-    color: #fff;
-    font-size: 0.6875rem;
-    line-height: 1.3;
-    letter-spacing: 0.04em;
-  }
-
-  .media-hub__score {
-    position: absolute;
-    right: 0.4rem;
-    bottom: 0.4rem;
-    z-index: 1;
-    min-width: 1.6rem;
-    padding: 0.12rem 0.35rem;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--c-bg) 82%, transparent);
-    backdrop-filter: blur(8px);
-    font-family: var(--font-heading);
-    font-size: 0.75rem;
-    line-height: 1.2;
-    text-align: center;
+    transition: transform 0.6s var(--mh-ease);
   }
 
   .media-hub__peek {
     position: absolute;
     inset: 0;
-    z-index: 2;
     display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    gap: 0.2rem;
-    padding: 0.7rem 0.65rem 0.75rem;
+    align-items: flex-end;
+    padding: 0.65rem 0.65rem 0.7rem;
     background: linear-gradient(
       180deg,
-      transparent 20%,
-      color-mix(in srgb, #000 72%, transparent) 100%
+      transparent 30%,
+      color-mix(in srgb, #000 82%, transparent) 100%
     );
     color: #fff;
+    font-size: 0.6875rem;
+    line-height: 1.55;
     opacity: 0;
-    transform: translateY(4px);
-    transition:
-      opacity 0.18s ease,
-      transform 0.18s ease;
+    transition: opacity 0.25s ease;
     pointer-events: none;
   }
 
-  .media-hub__peek strong {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    line-height: 1.35;
-  }
-
-  .media-hub__peek span,
-  .media-hub__peek em {
-    font-size: 0.6875rem;
-    line-height: 1.4;
-    opacity: 0.88;
-    font-style: normal;
-  }
-
-  .media-hub__peek em {
+  .media-hub__peek > span {
     display: -webkit-box;
-    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
     overflow: hidden;
-    opacity: 0.8;
   }
 
-  .media-hub__card:is(:hover, :focus-visible) .media-hub__peek {
-    opacity: 1;
-    transform: none;
-  }
-
-  .media-hub__card:is(:hover, :focus-visible) .media-hub__cover {
-    transform: translateY(-2px) scale(1.015);
-    box-shadow: 0 14px 28px -14px
-      color-mix(in srgb, var(--c-text) 55%, transparent);
-  }
-
-  .media-hub__card--todo:is(:hover, :focus-visible) .media-hub__cover {
-    box-shadow:
-      0 0 0 2px color-mix(in srgb, var(--accent) 85%, transparent),
-      0 14px 28px -12px color-mix(in srgb, var(--accent) 60%, transparent);
+  .media-hub__sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   .media-hub__caption {
-    font-size: 0.75rem;
-    line-height: 1.35;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+
+  .media-hub__title {
     display: -webkit-box;
-    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     overflow: hidden;
-    color: color-mix(in srgb, var(--c-text) 78%, var(--c-bg));
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.4;
+    color: color-mix(in srgb, var(--c-text) 88%, var(--c-bg));
+  }
+
+  .media-hub__sub {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    color: var(--mh-muted);
+  }
+
+  .media-hub__sub-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .media-hub__score {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    flex: none;
+    color: var(--mh-soft);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .media-hub__score svg {
+    width: 0.75rem;
+    height: 0.75rem;
+    fill: var(--accent);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .media-hub__card:hover .media-hub__cover {
+      transform: translateY(-4px);
+      box-shadow:
+        0 2px 4px color-mix(in srgb, #000 8%, transparent),
+        0 20px 32px -16px color-mix(in srgb, #000 45%, transparent);
+    }
+
+    .media-hub__card:hover .media-hub__cover img {
+      transform: scale(1.04);
+    }
+
+    .media-hub__card:hover .media-hub__peek {
+      opacity: 1;
+    }
+  }
+
+  .media-hub__card:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
+  .media-hub__card:focus-visible .media-hub__cover {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .media-hub__lightbox :is(button, a):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+
+  /* 灯箱 */
+  :global(html:has(.media-hub__lightbox[open])) {
+    overflow: hidden;
   }
 
   .media-hub__lightbox {
+    width: min(46rem, calc(100vw - 2rem));
+    max-width: none;
+    max-height: calc(100dvh - 2rem);
+    margin: auto;
     padding: 0;
     border: 0;
-    max-width: min(52rem, calc(100vw - 2rem));
-    width: 100%;
     background: transparent;
+    color: var(--c-text);
+    overflow: visible;
+  }
+
+  .media-hub__lightbox[open] {
+    animation: media-hub-pop 0.32s var(--mh-ease);
   }
 
   .media-hub__lightbox::backdrop {
-    background: color-mix(in srgb, #000 55%, transparent);
-    backdrop-filter: blur(6px);
+    background: color-mix(in srgb, #000 48%, transparent);
+    backdrop-filter: blur(8px) saturate(120%);
   }
 
-  .media-hub__lightbox-inner {
-    display: grid;
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-    border-radius: 16px;
-    overflow: hidden;
-    background: var(--c-bg);
-    border: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
-    box-shadow: 0 24px 60px -24px color-mix(in srgb, #000 55%, transparent);
+  .media-hub__lightbox[open]::backdrop {
+    animation: media-hub-fade 0.3s ease;
+  }
+
+  .media-hub__lightbox [hidden] {
+    display: none !important;
+  }
+
+  .media-hub__sheet {
     position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: 13.5rem minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      'cover head'
+      'cover review'
+      'cover foot';
+    column-gap: 2rem;
+    max-height: calc(100dvh - 2rem);
+    padding: 1.25rem;
+    overflow: hidden auto;
+    border: 1px solid var(--mh-line);
+    border-radius: 18px;
+    background: var(--c-bg);
+    box-shadow: 0 32px 80px -32px color-mix(in srgb, #000 60%, transparent);
   }
 
-  .media-hub__lightbox-close {
+  /* 用当前封面的模糊色晕给面板染一层很淡的底色。 */
+  .media-hub__ambient {
     position: absolute;
-    top: 0.55rem;
-    right: 0.55rem;
-    z-index: 2;
-    width: 2rem;
-    height: 2rem;
-    border: 0;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--c-bg) 80%, transparent);
-    color: var(--c-text);
-    cursor: pointer;
-    font-size: 1.25rem;
-    line-height: 1;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
   }
 
-  .media-hub__lightbox-cover {
-    background: color-mix(in srgb, var(--c-text) 6%, var(--c-bg));
-    min-height: 18rem;
-  }
-
-  .media-hub__lightbox-cover img {
+  .media-hub__ambient img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    filter: blur(48px) saturate(1.4);
+    opacity: 0.12;
+    transform: scale(1.3);
+  }
+
+  :global(.dark) .media-hub__ambient img {
+    opacity: 0.2;
+  }
+
+  .media-hub__lb-cover {
+    grid-area: cover;
+    align-self: start;
+    margin: 0;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--c-text) 6%, var(--c-bg));
+    box-shadow: 0 14px 30px -16px color-mix(in srgb, #000 55%, transparent);
+  }
+
+  .media-hub__lb-cover img {
     display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
-  .media-hub__lightbox-body {
-    padding: 1.4rem 1.35rem 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
+  /* 右栏：只用字号、字重与留白分层；不用胶囊、描边按钮与分隔线。 */
+  .media-hub__lb-head {
+    grid-area: head;
+    min-width: 0;
+    padding: 0.35rem 2.5rem 0 0;
   }
 
-  .media-hub__lightbox-kicker {
+  .media-hub__lb-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
     margin: 0;
     font-size: 0.75rem;
-    color: color-mix(in srgb, var(--c-text) 55%, var(--c-bg));
+    letter-spacing: 0.08em;
+    color: var(--mh-muted);
   }
 
-  .media-hub__lightbox-body h2 {
-    margin: 0;
-    font-size: 1.35rem;
+  .media-hub__lb-kicker[data-status='todo']::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .media-hub__lb-head h2 {
+    margin: 0.6rem 0 0;
+    font-size: 1.625rem;
     font-weight: 600;
-    line-height: 1.3;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
   }
 
-  .media-hub__lightbox-meta {
-    margin: 0;
+  .media-hub__lb-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.7rem 0 0;
     font-size: 0.8125rem;
-    color: color-mix(in srgb, var(--c-text) 60%, var(--c-bg));
+    font-variant-numeric: tabular-nums;
+    color: var(--mh-muted);
   }
 
-  .media-hub__lightbox-review {
-    margin: 0.35rem 0 0;
-    font-size: 0.875rem;
-    line-height: 1.7;
+  .media-hub__stars {
+    --score: 0;
+    position: relative;
+    display: inline-block;
+    font-size: 0.8125rem;
+    line-height: 1;
+    letter-spacing: 0.15em;
+    color: color-mix(in srgb, var(--c-text) 14%, transparent);
+  }
+
+  .media-hub__stars::before {
+    content: '★★★★★';
+  }
+
+  .media-hub__stars::after {
+    content: '★★★★★';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: calc(var(--score) / 5 * 100%);
+    overflow: hidden;
+    white-space: nowrap;
+    color: var(--accent);
+  }
+
+  .media-hub__lb-meta {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0.55rem 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--mh-muted);
+  }
+
+  .media-hub__lb-meta > :global(span + span)::before {
+    content: '·';
+    margin: 0 0.45em;
+    opacity: 0.6;
+  }
+
+  .media-hub__lb-review {
+    grid-area: review;
+    align-self: start;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    font-size: 0.9375rem;
+    font-style: normal;
+    line-height: 1.85;
+    color: color-mix(in srgb, var(--c-text) 82%, var(--c-bg));
     white-space: pre-wrap;
   }
 
-  .media-hub__lightbox-link {
-    margin-top: auto;
-    align-self: flex-start;
-    font-size: 0.875rem;
-    color: var(--accent);
+  .media-hub__lb-foot {
+    grid-area: foot;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .media-hub__lb-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.3rem 0;
+    color: var(--mh-soft);
+    font-size: 0.8125rem;
+    line-height: 1.2;
     text-decoration: none;
+    transition: color 0.2s ease;
   }
 
-  .media-hub__lightbox-link:is(:hover, :focus-visible) {
-    text-decoration: underline;
-    text-underline-offset: 0.16em;
+  .media-hub__lb-link:hover {
+    color: var(--accent);
   }
 
-  @media (max-width: 720px) {
+  .media-hub__lb-link svg {
+    width: 0.85rem;
+    height: 0.85rem;
+    fill: currentColor;
+    transition: transform 0.2s ease;
+  }
+
+  .media-hub__lb-link:hover svg {
+    transform: translate(1px, -1px);
+  }
+
+  .media-hub__lb-pager {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.1rem;
+    margin-left: auto;
+  }
+
+  .media-hub__lb-pos {
+    min-width: 3rem;
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    color: var(--mh-muted);
+  }
+
+  .media-hub__lb-step,
+  .media-hub__lb-close {
+    display: inline-grid;
+    place-items: center;
+    width: 1.875rem;
+    height: 1.875rem;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--mh-soft);
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      opacity 0.2s ease;
+  }
+
+  .media-hub__lb-step svg,
+  .media-hub__lb-close svg {
+    width: 1.05rem;
+    height: 1.05rem;
+    fill: currentColor;
+  }
+
+  .media-hub__lb-step:enabled:hover,
+  .media-hub__lb-close:hover {
+    background: color-mix(in srgb, var(--c-text) 7%, transparent);
+    color: var(--c-text);
+  }
+
+  .media-hub__lb-step:disabled {
+    opacity: 0.25;
+    cursor: default;
+  }
+
+  .media-hub__lb-close {
+    position: absolute;
+    top: 0.85rem;
+    right: 0.85rem;
+  }
+
+  @keyframes media-hub-pop {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.98);
+    }
+  }
+
+  @keyframes media-hub-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @media (max-width: 600px) {
     .media-hub__stats {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      width: 100%;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: 0.75rem;
     }
+
+    .media-hub__stat dt {
+      font-size: 0.6875rem;
+      letter-spacing: 0;
+    }
+
+    .media-hub__stat-value {
+      font-size: 1.625rem;
+    }
+
+    .media-hub__stat-unit {
+      font-size: 0.6875rem;
+    }
+
     .media-hub__wall {
-      grid-template-columns: repeat(auto-fill, minmax(6.4rem, 1fr));
-      gap: 0.7rem 0.55rem;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1.4rem 0.75rem;
     }
-    .media-hub__lightbox-inner {
-      grid-template-columns: 1fr;
+
+    .media-hub__sheet {
+      grid-template-columns: 6.5rem minmax(0, 1fr);
+      grid-template-rows: auto auto auto;
+      grid-template-areas:
+        'cover head'
+        'review review'
+        'foot foot';
+      column-gap: 1rem;
+      padding: 1rem;
+      border-radius: 16px;
     }
-    .media-hub__lightbox-cover {
-      max-height: 16rem;
+
+    .media-hub__lb-head {
+      padding-top: 0;
+    }
+
+    .media-hub__lb-head h2 {
+      font-size: 1.1875rem;
+    }
+
+    .media-hub__lb-review {
+      margin-top: 1.1rem;
+      font-size: 0.875rem;
+    }
+
+    .media-hub__lb-close {
+      top: 0.75rem;
+      right: 0.75rem;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .media-hub__card:is(:hover, :focus-visible) .media-hub__cover,
+    .media-hub__lightbox[open],
+    .media-hub__lightbox[open]::backdrop {
+      animation: none;
+    }
+
+    .media-hub__cover,
+    .media-hub__cover img,
     .media-hub__peek {
       transition: none;
     }

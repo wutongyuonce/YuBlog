@@ -2,46 +2,52 @@
 
 export const MEDIA_CATEGORIES = [
   {
-    id: 'movie',
-    label: '电影',
-    verb: '看',
+    id: 'anime',
+    label: '动漫',
+
+    unit: '部',
     todoLabel: '待看',
+    doneLabel: '已看',
     doneMonthLabel: '本月已看',
     doneYearLabel: '今年已看',
   },
   {
-    id: 'anime',
-    label: '动漫',
-    verb: '看',
+    id: 'movie',
+    label: '电影',
+
+    unit: '部',
     todoLabel: '待看',
+    doneLabel: '已看',
     doneMonthLabel: '本月已看',
     doneYearLabel: '今年已看',
-    noteHtml:
-      '<a href="https://space.bilibili.com/521627597/bangumi" target="_blank" rel="noopener noreferrer">我的 B 站追番／追剧</a>',
   },
   {
     id: 'tv',
     label: '电视剧',
-    verb: '看',
+
+    unit: '部',
     todoLabel: '待看',
+    doneLabel: '已看',
     doneMonthLabel: '本月已看',
     doneYearLabel: '今年已看',
   },
   {
     id: 'game',
     label: '游戏',
-    verb: '玩',
+
+    unit: '款',
     todoLabel: '待玩',
+    doneLabel: '已玩',
     doneMonthLabel: '本月已玩',
     doneYearLabel: '今年已玩',
-    noteHtml:
-      'Steam Friend Code：<a href="https://steamcommunity.com/id/wutongyuonce/" target="_blank" rel="noopener noreferrer">1554038676</a>',
   },
   {
     id: 'book',
     label: '书',
-    verb: '读',
+
+    unit: '本',
     todoLabel: '待读',
+    doneLabel: '已读',
     doneMonthLabel: '本月已读',
     doneYearLabel: '今年已读',
   },
@@ -67,7 +73,9 @@ function parseYmd(date) {
 
 /**
  * 待看／玩在前；已完成按日期新→旧；无日期按标题（zh-Hans）。
- * @param {Array<{ status: string, date?: string, title: string }>} items
+ * @template {{ status: string, date?: string, title: string }} T
+ * @param {T[]} items
+ * @returns {T[]}
  */
 export function sortMediaItems(items) {
   const collator = new Intl.Collator('zh-Hans-CN')
@@ -106,12 +114,4 @@ export function mediaStats(items, now = new Date()) {
     if (d.startsWith(`${y}-`)) doneYear++
   }
   return { todo, doneMonth, doneYear, total }
-}
-
-/** @param {string | undefined} hash */
-export function categoryFromHash(hash) {
-  const id = String(hash || '')
-    .replace(/^#/, '')
-    .split(/[/?]/)[0]
-  return MEDIA_CATEGORIES.some((c) => c.id === id) ? id : 'movie'
 }
