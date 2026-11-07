@@ -78,20 +78,10 @@ const albumImages = (details) => {
 export const lastfmOriginalCover = (cover) =>
   cover ? cover.replace(/\/i\/u\/[^/]+\//, '/i/u/ar0/') : null
 
-export async function fetchLastfmSnapshot({
-  apiKey,
-  user = LASTFM_USER,
-  now = new Date(),
-  fetchImpl = fetch,
-} = {}) {
-  text(apiKey, 'API key (set LASTFM_API_KEY)')
-  text(user, 'user')
-  const to = Math.floor(now.getTime() / 1000)
-  if (!Number.isSafeInteger(to) || to < WEEK_SECONDS)
-    throw new Error('Last.fm: invalid sync time')
-  const from = to - WEEK_SECONDS
-
-  const request = async (method, params = {}, optionalAlbum = false) => {
+/** 一次 Last.fm API 调用；错误消息不含 URL 与密钥。 */
+const createRequest =
+  ({ apiKey, user, fetchImpl }) =>
+  async (method, params = {}, optionalAlbum = false) => {
     const url = new URL(API_URL)
     url.search = new URLSearchParams({
       method,
@@ -118,6 +108,68 @@ export async function fetchLastfmSnapshot({
     }
     return data
   }
+
+const trackUrl = (artist, name) =>
+  `https://www.last.fm/music/${encodeURIComponent(artist)}/_/${encodeURIComponent(name)}`
+
+/**
+ * 正在播放／最近一首：只取 `user.getRecentTracks` 的第一条。Last.fm 只标记
+ * `nowplaying`，不提供播放进度或开始时间，所以这里也不推算进度。
+ */
+export async function fetchLastfmNowPlaying({
+  apiKey,
+  user = LASTFM_USER,
+  now = new Date(),
+  fetchImpl = fetch,
+} = {}) {
+  text(apiKey, 'API key (set LASTFM_API_KEY)')
+  text(user, 'user')
+  const request = createRequest({ apiKey, user, fetchImpl })
+  const recent = await request('user.getRecentTracks', { limit: '1' })
+  const [latest] = list(recent.recenttracks?.track, 'recent tracks')
+  const base = {
+    user,
+    profileUrl: lastfmProfileUrl(user),
+    updatedAt: now.toISOString(),
+  }
+  if (!latest) return { ...base, playing: false, playedAt: null, track: null }
+  const playing = latest['@attr']?.nowplaying === 'true'
+  const name = text(latest.name, 'recent name')
+  const artist = text(latest.artist?.['#text'], 'recent artist')
+  const cover = coverOf(latest.image)
+  return {
+    ...base,
+    playing,
+    playedAt: playing
+      ? null
+      : new Date(count(latest.date?.uts, 'scrobble time') * 1000).toISOString(),
+    track: {
+      name,
+      artist,
+      album:
+        typeof latest.album?.['#text'] === 'string'
+          ? latest.album['#text'].trim() || null
+          : null,
+      cover,
+      url: trackUrl(artist, name),
+    },
+  }
+}
+
+export async function fetchLastfmSnapshot({
+  apiKey,
+  user = LASTFM_USER,
+  now = new Date(),
+  fetchImpl = fetch,
+} = {}) {
+  text(apiKey, 'API key (set LASTFM_API_KEY)')
+  text(user, 'user')
+  const to = Math.floor(now.getTime() / 1000)
+  if (!Number.isSafeInteger(to) || to < WEEK_SECONDS)
+    throw new Error('Last.fm: invalid sync time')
+  const from = to - WEEK_SECONDS
+
+  const request = createRequest({ apiKey, user, fetchImpl })
   const recentParams = { from: String(from), to: String(to), limit: '200' }
   const [top, recent, info, artists] = await Promise.all([
     request('user.getTopTracks', { period: '7day', limit: '10' }),
@@ -135,7 +187,7 @@ export async function fetchLastfmSnapshot({
         artist,
         album: null,
         cover: null,
-        url: `https://www.last.fm/music/${encodeURIComponent(artist)}/_/${encodeURIComponent(name)}`,
+        url: trackUrl(artist, name),
         playcount: count(track.playcount, 'track playcount'),
       }
     })

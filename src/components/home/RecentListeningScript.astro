@@ -2,22 +2,32 @@
 <script>
   import {
     parseListeningPayload,
+    parseNowPlayingPayload,
     renderListening,
+    renderNowPlaying,
   } from '~/utils/recent-listening'
 
   /** 与 Vercel 上的函数路径一致；接口不受站点 base 影响。 */
   const ENDPOINT = '/api/lastfm'
+  const NOW_ENDPOINT = '/api/lastfm-now'
+  /** 正在播放每分钟刷新一次；接口自身有 30 秒 CDN 缓存。 */
+  const NOW_INTERVAL = 60_000
 
   let request: AbortController | undefined
+  let nowTimer: ReturnType<typeof setInterval> | undefined
+
+  const getJson = async (url: string, signal: AbortSignal) => {
+    const response = await fetch(url, {
+      signal,
+      headers: { accept: 'application/json' },
+    })
+    return response.ok ? response.json() : null
+  }
 
   const fill = async (root: HTMLElement, signal: AbortSignal) => {
     let snapshot = null
     try {
-      const response = await fetch(ENDPOINT, {
-        signal,
-        headers: { accept: 'application/json' },
-      })
-      if (response.ok) snapshot = parseListeningPayload(await response.json())
+      snapshot = parseListeningPayload(await getJson(ENDPOINT, signal))
     } catch (error) {
       if (signal.aborted) return
       // 网络错误、超时和非 JSON 响应都走同一套失败状态。
@@ -29,20 +39,43 @@
     document.dispatchEvent(new Event('content:added'))
   }
 
+  const fillNow = async (card: HTMLElement, signal: AbortSignal) => {
+    let data = null
+    try {
+      data = parseNowPlayingPayload(await getJson(NOW_ENDPOINT, signal))
+    } catch (error) {
+      if (signal.aborted) return
+      console.warn('Last.fm now-playing request failed', error)
+    }
+    if (signal.aborted || !card.isConnected) return
+    renderNowPlaying(card, data)
+  }
+
+  const stop = () => {
+    request?.abort()
+    request = undefined
+    clearInterval(nowTimer)
+    nowTimer = undefined
+  }
+
   const load = () => {
     const root = document.querySelector<HTMLElement>('[data-listening]')
     if (!root || root.dataset.state !== 'loading' || request) return
     const current = new AbortController()
     request = current
-    void fill(root, current.signal).finally(() => {
-      if (request === current) request = undefined
-    })
+    const card = root.querySelector<HTMLElement>('[data-now-playing]')
+    if (card) {
+      void fillNow(card, current.signal)
+      // 只在页面可见时轮询；隐藏的标签页不打接口。
+      nowTimer = setInterval(() => {
+        if (document.visibilityState === 'visible')
+          void fillNow(card, current.signal)
+      }, NOW_INTERVAL)
+    }
+    void fill(root, current.signal)
   }
 
-  document.addEventListener('astro:before-swap', () => {
-    request?.abort()
-    request = undefined
-  })
+  document.addEventListener('astro:before-swap', stop)
   document.addEventListener('astro:page-load', load)
   load()
 </script>

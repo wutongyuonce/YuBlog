@@ -18,11 +18,48 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
   data-state="loading"
 >
   <header class="home-section-header">
-    <h2 id="recent-listening-title">最近在听 TOP10</h2>
+    <h2 id="recent-listening-title">近期在听</h2>
     <a href={profileUrl} target="_blank" rel="noopener noreferrer">
       Last.fm ↗
     </a>
   </header>
+  <!-- 正在播放／最近播放：加载时是骨架，失败或无记录时整张收起。 -->
+  <article
+    class="now-playing"
+    aria-label="正在播放"
+    aria-busy="true"
+    data-now-playing
+    data-state="loading"
+  >
+    <div class="now-playing__ambient" aria-hidden="true">
+      <img data-np-ambient alt="" />
+    </div>
+    <div class="now-playing__cover">
+      <img data-np-cover alt="" width="300" height="300" decoding="async" />
+      <span class="now-playing__placeholder" aria-hidden="true">
+        ♪
+      </span>
+    </div>
+    <div class="now-playing__body">
+      <p class="now-playing__status">
+        <span class="now-playing__bars" aria-hidden="true">
+          <i></i>
+          <i></i>
+          <i></i>
+        </span>
+        <span data-np-status></span>
+      </p>
+      <a
+        class="now-playing__title"
+        data-np-title
+        href={profileUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+      ></a>
+      <p class="now-playing__artist" data-np-artist></p>
+      <p class="now-playing__album" data-np-album></p>
+    </div>
+  </article>
   <div class="recent-listening__stats" aria-label="听歌统计">
     <span>
       过去 7 天 <strong data-listening-stat>—</strong> 次
@@ -42,7 +79,7 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
       class="media-cards media-cards--rail media-cards--auto"
       tabindex="0"
       role="region"
-      aria-label="过去 7 天常听歌曲 TOP 10"
+      aria-label="过去 7 天常听歌曲"
     >
       <div class="media-cards__track" role="list" data-listening-track>
         {Array.from({ length: 10 }, () => (
@@ -66,6 +103,11 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
     更新于 <time data-listening-time>—</time>（北京时间）
   </p>
   <noscript>
+    <style>
+      .now-playing {
+        display: none !important;
+      }
+    </style>
     <p class="recent-listening__message">
       听歌数据由 Last.fm 实时提供，需要启用 JavaScript；也可以直接访问{' '}
       <a href={profileUrl} target="_blank" rel="noopener noreferrer">
@@ -102,6 +144,179 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
 </section>
 
 <style>
+  /* 正在播放：封面 + 三行文字，底色由封面的模糊色晕轻染；不假造进度条。 */
+  .now-playing {
+    --np-cover: 4.75rem;
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: var(--np-cover) minmax(0, 1fr);
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding: 0.875rem;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--c-text) 9%, transparent);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--c-text) 3%, var(--c-bg));
+  }
+  .now-playing[hidden] {
+    display: none;
+  }
+  .now-playing__ambient {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .now-playing__ambient img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(40px) saturate(1.4);
+    opacity: 0.16;
+    transform: scale(1.4);
+  }
+  .now-playing__ambient img:not([src]),
+  .now-playing__cover img:not([src]) {
+    display: none;
+  }
+  :global(.dark) .now-playing__ambient img {
+    opacity: 0.22;
+  }
+  .now-playing__cover {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--c-text) 8%, var(--c-bg));
+    box-shadow: 0 6px 16px -8px rgb(0 0 0 / 35%);
+  }
+  .now-playing__cover img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .now-playing__placeholder {
+    position: absolute;
+    inset: 0;
+    display: none;
+    place-items: center;
+    color: color-mix(in srgb, var(--c-text) 45%, var(--c-bg));
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+  }
+  .now-playing[data-no-cover] .now-playing__placeholder {
+    display: grid;
+  }
+  .now-playing__body {
+    display: grid;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+  .now-playing__body > * {
+    margin: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .now-playing__status {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.2rem;
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    color: color-mix(in srgb, var(--c-text) 55%, var(--c-bg));
+  }
+  .now-playing[data-state='playing'] .now-playing__status {
+    color: var(--accent);
+  }
+  /* 三根均衡器细条，播放时跳动。 */
+  .now-playing__bars {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 0.625rem;
+  }
+  .now-playing__bars i {
+    width: 2px;
+    height: 30%;
+    border-radius: 1px;
+    background: currentColor;
+  }
+  .now-playing[data-state='playing'] .now-playing__bars i {
+    animation: now-playing-bar 0.9s ease-in-out infinite alternate;
+  }
+  .now-playing[data-state='playing'] .now-playing__bars i:nth-child(2) {
+    animation-delay: -0.45s;
+  }
+  .now-playing[data-state='playing'] .now-playing__bars i:nth-child(3) {
+    animation-delay: -0.2s;
+  }
+  @keyframes now-playing-bar {
+    from {
+      height: 25%;
+    }
+    to {
+      height: 100%;
+    }
+  }
+  .now-playing__title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.45;
+    color: var(--c-text);
+    text-decoration: none;
+  }
+  /* 标题族：docs/design/site.md#visuals */
+  .now-playing__title:is(:hover, :focus-visible) {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+  .now-playing__artist,
+  .now-playing__album {
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: color-mix(in srgb, var(--c-text) 62%, var(--c-bg));
+  }
+  .now-playing__album {
+    font-size: 0.75rem;
+    color: color-mix(in srgb, var(--c-text) 45%, var(--c-bg));
+  }
+  .now-playing__album[hidden] {
+    display: none;
+  }
+  /* 加载态：封面与三行文字占位，尺寸与就绪后一致。 */
+  .now-playing[data-state='loading'] :is(.now-playing__body > *) {
+    width: 60%;
+    height: 0.8rem;
+    margin: 0.2rem 0;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--c-text) 8%, var(--c-bg));
+    color: transparent;
+    animation: recent-listening-skeleton-pulse 1.4s ease-in-out infinite;
+  }
+  .now-playing[data-state='loading'] .now-playing__status {
+    width: 30%;
+  }
+  /* 均衡器只在播放时出现；静止的三个矮点像省略号，会被误读。 */
+  .now-playing:not([data-state='playing']) .now-playing__bars {
+    display: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .now-playing[data-state='playing'] .now-playing__bars i {
+      height: 70%;
+      animation: none;
+    }
+    .now-playing[data-state='loading'] :is(.now-playing__body > *) {
+      animation: none;
+    }
+  }
   .recent-listening {
     /* Two title lines, two metadata lines, and their shared gap. */
     --listening-copy-height: calc(3rem + 0.35rem + 2.625rem);

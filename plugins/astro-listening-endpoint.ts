@@ -6,9 +6,13 @@ import { parseEnv } from 'node:util'
 import type { AstroIntegration } from 'astro'
 
 import { handleListening } from '../api/lastfm.js'
+import { handleNowPlaying } from '../api/lastfm-now.js'
 
 /** 与 Vercel 上的函数路径一致；接口不受站点 base 影响。 */
-const ROUTE = '/api/lastfm'
+const ROUTES = {
+  '/api/lastfm-now': handleNowPlaying,
+  '/api/lastfm': handleListening,
+} as const
 
 /**
  * 让 `pnpm dev` 也有听歌接口。
@@ -32,9 +36,11 @@ export function listeningEndpointIntegration(): AstroIntegration {
                 name: 'listening-endpoint',
                 apply: 'serve',
                 configureServer(server) {
-                  server.middlewares.use(ROUTE, (request, response) => {
-                    void respond(request, response)
-                  })
+                  // connect 按路径段匹配，`/api/lastfm` 不会命中 `/api/lastfm-now`。
+                  for (const [route, handler] of Object.entries(ROUTES))
+                    server.middlewares.use(route, (request, response) => {
+                      void respond(request, response, route, handler)
+                    })
                 },
               },
             ],
@@ -47,16 +53,18 @@ export function listeningEndpointIntegration(): AstroIntegration {
 
 async function respond(
   request: IncomingMessage & { originalUrl?: string },
-  response: ServerResponse
+  response: ServerResponse,
+  route: string,
+  handler: typeof handleListening
 ) {
-  const url = new URL(request.originalUrl ?? request.url ?? ROUTE, 'http://dev')
+  const url = new URL(request.originalUrl ?? request.url ?? route, 'http://dev')
   let result
   try {
     const env = { ...(await dotenv()), ...process.env }
-    result = await handleListening(
-      new Request(url, { method: request.method }),
-      { apiKey: env.LASTFM_API_KEY, user: env.LASTFM_USER }
-    )
+    result = await handler(new Request(url, { method: request.method }), {
+      apiKey: env.LASTFM_API_KEY,
+      user: env.LASTFM_USER,
+    })
   } catch (error) {
     console.error(error)
     result = new Response(JSON.stringify({ error: 'dev_middleware_failed' }), {
