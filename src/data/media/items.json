@@ -6,7 +6,7 @@
     "title": "猎凶风河谷",
     "cover": "movie/wind-river.jpg",
     "href": "https://zh.wikipedia.org/wiki/極地追擊",
-    "label": "电影"
+    "tags": ["犯罪", "悬疑"]
   },
   {
     "id": "movie-赴汤蹈火",
@@ -15,7 +15,7 @@
     "title": "赴汤蹈火",
     "cover": "movie/hell-or-high-water.jpg",
     "href": "https://zh.wikipedia.org/wiki/非正常械劫案",
-    "label": "电影"
+    "tags": ["犯罪", "西部"]
   },
   {
     "id": "movie-空枪",
@@ -26,7 +26,7 @@
     "href": "https://zh.wikipedia.org/wiki/空枪",
     "score": 3.5,
     "date": "2026-11-03",
-    "label": "电影",
+    "tags": ["悬疑"],
     "review": "视觉画面上挺不错的，具体剧情还差点意思"
   },
   {
@@ -38,7 +38,7 @@
     "href": "https://zh.wikipedia.org/wiki/无人区_(电影)",
     "score": 5,
     "date": "2026-10-29",
-    "label": "电影",
+    "tags": ["犯罪", "西部"],
     "review": "可能是中国西部黑色犯罪片中最早也最好的一部"
   },
   {
@@ -49,7 +49,7 @@
     "cover": "movie/twelve-zodiac.jpg",
     "href": "https://zh.wikipedia.org/wiki/十二生肖_(電影)",
     "score": 3.5,
-    "label": "电影",
+    "tags": ["动作", "冒险"],
     "review": "感觉小时候过年在电视上看过好几遍"
   },
   {
@@ -60,7 +60,7 @@
     "cover": "movie/breakup-buddies.jpg",
     "href": "https://zh.wikipedia.org/wiki/心花路放",
     "score": 4.5,
-    "label": "电影",
+    "tags": ["喜剧", "公路"],
     "review": "经典公路片"
   },
   {
@@ -71,7 +71,7 @@
     "cover": "movie/getting-home.jpg",
     "href": "https://zh.wikipedia.org/wiki/落叶归根",
     "score": 4.5,
-    "label": "电影",
+    "tags": ["喜剧", "公路"],
     "review": "黑色喜剧"
   },
   {
@@ -83,7 +83,7 @@
     "href": "https://zh.wikipedia.org/wiki/曼达洛人与古古",
     "score": 3.5,
     "date": "2026-10-27",
-    "label": "电影",
+    "tags": ["科幻", "星战"],
     "review": "速刷，没咋看过星球大战的前片背景，不过还算能看得进去"
   },
   {
@@ -94,7 +94,7 @@
     "cover": "movie/sicario.png",
     "href": "https://en.wikipedia.org/wiki/Sicario_(2015_film)",
     "score": 4,
-    "label": "电影",
+    "tags": ["犯罪", "动作"],
     "review": "一名 FBI 探员加入美墨边境的缉毒行动，逐渐发现任务背后另有规则。维伦纽瓦把荒漠、边境线和失控的暴力拍得冷峻压抑。"
   },
   {
@@ -105,7 +105,7 @@
     "cover": "movie/sicario-day-of-the-soldado.png",
     "href": "https://en.wikipedia.org/wiki/Sicario:_Day_of_the_Soldado",
     "score": 3,
-    "label": "电影",
+    "tags": ["犯罪", "动作"],
     "review": "美墨边境的秘密行动继续，马特和亚历杭德罗试图用绑架挑起贩毒集团之间的冲突。任务失控后，两人围绕一名毒枭的女儿走向不同选择。"
   },
   {
@@ -116,7 +116,7 @@
     "cover": "movie/resident-evil.jpg",
     "href": "https://zh.wikipedia.org/wiki/恶灵古堡：爆发夜",
     "score": 3,
-    "label": "电影",
+    "tags": ["恐怖"],
     "review": "前半部还是能看的，后半部编剧简直在拿脚写剧本，太降智了"
   },
   {
@@ -127,7 +127,7 @@
     "cover": "movie/crazy-stone.jpg",
     "href": "https://zh.wikipedia.org/wiki/疯狂的石头",
     "score": 4.5,
-    "label": "电影",
+    "tags": ["喜剧", "犯罪"],
     "review": "宁浩 2006 年的黑色喜剧。一块翡翠把厂长、小偷和骗子卷进同一场互相算计，台词和巧合都收得很紧。"
   },
   {
@@ -138,7 +138,7 @@
     "cover": "movie/dear-you.jpg",
     "href": "https://zh.wikipedia.org/wiki/给阿嬷的情书",
     "score": 5,
-    "label": "电影",
+    "tags": ["剧情", "家庭"],
     "review": "蓝鸿春 2026 年的电影，讲潮汕侨批和一封写给阿嬷的信，素人主演，拍的是下南洋那一代人留下的家书。"
   },
   {
@@ -149,7 +149,7 @@
     "cover": "movie/detective-chinatown.jpg",
     "href": "https://zh.wikipedia.org/wiki/唐人街探案",
     "score": 5,
-    "label": "电影",
+    "tags": ["喜剧", "探案"],
     "review": "陈思诚的喜剧探案。秦风靠观察和脑补拆案，笑点和案情绑在一起，节奏很快。"
   },
   {
@@ -160,7 +160,7 @@
     "cover": "movie/dying-to-survive.jpg",
     "href": "https://zh.wikipedia.org/wiki/我不是药神",
     "score": 5,
-    "label": "电影",
+    "tags": ["剧情", "现实"],
     "review": "徐峥饰演的神油店老板代购仿制药。前半段是市井喜剧，后半段把救命药的价钱压到人身上。"
   },
   {
@@ -171,7 +171,7 @@
     "cover": "movie/shoplifters.jpg",
     "href": "https://zh.wikipedia.org/wiki/小偷家族",
     "score": 4.5,
-    "label": "电影",
+    "tags": ["剧情", "家庭"],
     "review": "是枝裕和拍的一组没有血缘、却靠彼此过活的人。家里很挤，关系却比许多正规家庭更真。"
   },
   {
@@ -182,7 +182,7 @@
     "cover": "movie/parasite.jpg",
     "href": "https://zh.wikipedia.org/wiki/寄生上流",
     "score": 4,
-    "label": "电影",
+    "tags": ["剧情", "惊悚"],
     "review": "奉俊昊的阶级寓言。穷人家整户潜入富豪宅邸，前半像骗局喜剧，后半彻底翻面。"
   },
   {
@@ -193,7 +193,7 @@
     "cover": "movie/decision-to-leave.jpg",
     "href": "https://zh.wikipedia.org/wiki/分手的决心",
     "score": 4,
-    "label": "电影",
+    "tags": ["爱情", "悬疑"],
     "review": "朴赞郁的爱情悬疑。刑警爱上嫌疑人，画面冷，感情却缠得很紧。"
   },
   {
@@ -204,7 +204,7 @@
     "cover": "movie/bouquet.jpg",
     "href": "https://zh.wikipedia.org/wiki/她和他的戀愛花期",
     "score": 4,
-    "label": "电影",
+    "tags": ["爱情"],
     "review": "一对从学生时代走到职场的恋人。花束期很甜，后面是生活把两个人慢慢拉开。"
   },
   {
@@ -215,7 +215,7 @@
     "cover": "movie/now-you-see-me.jpg",
     "href": "https://zh.wikipedia.org/wiki/出神入化",
     "score": 4,
-    "label": "电影",
+    "tags": ["悬疑", "犯罪"],
     "review": "一群魔术师用大型魔术抢劫。机关和反转是主菜，看的就是「刚才那一下怎么做到的」。"
   },
   {
@@ -226,7 +226,7 @@
     "cover": "movie/leon.jpg",
     "href": "https://zh.wikipedia.org/wiki/这个杀手不太冷",
     "score": 4,
-    "label": "电影",
+    "tags": ["动作", "剧情"],
     "review": "莱昂和邻居小女孩的故事。杀手戏冷，两个人的相处却很暖。"
   },
   {
@@ -237,7 +237,7 @@
     "cover": "movie/pacific-rim.jpeg",
     "href": "https://zh.wikipedia.org/wiki/环太平洋_(电影)",
     "score": 4,
-    "label": "电影",
+    "tags": ["科幻", "机甲"],
     "review": "巨型机甲打海怪。剧情不复杂，驾驶舱里两个人同步出拳的场面很过瘾。"
   },
   {
@@ -248,7 +248,7 @@
     "cover": "movie/odyssey.jpg",
     "href": "https://zh.wikipedia.org/wiki/奥德赛_(电影)",
     "score": 5,
-    "label": "电影",
+    "tags": ["史诗", "冒险"],
     "review": "按荷马史诗拍的远征。航程、神意和回家的执念压在一起，场面很大。"
   },
   {
@@ -259,7 +259,7 @@
     "cover": "movie/oppenheimer.jpg",
     "href": "https://zh.wikipedia.org/wiki/奥本海默_(电影)",
     "score": 5,
-    "label": "电影",
+    "tags": ["传记", "历史"],
     "review": "诺兰拍原子弹之父。听证会和试验场来回切，人被自己造出来的东西压住。"
   },
   {
@@ -270,7 +270,7 @@
     "cover": "movie/avatar.jpg",
     "href": "https://zh.wikipedia.org/wiki/阿凡达",
     "score": 4.5,
-    "label": "电影",
+    "tags": ["科幻"],
     "review": "卡梅隆的潘多拉。故事是老桥段，森林、飞行和尺度仍然值得进影厅。"
   },
   {
@@ -281,7 +281,7 @@
     "cover": "movie/dune.jpg",
     "href": "https://zh.wikipedia.org/wiki/沙丘_(2021年電影)",
     "score": 4.5,
-    "label": "电影",
+    "tags": ["科幻"],
     "review": "维伦纽瓦的沙丘。声音和沙漠都很大，命运压在一个还没准备好的人身上。"
   },
   {
@@ -292,7 +292,7 @@
     "cover": "movie/f1.jpg",
     "href": "https://zh.wikipedia.org/wiki/F1：狂飙飞车",
     "score": 5,
-    "label": "电影",
+    "tags": ["运动"],
     "review": "围着一级方程式拍的竞速片。车手、车队和弯道都按真比赛的密度来。"
   },
   {
@@ -303,7 +303,7 @@
     "cover": "movie/fast-furious.jpg",
     "href": "https://zh.wikipedia.org/wiki/速度与激情",
     "score": 4.5,
-    "label": "电影",
+    "tags": ["动作", "赛车"],
     "review": "一家人飙车的长系列。第五部最爱，后面越拍越夸张，但还是冲着那股义气去看。"
   },
   {
@@ -314,7 +314,7 @@
     "cover": "movie/who-am-i.jpg",
     "href": "https://zh.wikipedia.org/wiki/我是谁：没有绝对安全的系统",
     "score": 4.5,
-    "label": "电影",
+    "tags": ["惊悚", "黑客"],
     "review": "德国黑客片。一个人撞进情报系统，追杀和敲键盘交替，节奏很紧。"
   },
   {
@@ -325,7 +325,7 @@
     "cover": "movie/spiderman.jpg",
     "href": "https://zh.wikipedia.org/wiki/蜘蛛侠",
     "score": 4.5,
-    "label": "电影",
+    "tags": ["超级英雄"],
     "review": "新三部加动画一起算。邻家小子的责任感和几条宇宙线叠在一起，仍然是最想重看的超英。"
   },
   {
@@ -336,7 +336,7 @@
     "cover": "movie/venom.jpg",
     "href": "https://zh.wikipedia.org/wiki/毒液",
     "score": 4.5,
-    "label": "电影",
+    "tags": ["超级英雄"],
     "review": "记者和共生体吵着过日子。吓人的部分不多，两个人抢身体的笑点更记得住。"
   },
   {
@@ -347,7 +347,7 @@
     "cover": "movie/captain-america.jpg",
     "href": "https://zh.wikipedia.org/wiki/美国队长",
     "score": 4,
-    "label": "电影",
+    "tags": ["超级英雄"],
     "review": "一个从二战走到现代的士兵。正经，但队形和选择都站得住。"
   },
   {
@@ -358,7 +358,7 @@
     "cover": "movie/black-panther.jpg",
     "href": "https://zh.wikipedia.org/wiki/黑豹_(電影)",
     "score": 4,
-    "label": "电影",
+    "tags": ["超级英雄"],
     "review": "瓦坎达的王位和外界撞在一起。国度的样子比打戏更记得住。"
   },
   {
@@ -369,7 +369,7 @@
     "cover": "movie/avengers.jpg",
     "href": "https://zh.wikipedia.org/wiki/复仇者联盟",
     "score": 4.5,
-    "label": "电影",
+    "tags": ["超级英雄"],
     "review": "一群人终于站到同一场战役里。看的是集合，不是某一句台词。"
   },
   {
@@ -380,7 +380,7 @@
     "cover": "movie/thor.jpg",
     "href": "https://zh.wikipedia.org/wiki/雷神_(电影)",
     "score": 3,
-    "label": "电影",
+    "tags": ["超级英雄"],
     "review": "神落到人间再找回锤子。场面有，人物比较直，打完就过去了。"
   },
   {
@@ -391,7 +391,7 @@
     "cover": "movie/iron-man.jpg",
     "href": "https://zh.wikipedia.org/wiki/钢铁侠",
     "score": 5,
-    "label": "电影",
+    "tags": ["超级英雄"],
     "review": "托尼·斯塔克用盔甲把漫威这条线打开。嘴贫，但工坊里那一身盔甲仍然最好看。"
   },
   {
@@ -402,7 +402,7 @@
     "cover": "movie/doctor-strange.jpg",
     "href": "https://zh.wikipedia.org/wiki/奇异博士",
     "score": 3.5,
-    "label": "电影",
+    "tags": ["超级英雄"],
     "review": "外科医生转去学魔法。视觉在转，故事比较常规。"
   },
   {
@@ -413,7 +413,7 @@
     "cover": "movie/ant-man.jpg",
     "href": "https://zh.wikipedia.org/wiki/蚁人",
     "score": 4,
-    "label": "电影",
+    "tags": ["超级英雄"],
     "review": "把盗窃片缩进微观世界。笑话和尺寸反差比史诗感更对味。"
   },
   {
@@ -424,7 +424,7 @@
     "cover": "movie/guardians.jpg",
     "href": "https://zh.wikipedia.org/wiki/银河护卫队",
     "score": 4.5,
-    "label": "电影",
+    "tags": ["超级英雄"],
     "review": "一船不合拍的人靠歌单绑在一起。热闹，也有一点真感情。"
   },
   {
@@ -435,7 +435,7 @@
     "cover": "movie/deadpool.jpg",
     "href": "https://zh.wikipedia.org/wiki/死侍",
     "score": 4,
-    "label": "电影",
+    "tags": ["超级英雄"],
     "review": "打破第四面墙的佣兵。脏话和自嘲很多，动作也确实利落。"
   },
   {
@@ -446,7 +446,7 @@
     "cover": "anime/fx-kurumi.jpg",
     "href": "https://zh.wikipedia.org/wiki/FX战士久留美",
     "score": 4,
-    "label": "日漫"
+    "tags": ["日漫", "喜剧"]
   },
   {
     "id": "anime-牧神记",
@@ -456,7 +456,7 @@
     "cover": "anime/mushen.jpg",
     "href": "https://www.bilibili.com/bangumi/play/ss45969",
     "score": 4.5,
-    "label": "国漫"
+    "tags": ["国漫", "玄幻"]
   },
   {
     "id": "anime-进击的巨人",
@@ -465,7 +465,7 @@
     "title": "进击的巨人",
     "cover": "anime/aot.jpg",
     "href": "https://zh.wikipedia.org/wiki/進擊的巨人",
-    "label": "日漫"
+    "tags": ["日漫", "黑暗奇幻"]
   },
   {
     "id": "anime-charlotte",
@@ -474,7 +474,7 @@
     "title": "Charlotte",
     "cover": "anime/charlotte.jpg",
     "href": "https://zh.wikipedia.org/wiki/Charlotte_(動畫)",
-    "label": "日漫"
+    "tags": ["日漫", "超能力"]
   },
   {
     "id": "anime-无职转生",
@@ -483,7 +483,7 @@
     "title": "无职转生",
     "cover": "anime/mushoku.jpg",
     "href": "https://zh.wikipedia.org/wiki/無職轉生～到了異世界就拿出真本事～",
-    "label": "日漫"
+    "tags": ["日漫", "异世界"]
   },
   {
     "id": "anime-命运石之门",
@@ -492,7 +492,7 @@
     "title": "命运石之门",
     "cover": "anime/steins.jpg",
     "href": "https://zh.wikipedia.org/wiki/命運石之門",
-    "label": "日漫"
+    "tags": ["日漫", "科幻"]
   },
   {
     "id": "anime-东京喰种",
@@ -501,7 +501,7 @@
     "title": "东京喰种",
     "cover": "anime/ghoul.jpg",
     "href": "https://zh.wikipedia.org/wiki/東京喰種",
-    "label": "日漫"
+    "tags": ["日漫", "黑暗奇幻"]
   },
   {
     "id": "anime-咒术回战",
@@ -510,7 +510,7 @@
     "title": "咒术回战",
     "cover": "anime/jujutsu.jpg",
     "href": "https://zh.wikipedia.org/wiki/咒術迴戰",
-    "label": "日漫"
+    "tags": ["日漫", "战斗"]
   },
   {
     "id": "anime-中二病也要谈恋爱",
@@ -519,7 +519,7 @@
     "title": "中二病也要谈恋爱",
     "cover": "anime/chuunibyou.jpg",
     "href": "https://zh.wikipedia.org/wiki/中二病也想談戀愛！",
-    "label": "日漫"
+    "tags": ["日漫", "恋爱"]
   },
   {
     "id": "anime-月刊少女野崎君",
@@ -528,7 +528,7 @@
     "title": "月刊少女野崎君",
     "cover": "anime/nozakikun.jpg",
     "href": "https://zh.wikipedia.org/wiki/月刊少女野崎同學",
-    "label": "日漫"
+    "tags": ["日漫", "喜剧"]
   },
   {
     "id": "anime-奇幻世界舅舅",
@@ -537,7 +537,7 @@
     "title": "奇幻世界舅舅",
     "cover": "anime/uncle.jpg",
     "href": "https://zh.wikipedia.org/wiki/異世界歸來的舅舅",
-    "label": "日漫"
+    "tags": ["日漫", "异世界"]
   },
   {
     "id": "anime-男子高中生的日常",
@@ -546,7 +546,7 @@
     "title": "男子高中生的日常",
     "cover": "anime/danshi.jpg",
     "href": "https://zh.wikipedia.org/wiki/男子高中生的日常",
-    "label": "日漫"
+    "tags": ["日漫", "喜剧"]
   },
   {
     "id": "anime-灵能百分百",
@@ -555,7 +555,7 @@
     "title": "灵能百分百",
     "cover": "anime/mob.jpg",
     "href": "https://zh.wikipedia.org/wiki/路人超能100",
-    "label": "日漫"
+    "tags": ["日漫", "超能力"]
   },
   {
     "id": "anime-葬送的芙莉莲-2",
@@ -566,7 +566,7 @@
     "href": "https://zh.wikipedia.org/wiki/葬送的芙莉莲",
     "score": 4.5,
     "date": "2026-10-25",
-    "label": "日漫",
+    "tags": ["日漫", "奇幻"],
     "review": "作为过渡的一季，还是很好看"
   },
   {
@@ -578,7 +578,7 @@
     "href": "https://zh.wikipedia.org/wiki/葬送的芙莉莲",
     "score": 5,
     "date": "2026-10-18",
-    "label": "日漫",
+    "tags": ["日漫", "奇幻"],
     "review": "好温柔的动漫，世界上有这样的动漫真是太美好了"
   },
   {
@@ -589,7 +589,7 @@
     "cover": "anime/eva.jpg",
     "href": "https://zh.wikipedia.org/wiki/新世纪福音战士",
     "score": 5,
-    "label": "日漫",
+    "tags": ["日漫", "机甲"],
     "review": "少年开机甲，真正难的是驾驶舱里的人。补完和电视结局可以分开看，都刺。"
   },
   {
@@ -600,7 +600,7 @@
     "cover": "anime/hyouka.jpg",
     "href": "https://zh.wikipedia.org/wiki/冰菓",
     "score": 5,
-    "label": "日漫",
+    "tags": ["日漫", "推理"],
     "review": "古籍研究会接一些很小的谜。青春片，但推理收得干净。"
   },
   {
@@ -611,7 +611,7 @@
     "cover": "anime/uma.jpg",
     "href": "https://zh.wikipedia.org/wiki/赛马娘_Pretty_Derby",
     "score": 5,
-    "label": "日漫",
+    "tags": ["日漫", "运动"],
     "review": "马娘训练、比赛、再训练。热血得很直，赢的那场还是会吼出来。"
   },
   {
@@ -622,7 +622,7 @@
     "cover": "anime/railgun.jpg",
     "href": "https://zh.wikipedia.org/wiki/某科学的超电磁炮",
     "score": 5,
-    "label": "日漫",
+    "tags": ["日漫", "超能力"],
     "review": "学园都市里御坂美琴的日常和能力战斗。比本篇更轻松，打架仍然好看。"
   },
   {
@@ -633,7 +633,7 @@
     "cover": "anime/index.jpg",
     "href": "https://zh.wikipedia.org/wiki/魔法禁书目录",
     "score": 5,
-    "label": "日漫",
+    "tags": ["日漫", "超能力"],
     "review": "当麻右手专门抓魔法。设定很多，学园都市的乱劲也是看点。"
   },
   {
@@ -644,7 +644,7 @@
     "cover": "anime/violet.jpg",
     "href": "https://zh.wikipedia.org/wiki/紫罗兰永恒花园",
     "score": 5,
-    "label": "日漫",
+    "tags": ["日漫", "治愈"],
     "review": "自动手记人偶替人写信。每集一个委托人，画面和「爱」这个词一起慢慢懂。"
   },
   {
@@ -655,7 +655,7 @@
     "cover": "anime/bunny-girl.jpg",
     "href": "https://zh.wikipedia.org/wiki/青春猪头少年不会梦到兔女郎学姐",
     "score": 5,
-    "label": "日漫",
+    "tags": ["日漫", "青春"],
     "review": "我的入门番。青春期症候群把心事变成看得见的异常，樱岛学姐那条线很完整。"
   },
   {
@@ -666,7 +666,7 @@
     "cover": "anime/solo-leveling.jpg",
     "href": "https://zh.wikipedia.org/wiki/我独自升级",
     "score": 4,
-    "label": "日漫",
+    "tags": ["日漫", "战斗"],
     "review": "最弱猎人进副本升级。打怪很爽，系统提示也干脆。"
   },
   {
@@ -677,7 +677,7 @@
     "cover": "anime/relife.jpg",
     "href": "https://zh.wikipedia.org/wiki/ReLIFE",
     "score": 4.5,
-    "label": "日漫",
+    "tags": ["日漫", "青春"],
     "review": "失败的大人吃了药回到高中。重来一次不是开挂，是把当时没说的话说出来。"
   },
   {
@@ -688,7 +688,7 @@
     "cover": "anime/abyss.jpg",
     "href": "https://zh.wikipedia.org/wiki/来自深渊",
     "score": 4.5,
-    "label": "日漫",
+    "tags": ["日漫", "冒险"],
     "review": "深渊往下越来越好看，也越来越狠。可爱画风和后面的代价反差很大。"
   },
   {
@@ -699,7 +699,7 @@
     "cover": "anime/tsuki.jpg",
     "href": "https://zh.wikipedia.org/wiki/月色真美",
     "score": 5,
-    "label": "日漫",
+    "tags": ["日漫", "恋爱"],
     "review": "很安静的校园恋爱。告白之后的日子比告白本身写得细。"
   },
   {
@@ -710,7 +710,7 @@
     "cover": "anime/bocchi.jpg",
     "href": "https://zh.wikipedia.org/wiki/孤獨搖滾！",
     "score": 4,
-    "label": "日漫",
+    "tags": ["日漫", "音乐"],
     "review": "社恐吉他手被拉进乐队。演出和内心戏都好，笑点也密。"
   },
   {
@@ -721,7 +721,7 @@
     "cover": "anime/anohana.jpg",
     "href": "https://zh.wikipedia.org/wiki/我們仍未知道那天所看見的花名",
     "score": 4,
-    "label": "日漫",
+    "tags": ["日漫", "青春"],
     "review": "一群小时候的朋友，和那个已经不在的人。超自然是引子，后悔才是正文。"
   },
   {
@@ -732,7 +732,7 @@
     "cover": "anime/saekano.jpg",
     "href": "https://zh.wikipedia.org/wiki/路人女主的養成方法",
     "score": 4,
-    "label": "日漫",
+    "tags": ["日漫", "恋爱"],
     "review": "用游戏攻略的方式追校园剧女主。后宫壳，创作和选择还有一点真东西。"
   },
   {
@@ -743,7 +743,7 @@
     "cover": "anime/black-company.jpg",
     "href": "https://www.bilibili.com/bangumi/play/ss38934",
     "score": 4.5,
-    "label": "日漫",
+    "tags": ["日漫", "异世界"],
     "review": "标题很糟糕，里面其实在骂黑心公司和加班。迷宫是下班之后的事。"
   },
   {
@@ -754,7 +754,7 @@
     "cover": "anime/sentence-hero.jpg",
     "href": "https://www.bilibili.com/bangumi/play/ss127870",
     "score": 4,
-    "label": "日漫",
+    "tags": ["日漫", "奇幻"],
     "review": "罪犯被判处“勇者刑”，被迫在前线战斗，死后仍会复活继续服刑。"
   },
   {
@@ -765,7 +765,7 @@
     "cover": "anime/summer-time.jpg",
     "href": "https://zh.wikipedia.org/wiki/夏日重現",
     "score": 4,
-    "label": "日漫",
+    "tags": ["日漫", "悬疑"],
     "review": "回到有影子的夏天，同一段时间反复走。悬疑比恋爱重。"
   },
   {
@@ -776,7 +776,7 @@
     "cover": "anime/oregairu.jpg",
     "href": "https://zh.wikipedia.org/wiki/我的青春恋爱物语果然有问题",
     "score": 4,
-    "label": "日漫",
+    "tags": ["日漫", "青春"],
     "review": "比企谷不想加入那种闪亮的青春。对话刺，但三个人的关系是真的。"
   },
   {
@@ -787,7 +787,7 @@
     "cover": "anime/remake-life.jpg",
     "href": "https://www.bilibili.com/bangumi/play/ss38865",
     "score": 3,
-    "label": "日漫",
+    "tags": ["日漫", "青春"],
     "review": "重来一次的青春群像。想法有，执行比较平。"
   },
   {
@@ -798,7 +798,7 @@
     "cover": "anime/horimiya.jpg",
     "href": "https://zh.wikipedia.org/wiki/堀與宮村",
     "score": 3,
-    "label": "日漫",
+    "tags": ["日漫", "恋爱"],
     "review": "外表和家里完全两样的两个人。甜，剧情比较直。"
   },
   {
@@ -809,7 +809,7 @@
     "cover": "anime/tonikawa.jpg",
     "href": "https://zh.wikipedia.org/wiki/總之就是非常可愛",
     "score": 3,
-    "label": "日漫",
+    "tags": ["日漫", "恋爱"],
     "review": "情侣日常，每集一个小场面。可爱是目的，别的不多。"
   },
   {
@@ -820,7 +820,7 @@
     "cover": "anime/heike.jpg",
     "href": "https://zh.wikipedia.org/wiki/平家物语",
     "score": 3.5,
-    "label": "日漫",
+    "tags": ["日漫", "历史"],
     "review": "山田尚子拍平家衰落。史诗被收成一个人眼里的季节。"
   },
   {
@@ -831,7 +831,7 @@
     "cover": "anime/spider.jpg",
     "href": "https://zh.wikipedia.org/wiki/轉生成蜘蛛又怎樣！",
     "score": 4,
-    "label": "日漫",
+    "tags": ["日漫", "异世界"],
     "review": "转生成迷宫里的蜘蛛，先活下来再说。升级和吐槽比剧情好用。"
   },
   {
@@ -842,7 +842,7 @@
     "cover": "anime/edgerunners.jpg",
     "href": "https://zh.wikipedia.org/wiki/赛博浪客",
     "score": 5,
-    "label": "日漫",
+    "tags": ["日漫", "科幻"],
     "review": "夜之城边缘的一小队人。很短，戴维和露西那条线收得很狠。"
   },
   {
@@ -853,7 +853,7 @@
     "cover": "anime/edgerunners-2.png",
     "href": "https://zh.wikipedia.org/wiki/赛博浪客",
     "score": 2,
-    "label": "日漫",
+    "tags": ["日漫", "科幻"],
     "review": "可惜了赛博朋克的设定和画面制作水平，第二季整个剧本混乱又缺乏张力，毫无内核。"
   },
   {
@@ -864,7 +864,7 @@
     "cover": "anime/eighty-six.jpg",
     "href": "https://zh.wikipedia.org/wiki/86—不存在的戰區—",
     "score": 4,
-    "label": "日漫",
+    "tags": ["日漫", "机甲"],
     "review": "墙外的人和墙内的指挥。战争、种族和那台机甲都没有轻松写。"
   },
   {
@@ -875,7 +875,7 @@
     "cover": "anime/csm.jpg",
     "href": "https://zh.wikipedia.org/wiki/鏈鋸人",
     "score": 4,
-    "label": "日漫",
+    "tags": ["日漫", "战斗"],
     "review": "恶魔猎人电次想过普通生活。暴力和感情都很冲。"
   },
   {
@@ -886,7 +886,7 @@
     "cover": "anime/makeine.jpg",
     "href": "https://zh.wikipedia.org/wiki/敗犬女主太多了！",
     "score": 4,
-    "label": "日漫",
+    "tags": ["日漫", "恋爱"],
     "review": "明知自己不是女主，还是要说完那句话。恋爱喜剧里少见地把输赢写清楚。"
   },
   {
@@ -897,7 +897,7 @@
     "cover": "anime/oshi-no-ko.jpg",
     "href": "https://zh.wikipedia.org/wiki/【我推的孩子】",
     "score": 4,
-    "label": "日漫",
+    "tags": ["日漫", "偶像"],
     "review": "偶像产业的光和后面的案子。第一集的反转撑起了后面。"
   },
   {
@@ -908,7 +908,7 @@
     "cover": "anime/rezero.jpg",
     "href": "https://zh.wikipedia.org/wiki/Re:從零開始的異世界生活",
     "score": 4,
-    "label": "日漫",
+    "tags": ["日漫", "异世界"],
     "review": "死亡回溯。菜月昴每次重来都要再痛一次，不是无代价的外挂。"
   },
   {
@@ -919,7 +919,7 @@
     "cover": "anime/nights-cat.jpg",
     "href": "https://zh.wikipedia.org/wiki/尼古喵喵",
     "score": 4,
-    "label": "日漫",
+    "tags": ["日漫", "治愈"],
     "review": "很短的猫咪日常。没有剧情负担，就看那只猫怎么占住夜晚。"
   },
   {
@@ -930,7 +930,7 @@
     "cover": "anime/fanren.jpg",
     "href": "https://zh.wikipedia.org/wiki/凡人修仙传",
     "score": 5,
-    "label": "国漫",
+    "tags": ["国漫", "仙侠"],
     "review": "这一路破空，苦难有千种，谁人懂～"
   },
   {
@@ -941,7 +941,7 @@
     "cover": "anime/lingcage.jpg",
     "href": "https://zh.wikipedia.org/wiki/灵笼",
     "score": 5,
-    "label": "国漫",
+    "tags": ["国漫", "科幻"],
     "review": "灯塔外面是怪物，里面是阶级。设定和人祸绑在一起，不是只好看。"
   },
   {
@@ -952,7 +952,7 @@
     "cover": "anime/dadao.jpg",
     "href": "https://www.bilibili.com/bangumi/play/ss43369",
     "score": 4.5,
-    "label": "国漫",
+    "tags": ["国漫", "仙侠"],
     "review": "猫腻那条线上的修行故事。世界观大，人还是在问自己要走哪条路。"
   },
   {
@@ -963,7 +963,7 @@
     "cover": "anime/rakshasa.jpg",
     "href": "https://zh.wikipedia.org/wiki/镇魂街",
     "score": 4,
-    "label": "国漫",
+    "tags": ["国漫", "热血"],
     "review": "守护灵和镇魂将。热血打戏直给，人设也记得住。"
   },
   {
@@ -974,7 +974,7 @@
     "cover": "anime/fog-hill.jpg",
     "href": "https://zh.wikipedia.org/wiki/雾山五行",
     "score": 5,
-    "label": "国漫",
+    "tags": ["国漫", "水墨"],
     "review": "水墨打戏。几乎不靠台词，动作本身就把五行讲完了。"
   },
   {
@@ -985,7 +985,7 @@
     "cover": "anime/scissor-seven.jpg",
     "href": "https://zh.wikipedia.org/wiki/刺客伍六七",
     "score": 4.5,
-    "label": "国漫",
+    "tags": ["国漫", "喜剧"],
     "review": "理发师兼刺客。前两季笑话密，后面感情重了一点。"
   },
   {
@@ -996,7 +996,7 @@
     "cover": "anime/white-cat.jpg",
     "href": "https://www.bilibili.com/bangumi/play/ss32321",
     "score": 5,
-    "label": "国漫",
+    "tags": ["国漫", "探案"],
     "review": "白猫和少卿查案。唐风市井画得很松，案子也不傻。"
   },
   {
@@ -1007,7 +1007,7 @@
     "cover": "anime/luoxiaohei.jpg",
     "href": "https://zh.wikipedia.org/wiki/罗小黑战记",
     "score": 5,
-    "label": "国漫",
+    "tags": ["国漫", "奇幻"],
     "review": "妖精、人类和那只黑猫。电影和番都安静，冲突却是真的。"
   },
   {
@@ -1018,7 +1018,7 @@
     "cover": "anime/china-wonder.jpg",
     "href": "https://zh.wikipedia.org/wiki/中国惊奇先生",
     "score": 5,
-    "label": "国漫",
+    "tags": ["国漫", "志怪"],
     "review": "民间怪谈一条条讲。气氛和包袱都在，适合当长一点的志怪。"
   },
   {
@@ -1029,7 +1029,7 @@
     "cover": "anime/immortal-king.jpg",
     "href": "https://zh.wikipedia.org/wiki/仙王的日常生活",
     "score": 3.5,
-    "label": "国漫",
+    "tags": ["国漫", "喜剧"],
     "review": "大能重生去上学。日常段子为主，主线比较散。"
   },
   {
@@ -1040,7 +1040,7 @@
     "cover": "anime/salted-fish.jpg",
     "href": "https://www.bilibili.com/bangumi/play/ss43341",
     "score": 4,
-    "label": "国漫",
+    "tags": ["国漫", "喜剧"],
     "review": "想躺平的人被卷进各种事。笑话接地气，不端着。"
   },
   {
@@ -1051,7 +1051,7 @@
     "cover": "anime/your-name.jpg",
     "href": "https://zh.wikipedia.org/wiki/你的名字。",
     "score": 5,
-    "label": "动画电影",
+    "tags": ["动画电影", "新海诚"],
     "review": "新海诚的身体交换。彗星和那条时间差，仍然是最完整的一部。"
   },
   {
@@ -1062,7 +1062,7 @@
     "cover": "anime/weathering.jpg",
     "href": "https://zh.wikipedia.org/wiki/天气之子",
     "score": 5,
-    "label": "动画电影",
+    "tags": ["动画电影", "新海诚"],
     "review": "少年遇上能改变天气的女孩。东京的雨下得很满，选择也很绝。"
   },
   {
@@ -1073,7 +1073,7 @@
     "cover": "anime/silent-voice.jpg",
     "href": "https://zh.wikipedia.org/wiki/声之形",
     "score": 5,
-    "label": "动画电影",
+    "tags": ["动画电影", "青春"],
     "review": "霸凌过的人回来道歉。不好看的地方它不躲，所以才成立。"
   },
   {
@@ -1084,7 +1084,7 @@
     "cover": "anime/words-bubble.jpg",
     "href": "https://www.bilibili.com/bangumi/play/ss39136",
     "score": 4,
-    "label": "动画电影",
+    "tags": ["动画电影", "青春"],
     "review": "樱井和樱桃的对话像汽水。很轻，但把「说出来」这件事写疼了。"
   },
   {
@@ -1095,7 +1095,7 @@
     "cover": "anime/nausicaa.jpg",
     "href": "https://zh.wikipedia.org/wiki/風之谷",
     "score": 5,
-    "label": "动画电影",
+    "tags": ["动画电影", "吉卜力"],
     "review": "宫崎骏早期的生态寓言。娜乌西卡走进腐海，比后来的很多片更硬。"
   },
   {
@@ -1106,7 +1106,7 @@
     "cover": "anime/howl.jpg",
     "href": "https://zh.wikipedia.org/wiki/哈爾移動城堡",
     "score": 5,
-    "label": "动画电影",
+    "tags": ["动画电影", "吉卜力"],
     "review": "城堡在荒野上走。苏菲和哈尔的关系不吵完，屋子也不会稳。"
   },
   {
@@ -1117,7 +1117,7 @@
     "cover": "anime/spirited.JPG",
     "href": "https://zh.wikipedia.org/wiki/千與千尋",
     "score": 5,
-    "label": "动画电影",
+    "tags": ["动画电影", "吉卜力"],
     "review": "女孩在神隐的浴场打工。规则奇怪，成长却很具体。"
   },
   {
@@ -1128,7 +1128,7 @@
     "cover": "anime/porco.jpg",
     "href": "https://zh.wikipedia.org/wiki/紅豬",
     "score": 5,
-    "label": "动画电影",
+    "tags": ["动画电影", "吉卜力"],
     "review": "不愿再做人的飞行员。天空、情敌和那点厌世都轻，也都不假。"
   },
   {
@@ -1139,7 +1139,7 @@
     "cover": "anime/laputa.jpg",
     "href": "https://zh.wikipedia.org/wiki/天空之城",
     "score": 5,
-    "label": "动画电影",
+    "tags": ["动画电影", "吉卜力"],
     "review": "漂浮的拉普达。冒险片的骨架，飞行和毁灭都还记得住。"
   },
   {
@@ -1150,7 +1150,7 @@
     "cover": "anime/mononoke.jpg",
     "href": "https://zh.wikipedia.org/wiki/魔法公主",
     "score": 5,
-    "label": "动画电影",
+    "tags": ["动画电影", "吉卜力"],
     "review": "人和森林没有简单的对错。阿席达卡夹在中间，结局也不哄人。"
   },
   {
@@ -1161,7 +1161,7 @@
     "cover": "anime/five-cm.JPG",
     "href": "https://zh.wikipedia.org/wiki/秒速5公分",
     "score": 5,
-    "label": "动画电影",
+    "tags": ["动画电影", "新海诚"],
     "review": "新海诚早期的错过。火车、樱花和一封没送到的信。"
   },
   {
@@ -1172,7 +1172,7 @@
     "cover": "anime/baxian.jpg",
     "href": "https://zh.wikipedia.org/wiki/八仙！",
     "score": 4,
-    "label": "动画电影",
+    "tags": ["动画电影", "神话"],
     "review": "把八仙做成公路片。神仙也会吵架、也会把事情搞砸。"
   },
   {
@@ -1182,7 +1182,7 @@
     "title": "Doctor X：白色黑手党时代",
     "cover": "tv/doctor-x.jpg",
     "href": "https://zh.wikipedia.org/wiki/Doctor_X：白色黑手黨時代",
-    "label": "韩剧"
+    "tags": ["韩剧", "医疗"]
   },
   {
     "id": "tv-谜探路德维希",
@@ -1191,7 +1191,7 @@
     "title": "谜探路德维希",
     "cover": "tv/ludwig.jpg",
     "href": "https://en.wikipedia.org/wiki/Ludwig_(2024_TV_series)",
-    "label": "英剧",
+    "tags": ["英剧", "推理"],
     "review": "准备看第一季。"
   },
   {
@@ -1201,7 +1201,7 @@
     "title": "曼达洛人",
     "cover": "tv/mandalorian.jpg",
     "href": "https://zh.wikipedia.org/wiki/曼達洛人_(電視劇)",
-    "label": "美剧",
+    "tags": ["美剧", "科幻"],
     "review": "准备看前三季。"
   },
   {
@@ -1211,7 +1211,7 @@
     "title": "洛基",
     "cover": "tv/loki.jpg",
     "href": "https://zh.wikipedia.org/wiki/洛基_(電視劇)",
-    "label": "美剧",
+    "tags": ["美剧", "超级英雄"],
     "review": "准备看前两季。"
   },
   {
@@ -1221,7 +1221,7 @@
     "title": "匹兹堡医护前线",
     "cover": "tv/the-pitt.jpg",
     "href": "https://en.wikipedia.org/wiki/The_Pitt_(TV_series)",
-    "label": "美剧",
+    "tags": ["美剧", "医疗"],
     "review": "准备看前两季。"
   },
   {
@@ -1231,7 +1231,7 @@
     "title": "黑钱胜地",
     "cover": "tv/ozark.jpg",
     "href": "https://zh.wikipedia.org/wiki/黑钱胜地",
-    "label": "美剧",
+    "tags": ["美剧", "犯罪"],
     "review": "准备看第一季。"
   },
   {
@@ -1241,7 +1241,7 @@
     "title": "终极名单",
     "cover": "tv/terminal-list.jpg",
     "href": "https://zh.wikipedia.org/wiki/終極名單",
-    "label": "美剧",
+    "tags": ["美剧", "动作"],
     "review": "准备看第一季。"
   },
   {
@@ -1251,7 +1251,7 @@
     "title": "昭雪",
     "cover": "tv/rectify.jpg",
     "href": "https://zh.wikipedia.org/wiki/矯正人生",
-    "label": "美剧",
+    "tags": ["美剧"],
     "review": "准备看第一季。"
   },
   {
@@ -1261,7 +1261,7 @@
     "title": "德里罪案",
     "cover": "tv/delhi-crime.jpg",
     "href": "https://en.wikipedia.org/wiki/Delhi_Crime",
-    "label": "印度剧",
+    "tags": ["印度剧", "犯罪"],
     "review": "准备看第一季。"
   },
   {
@@ -1271,7 +1271,7 @@
     "title": "安娜",
     "cover": "tv/anna.jpg",
     "href": "https://zh.wikipedia.org/wiki/安娜_(電視劇)",
-    "label": "韩剧"
+    "tags": ["韩剧", "悬疑"]
   },
   {
     "id": "tv-怪奇物语",
@@ -1281,7 +1281,7 @@
     "cover": "tv/stranger-things.jpg",
     "href": "https://zh.wikipedia.org/wiki/怪奇物語",
     "score": 5,
-    "label": "美剧",
+    "tags": ["美剧", "科幻"],
     "review": "印第安纳小镇底下有另一层世界。小孩破案，大人躲事，怪谈和青春绑在一起。"
   },
   {
@@ -1292,7 +1292,7 @@
     "cover": "tv/got.jpg",
     "href": "https://zh.wikipedia.org/wiki/权力的游戏_(电视剧)",
     "score": 5,
-    "label": "美剧",
+    "tags": ["美剧", "奇幻"],
     "review": "七国王座抢一张椅子。前几季的布局和人物仍然是剧集里很少见的密度。"
   },
   {
@@ -1303,7 +1303,7 @@
     "cover": "tv/house-dragon.jpg",
     "href": "https://zh.wikipedia.org/wiki/龙之家族",
     "score": 5,
-    "label": "美剧",
+    "tags": ["美剧", "奇幻"],
     "review": "坦格利安家内战的前史。龙、继承和家族会议，场面比后几季的权游更稳。"
   },
   {
@@ -1314,7 +1314,7 @@
     "cover": "tv/akotsk.jpg",
     "href": "https://zh.wikipedia.org/wiki/七王國的騎士_(電視劇)",
     "score": 5,
-    "label": "美剧",
+    "tags": ["美剧", "奇幻"],
     "review": "权游世界里更早的一篇骑士故事。比夺权轻一点，比比武和誓言重一点。"
   },
   {
@@ -1325,7 +1325,7 @@
     "cover": "tv/breaking-bad.jpg",
     "href": "https://zh.wikipedia.org/wiki/绝命毒师",
     "score": 5,
-    "label": "美剧",
+    "tags": ["美剧", "犯罪"],
     "review": "化学老师走进制毒。每季都在把一个还想当好人的人往前推一格，和风骚律师放一起打分。"
   },
   {
@@ -1336,7 +1336,7 @@
     "cover": "tv/better-call-saul.jpg",
     "href": "https://zh.wikipedia.org/wiki/风骚律师",
     "score": 5,
-    "label": "美剧",
+    "tags": ["美剧", "犯罪"],
     "review": "绝命毒师的前传。吉米怎么变成索尔，看得比案件本身更清楚。"
   },
   {
@@ -1347,7 +1347,7 @@
     "cover": "tv/wednesday.jpg",
     "href": "https://zh.wikipedia.org/wiki/星期三_(电视剧)",
     "score": 5,
-    "label": "美剧",
+    "tags": ["美剧", "奇幻"],
     "review": "亚当斯家的女儿去怪物学校。冷脸、调查和舞会意外地搭。"
   },
   {
@@ -1358,7 +1358,7 @@
     "cover": "tv/house-of-cards.jpg",
     "href": "https://zh.wikipedia.org/wiki/纸牌屋_(美国剧集)",
     "score": 5,
-    "label": "美剧",
+    "tags": ["美剧", "政治"],
     "review": "弗兰克对镜头说话，也在国会里拆人。前几季的权术很爽。"
   },
   {
@@ -1369,7 +1369,7 @@
     "cover": "tv/euphoria.jpg",
     "href": "https://zh.wikipedia.org/wiki/亢奋",
     "score": 5,
-    "label": "美剧",
+    "tags": ["美剧", "青春"],
     "review": "一群高中生的派对、性和焦虑。镜头很冲，人物却不是符号。"
   },
   {
@@ -1380,7 +1380,7 @@
     "cover": "tv/narcos.jpg",
     "href": "https://zh.wikipedia.org/wiki/毒梟_(電視劇)",
     "score": 4,
-    "label": "美剧",
+    "tags": ["美剧", "犯罪"],
     "review": "埃斯科瓦尔和后来墨西哥线的贩毒史。暴力直给，人物也立得住。"
   },
   {
@@ -1391,7 +1391,7 @@
     "cover": "tv/fargo-tv.jpg",
     "href": "https://zh.wikipedia.org/wiki/冰血暴_(电视剧)",
     "score": 4,
-    "label": "美剧",
+    "tags": ["美剧", "犯罪"],
     "review": "柯恩兄弟味道的犯罪剧。小城、蠢案和突然爆开的暴力。"
   },
   {
@@ -1402,7 +1402,7 @@
     "cover": "tv/hunger-games.jpg",
     "href": "https://zh.wikipedia.org/wiki/饥饿游戏",
     "score": 4,
-    "label": "美剧",
+    "tags": ["美剧", "科幻"],
     "review": "把少年扔进秀场竞技。生存赛是壳，看的是镜头怎么把人变成节目。"
   },
   {
@@ -1413,7 +1413,7 @@
     "cover": "tv/love-death-robots.jpg",
     "href": "https://zh.wikipedia.org/wiki/愛x死x機器人",
     "score": 5,
-    "label": "美剧",
+    "tags": ["美剧", "科幻"],
     "review": "每集一个短篇，科幻、恐怖和冷笑话换着来。有几集会留下来，有几集看完就走。"
   },
   {
@@ -1424,7 +1424,7 @@
     "cover": "tv/friends.jpg",
     "href": "https://zh.wikipedia.org/wiki/老友记",
     "score": 5,
-    "label": "美剧",
+    "tags": ["美剧", "喜剧"],
     "review": "六个人挤在纽约的咖啡馆和公寓里。笑话老，但那间屋子还是想回去坐坐。"
   },
   {
@@ -1435,7 +1435,7 @@
     "cover": "tv/rick-morty.jpg",
     "href": "https://zh.wikipedia.org/wiki/瑞克和莫蒂",
     "score": 5,
-    "label": "美剧",
+    "tags": ["美剧", "动画"],
     "review": "祖父带孙子穿宇宙。段子很密，偶尔会突然认真一下。"
   },
   {
@@ -1446,7 +1446,7 @@
     "cover": "tv/last-of-us.jpg",
     "href": "https://zh.wikipedia.org/wiki/最后生还者",
     "score": 4,
-    "label": "美剧",
+    "tags": ["美剧", "末日"],
     "review": "末日里一个男人和一个女孩赶路。感染体是背景，关系才是每集的重量。"
   },
   {
@@ -1457,7 +1457,7 @@
     "cover": "tv/tokyo-vice.jpg",
     "href": "https://zh.wikipedia.org/wiki/东京罪恶",
     "score": 4,
-    "label": "美剧",
+    "tags": ["美剧", "犯罪"],
     "review": "记者撞进东京黑社会。夜色和规矩都冷，追查过程很稳。"
   },
   {
@@ -1468,7 +1468,7 @@
     "cover": "tv/peaky.jpg",
     "href": "https://zh.wikipedia.org/wiki/浴血黑帮",
     "score": 5,
-    "label": "英剧",
+    "tags": ["英剧", "犯罪"],
     "review": "谢尔比家族在伯明翰做生意，也做暴力。剪裁、音乐和那顶帽子都记得住。"
   },
   {
@@ -1479,7 +1479,7 @@
     "cover": "tv/jackal.jpg",
     "href": "https://zh.wikipedia.org/wiki/豺狼的日子",
     "score": 5,
-    "label": "英剧",
+    "tags": ["英剧", "惊悚"],
     "review": "一个职业杀手接下一单几乎不可能的目标。筹备比开枪更紧张。"
   },
   {
@@ -1490,7 +1490,7 @@
     "cover": "tv/slow-horses-seasons-1-5.png",
     "href": "https://zh.wikipedia.org/wiki/流人",
     "score": 5,
-    "label": "英剧",
+    "tags": ["英剧", "谍战"],
     "review": "一群被流放的情报员还在干活。兰姆的刻薄和每季的案子一样好看。"
   },
   {
@@ -1502,7 +1502,7 @@
     "href": "https://zh.wikipedia.org/wiki/流人",
     "score": 4,
     "date": "2026-10-22",
-    "label": "英剧",
+    "tags": ["英剧", "谍战"],
     "review": "看兰姆的刻薄与温情，边缘人办案、挣扎生存。"
   },
   {
@@ -1513,7 +1513,7 @@
     "cover": "tv/dark.jpg",
     "href": "https://zh.wikipedia.org/wiki/暗黑_(电视剧)",
     "score": 5,
-    "label": "德剧",
+    "tags": ["德剧", "科幻"],
     "review": "德国小镇的时间循环。家族树比怪物更难，三季收得也很完整。"
   },
   {
@@ -1524,7 +1524,7 @@
     "cover": "tv/my-mister.jpg",
     "href": "https://zh.wikipedia.org/wiki/我的大叔",
     "score": 5,
-    "label": "韩剧",
+    "tags": ["韩剧", "治愈"],
     "review": "IU 和三个叔叔的生活剧。很静，欠债、加班和一句关心都有重量。"
   },
   {
@@ -1535,7 +1535,7 @@
     "cover": "tv/when-life-gives.jpg",
     "href": "https://zh.wikipedia.org/wiki/苦尽柑来遇见你",
     "score": 5,
-    "label": "韩剧",
+    "tags": ["韩剧", "家庭"],
     "review": "济州岛上几十年的爱和失去。IU 把一个女人的后半生演得很满。"
   },
   {
@@ -1546,7 +1546,7 @@
     "cover": "tv/hotel-del-luna.jpg",
     "href": "https://zh.wikipedia.org/wiki/德魯納酒店",
     "score": 4,
-    "label": "韩剧",
+    "tags": ["韩剧", "奇幻"],
     "review": "酒店里住着鬼，老板是月神。奇幻壳子，感情线很直。"
   },
   {
@@ -1557,7 +1557,7 @@
     "cover": "tv/perfect-crown.jpg",
     "href": "https://zh.wikipedia.org/wiki/21世紀大君夫人",
     "score": 4,
-    "label": "韩剧",
+    "tags": ["韩剧", "爱情"],
     "review": "设定在实行君主立宪制的现代韩国，财阀继承人与王室大君的爱情故事。"
   },
   {
@@ -1568,7 +1568,7 @@
     "cover": "tv/work-later-drink.jpg",
     "href": "https://zh.wikipedia.org/wiki/酒鬼都市女人们",
     "score": 5,
-    "label": "韩剧",
+    "tags": ["韩剧", "友情"],
     "review": "三个女人喝酒、工作、把日子过下去。对话很活，没有硬煽。"
   },
   {
@@ -1579,7 +1579,7 @@
     "cover": "tv/friendly-rivalry.jpg",
     "href": "https://zh.wikipedia.org/wiki/善意的競爭",
     "score": 4,
-    "label": "韩剧",
+    "tags": ["韩剧", "青春"],
     "review": "医学院里的友谊和排挤。竞争写得尖，人还没被写成纯坏人。"
   },
   {
@@ -1590,7 +1590,7 @@
     "cover": "tv/glory.jpg",
     "href": "https://zh.wikipedia.org/wiki/黑暗荣耀",
     "score": 5,
-    "label": "韩剧",
+    "tags": ["韩剧", "复仇"],
     "review": "被霸凌的人很多年后回来。复仇很慢，每一季都在还那笔账。"
   },
   {
@@ -1601,7 +1601,7 @@
     "cover": "tv/reply1988.jpg",
     "href": "https://zh.wikipedia.org/wiki/请回答1988",
     "score": 4,
-    "label": "韩剧",
+    "tags": ["韩剧", "家庭"],
     "review": "双门洞的一条街。邻居比剧情重要，看完会想回家吃饭。"
   },
   {
@@ -1612,7 +1612,7 @@
     "cover": "tv/lifetimes.jpg",
     "href": "https://zh.wikipedia.org/wiki/人世间_(电视剧)",
     "score": 4,
-    "label": "国产剧",
+    "tags": ["国产剧", "年代"],
     "review": "周家三兄妹过了几十年。很长，但把一个家庭怎么被时代推着走写清楚了。"
   },
   {
@@ -1623,7 +1623,7 @@
     "cover": "tv/detective-chinatown-web.jpg",
     "href": "https://zh.wikipedia.org/wiki/唐人街探案_(網絡劇)",
     "score": 4,
-    "label": "国产剧",
+    "tags": ["国产剧", "探案"],
     "review": "网剧版的秦风探案。案子一桩接一桩，还是靠观察和嘴贫往前推。"
   },
   {
@@ -1634,7 +1634,7 @@
     "cover": "tv/peoples-name.jpg",
     "href": "https://zh.wikipedia.org/wiki/人民的名义",
     "score": 5,
-    "label": "国产剧",
+    "tags": ["国产剧", "政治"],
     "review": "反腐剧里少见地把官场关系写细。侯亮平和那几桌饭都有信息。"
   },
   {
@@ -1645,7 +1645,7 @@
     "cover": "tv/awakening.jpg",
     "href": "https://zh.wikipedia.org/wiki/觉醒年代",
     "score": 4,
-    "label": "国产剧",
+    "tags": ["国产剧", "历史"],
     "review": "陈独秀、李大钊和青年毛泽东。观念戏多，但人是活的。"
   },
   {
@@ -1656,7 +1656,7 @@
     "cover": "tv/blossoms.jpg",
     "href": "https://zh.wikipedia.org/wiki/繁花_(电视剧)",
     "score": 5,
-    "label": "国产剧",
+    "tags": ["国产剧", "年代"],
     "review": "王家卫拍九十年代的上海。黄河路、宝总和一桌子本帮菜，气氛比情节密。"
   },
   {
@@ -1667,7 +1667,7 @@
     "cover": "tv/bad-kids.jpg",
     "href": "https://zh.wikipedia.org/wiki/隐秘的角落",
     "score": 4,
-    "label": "国产剧",
+    "tags": ["国产剧", "悬疑"],
     "review": "三个孩子撞见一件不该看见的事。海边小镇的悬疑收得很紧。"
   },
   {
@@ -1678,7 +1678,7 @@
     "cover": "tv/long-night.jpg",
     "href": "https://zh.wikipedia.org/wiki/沉默的真相",
     "score": 4,
-    "label": "国产剧",
+    "tags": ["国产剧", "悬疑"],
     "review": "一桩案子被切成三段时间。看的是人怎么把真相一寸寸送出去。"
   },
   {
@@ -1689,7 +1689,7 @@
     "cover": "tv/punchout.jpg",
     "href": "https://zh.wikipedia.org/wiki/狂飙",
     "score": 5,
-    "label": "国产剧",
+    "tags": ["国产剧", "犯罪"],
     "review": "强盛集团和安欣对了二十年。黑白两线都有人，不是只靠一句口号。"
   },
   {
@@ -1700,7 +1700,7 @@
     "cover": "tv/ming-dynasty.jpg",
     "href": "https://zh.wikipedia.org/wiki/大明王朝1566",
     "score": 5,
-    "label": "国产剧",
+    "tags": ["国产剧", "历史"],
     "review": "嘉靖朝的政局和丝绸。对话密，权力怎么在奏折里移动看得很清。"
   },
   {
@@ -1711,7 +1711,7 @@
     "cover": "tv/dream-splendor.jpg",
     "href": "https://zh.wikipedia.org/wiki/梦华录",
     "score": 4,
-    "label": "国产剧",
+    "tags": ["国产剧", "古装"],
     "review": "三个女人在东京开茶坊。市井和案子并行，人比朝堂好看。"
   },
   {
@@ -1722,7 +1722,7 @@
     "cover": "tv/hyori.jpg",
     "href": "https://zh.wikipedia.org/wiki/孝利家民宿",
     "score": 5,
-    "label": "综艺",
+    "tags": ["综艺", "真人秀"],
     "review": "李孝利家的民宿。第一季和第二季放一起打分，客人来了就干活、吃饭、闲聊。"
   },
   {
@@ -1733,7 +1733,7 @@
     "cover": "tv/clarkson.jpg",
     "href": "https://zh.wikipedia.org/wiki/克拉克森的农场",
     "score": 5,
-    "label": "综艺",
+    "tags": ["综艺", "真人秀"],
     "review": "克拉克森真的去种地。拖拉机、天气和邻居比脱口秀更折腾人。"
   },
   {
@@ -1743,7 +1743,7 @@
     "title": "影之刃零",
     "cover": "game/shadowblade.jpg",
     "href": "https://zh.wikipedia.org/wiki/影之刃零",
-    "label": "游戏",
+    "tags": ["动作", "类魂"],
     "review": "又是类魂～"
   },
   {
@@ -1753,7 +1753,7 @@
     "title": "星露谷物语",
     "cover": "game/stardew.jpg",
     "href": "https://zh.wikipedia.org/wiki/星露谷物语",
-    "label": "游戏"
+    "tags": ["模拟", "种田"]
   },
   {
     "id": "game-艾尔登法环",
@@ -1762,7 +1762,7 @@
     "title": "艾尔登法环",
     "cover": "game/elden.jpg",
     "href": "https://zh.wikipedia.org/wiki/艾爾登法環",
-    "label": "游戏"
+    "tags": ["类魂", "开放世界"]
   },
   {
     "id": "game-无畏契约",
@@ -1772,7 +1772,7 @@
     "cover": "game/valorant.jpg",
     "href": "https://zh.wikipedia.org/wiki/无畏契约",
     "score": 4.5,
-    "label": "游戏",
+    "tags": ["射击", "竞技"],
     "review": "两三个赛季没打了，铂钻。"
   },
   {
@@ -1783,7 +1783,7 @@
     "cover": "game/csgo.png",
     "href": "https://zh.wikipedia.org/wiki/反恐精英：全球攻势",
     "score": 4.5,
-    "label": "游戏",
+    "tags": ["射击", "竞技"],
     "review": "爱看点绿龙 Spirit。"
   },
   {
@@ -1794,7 +1794,7 @@
     "cover": "game/apex.jpg",
     "href": "https://zh.wikipedia.org/wiki/Apex_英雄",
     "score": 4.5,
-    "label": "游戏",
+    "tags": ["射击", "大逃杀"],
     "review": "上大学玩的第一个 fps 游戏，抛开 EA 不谈最好玩的 fps 游戏😂。"
   },
   {
@@ -1805,7 +1805,7 @@
     "cover": "game/cp2077.jpg",
     "href": "https://zh.wikipedia.org/wiki/賽博朋克2077",
     "score": 4.5,
-    "label": "游戏",
+    "tags": ["RPG", "开放世界"],
     "review": "看边缘行者第一部入的坑。"
   },
   {
@@ -1816,7 +1816,7 @@
     "cover": "game/wukong.jpg",
     "href": "https://zh.wikipedia.org/wiki/黑神话：悟空",
     "score": 5,
-    "label": "游戏",
+    "tags": ["动作", "类魂"],
     "review": "玩的第一部 3A，当时各个直播间都在玩，很有氛围。"
   },
   {
@@ -1827,7 +1827,7 @@
     "cover": "game/little-nightmares.jpg",
     "href": "https://zh.wikipedia.org/wiki/小小梦魇2",
     "score": 5,
-    "label": "游戏",
+    "tags": ["恐怖", "解谜"],
     "review": "第一个玩的带点恐怖的游戏？很好玩，故事也很有意思。"
   },
   {
@@ -1838,7 +1838,7 @@
     "cover": "game/rdr2.jpg",
     "href": "https://zh.wikipedia.org/wiki/荒野大镖客：救赎2",
     "score": 4.5,
-    "label": "游戏",
+    "tags": ["开放世界", "西部"],
     "review": "一个帮派在西部的最后几年。"
   },
   {
@@ -1849,7 +1849,7 @@
     "cover": "game/ghostrunner.jpg",
     "href": "https://zh.wikipedia.org/wiki/幽灵行者",
     "score": 4,
-    "label": "游戏",
+    "tags": ["动作", "跑酷"],
     "review": "至今未通关..."
   },
   {
@@ -1860,7 +1860,7 @@
     "cover": "game/ets2.jpg",
     "href": "https://zh.wikipedia.org/wiki/欧洲卡车模拟2",
     "score": 4.5,
-    "label": "游戏",
+    "tags": ["模拟"],
     "review": "风景和电台比刺激重要。"
   },
   {
@@ -1871,7 +1871,7 @@
     "cover": "game/re2.jpg",
     "href": "https://zh.wikipedia.org/wiki/生化危机2",
     "score": 4,
-    "label": "游戏",
+    "tags": ["恐怖", "生存"],
     "review": "重制后的浣熊市。"
   },
   {
@@ -1882,7 +1882,7 @@
     "cover": "game/re3.jpg",
     "href": "https://zh.wikipedia.org/wiki/生化危机3_重制版",
     "score": 4,
-    "label": "游戏",
+    "tags": ["恐怖", "动作"],
     "review": "追踪者追着吉尔跑。"
   },
   {
@@ -1893,7 +1893,7 @@
     "cover": "game/re4.jpg",
     "href": "https://zh.wikipedia.org/wiki/生化危机4",
     "score": 5,
-    "label": "游戏",
+    "tags": ["恐怖", "动作"],
     "review": "里昂去救总统女儿。"
   },
   {
@@ -1904,7 +1904,7 @@
     "cover": "game/re7.jpg",
     "href": "https://zh.wikipedia.org/wiki/生化危机7",
     "score": 4,
-    "label": "游戏",
+    "tags": ["恐怖", "第一人称"],
     "review": "第一人称走进贝克家。恐怖从枪战改成屋子里的家人。"
   },
   {
@@ -1915,7 +1915,7 @@
     "cover": "game/fh4.jpg",
     "href": "https://zh.wikipedia.org/wiki/极限竞速_地平线4",
     "score": 4.5,
-    "label": "游戏",
+    "tags": ["竞速", "开放世界"],
     "review": "英国地图的四季真好看啊。"
   },
   {
@@ -1926,7 +1926,7 @@
     "cover": "game/fh5.jpg",
     "href": "https://zh.wikipedia.org/wiki/极限竞速_地平线5",
     "score": 4.5,
-    "label": "游戏",
+    "tags": ["竞速", "开放世界"],
     "review": "墨西哥地图更大了。"
   },
   {
@@ -1937,7 +1937,7 @@
     "cover": "game/it-takes-two.jpg",
     "href": "https://zh.wikipedia.org/wiki/双人成行",
     "score": 4,
-    "label": "游戏",
+    "tags": ["合作", "冒险"],
     "review": "做的还是很有意思的。"
   },
   {
@@ -1947,7 +1947,7 @@
     "title": "巫师3重制",
     "cover": "game/witcher3.jpg",
     "href": "https://zh.wikipedia.org/wiki/巫师3：狂猎",
-    "label": "游戏",
+    "tags": ["RPG", "开放世界"],
     "review": "重制版。"
   },
   {
@@ -1958,9 +1958,7 @@
     "cover": "book/russian-literati.jpg",
     "href": "https://book.qidian.com/info/1044119887/",
     "meta": "卡拉马佐夫",
-    "tags": [
-      "网文"
-    ]
+    "tags": ["网文", "穿越"]
   },
   {
     "id": "book-玄鉴仙族",
@@ -1970,9 +1968,7 @@
     "cover": "book/xuanjian-clan.jpg",
     "href": "https://book.qidian.com/info/1035420986/",
     "meta": "季越人",
-    "tags": [
-      "网文"
-    ]
+    "tags": ["网文", "仙侠"]
   },
   {
     "id": "book-东京医途",
@@ -1982,9 +1978,7 @@
     "cover": "book/tokyo-medicine.jpg",
     "href": "https://book.qidian.com/info/1046431588/",
     "meta": "睡醒了会饿",
-    "tags": [
-      "网文"
-    ]
+    "tags": ["网文", "都市"]
   },
   {
     "id": "book-冬日重现",
@@ -1994,9 +1988,7 @@
     "cover": "book/winter-return.jpg",
     "href": "https://book.qidian.com/info/1044572097/",
     "meta": "雪梨炖茶",
-    "tags": [
-      "网文"
-    ]
+    "tags": ["网文"]
   },
   {
     "id": "book-现实编程协会",
@@ -2006,9 +1998,7 @@
     "cover": "book/real-coding-club.jpg",
     "href": "https://book.qidian.com/info/1047535456/",
     "meta": "木也马",
-    "tags": [
-      "网文"
-    ]
+    "tags": ["网文"]
   },
   {
     "id": "book-钢铁火药和施法者",
@@ -2018,9 +2008,7 @@
     "cover": "book/steel-powder-mage.jpg",
     "href": "https://book.qidian.com/info/1021263756/",
     "meta": "尹紫电",
-    "tags": [
-      "网文"
-    ]
+    "tags": ["网文", "奇幻"]
   },
   {
     "id": "book-保卫南山公园",
@@ -2030,9 +2018,7 @@
     "cover": "book/nanshan-park.jpg",
     "href": "https://book.qidian.com/info/1034833260/",
     "meta": "天瑞说符",
-    "tags": [
-      "网文"
-    ]
+    "tags": ["网文", "科幻"]
   },
   {
     "id": "book-捞尸人",
@@ -2042,9 +2028,7 @@
     "cover": "book/corpse-diver.jpg",
     "href": "https://book.qidian.com/info/1041637443/",
     "meta": "纯洁滴小龙",
-    "tags": [
-      "网文"
-    ]
+    "tags": ["网文", "悬疑"]
   },
   {
     "id": "book-绍宋",
@@ -2054,9 +2038,7 @@
     "cover": "book/shaosong.jpg",
     "href": "https://book.qidian.com/info/1017281778/",
     "meta": "榴弹怕水",
-    "tags": [
-      "网文"
-    ]
+    "tags": ["网文", "历史"]
   },
   {
     "id": "book-死在火星上",
@@ -2066,9 +2048,7 @@
     "cover": "book/die-on-mars.jpg",
     "href": "https://book.qidian.com/info/1013489123/",
     "meta": "天瑞说符",
-    "tags": [
-      "网文"
-    ]
+    "tags": ["网文", "科幻"]
   },
   {
     "id": "book-深海余烬",
@@ -2078,9 +2058,7 @@
     "cover": "book/deep-sea-embers.jpg",
     "href": "https://book.qidian.com/info/1034360760/",
     "meta": "远瞳",
-    "tags": [
-      "网文"
-    ]
+    "tags": ["网文", "奇幻"]
   },
   {
     "id": "book-我们生活在南京",
@@ -2090,9 +2068,7 @@
     "cover": "book/living-in-nanjing.jpg",
     "href": "https://book.qidian.com/info/1025325277/",
     "meta": "天瑞说符",
-    "tags": [
-      "网文"
-    ]
+    "tags": ["网文", "科幻"]
   },
   {
     "id": "book-诡秘之主",
@@ -2102,9 +2078,7 @@
     "cover": "book/lord-of-mysteries.jpg",
     "href": "https://book.qidian.com/info/1010868264/",
     "meta": "爱潜水的乌贼",
-    "tags": [
-      "网文"
-    ]
+    "tags": ["网文", "奇幻"]
   },
   {
     "id": "book-我真没想重生啊",
@@ -2114,9 +2088,7 @@
     "cover": "book/accidental-rebirth.jpg",
     "href": "https://book.qidian.com/info/1015648531/",
     "meta": "柳岸花又明",
-    "tags": [
-      "网文"
-    ]
+    "tags": ["网文", "都市"]
   },
   {
     "id": "book-活着",
@@ -2126,9 +2098,7 @@
     "cover": "book/to-live.jpg",
     "href": "https://book.douban.com/subject/4913064/",
     "meta": "余华",
-    "tags": [
-      "现实与时代"
-    ]
+    "tags": ["华语文学", "现实"]
   },
   {
     "id": "book-许三观卖血记",
@@ -2138,9 +2108,7 @@
     "cover": "book/blood-merchant.jpg",
     "href": "https://book.douban.com/subject/4760224/",
     "meta": "余华",
-    "tags": [
-      "现实与时代"
-    ]
+    "tags": ["华语文学", "现实"]
   },
   {
     "id": "book-兄弟",
@@ -2150,9 +2118,7 @@
     "cover": "book/brothers.jpg",
     "href": "https://book.douban.com/subject/20441957/",
     "meta": "余华",
-    "tags": [
-      "现实与时代"
-    ]
+    "tags": ["华语文学", "现实"]
   },
   {
     "id": "book-额尔古纳河右岸",
@@ -2162,9 +2128,7 @@
     "cover": "book/ergun-river.jpg",
     "href": "https://book.douban.com/subject/34432750/",
     "meta": "迟子建",
-    "tags": [
-      "现实与时代"
-    ]
+    "tags": ["华语文学"]
   },
   {
     "id": "book-围城",
@@ -2174,9 +2138,7 @@
     "cover": "book/fortress.jpg",
     "href": "https://book.douban.com/subject/11524204/",
     "meta": "钱钟书",
-    "tags": [
-      "现实与时代"
-    ]
+    "tags": ["华语文学", "讽刺"]
   },
   {
     "id": "book-平凡的世界",
@@ -2186,9 +2148,7 @@
     "cover": "book/ordinary-world.jpg",
     "href": "https://book.douban.com/subject/10517238/",
     "meta": "路遥",
-    "tags": [
-      "现实与时代"
-    ]
+    "tags": ["华语文学", "现实"]
   },
   {
     "id": "book-草房子",
@@ -2198,9 +2158,7 @@
     "cover": "book/straw-house.jpg",
     "href": "https://book.douban.com/subject/25953676/",
     "meta": "曹文轩",
-    "tags": [
-      "现实与时代"
-    ]
+    "tags": ["华语文学", "成长"]
   },
   {
     "id": "book-尘埃落定",
@@ -2210,9 +2168,7 @@
     "cover": "book/red-poppies.jpg",
     "href": "https://book.douban.com/subject/35051822/",
     "meta": "阿来",
-    "tags": [
-      "现实与时代"
-    ]
+    "tags": ["华语文学"]
   },
   {
     "id": "book-丰乳肥臀",
@@ -2222,9 +2178,7 @@
     "cover": "book/big-breasts.jpg",
     "href": "https://book.douban.com/subject/26904658/",
     "meta": "莫言",
-    "tags": [
-      "现实与时代"
-    ]
+    "tags": ["华语文学"]
   },
   {
     "id": "book-白鹿原",
@@ -2234,9 +2188,7 @@
     "cover": "book/white-deer.jpg",
     "href": "https://book.douban.com/subject/27047454/",
     "meta": "陈忠实",
-    "tags": [
-      "现实与时代"
-    ]
+    "tags": ["华语文学", "家族"]
   },
   {
     "id": "book-房思琪的初恋乐园",
@@ -2246,9 +2198,7 @@
     "cover": "book/fang-siqi.jpg",
     "href": "https://book.douban.com/subject/27614904/",
     "meta": "林奕含",
-    "tags": [
-      "现实与时代"
-    ]
+    "tags": ["华语文学", "现实"]
   },
   {
     "id": "book-白夜行",
@@ -2258,9 +2208,7 @@
     "cover": "book/white-night.jpg",
     "href": "https://book.douban.com/subject/10554308/",
     "meta": "东野圭吾",
-    "tags": [
-      "悬疑与推理"
-    ]
+    "tags": ["日本文学", "推理"]
   },
   {
     "id": "book-恶意",
@@ -2270,9 +2218,7 @@
     "cover": "book/malice.jpg",
     "href": "https://book.douban.com/subject/26877752/",
     "meta": "东野圭吾",
-    "tags": [
-      "悬疑与推理"
-    ]
+    "tags": ["日本文学", "推理"]
   },
   {
     "id": "book-嫌疑人x的献身",
@@ -2282,9 +2228,7 @@
     "cover": "book/devotion-x.jpg",
     "href": "https://book.douban.com/subject/3211779/",
     "meta": "东野圭吾",
-    "tags": [
-      "悬疑与推理"
-    ]
+    "tags": ["日本文学", "推理"]
   },
   {
     "id": "book-绝叫",
@@ -2294,9 +2238,7 @@
     "cover": "book/outcry.jpg",
     "href": "https://book.douban.com/subject/35031587/",
     "meta": "叶真中显",
-    "tags": [
-      "悬疑与推理"
-    ]
+    "tags": ["日本文学", "推理"]
   },
   {
     "id": "book-无证之罪",
@@ -2306,9 +2248,7 @@
     "cover": "book/burning-ice.jpg",
     "href": "https://book.douban.com/subject/25799686/",
     "meta": "紫金陈",
-    "tags": [
-      "悬疑与推理"
-    ]
+    "tags": ["华语文学", "推理"]
   },
   {
     "id": "book-坏小孩",
@@ -2318,9 +2258,7 @@
     "cover": "book/bad-kids.jpg",
     "href": "https://book.douban.com/subject/25955474/",
     "meta": "紫金陈",
-    "tags": [
-      "悬疑与推理"
-    ]
+    "tags": ["华语文学", "推理"]
   },
   {
     "id": "book-长夜难明",
@@ -2330,9 +2268,7 @@
     "cover": "book/long-night.jpg",
     "href": "https://book.douban.com/subject/26923390/",
     "meta": "紫金陈",
-    "tags": [
-      "悬疑与推理"
-    ]
+    "tags": ["华语文学", "推理"]
   },
   {
     "id": "book-霍乱时期的爱情",
@@ -2342,9 +2278,7 @@
     "cover": "book/cholera-love.jpg",
     "href": "https://book.douban.com/subject/10594787/",
     "meta": "马尔克斯",
-    "tags": [
-      "世界文学与成长"
-    ]
+    "tags": ["外国文学", "爱情"]
   },
   {
     "id": "book-百年孤独",
@@ -2354,9 +2288,7 @@
     "cover": "book/solitude.jpg",
     "href": "https://book.douban.com/subject/6082808/",
     "meta": "马尔克斯",
-    "tags": [
-      "世界文学与成长"
-    ]
+    "tags": ["外国文学", "魔幻现实"]
   },
   {
     "id": "book-金阁寺",
@@ -2366,9 +2298,7 @@
     "cover": "book/golden-pavilion.jpg",
     "href": "https://book.douban.com/subject/35324326/",
     "meta": "三岛由纪夫",
-    "tags": [
-      "世界文学与成长"
-    ]
+    "tags": ["日本文学"]
   },
   {
     "id": "book-追风筝的人",
@@ -2378,9 +2308,7 @@
     "cover": "book/kite-runner.jpg",
     "href": "https://book.douban.com/subject/1770782/",
     "meta": "卡勒德·胡赛尼",
-    "tags": [
-      "世界文学与成长"
-    ]
+    "tags": ["外国文学", "成长"]
   },
   {
     "id": "book-灿烂千阳",
@@ -2390,9 +2318,7 @@
     "cover": "book/thousand-suns.jpg",
     "href": "https://book.douban.com/subject/2143732/",
     "meta": "卡勒德·胡赛尼",
-    "tags": [
-      "世界文学与成长"
-    ]
+    "tags": ["外国文学"]
   },
   {
     "id": "book-挪威的森林",
@@ -2402,9 +2328,7 @@
     "cover": "book/norwegian-wood.jpg",
     "href": "https://book.douban.com/subject/27200257/",
     "meta": "村上春树",
-    "tags": [
-      "世界文学与成长"
-    ]
+    "tags": ["日本文学", "青春"]
   },
   {
     "id": "book-杀死一只知更鸟",
@@ -2414,9 +2338,7 @@
     "cover": "book/mockingbird.jpg",
     "href": "https://book.douban.com/subject/26879778/",
     "meta": "哈珀·李",
-    "tags": [
-      "世界文学与成长"
-    ]
+    "tags": ["外国文学", "成长"]
   },
   {
     "id": "book-三体",
@@ -2426,9 +2348,7 @@
     "cover": "book/three-body.jpg",
     "href": "https://book.douban.com/subject/2567698/",
     "meta": "刘慈欣",
-    "tags": [
-      "科幻与奇幻"
-    ]
+    "tags": ["华语文学", "科幻"]
   },
   {
     "id": "book-解忧杂货店",
@@ -2438,9 +2358,7 @@
     "cover": "book/miracles-store.jpg",
     "href": "https://book.douban.com/subject/25862578/",
     "meta": "东野圭吾",
-    "tags": [
-      "科幻与奇幻"
-    ]
+    "tags": ["日本文学", "治愈"]
   },
   {
     "id": "book-摆渡人",
@@ -2450,9 +2368,7 @@
     "cover": "book/ferryman.jpg",
     "href": "https://book.douban.com/subject/26356948/",
     "meta": "克莱尔·麦克福尔",
-    "tags": [
-      "科幻与奇幻"
-    ]
+    "tags": ["外国文学", "奇幻"]
   },
   {
     "id": "book-当下的力量",
@@ -2462,9 +2378,7 @@
     "cover": "book/power-of-now.jpg",
     "href": "https://book.douban.com/subject/26815948/",
     "meta": "埃尔哈特·托利",
-    "tags": [
-      "散文与自我探索"
-    ]
+    "tags": ["心灵"]
   },
   {
     "id": "book-撒哈拉的故事",
@@ -2474,9 +2388,7 @@
     "cover": "book/sahara.jpg",
     "href": "https://book.douban.com/subject/1060068/",
     "meta": "三毛",
-    "tags": [
-      "散文与自我探索"
-    ]
+    "tags": ["华语文学", "散文"]
   },
   {
     "id": "book-梦里花落知多少",
@@ -2486,9 +2398,7 @@
     "cover": "book/dream-flowers.jpg",
     "href": "https://book.douban.com/subject/2070844/",
     "meta": "三毛",
-    "tags": [
-      "散文与自我探索"
-    ]
+    "tags": ["华语文学", "散文"]
   },
   {
     "id": "book-孤独六讲",
@@ -2498,9 +2408,7 @@
     "cover": "book/loneliness.jpg",
     "href": "https://book.douban.com/subject/4124727/",
     "meta": "蒋勋",
-    "tags": [
-      "散文与自我探索"
-    ]
+    "tags": ["华语文学", "散文"]
   },
   {
     "id": "book-我与地坛",
@@ -2510,8 +2418,6 @@
     "cover": "book/earth-temple.jpg",
     "href": "https://book.douban.com/subject/5910656/",
     "meta": "史铁生",
-    "tags": [
-      "散文与自我探索"
-    ]
+    "tags": ["华语文学", "散文"]
   }
 ]

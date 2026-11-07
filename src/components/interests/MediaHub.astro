@@ -53,7 +53,7 @@ const panels = MEDIA_CATEGORIES.map((cat) => {
 
 // 书显示作者；其它显示细分类型，与分类同名（如「电影」）时省略。
 const subline = (item: (typeof enriched)[number]) =>
-  item.meta || (item.label !== item.kind ? item.label : '')
+  item.meta || item.tags?.[0] || ''
 
 const star =
   'M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z'
@@ -176,9 +176,24 @@ const star =
       </figure>
       <header class="media-hub__lb-head">
         <p class="media-hub__lb-kicker" data-lb-kicker></p>
-        <h2 id="media-lb-title">
-          <span data-lb-title></span>
-        </h2>
+        <div class="media-hub__lb-titlerow">
+          <h2 id="media-lb-title">
+            <span data-lb-title></span>
+          </h2>
+          <a
+            class="media-hub__lb-link"
+            data-lb-link
+            href={Astro.url.pathname}
+            target="_blank"
+            rel="noopener noreferrer"
+            hidden
+          >
+            查看详情
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M16 8.4 7.4 17 6 15.6 14.6 7H7.1V5H18v10.9h-2z"></path>
+            </svg>
+          </a>
+        </div>
         <p class="media-hub__lb-rating" data-lb-rating hidden>
           <span
             class="media-hub__stars"
@@ -187,7 +202,7 @@ const star =
           ></span>
           <span data-lb-score></span>
         </p>
-        <p class="media-hub__lb-meta" data-lb-meta></p>
+        <ul class="media-hub__lb-tags" data-lb-tags aria-label="标签"></ul>
       </header>
       <blockquote
         class="media-hub__lb-review"
@@ -195,19 +210,7 @@ const star =
         hidden
       ></blockquote>
       <footer class="media-hub__lb-foot">
-        <a
-          class="media-hub__lb-link"
-          data-lb-link
-          href={Astro.url.pathname}
-          target="_blank"
-          rel="noopener noreferrer"
-          hidden
-        >
-          查看详情
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M16 8.4 7.4 17 6 15.6 14.6 7H7.1V5H18v10.9h-2z"></path>
-          </svg>
-        </a>
+        <time class="media-hub__lb-date" data-lb-date></time>
         <span class="media-hub__lb-pager">
           <button
             type="button"
@@ -259,7 +262,6 @@ const star =
             href: item.href || '',
             score: item.score ?? null,
             date: item.date || '',
-            label: item.label || '',
             meta: item.meta || '',
             tags: item.tags || [],
             review: item.review || '',
@@ -273,6 +275,8 @@ const star =
 </media-hub>
 
 <script>
+  import { tagTone } from '~/utils/media-hub.js'
+
   interface MediaItem {
     status: string
     title: string
@@ -280,7 +284,6 @@ const star =
     href: string
     score: number | null
     date: string
-    label: string
     meta: string
     tags: string[]
     review: string
@@ -308,7 +311,8 @@ const star =
       rating: pick('[data-lb-rating]'),
       stars: pick('[data-lb-stars]'),
       score: pick('[data-lb-score]'),
-      meta: pick('[data-lb-meta]'),
+      tags: pick('[data-lb-tags]'),
+      date: pick<HTMLTimeElement>('[data-lb-date]'),
       review: pick('[data-lb-review]'),
       link: pick<HTMLAnchorElement>('[data-lb-link]'),
       pos: pick('[data-lb-pos]'),
@@ -325,7 +329,10 @@ const star =
       lb.cover.src = item.coverUrl
       lb.cover.alt = `${item.title}封面`
       lb.ambient.src = item.coverUrl
-      lb.kicker.textContent = `${item.kind} · ${item.statusLabel}`
+      // 书把作者放在分类与状态之后；标签行只放标签。
+      lb.kicker.textContent = [item.kind, item.statusLabel, item.meta]
+        .filter(Boolean)
+        .join(' · ')
       lb.kicker.dataset.status = item.status
       lb.title.textContent = item.title
       lb.rating.hidden = item.score == null
@@ -333,16 +340,18 @@ const star =
         lb.stars.style.setProperty('--score', String(item.score))
         lb.score.textContent = `${item.score} / 5`
       }
-      lb.meta.replaceChildren(
-        ...[item.label, item.meta, ...item.tags, item.date]
-          .filter((text) => text && text !== item.kind)
-          .map((text) => {
-            const chip = document.createElement('span')
-            chip.textContent = text
-            return chip
-          })
+      lb.tags.replaceChildren(
+        ...item.tags.map((text) => {
+          const chip = document.createElement('li')
+          chip.textContent = text
+          chip.dataset.tone = String(tagTone(text))
+          return chip
+        })
       )
-      lb.meta.hidden = lb.meta.childElementCount === 0
+      lb.tags.hidden = item.tags.length === 0
+      lb.date.textContent = item.date
+      lb.date.dateTime = item.date
+      lb.date.hidden = !item.date
       lb.review.textContent = item.review
       lb.review.hidden = !item.review
       lb.link.hidden = !item.href
@@ -840,8 +849,21 @@ const star =
     background: var(--accent);
   }
 
+  /* 标题与「查看详情」同行：标题可换行并占满余宽，链接不换行、对齐标题首行；
+     余宽放不下时链接整体折到下一行右侧。 */
+  .media-hub__lb-titlerow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 1rem;
+    row-gap: 0.15rem;
+    margin-top: 0.6rem;
+  }
+
   .media-hub__lb-head h2 {
-    margin: 0.6rem 0 0;
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
     font-size: 1.625rem;
     font-weight: 600;
     line-height: 1.25;
@@ -884,19 +906,56 @@ const star =
     color: var(--accent);
   }
 
-  .media-hub__lb-meta {
+  /* 标签：同色系浅底 + 深字的小圆角块，色调按标签名固定；与背景混色，明暗主题都不刺眼。 */
+  .media-hub__lb-tags {
     display: flex;
     flex-wrap: wrap;
-    margin: 0.55rem 0 0;
-    font-size: 0.8125rem;
-    line-height: 1.6;
-    color: var(--mh-muted);
+    gap: 0.4rem;
+    margin: 0.85rem 0 0;
+    padding: 0;
+    list-style: none;
   }
 
-  .media-hub__lb-meta > :global(span + span)::before {
-    content: '·';
-    margin: 0 0.45em;
-    opacity: 0.6;
+  .media-hub__lb-tags > :global(li) {
+    --tone: #7a7f8a;
+    margin: 0;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--tone) 20%, var(--c-bg));
+    color: color-mix(in srgb, var(--tone) 88%, var(--c-text));
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.45;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .media-hub__lb-tags > :global(li::before) {
+    content: none;
+  }
+
+  .media-hub__lb-tags > :global([data-tone='0']) {
+    --tone: #b0577a;
+  }
+  .media-hub__lb-tags > :global([data-tone='1']) {
+    --tone: #4a72b0;
+  }
+  .media-hub__lb-tags > :global([data-tone='2']) {
+    --tone: #4f8a63;
+  }
+  .media-hub__lb-tags > :global([data-tone='3']) {
+    --tone: #a87a2f;
+  }
+  .media-hub__lb-tags > :global([data-tone='4']) {
+    --tone: #7c62b3;
+  }
+  .media-hub__lb-tags > :global([data-tone='5']) {
+    --tone: #6f7480;
+  }
+
+  :global(.dark) .media-hub__lb-tags > :global(li) {
+    background: color-mix(in srgb, var(--tone) 26%, var(--c-bg));
+    color: color-mix(in srgb, var(--tone) 45%, var(--c-text));
   }
 
   .media-hub__lb-review {
@@ -920,11 +979,21 @@ const star =
     margin-top: 1.5rem;
   }
 
+  .media-hub__lb-date {
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    color: var(--mh-muted);
+  }
+
   .media-hub__lb-link {
     display: inline-flex;
     align-items: center;
     gap: 0.2rem;
-    padding: 0.3rem 0;
+    flex: none;
+    margin-left: auto;
+    padding: 0.1rem 0;
+    white-space: nowrap;
     color: var(--mh-soft);
     font-size: 0.8125rem;
     line-height: 1.2;

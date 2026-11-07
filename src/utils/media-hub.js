@@ -115,3 +115,16 @@ export function mediaStats(items, now = new Date()) {
   }
   return { todo, doneMonth, doneYear, total }
 }
+
+/** 标签色调数；与 MediaHub 里 `[data-tone]` 的色板一一对应。 */
+export const TAG_TONES = 6
+
+/**
+ * 同一个标签在任何条目里都落到同一色调：按字符串哈希取模，不维护标签→颜色表。
+ * @param {string} tag
+ */
+export function tagTone(tag) {
+  let hash = 0
+  for (const char of tag) hash = (hash * 31 + char.codePointAt(0)) >>> 0
+  return hash % TAG_TONES
+}

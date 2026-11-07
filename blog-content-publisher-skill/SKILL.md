@@ -264,7 +264,13 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 分类需要页签时，把各页写成同名子目录里的 `<id>/<页签>.md`（frontmatter 只有 `title` 页签名与 `order`），顶层 `<id>.md` 只留元数据；页签文件名即 hash（如 `/interests/gear/#mac`），配图与页签文件同目录，用 `./file.png` 引用。页签内不再写与页签同名的标题。
 
-影音书游条目写在 `src/data/media/items.json`（字段：`id`、`category`、`status`（`todo`｜`done`）、`title`、`cover`，以及可选 `href`／`score`／`date`／`label`／`tags`／`review`／`meta`），不要再为电影／动漫／剧／游戏／书单独维护 Markdown 目录页。文章、关于、首页近期书影游仍可用 `:::card`。
+影音书游条目写在 `src/data/media/items.json`（字段：`id`、`category`、`status`（`todo`｜`done`）、`title`、`cover`，标签 `tags`，以及可选 `href`／`score`／`date`／`review`／`meta`（书填作者）），不要再为电影／动漫／剧／游戏／书单独维护 Markdown 目录页。文章、关于仍可用 `:::card`。
+
+标签规范（`tags` 必填，1–3 个，克制）：
+
+- 第一个标签定性：电视剧写地区／形式（`美剧`、`英剧`、`韩剧`、`日剧`、`国产剧`、`德剧`、`印度剧`、`综艺`），动漫写 `日漫`／`国漫`／`动画电影`，书写来源（`网文`、`华语文学`、`日本文学`、`外国文学`）；电影和游戏直接写题材。
+- 其后补 1–2 个题材，优先复用已有标签（如 `科幻`、`犯罪`、`悬疑`、`恋爱`、`异世界`、`超级英雄`、`开放世界`、`类魂`），不造近义词；动画电影可用 `新海诚`／`吉卜力` 这类创作者标签。
+- 不写与分类重复的词（`电影`、`游戏`、`书`），不写评价性词，拿不准的题材宁可少写。没有单独的 `label` 字段，卡片小字取 `meta` 或第一个标签。
 
 电影、电视剧、动漫、游戏的条目使用默认横卡。作者可按需填写评分 `score` 和日期 `date`，两者都与观看／游玩状态无关；没有作者提供的值时省略对应属性：
 

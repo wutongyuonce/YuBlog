@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { sortMediaItems, mediaStats } from '../src/utils/media-hub.js'
+import {
+  sortMediaItems,
+  mediaStats,
+  tagTone,
+  TAG_TONES,
+} from '../src/utils/media-hub.js'
+import items from '../src/data/media/items.json' with { type: 'json' }
 
 test('todo first, dated done before undated, undated by title', () => {
   const sorted = sortMediaItems([
@@ -27,4 +33,37 @@ test('stats use Shanghai calendar month/year', () => {
     now
   )
   assert.deepEqual(stats, { todo: 1, doneMonth: 1, doneYear: 2, total: 4 })
+})
+
+test('a tag always maps to the same tone within the palette', () => {
+  assert.equal(tagTone('美剧'), tagTone('美剧'))
+  for (const tag of ['美剧', '科幻', 'RPG', '华语文学']) {
+    const tone = tagTone(tag)
+    assert.ok(Number.isInteger(tone) && tone >= 0 && tone < TAG_TONES)
+  }
+})
+
+test('items follow the tag convention: 1–3 unique tags, region first for tv/anime', () => {
+  const regions = {
+    tv: ['美剧', '英剧', '韩剧', '日剧', '国产剧', '德剧', '印度剧', '综艺'],
+    anime: ['日漫', '国漫', '动画电影'],
+  }
+  for (const item of items) {
+    const { tags } = item
+    assert.ok(
+      Array.isArray(tags) && tags.length >= 1 && tags.length <= 3,
+      `${item.id}: 1–3 tags`
+    )
+    assert.equal(new Set(tags).size, tags.length, `${item.id}: unique tags`)
+    assert.ok(
+      tags.every((tag) => typeof tag === 'string' && tag.trim() === tag && tag),
+      `${item.id}: trimmed non-empty tags`
+    )
+    if (regions[item.category])
+      assert.ok(
+        regions[item.category].includes(tags[0]),
+        `${item.id}: first tag is the region/type`
+      )
+    assert.ok(!('label' in item), `${item.id}: label folded into tags`)
+  }
 })
