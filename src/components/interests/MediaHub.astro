@@ -979,11 +979,18 @@ const star =
     display: none;
   }
 
-  .media-hub__lb-title[href]:is(:hover, :focus-visible) {
+  /* showModal 会把焦点放到标题链接上；部分浏览器把它算作 :focus-visible，所以焦点变色只在
+     非鼠标操作时生效（判定源见 BaseLayout 的 data-input-method）。 */
+  .media-hub__lb-title[href]:hover,
+  :global(:root:not([data-input-method='pointer']))
+    .media-hub__lb-title[href]:focus-visible {
     color: var(--accent);
   }
 
-  .media-hub__lb-title[href]:is(:hover, :focus-visible) svg {
+  .media-hub__lb-title[href]:hover svg,
+  :global(:root:not([data-input-method='pointer']))
+    .media-hub__lb-title[href]:focus-visible
+    svg {
     transform: translate(0.08em, -0.08em);
   }
 
