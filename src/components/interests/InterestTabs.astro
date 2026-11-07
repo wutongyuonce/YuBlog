@@ -128,9 +128,14 @@ const { tabs, label } = Astro.props
       signal,
     })
 
-    // 首次定位、字体就绪与尺寸变化只对齐、不播滑动。
-    activate(hashId(), false)
-    place(false)
+    // 首次定位、字体就绪与尺寸变化只对齐、不播滑动。ClientRouter 先换 DOM 再改地址，
+    // 挂载时读到的可能是上一页的 hash，所以 page-load 时再对一次。
+    const sync = () => {
+      activate(hashId(), false)
+      place(false)
+    }
+    sync()
+    document.addEventListener('astro:page-load', sync, { signal })
     const resize = new ResizeObserver(() => place(false))
     resize.observe(list)
     signal.addEventListener('abort', () => resize.disconnect())

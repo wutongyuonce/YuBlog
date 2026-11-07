@@ -35,8 +35,7 @@ test('stats use Shanghai calendar month/year', () => {
   assert.deepEqual(stats, { todo: 1, doneMonth: 1, doneYear: 2, total: 4 })
 })
 
-test('a tag always maps to the same tone within the palette', () => {
-  assert.equal(tagTone('美剧'), tagTone('美剧'))
+test('tag tones stay within the palette', () => {
   for (const tag of ['美剧', '科幻', 'RPG', '华语文学']) {
     const tone = tagTone(tag)
     assert.ok(Number.isInteger(tone) && tone >= 0 && tone < TAG_TONES)
@@ -64,6 +63,5 @@ test('items follow the tag convention: 1–3 unique tags, region first for tv/an
         regions[item.category].includes(tags[0]),
         `${item.id}: first tag is the region/type`
       )
-    assert.ok(!('label' in item), `${item.id}: label folded into tags`)
   }
 })

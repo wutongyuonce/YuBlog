@@ -89,7 +89,8 @@ const parseScore = (value: string | null | undefined) => {
   return score
 }
 
-const safeHref = (value: string | null | undefined) => {
+/** 卡片链接安全规则的唯一属主；影音书游条目的 `href` 也经这里。 */
+export const safeHref = (value: string | null | undefined) => {
   const href = value?.trim() ?? ''
   if (
     href.includes('\\') ||

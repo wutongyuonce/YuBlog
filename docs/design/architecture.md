@@ -100,7 +100,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 屏幕时间日期、公开形状与缺失值；Blob 地址与上传；柱高刻度与失败文案 | `src/utils/screen-time.js`、`src/utils/screen-time-store.mjs`、`src/utils/screen-time-view.js`；本机采集在 `scripts/sync-screen-time.mjs`，运行时接口在 `api/screen-time.js`，详见 [设计](./screen-time.md) | 在组件内推断活跃状态或连接本机 API |
 | Last.fm 查询、统计、专辑匹配、资料缺失与请求上限 | `src/utils/lastfm.mjs`；缓存与失败语义在 `api/lastfm.js` | 在视图中重新调用 API 或推断排行／周总数 |
 | 拾趣固定歌单、平台资料归一化、运行时快照 | `src/data/playlists.json`、`src/utils/qq-playlist.mjs`／`netease-playlist.mjs` 与 `playlists.mjs`；缓存在 `api/playlists.js`，见 [拾趣歌单](./playlists.md) | 提交全量曲目、在页面抓远程封面或接受任意来源 URL |
-| 影音书游条目 | `src/data/media/items.json`；合页 `MediaHub`；排序／统计 `src/utils/media-hub.js` | 在 Markdown `:::card` 目录页再维护一份电影／动漫／剧／游戏／书清单 |
+| 影音书游条目 | `src/data/media/items.json`；合页 `MediaHub`；排序／统计／标签色调 `src/utils/media-hub.js`；封面 `src/utils/media-covers.ts` | 在 Markdown `:::card` 目录页再维护一份电影／动漫／剧／游戏／书清单 |
 | 写作热力统计与失败语义 | `blog-heatmap.js` | 在组件重算年度字数、将缺失字数当 0 |
 | 热力提示交互与页面清理 | `WritingHeatmap.astro` | 用旧根节点的定时器关闭新页面的提示层 |
 | 内容图片的路径与写入规则 | `src/content/**` 里的相对路径；正文宽度标记由 `plugins/remark-image-width.ts` 解析 | 把图片放进 `public/`、在正文写原始 `<img>`（相对路径会构建报错）、手写 `_astro` 地址 |
@@ -335,7 +335,7 @@ plugins/
 
 入口与子页均使用点状背景。当前分类包括设备与软件、影音书游、歌单、Kpop 等，列表和说明可随内容调整。
 
-合页共用 `InterestTabs`／`InterestTabPanel` 外壳：页签、hash 同步、方向键与无脚本时全部展开，挂在 `<interest-tabs>` 自定义元素上、随 ClientRouter 换页重绑；面板内容按数据形状分两类。同构条目走 JSON：电影／动漫／电视剧／游戏／书合并为 `/interests/media/`，条目权威在 `src/data/media/items.json`，封面仍放 `src/content/interests/{movie,anime,tv,game,book}/`，由 `MediaHub` 经 `getImage` 输出封面墙与灯箱两档 WebP，每类按待看／已看分组，灯箱在当前分类内前后切换。自由正文走 Markdown：电子设备／生活配件／订阅服务／Mac 软件／手机软件是 `/interests/gear/` 的 `gear/*.md`，表格、链接与相册沿用共享管线，配图与分页文件同在 `gear/`。旧子页路径（五条影音书游、`device`、`software`）永久跳转到对应合页 hash。首页近期书影游与关于等正文仍可用 `:::card`。
+合页共用 `InterestTabs`／`InterestTabPanel` 外壳：页签、hash 同步、方向键与无脚本时全部展开，挂在 `<interest-tabs>` 自定义元素上、随 ClientRouter 换页重绑；面板内容按数据形状分两类。同构条目走 JSON：电影／动漫／电视剧／游戏／书合并为 `/interests/media/`，条目权威在 `src/data/media/items.json`，封面仍放 `src/content/interests/{movie,anime,tv,game,book}/`，封面解析与 WebP 输出统一在 `src/utils/media-covers.ts`（合页与首页近期书影游共用），每类按待看／已看分组，灯箱在当前分类内前后切换。自由正文走 Markdown：电子设备／生活配件／订阅服务／Mac 软件／手机软件是 `/interests/gear/` 的 `gear/*.md`，表格、链接与相册沿用共享管线，配图与分页文件同在 `gear/`。旧子页路径（五条影音书游、`device`、`software`）永久跳转到对应合页 hash。文章、关于等正文仍可用 `:::card`。
 
 ### 标签 `/tags/`
 

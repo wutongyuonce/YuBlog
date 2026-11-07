@@ -109,10 +109,11 @@ export function playedAgoLabel(playedAt, now = new Date()) {
 }
 
 /**
- * 写入正在播放卡片；`data` 为 null 表示加载失败。失败或没有记录时整张卡片收起，
- * 不影响下方的七日排行。
+ * 写入正在播放卡片；`data` 为 null 表示加载失败。首次失败或没有记录时整张收起，
+ * 已有内容后的轮询失败保留上一次结果，避免卡片闪没、下方排行跳动。
  */
 export function renderNowPlaying(card, data, now = new Date()) {
+  if (!data && ['playing', 'recent'].includes(card.dataset.state)) return
   card.setAttribute('aria-busy', 'false')
   if (!data?.track) {
     card.dataset.state = data ? 'empty' : 'error'

@@ -11,14 +11,11 @@ import { respondWithLastfm } from './_lastfm-response.js'
 const CACHE =
   'public, max-age=0, s-maxage=30, stale-while-revalidate=30, stale-if-error=600'
 
-export function handleNowPlaying(
-  request,
-  { apiKey, user, fetchImpl, now } = {}
-) {
+export function handleNowPlaying(request, { apiKey, user, fetchImpl } = {}) {
   return respondWithLastfm(request, {
     apiKey,
     cache: CACHE,
-    load: () => fetchLastfmNowPlaying({ apiKey, user, now, fetchImpl }),
+    load: () => fetchLastfmNowPlaying({ apiKey, user, fetchImpl }),
   })
 }
 

@@ -26,7 +26,7 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
   <!-- 正在播放／最近播放：加载时是骨架，失败或无记录时整张收起。 -->
   <article
     class="now-playing"
-    aria-label="正在播放"
+    aria-labelledby="now-playing-status"
     aria-busy="true"
     data-now-playing
     data-state="loading"
@@ -47,7 +47,9 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
           <i></i>
           <i></i>
         </span>
-        <span data-np-status></span>
+        <span id="now-playing-status" data-np-status>
+          正在播放
+        </span>
       </p>
       <a
         class="now-playing__title"
@@ -153,7 +155,9 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
     grid-template-columns: var(--np-cover) minmax(0, 1fr);
     align-items: center;
     gap: 1rem;
-    margin-top: 1rem;
+    /* 窄卡居中：桌面不铺满版心，手机两侧至少留 0.75rem。 */
+    width: min(21rem, 100% - 1.5rem);
+    margin: 1rem auto 0;
     padding: 0.875rem;
     overflow: hidden;
     border: 1px solid color-mix(in srgb, var(--c-text) 9%, transparent);

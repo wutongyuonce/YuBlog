@@ -8,6 +8,7 @@ import items from '~/data/media/items.json'
 import { MEDIA_CATEGORIES } from '~/utils/media-hub.js'
 import { mediaCoverUrl } from '~/utils/media-covers'
 import { withBasePath } from '~/utils/path'
+import { safeHref } from '../../../plugins/remark-media-card'
 
 const order = new Map(MEDIA_CATEGORIES.map((cat, index) => [cat.id, index]))
 const todo = items
@@ -17,6 +18,7 @@ const todo = items
 const cards = await Promise.all(
   todo.map(async (item) => ({
     ...item,
+    href: safeHref(item.href),
     thumbUrl: await mediaCoverUrl(item.cover, 480),
     fullUrl: await mediaCoverUrl(item.cover, 900),
   }))

@@ -56,7 +56,7 @@ export const MEDIA_CATEGORIES = [
 const SHANGHAI = 'Asia/Shanghai'
 
 /** @param {Date} [now] */
-export function shanghaiYmd(now = new Date()) {
+function shanghaiYmd(now = new Date()) {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: SHANGHAI,
     year: 'numeric',

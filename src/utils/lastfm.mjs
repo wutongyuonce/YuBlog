@@ -119,7 +119,6 @@ const trackUrl = (artist, name) =>
 export async function fetchLastfmNowPlaying({
   apiKey,
   user = LASTFM_USER,
-  now = new Date(),
   fetchImpl = fetch,
 } = {}) {
   text(apiKey, 'API key (set LASTFM_API_KEY)')
@@ -127,18 +126,12 @@ export async function fetchLastfmNowPlaying({
   const request = createRequest({ apiKey, user, fetchImpl })
   const recent = await request('user.getRecentTracks', { limit: '1' })
   const [latest] = list(recent.recenttracks?.track, 'recent tracks')
-  const base = {
-    user,
-    profileUrl: lastfmProfileUrl(user),
-    updatedAt: now.toISOString(),
-  }
-  if (!latest) return { ...base, playing: false, playedAt: null, track: null }
+  if (!latest) return { playing: false, playedAt: null, track: null }
   const playing = latest['@attr']?.nowplaying === 'true'
   const name = text(latest.name, 'recent name')
   const artist = text(latest.artist?.['#text'], 'recent artist')
   const cover = coverOf(latest.image)
   return {
-    ...base,
     playing,
     playedAt: playing
       ? null

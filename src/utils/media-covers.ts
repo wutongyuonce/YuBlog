@@ -6,28 +6,16 @@
 import { getImage } from 'astro:assets'
 import type { ImageMetadata } from 'astro'
 
+// glob 只接受字面量，分类目录需与 MEDIA_CATEGORIES 的 id 保持一致。
 const coverModules = import.meta.glob<{ default: ImageMetadata }>(
   '/src/content/interests/{movie,anime,tv,game,book}/*.{jpg,jpeg,png,webp,avif,gif,JPG,JPEG,PNG,WEBP,AVIF,GIF}',
   { eager: true }
 )
 
-const coverByLower = new Map(
-  Object.entries(coverModules).map(([key, mod]) => [
-    key.toLowerCase(),
-    mod.default,
-  ])
-)
-
-export function mediaCoverSource(cover: string): ImageMetadata {
-  const key = `/src/content/interests/${cover}`
-  const src = coverModules[key]?.default || coverByLower.get(key.toLowerCase())
-  if (!src) throw new Error(`影音书游：找不到封面 ${cover}`)
-  return src
-}
-
 /** 按最大宽度输出 WebP，不放大原图。 */
 export async function mediaCoverUrl(cover: string, width: number) {
-  const src = mediaCoverSource(cover)
+  const src = coverModules[`/src/content/interests/${cover}`]?.default
+  if (!src) throw new Error(`影音书游：找不到封面 ${cover}`)
   const image = await getImage({
     src,
     width: Math.min(width, src.width),
