@@ -102,7 +102,8 @@ const bodiesOf = (tree) => {
 }
 
 /**
- * 能作为 `#fragment` 落点的集合：所有元素的 `id`，加上传统 `<a name>`。
+ * 能作为 `#fragment` 落点的集合：所有元素的 `id`，加上传统 `<a name>`，
+ * 以及拾趣合页的页签名（`data-panel`，由 InterestTabs 按 hash 切换）。
  * `<input name>`／`<form name>` 不是锚点，收进来会让失效链接伪装成有效。
  */
 const fragmentTargets = (tree) => {
@@ -110,6 +111,8 @@ const fragmentTargets = (tree) => {
   visit(tree, 'element', (node) => {
     const id = node.properties.id
     if (typeof id === 'string' && id) ids.add(id)
+    const panel = node.properties.dataPanel
+    if (typeof panel === 'string' && panel) ids.add(panel)
     if (node.tagName === 'a') {
       const name = node.properties.name
       if (typeof name === 'string' && name) ids.add(name)
@@ -291,7 +294,13 @@ test('home and interest cards preserve authored content through the shared pipel
   const recent = elements(home, 'div').find((node) =>
     node.properties.className?.includes('recent-media__body')
   )
-  assert.ok(recent, 'home renders the standalone recent.md content')
+  assert.ok(recent, 'home renders the recent media rail')
+  assert.ok(
+    elements(recent, 'article').some((node) =>
+      node.properties.className?.includes('media-card--portrait')
+    ),
+    'recent media reuses the portrait card markup'
+  )
   const processor = await createMarkdownProcessor({
     remarkPlugins: [remarkDirective, remarkMediaCard],
   })
@@ -325,14 +334,9 @@ test('home and interest cards preserve authored content through the shared pipel
       'utf8'
     )
     const { code } = await processor.render(source)
-    const page =
-      file === 'recent.md'
-        ? recent
-        : fromHtml(
-            await html(
-              `interests/${file.replace(/\.(md|mdx)$/, '')}/index.html`
-            )
-          )
+    const page = fromHtml(
+      await html(`interests/${file.replace(/\.(md|mdx)$/, '')}/index.html`)
+    )
     const groups = (tree) =>
       elements(tree, 'div')
         .filter((node) => node.properties.className?.includes('media-cards'))

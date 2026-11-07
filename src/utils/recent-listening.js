@@ -67,6 +67,84 @@ export function parseListeningPayload(value) {
   }
 }
 
+/**
+ * 正在播放接口的最小形状。歌名、歌手、链接不合规或非播放状态缺播放时间时返回 null；
+ * 账户没有任何记录时 `track` 为 null。
+ */
+export function parseNowPlayingPayload(value) {
+  if (!isRecord(value) || typeof value.playing !== 'boolean') return null
+  if (value.track === null)
+    return { playing: false, playedAt: null, track: null }
+  if (!isRecord(value.track)) return null
+  const name = nonEmptyText(value.track.name)
+  const artist = nonEmptyText(value.track.artist)
+  const url = httpsUrl(value.track.url)
+  if (!name || !artist || !url) return null
+  let playedAt = null
+  if (!value.playing) {
+    playedAt = nonEmptyText(value.playedAt)
+    if (!playedAt || Number.isNaN(Date.parse(playedAt))) return null
+  }
+  return {
+    playing: value.playing,
+    playedAt,
+    track: {
+      name,
+      artist,
+      album: nonEmptyText(value.track.album),
+      cover: httpsUrl(value.track.cover),
+      url,
+    },
+  }
+}
+
+/** 「刚刚／N 分钟前／N 小时前／N 天前」，未来时间按刚刚。 */
+export function playedAgoLabel(playedAt, now = new Date()) {
+  const minutes = Math.floor((now.getTime() - Date.parse(playedAt)) / 60_000)
+  if (minutes < 1) return '刚刚'
+  if (minutes < 60) return `${minutes} 分钟前`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours} 小时前`
+  return `${Math.floor(hours / 24)} 天前`
+}
+
+/**
+ * 写入正在播放卡片；`data` 为 null 表示加载失败。首次失败或没有记录时整张收起，
+ * 已有内容后的轮询失败保留上一次结果，避免卡片闪没、下方排行跳动。
+ */
+export function renderNowPlaying(card, data, now = new Date()) {
+  if (!data && ['playing', 'recent'].includes(card.dataset.state)) return
+  card.setAttribute('aria-busy', 'false')
+  if (!data?.track) {
+    card.dataset.state = data ? 'empty' : 'error'
+    card.hidden = true
+    return
+  }
+  const { track } = data
+  card.hidden = false
+  card.dataset.state = data.playing ? 'playing' : 'recent'
+  const pick = (name) => card.querySelector(`[data-np-${name}]`)
+  pick('status').textContent = data.playing
+    ? '正在播放'
+    : `最近播放 · ${playedAgoLabel(data.playedAt, now)}`
+  const title = pick('title')
+  title.textContent = track.name
+  title.title = track.name
+  title.href = track.url
+  pick('artist').textContent = track.artist
+  const album = pick('album')
+  album.textContent = track.album ?? ''
+  album.hidden = !track.album
+  const cover = pick('cover')
+  const ambient = pick('ambient')
+  for (const img of [cover, ambient]) {
+    if (track.cover) img.src = track.cover
+    else img.removeAttribute('src')
+  }
+  cover.alt = track.album ? `${track.album} 专辑封面` : ''
+  card.toggleAttribute('data-no-cover', !track.cover)
+}
+
 const numbers = new Intl.NumberFormat('zh-CN')
 const dateTime = new Intl.DateTimeFormat('zh-CN', {
   timeZone: 'Asia/Shanghai',

@@ -4,6 +4,7 @@ import { defineCollection } from 'astro:content'
 import {
   aboutSchema,
   interestSchema,
+  interestTabSchema,
   friendSchema,
   postSchema,
   projectSchema,
@@ -32,13 +33,23 @@ const about = defineCollection({
 const interests = defineCollection({
   loader: glob({
     base: './src/content/interests',
-    pattern: ['*.{md,mdx}', '!recent.md'],
+    pattern: '*.{md,mdx}',
   }),
   schema: interestSchema,
 })
 
+// 同名子目录里的 Markdown 是该分类的页签，id 形如 `gear/device`。
+const interestTabs = defineCollection({
+  loader: glob({
+    base: './src/content/interests',
+    pattern: '*/*.{md,mdx}',
+  }),
+  schema: interestTabSchema,
+})
+
 export const collections = {
   interests,
+  interestTabs,
   blogs,
   projects,
   friends,

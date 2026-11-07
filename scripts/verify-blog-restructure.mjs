@@ -689,7 +689,7 @@ test('interest menu and index agree and their links resolve to content pages', a
   )
   const sourceFiles = (
     await readdir(new URL('../src/content/interests/', import.meta.url))
-  ).filter((file) => /\.(md|mdx)$/.test(file) && file !== 'recent.md')
+  ).filter((file) => /\.(md|mdx)$/.test(file))
   assert.equal(
     elements(interests, (node) => node.tagName === 'table-of-contents').length,
     0,
@@ -731,6 +731,14 @@ test('interest menu and index agree and their links resolve to content pages', a
         elements(page, (node) => node.tagName === 'table-of-contents').length,
         0,
         'runtime playlist titles do not enter the Markdown directory'
+      )
+    } else if (
+      elements(content[0], (node) => node.tagName === 'interest-tabs').length
+    ) {
+      assert.equal(
+        elements(page, (node) => node.tagName === 'table-of-contents').length,
+        0,
+        `${id}: tabbed pages keep hidden panel headings out of the directory`
       )
     } else {
       assertBodyToc(page, content[0], id)
@@ -852,8 +860,16 @@ test('home listening ships ten loading skeletons the runtime endpoint fills', as
     head,
     (node) => node.tagName === 'script' && node.properties.type === 'module'
   )[0]
+  // 脚本超过 Vite 内联阈值时以 src 输出；只要仍是首个模块、内容仍是听歌脚本即可。
+  const src = firstModule.properties.src
+  const firstSource = src
+    ? await readFile(
+        new URL(`../dist${new URL(src, siteBase).pathname}`, import.meta.url),
+        'utf8'
+      )
+    : textOf(firstModule)
   assert.match(
-    textOf(firstModule),
+    firstSource,
     /\/api\/lastfm/,
     'listening starts before unrelated module dependencies finish loading'
   )

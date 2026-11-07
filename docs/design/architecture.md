@@ -26,16 +26,16 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 
 | 路由 | 人看到的 | 入口 | 数据权威 |
 | :--- | :--- | :--- | :--- |
-| `/` | 作者介绍、写作热力、近期五篇笔墨、屏幕时间、近期书影游与 Last.fm 听歌排行 | `src/pages/index.astro` | 已发布 `blogs`、`interests/recent.md`、运行时 `/api/lastfm` 与 `/api/screen-time` |
+| `/` | 作者介绍、写作热力、近期五篇笔墨、屏幕时间、近期书影游与 Last.fm 听歌排行 | `src/pages/index.astro` | 已发布 `blogs`、`src/data/media/items.json`、运行时 `/api/lastfm` 与 `/api/screen-time` |
 | `/blogs/` | 完整文稿列表，八篇分页，原始分类共用 URL 片段精确筛选 | `src/pages/blogs/index.astro` | `blogs` 集合 |
-| `/interests/`、`/interests/<id>/` | 分类入口与按内容自动生成的独立页面 | `src/pages/interests.astro`、`src/pages/interests/[id].astro` | `interests` 集合：顶层 `*.{md,mdx}`，排除 `recent.md` |
+| `/interests/`、`/interests/<id>/` | 分类入口与按内容自动生成的独立页面 | `src/pages/interests.astro`、`src/pages/interests/[id].astro` | `interests` 集合：顶层 `*.{md,mdx}`；`interestTabs`：`<id>/<tab>.md` |
 | `/tags/` | 标签芯片；多选 AND；未选不列出文章 | `src/pages/tags.astro` | 同上，标签从文章 frontmatter 汇总 |
 | `/archives/` | 按年时间线 | `src/pages/archives.astro` | 同上，按 `pubDate` 分组 |
 | `/projects/` | 分类网格 | `src/pages/projects.mdx` | `src/content/projects/data.json` |
 | `/about/` | 作者介绍 | `src/pages/about.mdx` | `src/content/about/about.md` |
 | `/friends/` | 友链卡片 + 申请模板 | `src/pages/friends.mdx` | `src/content/friends/data.json` |
 | `/blogs/[slug]/` | 正文、右侧 TOC | `src/pages/blogs/[...slug].astro` | 单篇 `blogs` |
-| `/rss.xml` | 订阅源 | `src/pages/rss.xml.js` | 已发布 `blogs`（不含拾趣或 `recent.md`） |
+| `/rss.xml` | 订阅源 | `src/pages/rss.xml.js` | 已发布 `blogs`（不含拾趣） |
 
 顶栏页面链接由 `src/config.ts` 的 `UI.internalNavs` 维护；更多菜单由 `MORE_LINKS` 提供友链、相册及访问统计条目，友链页对应更多选中态。相册链接指向独立部署的 `https://photos.wutongyu.site/`，访问统计链接指向无需登录的 Umami 公开分享看板；两个外链均带 ↗ 并在新标签页打开。拾趣与更多下拉框最大宽度 200px。工具组读取 `UI.socialLinks` 中的本仓库 GitHub 链接，并包含搜索、配色和主题按钮。个人社交由 `AUTHOR_LINKS` 维护：首页 GitHub 指向个人主页，与 X、Instagram、Bilibili、小红书、邮箱一起展示；关于正文独立维护作者希望公开的联系方式。
 
@@ -100,6 +100,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 屏幕时间日期、公开形状与缺失值；Blob 地址与上传；柱高刻度与失败文案 | `src/utils/screen-time.js`、`src/utils/screen-time-store.mjs`、`src/utils/screen-time-view.js`；本机采集在 `scripts/sync-screen-time.mjs`，运行时接口在 `api/screen-time.js`，详见 [设计](./screen-time.md) | 在组件内推断活跃状态或连接本机 API |
 | Last.fm 查询、统计、专辑匹配、资料缺失与请求上限 | `src/utils/lastfm.mjs`；缓存与失败语义在 `api/lastfm.js` | 在视图中重新调用 API 或推断排行／周总数 |
 | 拾趣固定歌单、平台资料归一化、运行时快照 | `src/data/playlists.json`、`src/utils/qq-playlist.mjs`／`netease-playlist.mjs` 与 `playlists.mjs`；缓存在 `api/playlists.js`，见 [拾趣歌单](./playlists.md) | 提交全量曲目、在页面抓远程封面或接受任意来源 URL |
+| 影音书游条目 | `src/data/media/items.json`；合页 `MediaHub`；排序／统计／标签色调 `src/utils/media-hub.js`；封面 `src/utils/media-covers.ts` | 在 Markdown `:::card` 目录页再维护一份电影／动漫／剧／游戏／书清单 |
 | 写作热力统计与失败语义 | `blog-heatmap.js` | 在组件重算年度字数、将缺失字数当 0 |
 | 热力提示交互与页面清理 | `WritingHeatmap.astro` | 用旧根节点的定时器关闭新页面的提示层 |
 | 内容图片的路径与写入规则 | `src/content/**` 里的相对路径；正文宽度标记由 `plugins/remark-image-width.ts` 解析 | 把图片放进 `public/`、在正文写原始 `<img>`（相对路径会构建报错）、手写 `_astro` 地址 |
@@ -213,7 +214,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 部署层保留 `/blogs/` 的静态列表路由，`vercel.json` 不配置将 `/blogs` 或 `/blogs/` 指向首页的重定向。名称编码分类片段及旧 `#tech`／`#thought`／`#diary` 兼容链接共用此路由，因此部署重定向会同时破坏菜单入口和分类筛选；本地 Astro preview 不读取 Vercel 重定向，构建回归另检查部署配置。
 
-文稿菜单由 `NavDropdown` 保存当前预览分类，只在实际分类链接的 pointerenter／focusin 时切换，鼠标走过行间隙时保留选择；无脚本的 hover／focus 降级仅应用于未绑定脚本的菜单。Escape 的文档级监听关闭已展开菜单，包括鼠标悬停展开但焦点仍在菜单外的情况；只有焦点原本在该菜单内才返回触发链接。浏览器回归脚本为 `scripts/verify-nav-dropdown.mjs`。
+文稿菜单由 `NavDropdown` 保存当前预览分类，只在实际分类链接的 pointerenter／focusin 时切换，鼠标走过行间隙时保留选择；无脚本的 hover／focus 降级仅应用于未绑定脚本的菜单。Escape 的文档级监听关闭已展开菜单，包括鼠标悬停展开但焦点仍在菜单外的情况；只有焦点原本在该菜单内才返回触发链接。面板的包含块是整行 `.nav-bar__pages`，而非各自按钮；打开时由 `nav-dropdown-position.js` 按触发按钮居中、再夹进 `.nav-bar__inner`，窄屏两排布局与窗口缩放时同样重算；`shell.css` 里的 left／right／translate 只作无脚本回退。浏览器回归脚本为 `scripts/verify-nav-dropdown.mjs`。
 
 顶部分类菜单只读取 `getPublishedBlogPosts`，由 `blog-browser.js` 的 `getCategoryPreviews` 按 `data.category` 原值统计分类，保留每类最多四篇已发布文章预览，发布日期顺序不变；入口按篇数降序，同数按名称的 `zh-Hans-CN` 排序。`draft` 不参与入口、计数或最近文章，是明确的设计决策边界：仅含草稿的分类消失，删除最后一篇已发布文章后对应入口消失；已发布集合为空时类别为空，仅保留“查看全部文稿”链接，不保留固定类别。开发网页列表与正文预览不属于此边界，行为不变。菜单 URL 通过共享 `serializeBlogQuery` 生成。桌面左列与右列各占一格：左列固定间距自上而下，右列只显示当前预览；面板高度取较高的一列，未选中预览不占高度，所以切换分类不移动左列。右列在面板滚动时保持可见，小屏仍逐类排列。写作热力的上海日历与年度汇总在 `blog-heatmap.js`；进度数字在 `progress-stats.js`；近期五篇在 `getRecentBlogPosts`（与列表筛选无关）。近期五篇仅在首页显示。首页板块标题共用 `shell.css` 的 `.home-section-header`，各自内容样式留在组件或共享正文样式；热力提示层的焦点、滚动限高、定时器与监听清理由 `WritingHeatmap` 唯一持有，页面交换前清理。
 
@@ -290,7 +291,7 @@ src/
   components/
     nav/          顶栏
     blog/         首页作者介绍
-    home/         写作热力、近期笔墨、屏幕时间、近期书影游、最近在听
+    home/         写作热力、近期笔墨、屏幕时间、近期书影游、近期在听
     views/        列表、标签、归档、拾趣、关于、友链、项目
     toc/
     widgets/      搜索、主题、进度
@@ -316,7 +317,7 @@ plugins/
 
 ### 首页 `/`
 
-`BlogProfile` 无卡片背景：头像与作者信息作为一组居中，头像右侧的名字与 INTJ 上下两行排列，INTJ 在名字下方且字明显更小；RSS 居右；下方依次是一行居中的六个社交图标和一行居中的斜体名言「我与我周旋久，宁做我」。名言较长时在版心内自动换行，没有全站总数。社交入口由 `config.ts` 的 `AUTHOR_LINKS` 维护，名称保留给读屏器和悬停提示。窄屏仍保持作者组居中、RSS 靠右同一行，社交仍为单行、名言在其下方，缩小图标间隔；时间进度标签和数字上下排列。`WritingHeatmap` 放在名片下方，首页随后呈现独立的 `ProgressStats` 三列细时间进度，再显示近期笔墨和屏幕时间。屏幕时间在访问时从 `/api/screen-time` 读取本机同步的七日聚合结果，数据边界与本机同步见 [设计](./screen-time.md)。标题与近期笔墨左对齐，年份在标题右侧以自定义下拉选择（多一年时；列表在触发器下方展开）；日历按上海时区自然年、周一起始，只计已发布文章。每年摘要显示篇数、字数和有文章的天数。单篇格子是链接，多篇在脚本启用后从提示层进入。`RecentWriting` 在其下显示最近五篇已发布文稿，无卡片底色，标题大小接近正文。`RecentMedia` 再往下渲染 `src/content/interests/recent.md`，不另画边框，宽度跟首页版心走。正文标题和卡片仅使用共享 `prose.css`，没有首页专用覆盖；近期条目使用连续 `:::card{layout="portrait"}` 组成一排，原封面、标题和顺序保留，原评论精简后放入 `meta`，不显示评分或类别角标，作品标题 `href` 直接指向对应 Wiki；不写 `scroll="auto"`，仅手动横滑。标题右侧「全部拾趣」进入拾趣入口。Markdown 标题按原层级分段并保留锚点。该文件排除出拾趣集合，不生成子页。`RecentListening` 接在近期书影游下方展示 Last.fm 听歌排行。首页不显示文章分页或个人侧栏。首页带 `?page=`、`?category=`、`?tag=` 的兼容书签在客户端转到 `/blogs/`。
+`BlogProfile` 无卡片背景：头像与作者信息作为一组居中，头像右侧的名字与 INTJ 上下两行排列，INTJ 在名字下方且字明显更小；RSS 居右；下方依次是一行居中的六个社交图标和一行居中的斜体名言「我与我周旋久，宁做我」。名言较长时在版心内自动换行，没有全站总数。社交入口由 `config.ts` 的 `AUTHOR_LINKS` 维护，名称保留给读屏器和悬停提示。窄屏仍保持作者组居中、RSS 靠右同一行，社交仍为单行、名言在其下方，缩小图标间隔；时间进度标签和数字上下排列。`WritingHeatmap` 放在名片下方，首页随后呈现独立的 `ProgressStats` 三列细时间进度，再显示近期笔墨和屏幕时间。屏幕时间在访问时从 `/api/screen-time` 读取本机同步的七日聚合结果，数据边界与本机同步见 [设计](./screen-time.md)。标题与近期笔墨左对齐，年份在标题右侧以自定义下拉选择（多一年时；列表在触发器下方展开）；日历按上海时区自然年、周一起始，只计已发布文章。每年摘要显示篇数、字数和有文章的天数。单篇格子是链接，多篇在脚本启用后从提示层进入。`RecentWriting` 在其下显示最近五篇已发布文稿，无卡片底色，标题大小接近正文。`RecentMedia` 再往下用 `items.json` 的待看条目渲染竖卡横滑栏，不另画边框，宽度跟首页版心走。正文标题和卡片仅使用共享 `prose.css`，没有首页专用覆盖；近期条目使用连续 `:::card{layout="portrait"}` 组成一排，原封面、标题和顺序保留，原评论精简后放入 `meta`，不显示评分或类别角标，作品标题 `href` 直接指向对应 Wiki；不写 `scroll="auto"`，仅手动横滑。标题右侧「全部拾趣」进入拾趣入口。Markdown 标题按原层级分段并保留锚点。该文件排除出拾趣集合，不生成子页。`RecentListening` 接在近期书影游下方展示 Last.fm 听歌排行。首页不显示文章分页或个人侧栏。首页带 `?page=`、`?category=`、`?tag=` 的兼容书签在客户端转到 `/blogs/`。
 
 ### 文稿 `/blogs/`
 
@@ -328,11 +329,13 @@ plugins/
 
 拾趣各类有独立 Markdown 和静态 HTML，因此使用路径路由；博客分类复用全量文稿 HTML 并在客户端筛选，因此使用 hash。两者表达不同内容结构。
 
-`src/content.config.ts` 扫描 `src/content/interests/` 顶层 `*.{md,mdx}`，排除 `recent.md`；配图目录内的文件不自动成为分类。`interestSchema` 要求非空 `title`、`description` 和非负整数 `order`，不限定分类 ID 或数量，也没有 `draft` 过滤。`[id].astro` 的 `getStaticPaths()` 为集合条目生成静态子页，因此新增文件在重新构建后自动加入页面、入口与菜单。入口页按 `order` 升序展示分类链接；首页近期书影游只读取 `recent.md`，该文件不生成子页或菜单项。分类子页把 `render(entry)` 返回的 `headings` 交给共享 `Toc`，无符合级别的正文标题时不挂载目录。
+`src/content.config.ts` 扫描 `src/content/interests/` 顶层 `*.{md,mdx}`；配图目录内的文件不自动成为分类。同名子目录里的 `<id>/<tab>.md` 属于 `interestTabs` 集合（只有 `title` 与 `order`），存在时该分类由 `MarkdownTabs` 渲染为页签合页，顶层 `<id>.md` 只保留分类元数据。`interestSchema` 要求非空 `title`、`description` 和非负整数 `order`，不限定分类 ID 或数量，也没有 `draft` 过滤。`[id].astro` 的 `getStaticPaths()` 为集合条目生成静态子页，因此新增文件在重新构建后自动加入页面、入口与菜单。入口页按 `order` 升序展示分类链接。分类子页把 `render(entry)` 返回的 `headings` 交给共享 `Toc`，无符合级别的正文标题时不挂载目录。
 
 `InterestsView` 在 `/interests/<id>/` 只渲染该分类的内容，页面标题直接使用分类名。入口和顶部下拉菜单读取同一份集合元数据，内容无需 JS 即可阅读。`NavDropdown` 仅在 `INTEREST_ICONS` 自身含该 ID 且图标非空时输出图标节点，不读取原型链，无图标分类保留文字与链接、不留占位；`unocss.config.ts` 自动将映射值加入 safelist。分类增加后仍需检查菜单换行、窄屏边界与内部滚动。
 
-入口与子页均使用点状背景。当前内容包括设备、动漫、电影、电视剧、游戏、书与 Kpop，分类列表和说明可以随内容调整。电影、电视剧、动漫、游戏的条目用默认 `:::card`，按容器宽度自动分列，当前版心最多两列。作者可按需填写 `score`，不由观看／游玩状态决定；未填写时不生成评分。书页使用竖卡，原作者姓名放在 `meta`、不显示评分；内容按类型用三级标题分组，每类独立一排横滑栏，组内保留原顺序，封面位于 `src/content/interests/book/`；当前版心大约四本半显示并继续横滑。封面放在对应分类子目录，仍走图片管线。
+入口与子页均使用点状背景。当前分类包括设备与软件、影音书游、歌单、Kpop 等，列表和说明可随内容调整。
+
+合页共用 `InterestTabs`／`InterestTabPanel` 外壳：页签、hash 同步、方向键与无脚本时全部展开，挂在 `<interest-tabs>` 自定义元素上、随 ClientRouter 换页重绑；面板内容按数据形状分两类。同构条目走 JSON：电影／动漫／电视剧／游戏／书合并为 `/interests/media/`，条目权威在 `src/data/media/items.json`，封面仍放 `src/content/interests/{movie,anime,tv,game,book}/`，封面解析与 WebP 输出统一在 `src/utils/media-covers.ts`（合页与首页近期书影游共用），每类按待看／已看分组，灯箱在当前分类内前后切换。自由正文走 Markdown：电子设备／生活配件／订阅服务／Mac 软件／手机软件是 `/interests/gear/` 的 `gear/*.md`，表格、链接与相册沿用共享管线，配图与分页文件同在 `gear/`。旧子页路径（五条影音书游、`device`、`software`）永久跳转到对应合页 hash。文章、关于等正文仍可用 `:::card`。
 
 ### 标签 `/tags/`
 

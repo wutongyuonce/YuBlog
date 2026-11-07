@@ -42,6 +42,9 @@ const SELF_CLASS_TAGS: readonly (readonly [tag: string, className: string])[] =
     ['p', 'writing-heatmap__single-year'],
     ['details', 'writing-heatmap__years'],
     ['p', 'screen-time__value'],
+    ['dd', 'media-hub__stat-value'],
+    ['button', 'interest-tabs__tab'],
+    ['h2', 'media-hub__group-title'],
   ]
 
 /**
@@ -87,6 +90,7 @@ const EXTRA_TITLE_CHARS = [
   '小时',
   '没有文章',
   '年月日星期一二三四五六日',
+  '影音书游',
 ].join('')
 
 const ENTITIES: Record<string, string> = {

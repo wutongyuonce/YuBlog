@@ -165,6 +165,29 @@ const noScriptPreviewCss =
 </div>
 
 <script>
+  import { placeDropdownPanel } from '~/utils/nav-dropdown-position.js'
+
+  // 绑定后由脚本定位：居中在触发按钮下，夹进导航外框；无脚本时走 shell.css 回退。
+  const positionPanel = (menu: HTMLElement) => {
+    const panel = menu.querySelector<HTMLElement>('.nav-dropdown__panel')
+    const trigger = menu.querySelector<HTMLElement>('.nav-dropdown__trigger')
+    const origin = panel?.offsetParent
+    const bound = menu.closest('.nav-bar__inner')
+    if (!panel || !trigger || !origin || !bound) return
+    const t = trigger.getBoundingClientRect()
+    const b = bound.getBoundingClientRect()
+    const o = origin.getBoundingClientRect()
+    const left = placeDropdownPanel({
+      triggerLeft: t.left,
+      triggerWidth: t.width,
+      panelWidth: panel.offsetWidth,
+      boundLeft: b.left,
+      boundRight: b.right,
+      originLeft: o.left + origin.clientLeft,
+    })
+    panel.style.setProperty('--panel-left', `${left}px`)
+  }
+
   const closeDropdowns = () => {
     document
       .querySelectorAll<HTMLElement>('[data-nav-dropdown]')
@@ -215,6 +238,7 @@ const noScriptPreviewCss =
           if (open) {
             closeDropdowns()
             menu.dataset.open = ''
+            positionPanel(menu)
           } else delete menu.dataset.open
           link.setAttribute('aria-expanded', String(open))
         }
@@ -275,6 +299,12 @@ const noScriptPreviewCss =
     if (menu.contains(document.activeElement))
       menu.querySelector<HTMLAnchorElement>('[data-nav-link]')?.focus()
     closeDropdowns()
+  })
+  window.addEventListener('resize', () => {
+    const menu = document.querySelector<HTMLElement>(
+      '[data-nav-dropdown][data-open]'
+    )
+    if (menu) positionPanel(menu)
   })
   document.addEventListener('astro:before-preparation', closeDropdowns)
   document.addEventListener('astro:page-load', mountDropdowns)

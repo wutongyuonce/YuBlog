@@ -226,3 +226,9 @@ export const interestSchema = z.object({
   description: z.string().trim().min(1),
   order: z.number().int().nonnegative(),
 })
+
+/** `interests/<id>/<tab>.md`: one tab of a tabbed interest page; title is the tab label. */
+export const interestTabSchema = z.object({
+  title: z.string().trim().min(1),
+  order: z.number().int().nonnegative(),
+})

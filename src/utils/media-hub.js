@@ -1,0 +1,130 @@
+/** 影音书游合页：分类、排序与统计（上海时区日历）。 */
+
+export const MEDIA_CATEGORIES = [
+  {
+    id: 'anime',
+    label: '动漫',
+
+    unit: '部',
+    todoLabel: '待看',
+    doneLabel: '已看',
+    doneMonthLabel: '本月已看',
+    doneYearLabel: '今年已看',
+  },
+  {
+    id: 'movie',
+    label: '电影',
+
+    unit: '部',
+    todoLabel: '待看',
+    doneLabel: '已看',
+    doneMonthLabel: '本月已看',
+    doneYearLabel: '今年已看',
+  },
+  {
+    id: 'tv',
+    label: '电视剧',
+
+    unit: '部',
+    todoLabel: '待看',
+    doneLabel: '已看',
+    doneMonthLabel: '本月已看',
+    doneYearLabel: '今年已看',
+  },
+  {
+    id: 'game',
+    label: '游戏',
+
+    unit: '款',
+    todoLabel: '待玩',
+    doneLabel: '已玩',
+    doneMonthLabel: '本月已玩',
+    doneYearLabel: '今年已玩',
+  },
+  {
+    id: 'book',
+    label: '书',
+
+    unit: '本',
+    todoLabel: '待读',
+    doneLabel: '已读',
+    doneMonthLabel: '本月已读',
+    doneYearLabel: '今年已读',
+  },
+]
+
+const SHANGHAI = 'Asia/Shanghai'
+
+/** @param {Date} [now] */
+function shanghaiYmd(now = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: SHANGHAI,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(now)
+}
+
+/** @param {string | undefined} date */
+function parseYmd(date) {
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null
+  return date
+}
+
+/**
+ * 待看／玩在前；已完成按日期新→旧；无日期按标题（zh-Hans）。
+ * @template {{ status: string, date?: string, title: string }} T
+ * @param {T[]} items
+ * @returns {T[]}
+ */
+export function sortMediaItems(items) {
+  const collator = new Intl.Collator('zh-Hans-CN')
+  return [...items].sort((a, b) => {
+    if (a.status !== b.status) return a.status === 'todo' ? -1 : 1
+    if (a.status === 'todo') return 0
+    const da = parseYmd(a.date)
+    const db = parseYmd(b.date)
+    if (da && db) return db.localeCompare(da)
+    if (da && !db) return -1
+    if (!da && db) return 1
+    return collator.compare(a.title, b.title)
+  })
+}
+
+/**
+ * @param {Array<{ status: string, date?: string }>} items
+ * @param {Date} [now]
+ */
+export function mediaStats(items, now = new Date()) {
+  const today = shanghaiYmd(now)
+  const [y, m] = today.split('-')
+  const monthPrefix = `${y}-${m}`
+  let todo = 0
+  let doneMonth = 0
+  let doneYear = 0
+  let total = items.length
+  for (const item of items) {
+    if (item.status === 'todo') {
+      todo++
+      continue
+    }
+    const d = parseYmd(item.date)
+    if (!d) continue
+    if (d.startsWith(monthPrefix)) doneMonth++
+    if (d.startsWith(`${y}-`)) doneYear++
+  }
+  return { todo, doneMonth, doneYear, total }
+}
+
+/** 标签色调数；与 MediaHub 里 `[data-tone]` 的色板一一对应。 */
+export const TAG_TONES = 6
+
+/**
+ * 同一个标签在任何条目里都落到同一色调：按字符串哈希取模，不维护标签→颜色表。
+ * @param {string} tag
+ */
+export function tagTone(tag) {
+  let hash = 0
+  for (const char of tag) hash = (hash * 31 + char.codePointAt(0)) >>> 0
+  return hash % TAG_TONES
+}

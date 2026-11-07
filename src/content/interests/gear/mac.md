@@ -1,28 +1,7 @@
 ---
-title: 软件
-description: Mac 和手机上在用的软件和订阅
-order: 1
+title: Mac 软件
+order: 3
 ---
-
-### 我的订阅服务
-
-| 类型 | 名称 | 时间 | 价格 | 描述 |
-| --- | --- | --- | --- | --- |
-| AI | [GPT Plus](https://chatgpt.com) | 2026.7.12-至今 | 120 ¥/月 | 专门办了个招行万事达的卡来开通 |
-| AI | [Google Pro](https://gemini.google.com/)*2 | 2026.11.1-2030.11.1 | 720*2日元/月 | sheerid 学生认证优惠 |
-| AI | [Supergrok](https://accounts.x.ai/) | 2026.9.4-2026.12.3 | 230¥ 3个月 | |
-| AI | [Remy Max plan](https://www.corepass.com/remy) | 2026.11.3-2026.12.3 | ~~99$/月~~ | remy 团队邮箱免费赠送一个月 Max plan，opus5.5、gemini4、gpt6 astra 爽用 |
-| AI | [Deepseek API](https://platform.deepseek.com/usage) | | 320¥+ | |
-| 代码 | [阿里云云服务2核2GB](https://ecs.console.aliyun.com/) | 2027.10.25 到期 | 大学生 300 元优惠劵 | |
-| 音乐 | qq 音乐 | 2027.11.13 到期 | | 移动电话卡每月能领一个月的会员 |
-| 音乐 | ~~apple music~~（已停） | | | |
-| 视频 | b 站年会 | 2027.1.6 到期 | 80¥ | |
-| 网络 | vpn | 2026.10.22-2027.10.22 | 188¥/年 | |
-| 视频 | ~~netflix~~（已停） | | | |
-
-[![Tokens Stats](https://tokens.ci/api/embed/wutongyuonce/svg?theme=light&template=graph&tokens=compact&cost=compact)](https://tokens.ci/u/wutongyuonce)
-
-### 我的 Mac 软件
 
 | 类型 | 软件 | 说明 |
 | --- | --- | --- |
@@ -93,29 +72,7 @@ order: 1
 | 游戏 | [CrossOver](https://www.codeweavers.com/crossover) | |
 
 :::gallery{layout="scroll"}
-![grok-bot](./software/grok-bot.png)
+![grok-bot](./grok-bot.png)
 
-![pi](./software/pi.png)
+![pi](./pi.png)
 :::
-
-### 我的手机软件
-
-| 类型 | 软件 |
-| --- | --- |
-| | 微信、豆包输入法 |
-| 社交媒体 | vx、qq、zfb、wb、X、ins、Github、telegram、discord、Twitch、Proton Authenticator（密钥） |
-| 视频影视播客小说 | b站、youtube、dy、豆瓣、小宇宙、起点、番茄、LOFTER、POSTYPE、bilibili漫画、知乎、腾讯体育、咪咕、腾讯视频 |
-| 浏览器 | Chrome、Edge |
-| 音乐 | qq音乐、wyy、apple music、spotify |
-| 邮箱 | qq邮箱、gmail、网易邮箱 |
-| 游戏 | steam、小黑盒 |
-| 梯子 | clash verge |
-| 统计、日程管理 | 滴答清单、时间日志、icost |
-| 支付金融 | 中国/建设/招商/鄞州银行、跨境购、数字人民币、云闪付、同花顺 |
-| 运动健康 | Sigma、米家 |
-| 交通 | 美团、哈啰、小遛、滴滴、曹操、高德地图、腾讯地图、googlemap、12306、12123 |
-| 购物租房电话费快递买车 | 中国移动、贝壳、闲鱼、淘宝、京东、得物、淘宝闪购、大众点评、kfc、麦当劳、inm、货拉拉、pdd、转转、95分、顺丰、大麦、菜鸟、懂车帝、易车 |
-| 旅行 | 携程、去哪儿、航旅纵横、爱彼迎、马蜂窝、Booking、华住会、圆周旅迹 |
-| 学习工作 | 多邻国、不背单词、欧陆词典、沉浸式翻译、腾讯会议、Leetcode、指南者留学、百度网盘、飞书、语雀、学信网、扫描全能王 |
-| 就业 | boss、offershow、牛牛、领英、智联招聘、脉脉、实习僧 |
-| AI | Tailscale、grok bot、chatgpt、deepseek |

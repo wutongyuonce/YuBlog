@@ -1,0 +1,1128 @@
+---
+import InterestTabs from '~/components/interests/InterestTabs.astro'
+import InterestTabPanel from '~/components/interests/InterestTabPanel.astro'
+import items from '~/data/media/items.json'
+import { mediaCoverUrl } from '~/utils/media-covers'
+import { safeHref } from '../../../plugins/remark-media-card'
+import {
+  MEDIA_CATEGORIES,
+  sortMediaItems,
+  mediaStats,
+} from '~/utils/media-hub.js'
+
+// 封面墙与灯箱各取一档 WebP，沿用 Astro 图片管线，不直出原图。
+const resolveCover = async (cover: string) => {
+  const [thumbUrl, coverUrl] = await Promise.all([
+    mediaCoverUrl(cover, 360),
+    mediaCoverUrl(cover, 720),
+  ])
+  return { thumbUrl, coverUrl }
+}
+
+const labelsById = new Map(MEDIA_CATEGORIES.map((cat) => [cat.id, cat]))
+
+const enriched = await Promise.all(
+  items.map(async (item) => {
+    const cat = labelsById.get(item.category)
+    if (!cat) throw new Error(`影音书游：${item.id} 的 category 未知`)
+    return {
+      ...item,
+      ...(await resolveCover(item.cover)),
+      kind: cat.label,
+      statusLabel: item.status === 'todo' ? cat.todoLabel : cat.doneLabel,
+    }
+  })
+)
+
+const panels = MEDIA_CATEGORIES.map((cat) => {
+  const list = sortMediaItems(
+    enriched.filter((item) => item.category === cat.id)
+  )
+  const groups = [
+    {
+      id: 'todo',
+      label: cat.todoLabel,
+      items: list.filter((item) => item.status === 'todo'),
+    },
+    {
+      id: 'done',
+      label: cat.doneLabel,
+      items: list.filter((item) => item.status !== 'todo'),
+    },
+  ].filter((group) => group.items.length > 0)
+  return { ...cat, total: list.length, groups, stats: mediaStats(list) }
+})
+
+// 书显示作者；其它显示第一个标签。
+const subline = (item: (typeof enriched)[number]) =>
+  item.meta || item.tags?.[0] || ''
+
+const star =
+  'M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z'
+---
+
+<media-hub class="media-hub" aria-label="影音书游">
+  <InterestTabs
+    label="分类"
+    tabs={panels.map((cat) => ({
+      id: cat.id,
+      label: cat.label,
+      count: cat.total,
+    }))}
+  >
+    {panels.map((cat, index) => (
+      <InterestTabPanel id={cat.id} label={cat.label} active={index === 0}>
+        <dl class="media-hub__stats">
+          {[
+            { label: cat.todoLabel, value: cat.stats.todo, todo: true },
+            { label: cat.doneMonthLabel, value: cat.stats.doneMonth },
+            { label: cat.doneYearLabel, value: cat.stats.doneYear },
+            { label: '总数', value: cat.stats.total },
+          ].map((stat) => (
+            <div
+              class:list={[
+                'media-hub__stat',
+                stat.value === 0 && 'media-hub__stat--zero',
+                stat.todo && stat.value > 0 && 'media-hub__stat--todo',
+              ]}
+            >
+              <dt>{stat.label}</dt>
+              <dd class="media-hub__stat-value">
+                {stat.value}
+                <span class="media-hub__stat-unit">{cat.unit}</span>
+              </dd>
+            </div>
+          ))}
+        </dl>
+
+        {cat.groups.length === 0 ? (
+          <p class="media-hub__empty">这一类暂时还空着。</p>
+        ) : (
+          cat.groups.map((group) => (
+            <section
+              class="media-hub__group"
+              aria-labelledby={`media-group-${cat.id}-${group.id}`}
+            >
+              <h2
+                class="media-hub__group-title"
+                id={`media-group-${cat.id}-${group.id}`}
+              >
+                {group.label}
+                <span class="media-hub__group-count">{group.items.length}</span>
+              </h2>
+              <ul class="media-hub__wall">
+                {group.items.map((item, index) => (
+                  <li>
+                    <button
+                      type="button"
+                      class="media-hub__card"
+                      data-media-open={item.id}
+                      aria-haspopup="dialog"
+                    >
+                      <span class="media-hub__cover">
+                        <img
+                          src={item.thumbUrl}
+                          alt=""
+                          width="240"
+                          height="360"
+                          loading={index < 10 ? 'eager' : 'lazy'}
+                          decoding="async"
+                        />
+                        {item.review && (
+                          <span class="media-hub__peek" aria-hidden="true">
+                            <span>{item.review}</span>
+                          </span>
+                        )}
+                      </span>
+                      <span class="media-hub__caption">
+                        <span class="media-hub__title">{item.title}</span>
+                        <span class="media-hub__sub">
+                          <span class="media-hub__sub-text">
+                            {subline(item)}
+                          </span>
+                          {item.score != null && (
+                            <span class="media-hub__score">
+                              <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d={star} />
+                              </svg>
+                              <span class="media-hub__sr">评分</span>
+                              {item.score}
+                            </span>
+                          )}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))
+        )}
+      </InterestTabPanel>
+    ))}
+  </InterestTabs>
+
+  <dialog
+    class="media-hub__lightbox"
+    data-media-lightbox
+    aria-labelledby="media-lb-title"
+  >
+    <div class="media-hub__sheet">
+      <div class="media-hub__ambient" aria-hidden="true">
+        <img data-lb-ambient alt="" />
+      </div>
+      <figure class="media-hub__lb-cover">
+        <img data-lb-cover alt="" />
+      </figure>
+      <header class="media-hub__lb-head">
+        <p class="media-hub__lb-kicker" data-lb-kicker></p>
+        <h2 id="media-lb-title">
+          <!-- 有 href 时标题即链接、带箭头；没有时去掉 href，只剩文字。 -->
+          <a
+            class="media-hub__lb-title"
+            data-lb-link
+            href={Astro.url.pathname}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span data-lb-title></span>
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M2 14 14 2M4.5 2H14v9.5"></path>
+            </svg>
+          </a>
+        </h2>
+        <p class="media-hub__lb-rating" data-lb-rating hidden>
+          <span
+            class="media-hub__stars"
+            data-lb-stars
+            aria-hidden="true"
+          ></span>
+          <span data-lb-score></span>
+        </p>
+        <ul class="media-hub__lb-tags" data-lb-tags aria-label="标签"></ul>
+      </header>
+      <blockquote
+        class="media-hub__lb-review"
+        data-lb-review
+        hidden
+      ></blockquote>
+      <footer class="media-hub__lb-foot">
+        <time class="media-hub__lb-date" data-lb-date></time>
+        <span class="media-hub__lb-pager">
+          <button
+            type="button"
+            class="media-hub__lb-step"
+            data-lb-step="-1"
+            aria-label="上一部"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m10.8 12 4.95 4.95-1.41 1.41L7.98 12l6.36-6.36 1.41 1.41z"></path>
+            </svg>
+          </button>
+          <span class="media-hub__lb-pos" data-lb-pos></span>
+          <button
+            type="button"
+            class="media-hub__lb-step"
+            data-lb-step="1"
+            aria-label="下一部"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m13.2 12-4.95-4.95 1.41-1.41L16.02 12l-6.36 6.36-1.41-1.41z"></path>
+            </svg>
+          </button>
+        </span>
+      </footer>
+      <button
+        type="button"
+        class="media-hub__lb-close"
+        data-media-close
+        aria-label="关闭"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m12 10.6 4.95-4.95 1.41 1.41L13.41 12l4.95 4.95-1.41 1.41L12 13.41l-4.95 4.95-1.41-1.41L10.59 12 5.64 7.05l1.41-1.41z"></path>
+        </svg>
+      </button>
+    </div>
+  </dialog>
+
+  <script
+    type="application/json"
+    data-media-catalog
+    set:html={JSON.stringify(
+      Object.fromEntries(
+        enriched.map((item) => [
+          item.id,
+          {
+            status: item.status,
+            title: item.title,
+            coverUrl: item.coverUrl,
+            href: safeHref(item.href),
+            score: item.score ?? null,
+            date: item.date || '',
+            meta: item.meta || '',
+            tags: item.tags || [],
+            review: item.review || '',
+            kind: item.kind,
+            statusLabel: item.statusLabel,
+          },
+        ])
+      )
+    ).replace(/</g, '\\u003c')}
+  />
+</media-hub>
+
+<script>
+  import { tagTone } from '~/utils/media-hub.js'
+
+  interface MediaItem {
+    status: string
+    title: string
+    coverUrl: string
+    href: string
+    score: number | null
+    date: string
+    meta: string
+    tags: string[]
+    review: string
+    kind: string
+    statusLabel: string
+  }
+
+  function mount(root: HTMLElement, signal: AbortSignal) {
+    const catalogEl = root.querySelector('[data-media-catalog]')
+    const dialog = root.querySelector<HTMLDialogElement>(
+      '[data-media-lightbox]'
+    )
+    if (!catalogEl || !dialog) return
+    const catalog = JSON.parse(catalogEl.textContent || '{}') as Record<
+      string,
+      MediaItem
+    >
+    const pick = <T extends HTMLElement>(selector: string) =>
+      dialog.querySelector<T>(selector)!
+    const lb = {
+      ambient: pick<HTMLImageElement>('[data-lb-ambient]'),
+      cover: pick<HTMLImageElement>('[data-lb-cover]'),
+      kicker: pick('[data-lb-kicker]'),
+      title: pick('[data-lb-title]'),
+      rating: pick('[data-lb-rating]'),
+      stars: pick('[data-lb-stars]'),
+      score: pick('[data-lb-score]'),
+      tags: pick('[data-lb-tags]'),
+      date: pick<HTMLTimeElement>('[data-lb-date]'),
+      review: pick('[data-lb-review]'),
+      link: pick<HTMLAnchorElement>('[data-lb-link]'),
+      pos: pick('[data-lb-pos]'),
+      prev: pick<HTMLButtonElement>('[data-lb-step="-1"]'),
+      next: pick<HTMLButtonElement>('[data-lb-step="1"]'),
+    }
+
+    let sequence: string[] = []
+    let cursor = -1
+
+    const render = () => {
+      const item = catalog[sequence[cursor]]
+      if (!item) return
+      lb.cover.src = item.coverUrl
+      lb.cover.alt = `${item.title}封面`
+      lb.ambient.src = item.coverUrl
+      // 书把作者放在分类与状态之后；标签行只放标签。
+      lb.kicker.textContent = [item.kind, item.statusLabel, item.meta]
+        .filter(Boolean)
+        .join(' · ')
+      lb.kicker.dataset.status = item.status
+      lb.title.textContent = item.title
+      lb.rating.hidden = item.score == null
+      if (item.score != null) {
+        lb.stars.style.setProperty('--score', String(item.score))
+        lb.score.textContent = `${item.score} / 5`
+      }
+      lb.tags.replaceChildren(
+        ...item.tags.map((text) => {
+          const chip = document.createElement('li')
+          chip.textContent = text
+          chip.dataset.tone = String(tagTone(text))
+          return chip
+        })
+      )
+      lb.tags.hidden = item.tags.length === 0
+      lb.date.textContent = item.date
+      lb.date.dateTime = item.date
+      lb.date.hidden = !item.date
+      lb.review.textContent = item.review
+      lb.review.hidden = !item.review
+      if (item.href) lb.link.href = item.href
+      else lb.link.removeAttribute('href')
+      lb.pos.textContent = `${cursor + 1} / ${sequence.length}`
+      lb.prev.disabled = cursor <= 0
+      lb.next.disabled = cursor >= sequence.length - 1
+    }
+
+    const open = (id: string, from: HTMLElement) => {
+      const panel = from.closest<HTMLElement>('[data-panel]')
+      sequence = Array.from(
+        panel?.querySelectorAll<HTMLElement>('[data-media-open]') ?? []
+      ).map((el) => el.dataset.mediaOpen || '')
+      cursor = sequence.indexOf(id)
+      render()
+      if (!dialog.open) dialog.showModal()
+    }
+
+    const step = (delta: number) => {
+      const next = cursor + delta
+      if (next < 0 || next >= sequence.length) return
+      cursor = next
+      render()
+    }
+
+    root.addEventListener(
+      'click',
+      (event) => {
+        const target = event.target as Element
+        const card = target.closest<HTMLElement>('[data-media-open]')
+        if (card) open(card.dataset.mediaOpen || '', card)
+      },
+      { signal }
+    )
+
+    dialog.addEventListener(
+      'click',
+      (event) => {
+        const target = event.target as Element
+        if (target === dialog || target.closest('[data-media-close]')) {
+          dialog.close()
+          return
+        }
+        const stepper = target.closest<HTMLElement>('[data-lb-step]')
+        if (stepper) step(Number(stepper.dataset.lbStep))
+      },
+      { signal }
+    )
+
+    dialog.addEventListener(
+      'keydown',
+      (event) => {
+        if (event.key === 'ArrowLeft') step(-1)
+        else if (event.key === 'ArrowRight') step(1)
+      },
+      { signal }
+    )
+  }
+
+  // 页签由 InterestTabs 管；这里只绑灯箱，同样随 ClientRouter 换页重绑。
+  class MediaHubElement extends HTMLElement {
+    private controller?: AbortController
+    connectedCallback() {
+      this.controller = new AbortController()
+      mount(this, this.controller.signal)
+    }
+    disconnectedCallback() {
+      this.controller?.abort()
+    }
+  }
+  if (!customElements.get('media-hub'))
+    customElements.define('media-hub', MediaHubElement)
+</script>
+
+<style>
+  .media-hub {
+    --mh-line: color-mix(in srgb, var(--c-text) 10%, transparent);
+    --mh-muted: color-mix(in srgb, var(--c-text) 52%, var(--c-bg));
+    --mh-soft: color-mix(in srgb, var(--c-text) 72%, var(--c-bg));
+    --mh-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+    display: block;
+  }
+
+  /* 统计：无框无分隔线，只靠字号与留白分层；数字在上、标签在下。 */
+  .media-hub__stats {
+    display: grid;
+    grid-template-columns: repeat(4, max-content);
+    column-gap: 2.75rem;
+    margin: 1.75rem 0 0;
+  }
+
+  .media-hub__stat {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 0.45rem;
+    min-width: 0;
+  }
+
+  .media-hub__stat dt {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    line-height: 1.2;
+    letter-spacing: 0.04em;
+    color: var(--mh-muted);
+    white-space: nowrap;
+  }
+
+  .media-hub__stat--todo dt::before {
+    content: '';
+    flex: none;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .media-hub__stat-value {
+    display: flex;
+    align-items: baseline;
+    gap: 0.2rem;
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .media-hub__stat-unit {
+    font-size: 0.75rem;
+    letter-spacing: 0;
+    color: var(--mh-muted);
+  }
+
+  .media-hub__stat--todo .media-hub__stat-value {
+    color: var(--accent);
+  }
+
+  .media-hub__stat--zero .media-hub__stat-value {
+    color: color-mix(in srgb, var(--c-text) 25%, var(--c-bg));
+  }
+
+  .media-hub__empty {
+    margin: 2.5rem 0;
+    font-size: 0.875rem;
+    color: var(--mh-muted);
+  }
+
+  /* 分组：待看／已看各一段，标题右侧延伸细线。 */
+  .media-hub__group {
+    margin-top: 2.5rem;
+  }
+
+  .media-hub__group-title {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 0 0 1.125rem;
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.4;
+  }
+
+  .media-hub__group-title::after {
+    content: '';
+    flex: 1;
+    align-self: center;
+    height: 1px;
+    margin-left: 0.25rem;
+    background: var(--mh-line);
+  }
+
+  .media-hub__group-count {
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--mh-muted);
+  }
+
+  .media-hub__wall {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(7.25rem, 1fr));
+    gap: 1.75rem 0.9rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .media-hub__wall > li {
+    margin: 0;
+    padding: 0;
+  }
+
+  .media-hub__card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .media-hub__cover {
+    position: relative;
+    display: block;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--c-text) 6%, var(--c-bg));
+    box-shadow:
+      0 1px 2px color-mix(in srgb, #000 8%, transparent),
+      0 8px 18px -10px color-mix(in srgb, #000 35%, transparent);
+    transition:
+      transform 0.35s var(--mh-ease),
+      box-shadow 0.35s var(--mh-ease);
+  }
+
+  /* 内描边让浅色封面在白底、深色封面在黑底都有边界。 */
+  .media-hub__cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px
+      color-mix(in srgb, var(--c-text) 9%, transparent);
+    pointer-events: none;
+  }
+
+  .media-hub__cover img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s var(--mh-ease);
+  }
+
+  .media-hub__peek {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    padding: 0.65rem 0.65rem 0.7rem;
+    background: linear-gradient(
+      180deg,
+      transparent 30%,
+      color-mix(in srgb, #000 82%, transparent) 100%
+    );
+    color: #fff;
+    font-size: 0.6875rem;
+    line-height: 1.55;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+  }
+
+  .media-hub__peek > span {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    overflow: hidden;
+  }
+
+  .media-hub__sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .media-hub__caption {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+
+  .media-hub__title {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.4;
+    color: color-mix(in srgb, var(--c-text) 88%, var(--c-bg));
+  }
+
+  .media-hub__sub {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    color: var(--mh-muted);
+  }
+
+  .media-hub__sub-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .media-hub__score {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    flex: none;
+    color: var(--mh-soft);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .media-hub__score svg {
+    width: 0.75rem;
+    height: 0.75rem;
+    fill: var(--accent);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .media-hub__card:hover .media-hub__cover {
+      transform: translateY(-4px);
+      box-shadow:
+        0 2px 4px color-mix(in srgb, #000 8%, transparent),
+        0 20px 32px -16px color-mix(in srgb, #000 45%, transparent);
+    }
+
+    .media-hub__card:hover .media-hub__cover img {
+      transform: scale(1.04);
+    }
+
+    .media-hub__card:hover .media-hub__peek {
+      opacity: 1;
+    }
+  }
+
+  .media-hub__card:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
+  .media-hub__card:focus-visible .media-hub__cover {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .media-hub__lightbox :is(button, a):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+
+  /* 灯箱 */
+  :global(html:has(.media-hub__lightbox[open])) {
+    overflow: hidden;
+  }
+
+  .media-hub__lightbox {
+    width: min(46rem, calc(100vw - 2rem));
+    max-width: none;
+    max-height: calc(100dvh - 2rem);
+    margin: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--c-text);
+    overflow: visible;
+  }
+
+  .media-hub__lightbox[open] {
+    animation: media-hub-pop 0.32s var(--mh-ease);
+  }
+
+  .media-hub__lightbox::backdrop {
+    background: color-mix(in srgb, #000 48%, transparent);
+    backdrop-filter: blur(8px) saturate(120%);
+  }
+
+  .media-hub__lightbox[open]::backdrop {
+    animation: media-hub-fade 0.3s ease;
+  }
+
+  .media-hub__lightbox [hidden] {
+    display: none !important;
+  }
+
+  .media-hub__sheet {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: 13.5rem minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      'cover head'
+      'cover review'
+      'cover foot';
+    column-gap: 2rem;
+    max-height: calc(100dvh - 2rem);
+    padding: 1.25rem;
+    overflow: hidden auto;
+    border: 1px solid var(--mh-line);
+    border-radius: 18px;
+    background: var(--c-bg);
+    box-shadow: 0 32px 80px -32px color-mix(in srgb, #000 60%, transparent);
+  }
+
+  /* 用当前封面的模糊色晕给面板染一层很淡的底色。 */
+  .media-hub__ambient {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .media-hub__ambient img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(48px) saturate(1.4);
+    opacity: 0.12;
+    transform: scale(1.3);
+  }
+
+  :global(.dark) .media-hub__ambient img {
+    opacity: 0.2;
+  }
+
+  .media-hub__lb-cover {
+    grid-area: cover;
+    align-self: start;
+    margin: 0;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--c-text) 6%, var(--c-bg));
+    box-shadow: 0 14px 30px -16px color-mix(in srgb, #000 55%, transparent);
+  }
+
+  .media-hub__lb-cover img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* 右栏：只用字号、字重与留白分层；不用胶囊、描边按钮与分隔线。 */
+  .media-hub__lb-head {
+    grid-area: head;
+    min-width: 0;
+    padding: 0.35rem 2.5rem 0 0;
+  }
+
+  .media-hub__lb-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    color: var(--mh-muted);
+  }
+
+  .media-hub__lb-kicker[data-status='todo']::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .media-hub__lb-head h2 {
+    margin: 0.6rem 0 0;
+    font-size: 1.625rem;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+
+  .media-hub__lb-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.7rem 0 0;
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--mh-muted);
+  }
+
+  .media-hub__stars {
+    --score: 0;
+    position: relative;
+    display: inline-block;
+    font-size: 0.8125rem;
+    line-height: 1;
+    letter-spacing: 0.15em;
+    color: color-mix(in srgb, var(--c-text) 14%, transparent);
+  }
+
+  .media-hub__stars::before {
+    content: '★★★★★';
+  }
+
+  .media-hub__stars::after {
+    content: '★★★★★';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: calc(var(--score) / 5 * 100%);
+    overflow: hidden;
+    white-space: nowrap;
+    color: var(--accent);
+  }
+
+  /* 标签：同色系浅底 + 深字的小圆角块，色调按标签名固定；与背景混色，明暗主题都不刺眼。 */
+  .media-hub__lb-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0.85rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .media-hub__lb-tags > :global(li) {
+    --tone: #7a7f8a;
+    margin: 0;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--tone) 20%, var(--c-bg));
+    color: color-mix(in srgb, var(--tone) 88%, var(--c-text));
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.45;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .media-hub__lb-tags > :global([data-tone='0']) {
+    --tone: #b0577a;
+  }
+  .media-hub__lb-tags > :global([data-tone='1']) {
+    --tone: #4a72b0;
+  }
+  .media-hub__lb-tags > :global([data-tone='2']) {
+    --tone: #4f8a63;
+  }
+  .media-hub__lb-tags > :global([data-tone='3']) {
+    --tone: #a87a2f;
+  }
+  .media-hub__lb-tags > :global([data-tone='4']) {
+    --tone: #7c62b3;
+  }
+  .media-hub__lb-tags > :global([data-tone='5']) {
+    --tone: #6f7480;
+  }
+
+  :global(.dark) .media-hub__lb-tags > :global(li) {
+    background: color-mix(in srgb, var(--tone) 26%, var(--c-bg));
+    color: color-mix(in srgb, var(--tone) 45%, var(--c-text));
+  }
+
+  .media-hub__lb-review {
+    grid-area: review;
+    align-self: start;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    font-size: 0.9375rem;
+    font-style: normal;
+    line-height: 1.85;
+    color: color-mix(in srgb, var(--c-text) 82%, var(--c-bg));
+    white-space: pre-wrap;
+  }
+
+  .media-hub__lb-foot {
+    grid-area: foot;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .media-hub__lb-date {
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    color: var(--mh-muted);
+  }
+
+  /* 标题即作品链接：箭头紧跟末字（标题换行时跟在最后一行）；悬浮整体变强调色、箭头右上微移。
+     没有 href 时是普通文字、不显示箭头。 */
+  .media-hub__lb-title {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  /* 箭头按标题字号缩放：高度约等于大写字高、顶端与字顶对齐，描边粗细接近 600 字重的笔画。 */
+  .media-hub__lb-title svg {
+    display: inline-block;
+    width: 0.5em;
+    height: 0.5em;
+    margin-left: 0.25em;
+    vertical-align: 0.2em;
+    overflow: visible;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.2s ease;
+  }
+
+  .media-hub__lb-title:not([href]) svg {
+    display: none;
+  }
+
+  .media-hub__lb-title[href]:is(:hover, :focus-visible) {
+    color: var(--accent);
+  }
+
+  .media-hub__lb-title[href]:is(:hover, :focus-visible) svg {
+    transform: translate(0.08em, -0.08em);
+  }
+
+  .media-hub__lb-pager {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.1rem;
+    margin-left: auto;
+  }
+
+  .media-hub__lb-pos {
+    min-width: 3rem;
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    color: var(--mh-muted);
+  }
+
+  .media-hub__lb-step,
+  .media-hub__lb-close {
+    display: inline-grid;
+    place-items: center;
+    width: 1.875rem;
+    height: 1.875rem;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--mh-soft);
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      opacity 0.2s ease;
+  }
+
+  .media-hub__lb-step svg,
+  .media-hub__lb-close svg {
+    width: 1.05rem;
+    height: 1.05rem;
+    fill: currentColor;
+  }
+
+  .media-hub__lb-step:enabled:hover,
+  .media-hub__lb-close:hover {
+    background: color-mix(in srgb, var(--c-text) 7%, transparent);
+    color: var(--c-text);
+  }
+
+  .media-hub__lb-step:disabled {
+    opacity: 0.25;
+    cursor: default;
+  }
+
+  .media-hub__lb-close {
+    position: absolute;
+    top: 0.85rem;
+    right: 0.85rem;
+  }
+
+  @keyframes media-hub-pop {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.98);
+    }
+  }
+
+  @keyframes media-hub-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .media-hub__stats {
+      width: 100%;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: 0.75rem;
+    }
+
+    .media-hub__stat dt {
+      font-size: 0.6875rem;
+      letter-spacing: 0;
+    }
+
+    .media-hub__stat-value {
+      font-size: 1.625rem;
+    }
+
+    .media-hub__stat-unit {
+      font-size: 0.6875rem;
+    }
+
+    .media-hub__wall {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1.4rem 0.75rem;
+    }
+
+    .media-hub__sheet {
+      grid-template-columns: 6.5rem minmax(0, 1fr);
+      grid-template-rows: auto auto auto;
+      grid-template-areas:
+        'cover head'
+        'review review'
+        'foot foot';
+      column-gap: 1rem;
+      padding: 1rem;
+      border-radius: 16px;
+    }
+
+    .media-hub__lb-head {
+      padding-top: 0;
+    }
+
+    .media-hub__lb-head h2 {
+      font-size: 1.1875rem;
+    }
+
+    .media-hub__lb-review {
+      margin-top: 1.1rem;
+      font-size: 0.875rem;
+    }
+
+    .media-hub__lb-close {
+      top: 0.75rem;
+      right: 0.75rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .media-hub__lightbox[open],
+    .media-hub__lightbox[open]::backdrop {
+      animation: none;
+    }
+
+    .media-hub__cover,
+    .media-hub__cover img,
+    .media-hub__peek {
+      transition: none;
+    }
+  }
+</style>

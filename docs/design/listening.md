@@ -4,7 +4,9 @@
 
 ## 行为契约
 
-首页在近期书影游下方保留「最近在听 TOP10」。区块由服务端输出的加载态骨架（十张方卡形占位）和一张卡片模板组成；听歌数据在访问时由运行时接口取得，构建产物里没有任何听歌数据。接口成功后区块呈现过去七天 TOP 10 歌曲（封面、歌名、`歌手 - 专辑名`）与辅助统计（七天听歌次数、累计记录数、七天最常听歌手）和更新时间；标题右侧「Last.fm ↗」直接来自站点身份常量，不依赖接口。首页这条轨道不是滚动容器：超出部分始终裁切，由循环把卡片从一端送回另一端，两端淡出；按下或键盘聚焦轨道时暂停，悬停继续。减少动态效果时循环和淡出停止，轨道仍然只裁切、不出现滚动条。无脚本时轨道保持骨架，不改成可横滑。点击封面或键盘 Enter／空格可用现有查看器打开 Last.fm 原尺寸图片，关闭后恢复到相应源卡片的焦点（循环副本不增加重复焦点入口）。歌名展示区最多两行，小字沿用陈列架两行限高；骨架与真实卡片共用可容纳两行歌名、两行说明及间距的文字区高度，短文案和缺封面也不收缩。
+首页在近期书影游下方是「近期在听」：标题下先是一张正在播放卡片，再是七日 TOP 10。区块由服务端输出的加载态骨架（十张方卡形占位）和一张卡片模板组成；听歌数据在访问时由运行时接口取得，构建产物里没有任何听歌数据。接口成功后区块呈现过去七天 TOP 10 歌曲（封面、歌名、`歌手 - 专辑名`）与辅助统计（七天听歌次数、累计记录数、七天最常听歌手）和更新时间；标题右侧「Last.fm ↗」直接来自站点身份常量，不依赖接口。首页这条轨道不是滚动容器：超出部分始终裁切，由循环把卡片从一端送回另一端，两端淡出；按下或键盘聚焦轨道时暂停，悬停继续。减少动态效果时循环和淡出停止，轨道仍然只裁切、不出现滚动条。无脚本时轨道保持骨架，不改成可横滑。点击封面或键盘 Enter／空格可用现有查看器打开 Last.fm 原尺寸图片，关闭后恢复到相应源卡片的焦点（循环副本不增加重复焦点入口）。歌名展示区最多两行，小字沿用陈列架两行限高；骨架与真实卡片共用可容纳两行歌名、两行说明及间距的文字区高度，短文案和缺封面也不收缩。
+
+正在播放卡片来自独立接口 `GET /api/lastfm-now`（只取 `user.getRecentTracks` 第一条，CDN 缓存 30 秒），页面可见时每分钟刷新一次、离开首页即停止。Last.fm 只标记 `nowplaying`，不提供进度或开始时间，所以卡片不画进度条：正在播放时显示跳动的均衡器与「正在播放」，否则显示「最近播放 · N 分钟前」；加载时为同尺寸骨架，首次加载失败或账户没有记录时整张收起，之后的轮询失败保留上一次结果，不影响下方排行与统计；无脚本时隐藏。
 
 区块只有四种状态：加载中（十张不可聚焦的方卡形骨架占位，轻量脉冲；`prefers-reduced-motion: reduce` 时静止；统计与时间显示占位 `—`）、就绪（统计、卡片、更新时间；骨架被清空）、真实空数据（`过去 7 天还没有听歌记录。`，隐藏卡片区）、失败（`暂时无法获取听歌数据。`，隐藏卡片区）。无脚本时保留骨架卡并显示说明文字，指向 Last.fm 主页。封面仍按既有 `img` 懒加载，不为图片另做第二套骨架；真实卡片的封面容器延续骨架底色，避免接口就绪后、远程图片尚未下载时露出透明空框。
 
@@ -30,7 +32,7 @@ API 多次查询期间用户仍可听歌，不提供跨接口事务一致性；�
 
 可接受取舍：构建产物不含听歌数据，所以首屏（以及无脚本、接口失败的访问）没有可读排行，爬虫也拿不到这部分内容；冷缓存的一次访问要等 Last.fm 完成查询，1 小时缓存承担其余访问，定时暖请求只降低访客撞上冷回源的概率。这些取舍来自不把听歌数据写进仓库。
 
-不提供正在播放、音乐播放、听歌时长、听歌热力图、用户切换或第三方音乐搜索。
+不提供播放进度、音乐播放、听歌时长、听歌热力图、用户切换或第三方音乐搜索。
 
 ## 架构与 authority
 
@@ -49,9 +51,10 @@ API 多次查询期间用户仍可听歌，不提供跨接口事务一致性；�
 | L1/L2、七天窗口、API 错误、分页与请求上限 | `src/utils/lastfm.mjs` | `fetchLastfmSnapshot({ apiKey, user, now, fetchImpl })` → 标准快照 | 接口处理函数、单测 | `test/lastfm.test.mjs` |
 | L3、Last.fm 图片占位识别、专辑匹配与基础版封面 | 同上 | 同一函数，不向视图暴露 API 原始数据 | 同上 | 同一单测 |
 | 用户身份、主页地址 | 同上 | `LASTFM_USER`、`lastfmProfileUrl(user)` | 组件页头链接、适配器 | 产物检查 |
-| L4/L6、缓存策略、状态码、错误净化 | `api/lastfm.js` | `handleListening(request, { apiKey, user, fetchImpl, now })`；默认导出读取环境变量 | Vercel、dev 中间件、单测 | `test/listening-endpoint.test.mjs` |
+| 正在播放的查询、30 秒缓存、响应校验与渲染 | `src/utils/lastfm.mjs`；`api/lastfm-now.js`；`src/utils/recent-listening.js` | `fetchLastfmNowPlaying`、`handleNowPlaying`、`parseNowPlayingPayload`／`renderNowPlaying` | 首页卡片、dev 中间件、单测 | `test/now-playing.test.mjs` |
+| L4/L6、状态码、错误净化 | 两个接口共用 `api/_lastfm-response.js`；各自的缓存窗口在 `api/lastfm.js`／`api/lastfm-now.js` | `handleListening(request, { apiKey, user, fetchImpl, now })`；默认导出读取环境变量 | Vercel、dev 中间件、单测 | `test/listening-endpoint.test.mjs` |
 | L4 部署前提：根目录 `api/` 被收集为函数 | `vercel.json`（`framework: null`、`buildCommand`、`outputDirectory`） | 平台按 Other 预设构建，静态产物仍是 `dist` | Vercel 部署 | 预览部署的接口响应 |
-| 本地 dev 提供同一接口 | `plugins/astro-listening-endpoint.ts` | 在 `/api/lastfm` 调用同一处理函数；密钥取环境变量或 `.env` | `pnpm dev` | 本地 `curl` 检查 |
+| 本地 dev 提供同一接口 | `plugins/astro-listening-endpoint.ts` | 在 `/api/lastfm`、`/api/lastfm-now` 调用同一处理函数；密钥取环境变量或 `.env` | `pnpm dev` | 本地 `curl` 检查 |
 | L7、请求启动顺序与导航取消 | `src/components/home/RecentListeningScript.astro` | `Head.astro` 在 ClientRouter 前输出；`astro:page-load` 加载、`astro:before-swap` 取消 | 首页与站内导航 | 产物脚本顺序检查、阻滞其它模块的浏览器检查 |
 | 响应形状校验、统计文案、卡片渲染、清空骨架 | `src/utils/recent-listening.js` | `parseListeningPayload`、`listeningStats`、`listeningUpdatedLabel`、`renderListening`（先放入新卡片并提交布局，再移除骨架） | `RecentListeningScript.astro` | `test/recent-listening.test.mjs`、`verify-card-rails.mjs` |
 | L5、加载态骨架卡、空／失败状态、无脚本说明与切换高度 | `src/components/home/RecentListening.astro` | 复用方卡尺寸与 `.media-cards--auto` 循环；轨道溢出由听歌区自己裁切，不使用正文滚动条；骨架不参与循环；预留相同文字高度并稳定统计行 | `index.astro` | built 首页检查、`verify-card-rails.mjs` |

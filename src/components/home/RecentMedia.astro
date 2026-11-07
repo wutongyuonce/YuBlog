@@ -1,6 +1,28 @@
 ---
-import { Content as RecentMediaContent } from '../../content/interests/recent.md'
+/* eslint-disable astro/jsx-a11y/no-noninteractive-tabindex -- 与 :::card 输出一致：横滑栏与可滚动短评需要键盘可达。 */
+/**
+ * 首页近期书影游：直接取影音书游里各类「待看／待玩／待读」条目，
+ * 输出与 `:::card{layout="portrait"}` 横滑栏相同的结构，样式全由 prose.css 承担。
+ */
+import items from '~/data/media/items.json'
+import { MEDIA_CATEGORIES } from '~/utils/media-hub.js'
+import { mediaCoverUrl } from '~/utils/media-covers'
 import { withBasePath } from '~/utils/path'
+import { safeHref } from '../../../plugins/remark-media-card'
+
+const order = new Map(MEDIA_CATEGORIES.map((cat, index) => [cat.id, index]))
+const todo = items
+  .filter((item) => item.status === 'todo')
+  .sort((a, b) => order.get(a.category)! - order.get(b.category)!)
+
+const cards = await Promise.all(
+  todo.map(async (item) => ({
+    ...item,
+    href: safeHref(item.href),
+    thumbUrl: await mediaCoverUrl(item.cover, 480),
+    fullUrl: await mediaCoverUrl(item.cover, 900),
+  }))
+)
 ---
 
 <section class="recent-media" aria-labelledby="recent-media-title">
@@ -8,9 +30,56 @@ import { withBasePath } from '~/utils/path'
     <h2 id="recent-media-title">近期书影游</h2>
     <a href={withBasePath('/interests/')}>全部拾趣</a>
   </header>
-  <div class="prose markdown-content recent-media__body">
-    <RecentMediaContent />
-  </div>
+  {cards.length > 0 && (
+    <div class="prose markdown-content recent-media__body">
+      <div
+        class="media-cards media-cards--rail"
+        tabindex="0"
+        role="region"
+        aria-label="横向卡片栏"
+      >
+        <div class="media-cards__track">
+          {cards.map((item) => (
+            <article class="media-card media-card--portrait">
+              <span class="image-view" style="--image-width: 480px">
+                <img
+                  class="media-card__cover"
+                  src={item.thumbUrl}
+                  alt={`${item.title}海报`}
+                  loading="lazy"
+                  decoding="async"
+                  width="480"
+                  height="720"
+                />
+                <template class="image-view__source">
+                  <img
+                    src={item.fullUrl}
+                    alt={`${item.title}海报`}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </template>
+              </span>
+              <div class="media-card__body">
+                {item.href ? (
+                  <a href={item.href} class="media-card__title">
+                    {item.title}
+                  </a>
+                ) : (
+                  <p class="media-card__title">{item.title}</p>
+                )}
+                {item.review && (
+                  <p class="media-card__meta" tabindex="0">
+                    {item.review}
+                  </p>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </div>
+  )}
 </section>
 
 <style>

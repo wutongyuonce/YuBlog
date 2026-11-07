@@ -23,7 +23,7 @@
 | 标签 | `/tags/` | 按名称或数量排序，多选标签取交集 |
 | 归档 | `/archives/` | 按年浏览文章时间线，查看分类和标签 |
 | 文章 | `/blogs/<slug>/` | 阅读正文、桌面／手机目录、上下篇、随机文章和评论 |
-| 拾趣 | `/interests/`、`/interests/<id>/` | 设备、动漫、电影、游戏、书等内容；分类随 Markdown 文件自动生成 |
+| 拾趣 | `/interests/`、`/interests/<id>/` | 设备与软件、影音书游、歌单等内容；分类随 Markdown 文件自动生成 |
 | 项目 | `/projects/` | 按分类展示项目卡片 |
 | 关于 | `/about/` | 作者介绍，维护一份 Markdown |
 | 友链 | `/friends/` | 推荐／双向友链、交换模板、留言申请 |
@@ -70,7 +70,7 @@ dev 搜索使用模拟数据，真实 Pagefind 搜索需先构建再预览。`pn
 | 文章封面 | `src/content/blogs/_title-images/`，用 `titleImage`／`titleImageAlt` 引用 |
 | 拾趣分类与配图 | `src/content/interests/<id>.md` 或 `.mdx`，配图放对应子目录 |
 | 歌单 | `src/data/playlists.json`，封面放 `src/content/interests/playlists/` |
-| 首页近期书影游 | `src/content/interests/recent.md` |
+| 首页近期书影游 | 自动取 `src/data/media/items.json` 的待看条目 |
 | 作者介绍 | `src/content/about/about.md` |
 | 项目／友链 | `src/content/projects/data.json`／`src/content/friends/data.json` |
 

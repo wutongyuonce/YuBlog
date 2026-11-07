@@ -1,0 +1,37 @@
+---
+/** 由 `interests/<id>/<tab>.md` 组成的合页：每个文件一个页签，正文沿用共享 Markdown 样式。 */
+import { render, type CollectionEntry } from 'astro:content'
+import InterestTabs from '~/components/interests/InterestTabs.astro'
+import InterestTabPanel from '~/components/interests/InterestTabPanel.astro'
+
+interface Props {
+  label: string
+  entries: CollectionEntry<'interestTabs'>[]
+}
+const { label, entries } = Astro.props
+
+const tabs = await Promise.all(
+  entries.map(async (entry) => ({
+    // `gear/device` → `device`，作为 hash 与 DOM id。
+    id: entry.id.slice(entry.id.indexOf('/') + 1),
+    label: entry.data.title,
+    Content: (await render(entry)).Content,
+  }))
+)
+---
+
+<InterestTabs {label} {tabs}>
+  {tabs.map(({ id, label: tabLabel, Content }, index) => (
+    <InterestTabPanel {id} label={tabLabel} active={index === 0}>
+      <article class="prose markdown-content markdown-tabs__content">
+        <Content />
+      </article>
+    </InterestTabPanel>
+  ))}
+</InterestTabs>
+
+<style>
+  .markdown-tabs__content {
+    margin-top: 1.75rem;
+  }
+</style>

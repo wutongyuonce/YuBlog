@@ -66,7 +66,7 @@ See [verification](docs/guides/development.md#verification) for format, lint, te
 | Article covers | `src/content/blogs/_title-images/`, referenced with `titleImage`/`titleImageAlt` |
 | Interest categories and assets | `src/content/interests/<id>.md` or `.mdx`, with matching asset directories |
 | Playlists | `src/data/playlists.json`; covers in `src/content/interests/playlists/` |
-| Home recent media | `src/content/interests/recent.md` |
+| Home recent media | To-do entries in `src/data/media/items.json` |
 | Author introduction | `src/content/about/about.md` |
 | Projects / friends | `src/content/projects/data.json` / `src/content/friends/data.json` |
 
