@@ -60,6 +60,34 @@ test('only a candidate whose name and artist both match supplies the cover', asy
   )
 })
 
+test('notes are left out of the query and joint artists match one by one', async () => {
+  const { fetchImpl, requests } = upstream(() =>
+    ok({
+      albums: [
+        { name: '0.5x', artist: { name: 'BikaBreezy' }, picUrl: pic },
+        { name: 'LA FAMA', artists: [{ name: 'ROSALÍA' }], picUrl: pic },
+      ],
+    })
+  )
+  const find = createNeteaseCoverFinder({ fetchImpl })
+  assert.ok(
+    await find({
+      kind: 'album',
+      name: '0.5x (零点五倍速)',
+      artist: 'BikaBreezy',
+    })
+  )
+  assert.equal(requests[0].s, '0.5x BikaBreezy')
+  assert.ok(
+    await find({
+      kind: 'album',
+      name: 'LA FAMA',
+      artist: 'Rosalía, The Weeknd',
+    }),
+    'one artist of a joint credit is enough'
+  )
+})
+
 test('a short name inside a much longer one is not a match', async () => {
   const { fetchImpl } = upstream(() =>
     ok({

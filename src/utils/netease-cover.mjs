@@ -29,12 +29,23 @@ const fold = (value) =>
     .toLowerCase()
     .replace(/[\s\p{P}\p{S}]+/gu, '')
 
-/** 原名与去掉括号注记（版本、译名、Live 等）后的名字。 */
+/** 去掉括号注记（版本、译名、Live 等）后的名字。 */
+const bareName = (value) =>
+  value.replace(/[(（[【][^)）\]】]*[)）\]】]/g, '').trim()
+
+/** 原名与去掉括号注记后的名字。 */
 const forms = (value) => {
   if (typeof value !== 'string') return []
-  const bare = value.replace(/[(（[【][^)）\]】]*[)）\]】]/g, '')
-  return [...new Set([fold(value), fold(bare)])].filter(Boolean)
+  return [...new Set([fold(value), fold(bareName(value))])].filter(Boolean)
 }
+
+/** Last.fm 常把合作歌手写成一串（「Rosalía, The Weeknd」），拆开后任一位对上即可。 */
+const artistParts = (artist) => [
+  artist,
+  ...artist
+    .split(/\s*(?:,|，|、|&|＆|\/|;|\bfeat\.?|\bft\.?|\bx\b)\s*/i)
+    .filter(Boolean),
+]
 
 /**
  * 两个名字的任一形式相等，或较短的一方被另一方包含且至少占其 60%（「陈小满」与
@@ -121,7 +132,8 @@ export function createNeteaseCoverFinder({
   const search = async (kind, name, artist) => {
     const url = new URL(SEARCH_URL)
     url.search = new URLSearchParams({
-      s: `${name} ${artist}`,
+      // 括号注记会把结果带偏（「0.5x (零点五倍速)」搜不到「0.5x」），搜索只用原名主干。
+      s: `${bareName(name) || name} ${artist}`,
       type: TYPES[kind],
       limit: CANDIDATES,
     }).toString()
@@ -146,7 +158,9 @@ export function createNeteaseCoverFinder({
       if (
         image &&
         similar(candidate.name, name) &&
-        artistNames(candidate.artists).some((alias) => similar(alias, artist))
+        artistNames(candidate.artists).some((alias) =>
+          artistParts(artist).some((part) => similar(alias, part))
+        )
       )
         return {
           found: {
