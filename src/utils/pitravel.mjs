@@ -9,6 +9,10 @@ const DETAIL_URL =
 const DEFAULT_TIME_ZONE = 'Asia/Shanghai'
 /** `route_transportation_type` → 站内交通方式；未列出的编码按直线处理。 */
 const TRAVEL_MODES = { 0: 'drive', 1: 'walk' }
+/** `event_type` 201 是航班、火车等交通事件，带出发与到达两个地点。 */
+const TRANSPORT_EVENT = 201
+/** 铁路车次：字母前缀或纯数字；航班号都带航司代码，其余按航班处理。 */
+const TRAIN_NUMBER = /^([GDCZTKSY]\d{1,4}|\d{1,4})$/i
 const CLOCK = /^([01]\d|2[0-3]):[0-5]\d$/
 
 /**
@@ -149,28 +153,95 @@ function toCoordinates(poi) {
   return poi.coordinate_type === 'WGS84' ? [lng, lat] : gcj02ToWgs84(lng, lat)
 }
 
-function toStop(event) {
+function photoUrls(event) {
+  return (Array.isArray(event.image_list) ? event.image_list : [])
+    .map((image) => originalImage(image?.image_url))
+    .filter(Boolean)
+}
+
+function placeStop(event) {
   const poi = event.start_poi_info ?? event.end_poi_info
   const coordinates = toCoordinates(poi)
   const name = text(event.name) ?? text(poi?.name)
-  if (!coordinates || !name) return undefined
+  if (!coordinates || !name) return []
   const category = Array.isArray(poi?.category) ? poi.category[0] : undefined
   const start = clock(event.start_time)
   const end = clock(event.end_time)
-  return {
-    name,
-    category: text(category?.display_name),
-    emoji: text(category?.icon),
-    address: text(poi?.address),
-    coordinates,
-    time: start || end ? { start, end } : undefined,
-    note: text(event.note),
-    photoUrls: (Array.isArray(event.image_list) ? event.image_list : [])
-      .map((image) => originalImage(image?.image_url))
-      .filter(Boolean),
-    placeImageUrl: originalImage(poi?.image),
-    travel: TRAVEL_MODES[event.route_transportation_type] ?? 'straight',
-  }
+  return [
+    {
+      name,
+      category: text(category?.display_name),
+      emoji: text(category?.icon),
+      address: text(poi?.address),
+      coordinates,
+      time: start || end ? { start, end } : undefined,
+      note: text(event.note),
+      photoUrls: photoUrls(event),
+      placeImageUrl: originalImage(poi?.image),
+      travel: TRAVEL_MODES[event.route_transportation_type] ?? 'straight',
+    },
+  ]
+}
+
+/**
+ * 交通事件拆成出发与到达两站：出发站到到达站是飞机或火车，
+ * 时长取班次起止时间；到达站之后按事件自己的交通方式去下一站。
+ */
+function transportStops(event) {
+  const from = event.start_poi_info
+  const to = event.end_poi_info
+  const fromAt = toCoordinates(from)
+  const toAt = toCoordinates(to)
+  // 只有一端可用时按普通地点导入，不丢整条事件。
+  const fromOk = Boolean(fromAt && text(from?.name))
+  const toOk = Boolean(toAt && text(to?.name))
+  if (!fromOk || !toOk)
+    return placeStop({
+      ...event,
+      start_poi_info: fromOk ? from : toOk ? to : fromAt ? from : to,
+    })
+  const info = event.transport_info ?? {}
+  const number = text(info.transport_num)
+  const mode = number && TRAIN_NUMBER.test(number) ? 'train' : 'flight'
+  // 起止时间都是有效时间戳时才算时长。
+  const departs = Number(info.transport_start_time)
+  const arrives = Number(info.transport_end_time)
+  const seconds =
+    departs > 0 && arrives > departs ? (arrives - departs) / 1000 : 0
+  const common = { category: '交通', emoji: mode === 'train' ? '🚄' : '✈️' }
+  const start = clock(event.start_time)
+  const end = clock(event.end_time)
+  return [
+    {
+      ...common,
+      name: text(from.name),
+      address: text(from.address),
+      coordinates: fromAt,
+      time: start ? { start } : undefined,
+      note: [number, text(event.note)].filter(Boolean).join(' · ') || undefined,
+      photoUrls: photoUrls(event),
+      placeImageUrl: undefined,
+      travel: mode,
+      travelSeconds: seconds > 0 ? Math.round(seconds) : undefined,
+    },
+    {
+      ...common,
+      name: text(to.name),
+      address: text(to.address),
+      coordinates: toAt,
+      time: end ? { end } : undefined,
+      note: undefined,
+      photoUrls: [],
+      placeImageUrl: undefined,
+      travel: TRAVEL_MODES[event.route_transportation_type] ?? 'straight',
+    },
+  ]
+}
+
+function toStops(event) {
+  return event?.event_type === TRANSPORT_EVENT
+    ? transportStops(event)
+    : placeStop(event)
 }
 
 /**
@@ -197,9 +268,9 @@ export function toTripDraft(response) {
     .toSorted((a, b) => a.timestamp - b.timestamp)) {
     const stops = (Array.isArray(day.events) ? day.events : []).flatMap(
       (event) => {
-        const stop = toStop(event)
-        if (!stop) skipped.push(text(event?.name) ?? '（未命名）')
-        return stop ? [stop] : []
+        const stops = event ? toStops(event) : []
+        if (stops.length === 0) skipped.push(text(event?.name) ?? '（未命名）')
+        return stops
       }
     )
     const date = dateIn(timeZone, day.timestamp)

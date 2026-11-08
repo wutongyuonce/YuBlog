@@ -278,7 +278,13 @@ export const tripSchema = ({ image }: SchemaContext) =>
                 /** 去往下一站；最后一站没有。 */
                 route: z
                   .object({
-                    mode: z.enum(['drive', 'walk', 'straight']),
+                    mode: z.enum([
+                      'drive',
+                      'walk',
+                      'flight',
+                      'train',
+                      'straight',
+                    ]),
                     distance: z.number().nonnegative(),
                     duration: z.number().nonnegative().optional(),
                     path: z.array(lngLat).min(2),

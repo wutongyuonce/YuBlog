@@ -108,6 +108,21 @@ test('a truncated route shape falls back instead of inventing a point', async ()
   assert.match(warning, /不完整/)
 })
 
+test('flights and trains are straight lines that keep their mode and timetable', async () => {
+  const { route } = await requestRoute(
+    { from, to, mode: 'flight', duration: 8700 },
+    {
+      fetchImpl: () => {
+        throw new Error('should not be called')
+      },
+    }
+  )
+  assert.deepEqual(
+    [route.mode, route.duration, route.path.length],
+    ['flight', 8700, 2]
+  )
+})
+
 test('failures and unknown modes fall back to a straight line', async () => {
   const failed = await requestRoute(
     { from, to, mode: 'drive' },

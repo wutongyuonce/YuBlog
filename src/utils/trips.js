@@ -9,6 +9,8 @@ export const STATUS_LABELS = { plan: '计划', record: '记录' }
 export const ROUTE_MODE_LABELS = {
   drive: '驾车',
   walk: '步行',
+  flight: '飞机',
+  train: '火车',
   straight: '直线',
 }
 const COLLAGE_SIZE = 3
@@ -102,6 +104,18 @@ export function formatDuration(seconds) {
   if (minutes < 60) return `${minutes} 分钟`
   const rest = minutes % 60
   return `${Math.floor(minutes / 60)} 小时${rest ? ` ${rest} 分钟` : ''}`
+}
+
+/**
+ * 停靠点时间：两端都有写成「09:00 – 11:00」，只有一端时标明是起还是止，
+ * 避免跨夜航班的「22:00」与「00:25」看起来顺序颠倒。
+ * @param {{ start?: string, end?: string } | undefined} time
+ */
+export function formatStopTime(time) {
+  if (time?.start && time.end) return `${time.start} – ${time.end}`
+  if (time?.start) return `${time.start} 起`
+  if (time?.end) return `至 ${time.end}`
+  return ''
 }
 
 function monthDay({ month, day }) {

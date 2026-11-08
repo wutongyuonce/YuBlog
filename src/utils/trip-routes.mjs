@@ -103,24 +103,29 @@ export function simplifyPath(path, tolerance = TOLERANCE_METERS) {
   return rounded
 }
 
-function straight(from, to) {
+/** 飞机、火车或降级时的两点直线；只有班次给出了起止时间才带时长。 */
+function straight(from, to, mode = 'straight', duration) {
   return {
-    mode: 'straight',
+    mode,
     distance: Math.round(haversine(from, to)),
+    ...(duration !== undefined && { duration }),
     path: simplifyPath([from, to]),
   }
 }
 
 /**
  * 一段路线。`warning` 只在降级为直线时出现。
- * @param {{ from: [number, number], to: [number, number], mode: string }} leg
+ * 飞机和火车不请求路网，直接画直线。
+ * @param {{ from: [number, number], to: [number, number], mode: string, duration?: number }} leg
  * @param {{ fetchImpl?: typeof fetch, timeoutMs?: number }} [options]
  */
 export async function requestRoute(
-  { from, to, mode },
+  { from, to, mode, duration },
   { fetchImpl = fetch, timeoutMs = TIMEOUT_MS } = {}
 ) {
   const costing = COSTING[mode]
+  if (mode === 'flight' || mode === 'train')
+    return { route: straight(from, to, mode, duration) }
   if (!costing) return { route: straight(from, to) }
   try {
     const response = await fetchImpl(VALHALLA_URL, {

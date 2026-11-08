@@ -6,6 +6,7 @@ import {
   formatDateRange,
   formatDayLabel,
   formatKilometers,
+  formatStopTime,
   todayInTripZone,
   tripMapData,
   tripStatus,
@@ -72,6 +73,13 @@ test('date labels', () => {
     '2025年12月30日 – 2026年1月2日'
   )
   assert.equal(formatDayLabel('2026-11-06'), '11月6日 周五')
+  assert.equal(
+    formatStopTime({ start: '09:00', end: '11:00' }),
+    '09:00 – 11:00'
+  )
+  assert.equal(formatStopTime({ start: '22:00' }), '22:00 起')
+  assert.equal(formatStopTime({ end: '00:25' }), '至 00:25')
+  assert.equal(formatStopTime(undefined), '')
 })
 
 test('year colours are fixed per year, so new years never recolour old ones', () => {

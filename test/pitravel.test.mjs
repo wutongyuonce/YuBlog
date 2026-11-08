@@ -133,6 +133,75 @@ test('drafts keep dated days in order and map stops to neutral fields', () => {
   assert.equal(draft.days[1].stops[0].travel, 'straight')
 })
 
+test('a transport event becomes a departure and an arrival joined by its mode', () => {
+  const flight = (number) => ({
+    event_type: 201,
+    name: '南京 出发 至 重庆',
+    start_time: '22:00',
+    end_time: '00:25',
+    route_transportation_type: 0,
+    transport_info: {
+      transport_num: number,
+      transport_start_time: DAY1 + 79_200_000,
+      transport_end_time: DAY1 + 87_900_000,
+    },
+    start_poi_info: poi(118.87, 31.73, { name: '禄口机场' }),
+    end_poi_info: poi(106.66, 29.71, { name: '江北机场' }),
+  })
+  const draft = toTripDraft({
+    code: 0,
+    data: {
+      journey: {
+        name: 'x',
+        day_plans: [
+          {
+            day_index: 1,
+            timestamp: DAY1,
+            events: [
+              flight('PN6458'),
+              flight('G1234'),
+              flight('1461'),
+              { ...flight('MU7718'), end_poi_info: undefined },
+              { ...flight('MU7719'), start_poi_info: { name: '无坐标' } },
+              {
+                ...flight('CA1234'),
+                transport_info: {
+                  transport_num: 'CA1234',
+                  transport_start_time: null,
+                  transport_end_time: DAY1,
+                },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  })
+  const [departure, arrival, train, , slowTrain, , oneEnded] =
+    draft.days[0].stops
+  assert.deepEqual(
+    [departure.name, departure.travel, departure.travelSeconds, departure.note],
+    ['禄口机场', 'flight', 8700, 'PN6458']
+  )
+  assert.deepEqual(departure.time, { start: '22:00' })
+  assert.deepEqual(
+    [arrival.name, arrival.travel, arrival.time],
+    ['江北机场', 'drive', { end: '00:25' }]
+  )
+  assert.deepEqual([train.travel, slowTrain.travel], ['train', 'train'])
+  // 只剩出发地时按普通地点导入。
+  assert.equal(oneEnded.name, '南京 出发 至 重庆')
+  // 出发地不可用时用到达地。
+  assert.deepEqual(
+    draft.days[0].stops[7].coordinates,
+    draft.days[0].stops[1].coordinates
+  )
+  // 缺起飞时间时不编时长。
+  assert.equal(draft.days[0].stops[8].travelSeconds, undefined)
+  assert.equal(draft.days[0].stops.length, 10)
+  assert.deepEqual(draft.skipped, [])
+})
+
 test('two plans on the same date merge instead of dropping stops', () => {
   const day = (name) => ({
     day_index: 1,

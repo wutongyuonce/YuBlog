@@ -23,7 +23,7 @@ import { requestRoute } from '../src/utils/trip-routes.mjs'
 const TRIPS_DIR = resolve(import.meta.dirname, '../src/data/trips')
 const ID_PATTERN = /^[a-z0-9][a-z0-9-]*$/
 const MAX_EDGE = 1280
-const PLACE_FALLBACKS = 3
+const FALLBACK_COVERS = 3
 const TIMEOUT_MS = 15_000
 const HEADERS = {
   'User-Agent': 'Mozilla/5.0 (YuBlog trips import)',
@@ -108,12 +108,6 @@ await rm(staging, { recursive: true, force: true })
 await mkdir(staging, { recursive: true })
 
 try {
-  const cover = []
-  for (const [index, url] of draft.coverUrls.entries()) {
-    const file = await saveImage(url, staging, `cover-${index + 1}.jpg`)
-    if (file) cover.push(file)
-  }
-
   const flat = draft.days.flatMap((day) => day.stops)
   let routed = 0
   let straightLegs = 0
@@ -137,6 +131,7 @@ try {
           from: stop.coordinates,
           to: next.coordinates,
           mode: stop.travel,
+          duration: stop.travelSeconds,
         })
         route = result.route
         if (result.warning)
@@ -163,20 +158,25 @@ try {
     days.push({ date: day.date, summary: day.summary, stops })
   }
 
-  // 没有本人封面或照片时，才用地点实景图兜底。
-  const hasOwnImages =
-    cover.length > 0 ||
-    days.some((day) => day.stops.some((stop) => stop.photos.length > 0))
-  if (!hasOwnImages) {
-    const places = [
-      ...new Set(flat.map((stop) => stop.placeImageUrl).filter(Boolean)),
+  // 拼图优先用本人在各站上传的照片；一张都没有时，
+  // 才依次用圆周的行程封面和地点实景图兜底，最多三张。
+  const cover = []
+  const hasStopPhotos = days.some((day) =>
+    day.stops.some((stop) => stop.photos.length > 0)
+  )
+  if (!hasStopPhotos) {
+    const fallbacks = [
+      ...new Set([
+        ...draft.coverUrls,
+        ...flat.map((stop) => stop.placeImageUrl).filter(Boolean),
+      ]),
     ]
-    for (const url of places) {
-      if (cover.length >= PLACE_FALLBACKS) break
+    for (const url of fallbacks) {
+      if (cover.length >= FALLBACK_COVERS) break
       const file = await saveImage(
         url,
         staging,
-        `place-${cover.length + 1}.jpg`
+        `cover-${cover.length + 1}.jpg`
       )
       if (file) cover.push(file)
     }

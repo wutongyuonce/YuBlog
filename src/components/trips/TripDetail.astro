@@ -9,6 +9,7 @@ import {
   formatDateRange,
   formatDayLabel,
   formatDuration,
+  formatStopTime,
   formatKilometers,
   tripDayCount,
   tripDistance,
@@ -52,7 +53,7 @@ const days = await Promise.all(
       day.stops.map(async (stop) => ({
         ...stop,
         number: stops.indexOf(stop) + 1,
-        time: [stop.time?.start, stop.time?.end].filter(Boolean).join(' – '),
+        time: formatStopTime(stop.time),
         leg:
           stop.route &&
           [
