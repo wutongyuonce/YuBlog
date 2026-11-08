@@ -5,9 +5,11 @@ import {
   friendSchema,
   postSchema,
   projectSchema,
+  tripSchema,
 } from '../src/content/schema.ts'
 
 const post = postSchema({ image: () => z.any() })
+const trip = tripSchema({ image: () => z.string() })
 const requiredPost = {
   title: '  示例文章  ',
   pubDate: '2026-09-21',
@@ -69,4 +71,66 @@ test('a title image without meaningful alt text is rejected', () => {
     }).success,
     false
   )
+})
+
+const validTrip = {
+  title: '重庆',
+  start: '2026-11-06',
+  end: '2026-11-07',
+  days: [
+    {
+      date: '2026-11-06',
+      stops: [
+        {
+          name: 'A',
+          coordinates: [106.5, 29.5],
+          time: { start: '09:30' },
+          route: {
+            mode: 'walk',
+            distance: 10,
+            path: [
+              [106.5, 29.5],
+              [106.6, 29.6],
+            ],
+          },
+        },
+      ],
+    },
+    { date: '2026-11-07', stops: [] },
+  ],
+}
+
+test('trips default their images and accept optional stop fields', () => {
+  const parsed = trip.parse(validTrip)
+  assert.deepEqual(parsed.cover, [])
+  assert.deepEqual(parsed.days[0].stops[0].photos, [])
+})
+
+test('trip days must be ordered and match start and end', () => {
+  const [first, second] = validTrip.days
+  for (const broken of [
+    { ...validTrip, days: [second, first] },
+    { ...validTrip, end: '2026-11-08' },
+    { ...validTrip, days: [first, { ...second, date: '2026-11-06' }] },
+  ])
+    assert.equal(trip.safeParse(broken).success, false)
+})
+
+test('trip stops reject bad coordinates, times and one-point routes', () => {
+  const withStop = (patch) => ({
+    ...validTrip,
+    days: [
+      {
+        ...validTrip.days[0],
+        stops: [{ ...validTrip.days[0].stops[0], ...patch }],
+      },
+      validTrip.days[1],
+    ],
+  })
+  for (const patch of [
+    { coordinates: [200, 29.5] },
+    { time: { start: '24:00' } },
+    { route: { mode: 'drive', distance: 1, path: [[106.5, 29.5]] } },
+  ])
+    assert.equal(trip.safeParse(withStop(patch)).success, false)
 })

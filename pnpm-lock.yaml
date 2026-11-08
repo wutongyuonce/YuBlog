@@ -172,6 +172,9 @@ importers:
       '@vercel/blob':
         specifier: ^2.8.2
         version: 2.8.2
+      mapbox-gl:
+        specifier: ^3.34.2
+        version: 3.34.2
       react:
         specifier: ^19.3.0
         version: 19.3.0
@@ -206,6 +209,9 @@ importers:
       '@iconify/json':
         specifier: ^2.2.534
         version: 2.2.539
+      '@types/geojson':
+        specifier: ^7946.0.16
+        version: 7946.0.16
       '@types/hast':
         specifier: ^3.0.4
         version: 3.0.5
@@ -3749,6 +3755,9 @@ packages:
 
   magicast@0.5.4:
     resolution: {integrity: sha512-llBEhWm1SacoRwgHUoQJYtwp4PBLF4faQi5TCpIGyGs9n4y5+juI0tDgyKIfpqxckRHaHzouUEph3THklWh03w==}
+
+  mapbox-gl@3.34.2:
+    resolution: {integrity: sha512-SfuzpqjokSjv4C9/JEjxAfqVHY37B7Kky/AOFpc+9D0Sx0KuIoV3keSlvvuHuM/jxw84iQ/Nh7yIK1VxuDBBHA==}
 
   markdown-extensions@2.0.0:
     resolution: {integrity: sha512-o5vL7aDWatOTX8LzaS1WMoaoxIiLRQJuIKKe2wAw6IeULDHaqbiqiggmx+pKvZDb1Sj+pE46Sn1T7lCqfFtg1Q==}
@@ -8926,6 +8935,8 @@ snapshots:
       '@babel/parser': 7.29.8
       '@babel/types': 7.29.8
       source-map-js: 1.2.1
+
+  mapbox-gl@3.34.2: {}
 
   markdown-extensions@2.0.0: {}
 

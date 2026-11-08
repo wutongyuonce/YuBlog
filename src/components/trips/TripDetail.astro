@@ -1,0 +1,459 @@
+---
+import { Image, getImage } from 'astro:assets'
+
+import TripCover from '~/components/trips/TripCover.astro'
+import type { TripEntry } from '~/utils/trip-entries'
+import {
+  ROUTE_MODE_LABELS,
+  collageImages,
+  formatDateRange,
+  formatDayLabel,
+  formatDuration,
+  formatKilometers,
+  tripDayCount,
+  tripDistance,
+  tripPlaceCount,
+  tripYear,
+  yearColor,
+} from '~/utils/trips.js'
+
+// 一段旅程的详情：无 JS 时由 `:target` 展开，有 JS 时由页面脚本按地址片段切换。
+interface Props {
+  trip: TripEntry
+  status: 'plan' | 'record'
+  statusLabel: string
+}
+
+const { trip, status, statusLabel } = Astro.props
+const { id, data } = trip
+const color = yearColor(tripYear(data))
+const stops = data.days.flatMap((day) => day.stops)
+const outline = stops.flatMap((stop) => stop.route?.path ?? [stop.coordinates])
+const figures = [
+  { value: tripDayCount(data), unit: '天' },
+  { value: tripPlaceCount(data), unit: '个地点' },
+  { value: formatKilometers(tripDistance(data)), unit: '公里' },
+]
+
+const large = async (image: (typeof stops)[number]['photos'][number]) =>
+  (
+    await getImage({
+      src: image,
+      width: Math.min(1280, image.width),
+      format: 'webp',
+    })
+  ).src
+
+const days = await Promise.all(
+  data.days.map(async (day, dayIndex) => ({
+    ...day,
+    label: `第 ${dayIndex + 1} 天 · ${formatDayLabel(day.date)}`,
+    stops: await Promise.all(
+      day.stops.map(async (stop) => ({
+        ...stop,
+        number: stops.indexOf(stop) + 1,
+        time: [stop.time?.start, stop.time?.end].filter(Boolean).join(' – '),
+        leg:
+          stop.route &&
+          [
+            ROUTE_MODE_LABELS[stop.route.mode],
+            `${formatKilometers(stop.route.distance)} 公里`,
+            stop.route.duration !== undefined &&
+              formatDuration(stop.route.duration),
+          ]
+            .filter(Boolean)
+            .join(' · '),
+        photos: await Promise.all(
+          stop.photos.map(async (photo) => ({
+            photo,
+            large: await large(photo),
+          }))
+        ),
+      }))
+    ),
+  }))
+)
+---
+
+<section
+  class="trip-detail"
+  {id}
+  data-trip-detail={id}
+  aria-labelledby={`${id}-title`}
+  style={`--trip-color: ${color}`}
+>
+  <a class="trip-detail__back" href="#trips" data-trip-back>
+    <span class="i-ri-arrow-left-line" aria-hidden="true"></span>
+    全部旅程
+  </a>
+  <header class="trip-detail__header">
+    <p class="trip-detail__dates">
+      <span
+        class="trip-status"
+        data-trip-status={status}
+        data-trip-end={data.end}
+      >
+        {statusLabel}
+      </span>
+      {formatDateRange(data.start, data.end)}
+    </p>
+    <h2 id={`${id}-title`}>{data.title}</h2>
+  </header>
+  <TripCover
+    images={collageImages(data, (image) => image.src)}
+    title={data.title}
+    {outline}
+    {color}
+    sizes="(max-width: 48rem) 100vw, 26rem"
+  />
+  <ul class="trip-detail__figures">
+    {figures.map(({ value, unit }) => (
+      <li>
+        <strong>{value}</strong>
+        <span>{unit}</span>
+      </li>
+    ))}
+  </ul>
+  <button
+    class="trip-detail__replay"
+    type="button"
+    data-trip-replay={id}
+    disabled
+  >
+    <span class="i-ri-play-fill" aria-hidden="true"></span>
+    回放行程
+  </button>
+
+  <ol class="trip-days">
+    {days.map((day) => (
+      <li class="trip-day">
+        <h3>
+          {day.label}
+          {day.summary && <small>{day.summary}</small>}
+        </h3>
+        {day.stops.length === 0 ? (
+          <p class="trip-day__empty">这一天还没有安排。</p>
+        ) : (
+          <ol class="trip-stops">
+            {day.stops.map((stop) => (
+              <li class="trip-stop" data-trip-stop={stop.number - 1}>
+                <button
+                  class="trip-stop__head"
+                  type="button"
+                  data-trip-stop-focus
+                >
+                  <span class="trip-stop__number">{stop.number}</span>
+                  <span class="trip-stop__name">
+                    {stop.emoji && (
+                      <span class="trip-stop__emoji" aria-hidden="true">
+                        {stop.emoji}
+                      </span>
+                    )}
+                    {stop.name}
+                  </span>
+                </button>
+                {(stop.category || stop.time) && (
+                  <p class="trip-stop__meta">
+                    {[stop.category, stop.time].filter(Boolean).join(' · ')}
+                  </p>
+                )}
+                {stop.note && <p class="trip-stop__note">{stop.note}</p>}
+                {stop.photos.length > 0 && (
+                  <ul class="trip-stop__photos">
+                    {stop.photos.map(({ photo, large }, index) => (
+                      <li>
+                        <a
+                          href={large}
+                          data-trip-photo
+                          data-caption={stop.name}
+                          aria-label={`查看大图：${stop.name} 第 ${index + 1} 张`}
+                        >
+                          <Image
+                            src={photo}
+                            alt={`${stop.name} 照片 ${index + 1}`}
+                            widths={[160, 320]}
+                            sizes="5.5rem"
+                            format="webp"
+                            loading="lazy"
+                          />
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {stop.leg && <p class="trip-stop__leg">{stop.leg}</p>}
+              </li>
+            ))}
+          </ol>
+        )}
+      </li>
+    ))}
+  </ol>
+</section>
+
+<style>
+  .trip-detail {
+    padding: 0 1.25rem 1.5rem;
+  }
+
+  .trip-detail__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin: 0.25rem 0 0.75rem;
+    color: var(--trips-muted);
+    font-size: 0.875rem;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--c-text);
+    }
+  }
+
+  .trip-detail__header {
+    margin-bottom: 0.875rem;
+
+    & h2 {
+      margin: 0.25rem 0 0;
+      font-family: var(--font-heading);
+      font-size: 1.375rem;
+      font-weight: 600;
+      line-height: 1.35;
+    }
+  }
+
+  .trip-detail__dates {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    color: var(--trips-muted);
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .trip-detail__figures {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin: 0.875rem 0 0;
+    padding: 0;
+    list-style: none;
+    font-variant-numeric: tabular-nums;
+
+    & li {
+      display: flex;
+      align-items: baseline;
+      gap: 0.25rem;
+      min-width: 0;
+    }
+
+    & strong {
+      font-size: 1.375rem;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+    }
+
+    & span {
+      color: var(--trips-muted);
+      font-size: 0.8125rem;
+      white-space: nowrap;
+    }
+  }
+
+  .trip-detail__replay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    width: 100%;
+    height: 2.5rem;
+    margin-top: 0.875rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--c-text);
+    color: var(--c-bg);
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.35;
+    }
+
+    &:not(:disabled):hover {
+      opacity: 0.88;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--c-text);
+      outline-offset: 2px;
+    }
+  }
+
+  .trip-days,
+  .trip-stops,
+  .trip-stop__photos {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .trip-day {
+    margin-top: 1.5rem;
+
+    & h3 {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.25rem 0.625rem;
+      margin: 0 0 0.75rem;
+      font-size: 0.9375rem;
+      font-weight: 600;
+
+      & small {
+        color: var(--trips-muted);
+        font-size: 0.8125rem;
+        font-weight: 400;
+      }
+    }
+  }
+
+  .trip-day__empty {
+    margin: 0;
+    color: var(--trips-muted);
+    font-size: 0.875rem;
+  }
+
+  /* 序号圆点连成竖线，路段文字挂在线上。 */
+  .trip-stop {
+    position: relative;
+    padding: 0 0 0.875rem 2.125rem;
+    border-radius: 0.5rem;
+
+    &::before {
+      position: absolute;
+      top: 1.5rem;
+      bottom: 0;
+      left: 0.6875rem;
+      width: 1px;
+      background: var(--trips-line);
+      content: '';
+    }
+
+    &:last-child::before {
+      display: none;
+    }
+  }
+
+  .trip-stop__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    width: calc(100% + 2.125rem);
+    margin-left: -2.125rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+
+    &:hover .trip-stop__name,
+    &:focus-visible .trip-stop__name {
+      color: var(--trip-color);
+    }
+
+    &:focus-visible {
+      outline: none;
+
+      & .trip-stop__number {
+        outline: 2px solid var(--c-text);
+        outline-offset: 2px;
+      }
+    }
+  }
+
+  .trip-stop__number {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 999px;
+    background: var(--trip-color);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .trip-stop[data-active] .trip-stop__number {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--trip-color) 30%, transparent);
+  }
+
+  .trip-stop__name {
+    padding-top: 0.125rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.4;
+    transition: color 140ms ease;
+  }
+
+  .trip-stop__emoji {
+    margin-right: 0.3em;
+  }
+
+  .trip-stop__meta,
+  .trip-stop__leg {
+    margin: 0.125rem 0 0;
+    color: var(--trips-muted);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .trip-stop__leg {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .trip-stop__note {
+    margin: 0.375rem 0 0;
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+
+  .trip-stop__photos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
+    gap: 0.375rem;
+    margin-top: 0.5rem;
+
+    & a {
+      display: block;
+      overflow: hidden;
+      border-radius: 0.375rem;
+      aspect-ratio: 1;
+
+      &:focus-visible {
+        outline: 2px solid var(--c-text);
+        outline-offset: 2px;
+      }
+    }
+
+    & img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 200ms ease;
+    }
+
+    & a:hover img {
+      transform: scale(1.04);
+    }
+  }
+</style>

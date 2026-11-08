@@ -34,10 +34,11 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | `/projects/` | 分类网格 | `src/pages/projects.mdx` | `src/content/projects/data.json` |
 | `/about/` | 作者介绍 | `src/pages/about.mdx` | `src/content/about/about.md` |
 | `/friends/` | 友链卡片 + 申请模板 | `src/pages/friends.mdx` | `src/content/friends/data.json` |
+| `/trips/` | 全屏地图、旅程面板、详情与回放；不用站点顶栏和居中版心 | `src/pages/trips/index.astro`、`src/pages/trips/map.json.ts` | `trips` 集合（`src/data/trips/<id>/trip.json`），见 [旅行](./trips.md) |
 | `/blogs/[slug]/` | 正文、右侧 TOC | `src/pages/blogs/[...slug].astro` | 单篇 `blogs` |
 | `/rss.xml` | 订阅源 | `src/pages/rss.xml.js` | 已发布 `blogs`（不含拾趣） |
 
-顶栏页面链接由 `src/config.ts` 的 `UI.internalNavs` 维护；更多菜单由 `MORE_LINKS` 提供友链、相册及访问统计条目，友链页对应更多选中态。相册链接指向独立部署的 `https://photos.wutongyu.site/`，访问统计链接指向无需登录的 Umami 公开分享看板；两个外链均带 ↗ 并在新标签页打开。拾趣与更多下拉框最大宽度 200px。工具组读取 `UI.socialLinks` 中的本仓库 GitHub 链接，并包含搜索、配色和主题按钮。个人社交由 `AUTHOR_LINKS` 维护：首页 GitHub 指向个人主页，与 X、Instagram、Bilibili、小红书、邮箱一起展示；关于正文独立维护作者希望公开的联系方式。
+顶栏页面链接由 `src/config.ts` 的 `UI.internalNavs` 维护；更多菜单由 `MORE_LINKS` 提供友链、简历、旅行、相册及访问统计条目，友链页对应更多选中态。旅行页是全屏页，直接使用 `Head`，不经过 `BaseLayout`，没有顶栏。相册链接指向独立部署的 `https://photos.wutongyu.site/`，访问统计链接指向无需登录的 Umami 公开分享看板；两个外链均带 ↗ 并在新标签页打开。拾趣与更多下拉框最大宽度 200px。工具组读取 `UI.socialLinks` 中的本仓库 GitHub 链接，并包含搜索、配色和主题按钮。个人社交由 `AUTHOR_LINKS` 维护：首页 GitHub 指向个人主页，与 X、Instagram、Bilibili、小红书、邮箱一起展示；关于正文独立维护作者希望公开的联系方式。
 
 `nav-path.js` 统一导航路径归一化、下拉类型和父级选中，服务端 `NavBar`／`NavItem` 与客户端共用规则；配置的尾斜杠及站点 base 不改变结果。
 
@@ -101,6 +102,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | Last.fm 查询、统计、专辑匹配、资料缺失与请求上限 | `src/utils/lastfm.mjs`；缓存与失败语义在 `api/lastfm.js` | 在视图中重新调用 API 或推断排行／周总数 |
 | 拾趣固定歌单、平台资料归一化、运行时快照 | `src/data/playlists.json`、`src/utils/qq-playlist.mjs`／`netease-playlist.mjs` 与 `playlists.mjs`；缓存在 `api/playlists.js`，见 [拾趣歌单](./playlists.md) | 提交全量曲目、在页面抓远程封面或接受任意来源 URL |
 | 影音书游条目 | `src/data/media/items.json`；合页 `MediaHub`；排序／统计／标签色调 `src/utils/media-hub.js`；封面 `src/utils/media-covers.ts` | 在 Markdown `:::card` 目录页再维护一份电影／动漫／剧／游戏／书清单 |
+| 旅行数据、圆周旅迹适配、状态与统计、地图与回放 | `tripSchema`；`pitravel.mjs`；`trips.js`；`trip-map.ts`／`trip-replay.ts`，完整权威表见 [旅行](./trips.md#地图) | 手写 `trip.json`、在页面里重算状态或里程、运行时请求圆周旅迹 |
 | 写作热力统计与失败语义 | `blog-heatmap.js` | 在组件重算年度字数、将缺失字数当 0 |
 | 热力提示交互与页面清理 | `WritingHeatmap.astro` | 用旧根节点的定时器关闭新页面的提示层 |
 | 内容图片的路径与写入规则 | `src/content/**` 里的相对路径；正文宽度标记由 `plugins/remark-image-width.ts` 解析 | 把图片放进 `public/`、在正文写原始 `<img>`（相对路径会构建报错）、手写 `_astro` 地址 |

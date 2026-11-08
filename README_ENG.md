@@ -23,6 +23,7 @@ WutongRain’s personal blog, built with Astro 7, TypeScript and Markdown/MDX. I
 | Projects | `/projects/` | Project groups from JSON |
 | About | `/about/` | One author-introduction Markdown file |
 | Friends | `/friends/` | Recommended/mutual links, exchange template and comments |
+| Trips | `/trips/` | Full-screen map of travel plans and records, with daily stops, photos and route replay |
 | Feed | `/rss.xml` | Full content of all published blog posts |
 
 Blog categories use filtering URLs such as `/blogs/#技术`; interest categories are independent static routes. The album and traffic dashboard in More are external sites. See the [page contracts](docs/design/site.md).
@@ -67,6 +68,7 @@ See [verification](docs/guides/development.md#verification) for format, lint, te
 | Interest categories and assets | `src/content/interests/<id>.md` or `.mdx`, with matching asset directories |
 | Playlists | `src/data/playlists.json`; covers in `src/content/interests/playlists/` |
 | Home recent media | To-do entries in `src/data/media/items.json` |
+| Trips | `pnpm trips:import '<Pi Travel share link>'` writes `src/data/trips/<id>/`; see the [trips design](docs/design/trips.md) |
 | Author introduction | `src/content/about/about.md` |
 | Projects / friends | `src/content/projects/data.json` / `src/content/friends/data.json` |
 

@@ -989,3 +989,57 @@ test('home listening ships ten loading skeletons the runtime endpoint fills', as
   assert.ok(noscript, 'the section explains itself without scripting')
   assert.match(textOf(noscript), /JavaScript/)
 })
+
+test('the trips page lists every trip, renders each detail and ships its map data', async () => {
+  const page = await load('trips/index.html')
+  const dirs = (
+    await readdir(new URL('../src/data/trips/', import.meta.url), {
+      withFileTypes: true,
+    })
+  )
+    .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.'))
+    .map((entry) => entry.name)
+  const map = JSON.parse(
+    await readFile(new URL('../dist/trips/map.json', import.meta.url), 'utf8')
+  )
+
+  // 全屏页：没有站点顶栏，左上角回到首页。
+  assert.equal(
+    elements(page, (node) => node.properties.id === 'nav-menu-more').length,
+    0
+  )
+  const homeLink = elements(page, (node) => hasClass(node, 'trips-home'))[0]
+  assert.equal(homeLink.properties.href, sitePath('/'))
+  assert.match(textOf(page), /行程数据采集自圆周旅迹/)
+
+  const cards = elements(page, (node) => 'dataTripLink' in node.properties)
+  assert.deepEqual(
+    cards.map((node) => node.properties.href).toSorted(),
+    dirs.map((id) => `#${id}`).toSorted(),
+    'one card per trip, linking to its fragment'
+  )
+  for (const id of dirs) {
+    const detail = elements(page, (node) => node.properties.id === id)[0]
+    assert.ok(detail && 'dataTripDetail' in detail.properties, `${id}: detail`)
+    const trip = JSON.parse(
+      await readFile(
+        new URL(`../src/data/trips/${id}/trip.json`, import.meta.url),
+        'utf8'
+      )
+    )
+    const stops = trip.days.flatMap((day) => day.stops)
+    assert.equal(
+      elements(detail, (node) => 'dataTripStop' in node.properties).length,
+      stops.length,
+      `${id}: every stop is listed without scripting`
+    )
+    const geo = map.trips.find((item) => item.id === id)
+    assert.equal(geo.stops.length, stops.length, `${id}: map stops`)
+    assert.equal(
+      geo.legs.length,
+      stops.filter((stop) => stop.route).length,
+      `${id}: map legs`
+    )
+  }
+  assert.equal(map.trips.length, dirs.length)
+})

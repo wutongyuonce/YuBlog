@@ -1,0 +1,1241 @@
+---
+import Head from '~/components/base/Head.astro'
+import TripCover from '~/components/trips/TripCover.astro'
+import TripDetail from '~/components/trips/TripDetail.astro'
+import { AUTHOR_DISPLAY_NAME } from '~/config'
+import { getTrips } from '~/utils/trip-entries'
+import { withBasePath } from '~/utils/path'
+import {
+  STATUS_LABELS,
+  collageImages,
+  formatDateRange,
+  formatKilometers,
+  todayInTripZone,
+  tripDayCount,
+  tripDistance,
+  tripPlaceCount,
+  tripStatus,
+  tripTotals,
+  tripYear,
+  yearColor,
+} from '~/utils/trips.js'
+
+// 全屏旅行页：地图铺满，面板浮在右侧（窄屏在底部）。行为与数据见 docs/design/trips.md。
+const trips = await getTrips()
+const today = todayInTripZone()
+const totals = tripTotals(trips.map((trip) => trip.data))
+const years = [...new Set(trips.map((trip) => tripYear(trip.data)))]
+const groups = years.map((year) => ({
+  year,
+  trips: trips.filter((trip) => tripYear(trip.data) === year),
+}))
+const statusOf = (end: string) => tripStatus(end, today)
+const token = import.meta.env.PUBLIC_MAPBOX_TOKEN ?? ''
+const outline = (trip: (typeof trips)[number]) =>
+  trip.data.days.flatMap((day) =>
+    day.stops.flatMap((stop) => stop.route?.path ?? [stop.coordinates])
+  )
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <Head
+      title="旅行"
+      description="旅行计划与行程记录，在地图上回看每一段路。"
+    />
+    <link rel="preconnect" href="https://api.mapbox.com" crossorigin />
+  </head>
+  <body class="trips-body">
+    <main
+      class="trips-page"
+      data-trips
+      data-token={token}
+      data-map-url={withBasePath('/trips/map.json')}
+    >
+      <div
+        class="trips-canvas"
+        data-trips-canvas
+        role="region"
+        aria-label="旅行地图"
+      ></div>
+      <p class="trips-message" data-trips-message hidden={Boolean(token)}>
+        {token ? '' : '地图未配置，旅程仍可在面板里浏览。'}
+      </p>
+
+      <header class="trips-toolbar">
+        <a
+          class="trips-home"
+          href={withBasePath('/')}
+          aria-label="回到博客首页"
+        >
+          <img
+            src={withBasePath('/avatar.webp')}
+            width="28"
+            height="28"
+            alt=""
+          />
+          <span>{AUTHOR_DISPLAY_NAME}</span>
+        </a>
+        <div class="trips-toolbar__actions">
+          <button
+            class="trips-tool"
+            type="button"
+            data-trips-fit
+            aria-label="显示全部旅程"
+            title="显示全部旅程"
+            disabled
+          >
+            <span class="i-ri-focus-3-line" aria-hidden="true"></span>
+          </button>
+          <button
+            class="trips-tool"
+            type="button"
+            data-trips-panel-toggle
+            aria-controls="trips-panel"
+            aria-expanded="true"
+            aria-label="收起旅程面板"
+            title="收起旅程面板"
+          >
+            <span class="i-ri-side-bar-line" aria-hidden="true"></span>
+          </button>
+        </div>
+      </header>
+
+      <aside
+        class="trips-panel"
+        id="trips-panel"
+        data-trips-panel
+        aria-label="旅程"
+      >
+        <div class="trips-panel__scroll" data-trips-scroll>
+          <div class="trips-overview" id="trips">
+            <header class="trips-overview__header">
+              <p>
+                {totals.count} 段旅程 · {totals.days} 天 · {totals.places}{' '}
+                个地点 · 约 {formatKilometers(totals.distance)} 公里
+              </p>
+              <h1>旅行</h1>
+              <p class="trips-overview__source">
+                行程数据采集自圆周旅迹，并按本站格式整理适配。
+              </p>
+            </header>
+            {trips.length === 0 && <p class="trips-empty">还没有旅程。</p>}
+            {groups.map((group) => (
+              <section aria-labelledby={`trips-year-${group.year}`}>
+                <h2 class="trips-year" id={`trips-year-${group.year}`}>
+                  {group.year}
+                </h2>
+                <ol class="trips-list">
+                  {group.trips.map((trip, index) => {
+                    const status = statusOf(trip.data.end)
+                    return (
+                      <li>
+                        <a
+                          class="trip-card"
+                          href={`#${trip.id}`}
+                          data-trip-link={trip.id}
+                        >
+                          <TripCover
+                            images={collageImages(
+                              trip.data,
+                              (image) => image.src
+                            )}
+                            title={trip.data.title}
+                            outline={outline(trip)}
+                            color={yearColor(group.year)}
+                            sizes="(max-width: 48rem) 100vw, 25rem"
+                            priority={group.year === years[0] && index === 0}
+                          />
+                          <span class="trip-card__title">
+                            {trip.data.title}
+                          </span>
+                          <span class="trip-card__dates">
+                            <span
+                              class="trip-status"
+                              data-trip-status={status}
+                              data-trip-end={trip.data.end}
+                            >
+                              {STATUS_LABELS[status]}
+                            </span>
+                            {formatDateRange(trip.data.start, trip.data.end)}
+                          </span>
+                          <span class="trip-card__totals">
+                            {tripDayCount(trip.data)} 天 ·{' '}
+                            {tripPlaceCount(trip.data)} 个地点 · 约{' '}
+                            {formatKilometers(tripDistance(trip.data))} 公里
+                          </span>
+                        </a>
+                      </li>
+                    )
+                  })}
+                </ol>
+              </section>
+            ))}
+          </div>
+          {trips.map((trip) => {
+            const status = statusOf(trip.data.end)
+            return (
+              <TripDetail {trip} {status} statusLabel={STATUS_LABELS[status]} />
+            )
+          })}
+        </div>
+      </aside>
+
+      {years.length > 0 && (
+        <ul class="trips-legend" aria-label="图例：按开始年份着色">
+          {years.toReversed().map((year) => (
+            <li>
+              <span
+                class="trips-legend__dot"
+                style={`--trip-color: ${yearColor(year)}`}
+              />
+              {year}
+            </li>
+          ))}
+          <li class="trips-legend__route">
+            <span aria-hidden="true" />
+            路线
+          </li>
+        </ul>
+      )}
+
+      <section class="trips-replay" data-trips-replay aria-live="polite" hidden>
+        <img data-replay-photo alt="" hidden />
+        <div class="trips-replay__text">
+          <p data-replay-day></p>
+          <h2>
+            <span class="trips-replay__number" data-replay-number></span>
+            <span data-replay-name></span>
+          </h2>
+          <p class="trips-replay__meta" data-replay-meta></p>
+          <p class="trips-replay__note" data-replay-note></p>
+        </div>
+        <div class="trips-replay__controls">
+          <button
+            class="trips-tool"
+            type="button"
+            data-replay-toggle
+            aria-label="暂停"
+          >
+            <span class="i-ri-pause-fill" aria-hidden="true"></span>
+          </button>
+          <button
+            class="trips-tool"
+            type="button"
+            data-replay-exit
+            aria-label="退出回放"
+          >
+            <span class="i-ri-close-line" aria-hidden="true"></span>
+          </button>
+        </div>
+      </section>
+
+      <dialog class="trips-photo" data-trips-photo aria-label="照片">
+        <img alt="" />
+        <p></p>
+        <button class="trips-photo__prev" type="button" aria-label="上一张">
+          <span class="i-ri-arrow-left-s-line" aria-hidden="true"></span>
+        </button>
+        <button class="trips-photo__next" type="button" aria-label="下一张">
+          <span class="i-ri-arrow-right-s-line" aria-hidden="true"></span>
+        </button>
+        <button class="trips-photo__close" type="button" aria-label="关闭">
+          <span class="i-ri-close-line" aria-hidden="true"></span>
+        </button>
+      </dialog>
+    </main>
+
+    <script>
+      import 'mapbox-gl/dist/mapbox-gl.css'
+      import type { PaddingOptions } from 'mapbox-gl'
+
+      import { observeTheme } from '~/utils/theme-observer.js'
+      import {
+        createTripMap,
+        type TripGeo,
+        type TripMap,
+      } from '~/utils/trip-map'
+      import { createReplay, type Replay } from '~/utils/trip-replay'
+      import {
+        STATUS_LABELS,
+        todayInTripZone,
+        tripStatus,
+      } from '~/utils/trips.js'
+
+      const NARROW = '(max-width: 48rem)'
+
+      function mount(page: HTMLElement, signal: AbortSignal) {
+        const $ = <T extends Element>(selector: string) =>
+          page.querySelector<T>(selector)!
+        const panel = $<HTMLElement>('[data-trips-panel]')
+        const scroller = $<HTMLElement>('[data-trips-scroll]')
+        const message = $<HTMLElement>('[data-trips-message]')
+        const fitButton = $<HTMLButtonElement>('[data-trips-fit]')
+        const toggle = $<HTMLButtonElement>('[data-trips-panel-toggle]')
+        const replayCard = $<HTMLElement>('[data-trips-replay]')
+        const dialog = $<HTMLDialogElement>('[data-trips-photo]')
+        const narrow = matchMedia(NARROW)
+        let tripMap: TripMap | undefined
+        let replay: Replay | undefined
+        let selected: string | undefined
+
+        page.dataset.tripsJs = ''
+
+        // 状态按访问当天重算，构建日期只是无 JS 时的初值。
+        const today = todayInTripZone()
+        for (const badge of page.querySelectorAll<HTMLElement>(
+          '[data-trip-status]'
+        )) {
+          const status = tripStatus(badge.dataset.tripEnd!, today)
+          badge.dataset.tripStatus = status
+          badge.textContent = STATUS_LABELS[status]
+        }
+
+        function showMessage(text: string) {
+          message.textContent = text
+          message.hidden = false
+          page.dataset.tripsMapFailed = ''
+        }
+
+        function collapsed() {
+          return page.hasAttribute('data-trips-collapsed')
+        }
+
+        function getPadding(): PaddingOptions {
+          const gap = 24
+          const base = { top: 80, right: gap, bottom: 72, left: gap }
+          if (page.hasAttribute('data-trips-replaying')) {
+            const card = replayCard.getBoundingClientRect()
+            return { ...base, bottom: card.height + 48 }
+          }
+          if (collapsed()) return base
+          const rect = panel.getBoundingClientRect()
+          return narrow.matches
+            ? {
+                ...base,
+                bottom: Math.max(base.bottom, innerHeight - rect.top + gap),
+              }
+            : { ...base, right: innerWidth - rect.left + gap }
+        }
+
+        function setCollapsed(next: boolean) {
+          page.toggleAttribute('data-trips-collapsed', next)
+          toggle.setAttribute('aria-expanded', String(!next))
+          const label = next ? '展开旅程面板' : '收起旅程面板'
+          toggle.setAttribute('aria-label', label)
+          toggle.title = label
+        }
+
+        function detail(id: string | undefined) {
+          return id
+            ? page.querySelector<HTMLElement>(
+                `[data-trip-detail="${CSS.escape(id)}"]`
+              )
+            : null
+        }
+
+        /** 地址片段是选中状态的唯一来源。 */
+        function syncFromHash() {
+          const id = decodeURIComponent(location.hash.slice(1))
+          const next = detail(id) ? id : undefined
+          if (next === selected) return
+          stopReplay()
+          for (const item of page.querySelectorAll('.trip-stop[data-active]'))
+            delete (item as HTMLElement).dataset.active
+          selected = next
+          page.toggleAttribute('data-trips-selected', Boolean(next))
+          if (next && collapsed()) setCollapsed(false)
+          scroller.scrollTop = 0
+          tripMap?.select(next)
+        }
+
+        function activateStop(index: number | undefined, fly: boolean) {
+          const root = detail(selected)
+          for (const item of root?.querySelectorAll<HTMLElement>(
+            '.trip-stop'
+          ) ?? []) {
+            const active = Number(item.dataset.tripStop) === index
+            item.toggleAttribute('data-active', active)
+            if (active && !fly)
+              item.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+          }
+          tripMap?.activateStop(index, fly)
+        }
+
+        // —— 回放 ——
+        function stopData(index: number) {
+          const item = detail(selected)?.querySelector<HTMLElement>(
+            `[data-trip-stop="${index}"]`
+          )
+          const day = item?.closest('.trip-day')?.querySelector('h3')
+          return {
+            day: day?.firstChild?.textContent?.trim() ?? '',
+            name:
+              item?.querySelector('.trip-stop__name')?.textContent?.trim() ??
+              '',
+            meta:
+              item?.querySelector('.trip-stop__meta')?.textContent?.trim() ??
+              '',
+            note:
+              item?.querySelector('.trip-stop__note')?.textContent?.trim() ??
+              '',
+            photo:
+              item?.querySelector<HTMLAnchorElement>('[data-trip-photo]')?.href,
+          }
+        }
+
+        function showReplayStop(index: number) {
+          const data = stopData(index)
+          const set = (name: string, text: string) => {
+            const node = replayCard.querySelector<HTMLElement>(
+              `[data-replay-${name}]`
+            )!
+            node.textContent = text
+            node.hidden = !text
+          }
+          set('day', data.day)
+          set('number', String(index + 1))
+          set('name', data.name)
+          set('meta', data.meta)
+          set('note', data.note)
+          const photo = replayCard.querySelector<HTMLImageElement>(
+            '[data-replay-photo]'
+          )!
+          photo.hidden = !data.photo
+          if (data.photo) photo.src = data.photo
+          activateStop(index, false)
+        }
+
+        function setReplayPlaying(playing: boolean) {
+          const button = replayCard.querySelector<HTMLButtonElement>(
+            '[data-replay-toggle]'
+          )!
+          button.setAttribute('aria-label', playing ? '暂停' : '继续')
+          button.firstElementChild!.className = playing
+            ? 'i-ri-pause-fill'
+            : 'i-ri-play-fill'
+        }
+
+        function stopReplay() {
+          if (!replay) return
+          replay.destroy()
+          replay = undefined
+          replayCard.hidden = true
+          page.removeAttribute('data-trips-replaying')
+          activateStop(undefined, false)
+        }
+
+        async function startReplay(id: string) {
+          const trip = tripMap?.trip(id)
+          if (!tripMap || !trip || replay) return
+          page.toggleAttribute('data-trips-replaying', true)
+          replayCard.hidden = false
+          replay = await createReplay({
+            tripMap,
+            trip,
+            getPadding,
+            onStop: showReplayStop,
+            onPlayingChange: setReplayPlaying,
+            onEnd: () => setReplayPlaying(false),
+          })
+          replay.play()
+        }
+
+        // —— 照片对话框：同一段旅程内前后翻看 ——
+        let photos: HTMLAnchorElement[] = []
+        let photoIndex = 0
+        function showPhoto(index: number) {
+          photoIndex = Math.max(0, Math.min(photos.length - 1, index))
+          const link = photos[photoIndex]
+          const img = dialog.querySelector('img')!
+          img.src = link.href
+          img.alt = link.querySelector('img')?.alt ?? ''
+          dialog.querySelector('p')!.textContent =
+            `${link.dataset.caption ?? ''} · ${photoIndex + 1}/${photos.length}`
+          dialog.querySelector<HTMLButtonElement>(
+            '.trips-photo__prev'
+          )!.disabled = photoIndex === 0
+          dialog.querySelector<HTMLButtonElement>(
+            '.trips-photo__next'
+          )!.disabled = photoIndex === photos.length - 1
+        }
+
+        // —— 事件 ——
+        page.addEventListener(
+          'click',
+          (event) => {
+            const target = event.target as Element
+            const photo = target.closest<HTMLAnchorElement>('[data-trip-photo]')
+            if (photo) {
+              event.preventDefault()
+              photos = [
+                ...(photo
+                  .closest('[data-trip-detail]')
+                  ?.querySelectorAll<HTMLAnchorElement>('[data-trip-photo]') ??
+                  []),
+              ]
+              showPhoto(photos.indexOf(photo))
+              dialog.showModal()
+              return
+            }
+            const stop = target.closest<HTMLElement>('[data-trip-stop-focus]')
+            if (stop) {
+              activateStop(
+                Number(
+                  stop.closest<HTMLElement>('[data-trip-stop]')!.dataset
+                    .tripStop
+                ),
+                true
+              )
+              return
+            }
+            const replayButton =
+              target.closest<HTMLElement>('[data-trip-replay]')
+            if (replayButton) void startReplay(replayButton.dataset.tripReplay!)
+          },
+          { signal }
+        )
+        page.addEventListener(
+          'pointerover',
+          (event) => {
+            const card = (event.target as Element).closest<HTMLElement>(
+              '[data-trip-link]'
+            )
+            if (!selected) tripMap?.lift(card?.dataset.tripLink)
+            const stop = (event.target as Element).closest<HTMLElement>(
+              '[data-trip-stop]'
+            )
+            if (selected && !replay && stop)
+              tripMap?.activateStop(Number(stop.dataset.tripStop))
+          },
+          { signal }
+        )
+        panel.addEventListener('pointerleave', () => tripMap?.lift(undefined), {
+          signal,
+        })
+        replayCard
+          .querySelector('[data-replay-toggle]')!
+          .addEventListener('click', () => replay?.toggle(), { signal })
+        replayCard
+          .querySelector('[data-replay-exit]')!
+          .addEventListener('click', stopReplay, { signal })
+        fitButton.addEventListener(
+          'click',
+          () => {
+            if (selected) location.hash = 'trips'
+            else tripMap?.select(undefined)
+          },
+          { signal }
+        )
+        toggle.addEventListener(
+          'click',
+          () => {
+            setCollapsed(!collapsed())
+            tripMap?.resize()
+          },
+          { signal }
+        )
+        dialog.addEventListener(
+          'click',
+          (event) => {
+            const target = event.target as Element
+            if (target.closest('.trips-photo__prev')) showPhoto(photoIndex - 1)
+            else if (target.closest('.trips-photo__next'))
+              showPhoto(photoIndex + 1)
+            else if (target.closest('.trips-photo__close') || target === dialog)
+              dialog.close()
+          },
+          { signal }
+        )
+        dialog.addEventListener(
+          'keydown',
+          (event) => {
+            if (event.key === 'ArrowLeft') showPhoto(photoIndex - 1)
+            else if (event.key === 'ArrowRight') showPhoto(photoIndex + 1)
+          },
+          { signal }
+        )
+        addEventListener('hashchange', syncFromHash, { signal })
+        addEventListener(
+          'keydown',
+          (event) => {
+            if (event.key === 'Escape' && replay && !dialog.open) stopReplay()
+          },
+          { signal }
+        )
+
+        syncFromHash()
+
+        // —— 地图 ——
+        const token = page.dataset.token
+        if (!token) return
+        fetch(page.dataset.mapUrl!, { signal })
+          .then((response) => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`)
+            return response.json() as Promise<{ trips: TripGeo[] }>
+          })
+          .then(async ({ trips }) => {
+            if (signal.aborted) return
+            const instance = await createTripMap({
+              container: $<HTMLElement>('[data-trips-canvas]'),
+              token,
+              trips,
+              dark: document.documentElement.classList.contains('dark'),
+              getPadding,
+              onSelectTrip: (id) => (location.hash = id),
+              onSelectStop: (index) => activateStop(index, false),
+              onError: (text) => {
+                showMessage(text)
+                stopReplay()
+              },
+            })
+            if (signal.aborted) {
+              instance.destroy()
+              return
+            }
+            tripMap = instance
+            tripMap.map.once('load', () => {
+              fitButton.disabled = false
+              for (const button of page.querySelectorAll<HTMLButtonElement>(
+                '[data-trip-replay]'
+              ))
+                button.disabled = page.hasAttribute('data-trips-map-failed')
+              if (selected) tripMap?.select(selected)
+            })
+            const unobserve = observeTheme(() => {
+              stopReplay()
+              tripMap?.setDark(
+                document.documentElement.classList.contains('dark')
+              )
+            })
+            signal.addEventListener('abort', () => {
+              unobserve()
+              stopReplay()
+              tripMap?.destroy()
+            })
+          })
+          .catch((error) => {
+            if (signal.aborted) return
+            console.error(error)
+            showMessage('地图暂时无法加载，旅程仍可在面板里浏览。')
+          })
+      }
+
+      let controller: AbortController | undefined
+      document.addEventListener('astro:page-load', () => {
+        controller?.abort()
+        controller = undefined
+        const page = document.querySelector<HTMLElement>('[data-trips]')
+        if (!page) return
+        controller = new AbortController()
+        mount(page, controller.signal)
+      })
+      document.addEventListener('astro:before-swap', () => {
+        controller?.abort()
+        controller = undefined
+      })
+    </script>
+    <style is:global>
+      /* 地图与面板占满视口，不跟随正文滚动。 */
+      html:has(.trips-body),
+      .trips-body {
+        height: 100%;
+        overflow: hidden;
+        overscroll-behavior: none;
+      }
+
+      .trips-popup .mapboxgl-popup-content {
+        display: grid;
+        gap: 0.125rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.625rem;
+        background: color-mix(in srgb, var(--c-bg) 92%, transparent);
+        box-shadow: 0 6px 24px rgb(0 0 0 / 0.18);
+        color: var(--c-text);
+        font-family: inherit;
+        font-size: 0.8125rem;
+        backdrop-filter: blur(12px);
+
+        & span {
+          color: color-mix(in srgb, var(--c-text) 60%, var(--c-bg));
+          font-variant-numeric: tabular-nums;
+        }
+      }
+
+      .trips-popup .mapboxgl-popup-tip {
+        display: none;
+      }
+
+      .trips-replay-head {
+        width: 1.125rem;
+        height: 1.125rem;
+        border: 3px solid #fff;
+        border-radius: 999px;
+        background: var(--trip-color);
+        box-shadow: 0 0 0 6px
+          color-mix(in srgb, var(--trip-color) 30%, transparent);
+      }
+    </style>
+
+    <style>
+      .trips-page {
+        --trips-glass: color-mix(in srgb, var(--c-bg) 86%, transparent);
+        --trips-glass-border: color-mix(
+          in srgb,
+          var(--c-text) 10%,
+          transparent
+        );
+        --trips-muted: color-mix(in srgb, var(--c-text) 58%, var(--c-bg));
+        --trips-line: color-mix(in srgb, var(--c-text) 14%, transparent);
+        --trips-hover: color-mix(in srgb, var(--c-text) 6%, transparent);
+        --trips-panel-width: 26rem;
+        position: fixed;
+        inset: 0;
+        background: color-mix(in srgb, var(--c-text) 8%, var(--c-bg));
+        color: var(--c-text);
+      }
+
+      .trips-canvas {
+        position: absolute;
+        inset: 0;
+      }
+
+      .trips-message {
+        position: absolute;
+        top: 50%;
+        left: calc((100% - var(--trips-panel-width) - 2rem) / 2);
+        max-width: min(22rem, 80vw);
+        margin: 0;
+        color: var(--trips-muted);
+        font-size: 0.875rem;
+        text-align: center;
+        translate: -50% -50%;
+      }
+
+      /* —— 顶栏 —— */
+      .trips-toolbar {
+        position: absolute;
+        top: calc(1rem + env(safe-area-inset-top));
+        left: calc(1rem + env(safe-area-inset-left));
+        right: calc(var(--trips-panel-width) + 2.5rem);
+        z-index: 3;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        pointer-events: none;
+
+        & > * {
+          pointer-events: auto;
+        }
+      }
+
+      .trips-page[data-trips-collapsed] .trips-toolbar,
+      .trips-page[data-trips-replaying] .trips-toolbar {
+        right: calc(1rem + env(safe-area-inset-right));
+      }
+
+      .trips-home,
+      .trips-tool {
+        border: 1px solid var(--trips-glass-border);
+        background: var(--trips-glass);
+        box-shadow: 0 6px 24px rgb(0 0 0 / 0.08);
+        backdrop-filter: blur(14px);
+      }
+
+      .trips-home {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        height: 2.75rem;
+        padding: 0 1rem 0 0.375rem;
+        border-radius: 999px;
+        color: var(--c-text);
+        font-size: 0.9375rem;
+        font-weight: 500;
+        text-decoration: none;
+
+        & img {
+          width: 2rem;
+          height: 2rem;
+          border-radius: 999px;
+        }
+
+        &:hover {
+          background: color-mix(in srgb, var(--c-bg) 96%, var(--c-text));
+        }
+      }
+
+      .trips-toolbar__actions {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .trips-tool {
+        display: grid;
+        flex-shrink: 0;
+        place-items: center;
+        width: 2.75rem;
+        height: 2.75rem;
+        border-radius: 999px;
+        color: color-mix(in srgb, var(--c-text) 72%, var(--c-bg));
+        cursor: pointer;
+
+        & span {
+          font-size: 1.125rem;
+        }
+
+        &:hover:not(:disabled) {
+          color: var(--c-text);
+        }
+
+        &:disabled {
+          cursor: default;
+          opacity: 0.4;
+        }
+      }
+
+      .trips-home:focus-visible,
+      .trips-tool:focus-visible,
+      .trip-card:focus-visible {
+        outline: 2px solid var(--c-text);
+        outline-offset: 2px;
+      }
+
+      /* —— 面板 —— */
+      .trips-panel {
+        position: absolute;
+        top: calc(1rem + env(safe-area-inset-top));
+        right: calc(1rem + env(safe-area-inset-right));
+        bottom: 1rem;
+        z-index: 2;
+        display: flex;
+        width: var(--trips-panel-width);
+        overflow: hidden;
+        border: 1px solid var(--trips-glass-border);
+        border-radius: 1.25rem;
+        background: color-mix(in srgb, var(--c-bg) 94%, transparent);
+        box-shadow: 0 12px 40px rgb(0 0 0 / 0.14);
+        backdrop-filter: blur(18px);
+        transition:
+          translate 260ms cubic-bezier(0.2, 0.7, 0.2, 1),
+          opacity 200ms ease;
+      }
+
+      .trips-page[data-trips-collapsed] .trips-panel,
+      .trips-page[data-trips-replaying] .trips-panel {
+        opacity: 0;
+        pointer-events: none;
+        translate: calc(100% + 1.5rem) 0;
+      }
+
+      .trips-panel__scroll {
+        flex: 1;
+        min-width: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+      }
+
+      .trips-overview__header {
+        padding: 1.25rem 1.25rem 0.5rem;
+
+        & p {
+          margin: 0;
+          color: var(--trips-muted);
+          font-size: 0.875rem;
+          font-variant-numeric: tabular-nums;
+        }
+
+        & h1 {
+          margin: 0.25rem 0 0;
+          font-family: var(--font-heading);
+          font-size: 1.5rem;
+          font-weight: 600;
+        }
+      }
+
+      .trips-overview__header .trips-overview__source {
+        margin-top: 0.25rem;
+        font-size: 0.75rem;
+      }
+
+      .trips-empty {
+        padding: 0 1.25rem;
+        color: var(--trips-muted);
+      }
+
+      .trips-year {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        margin: 0;
+        padding: 0.75rem 1.25rem 0.375rem;
+        background: color-mix(in srgb, var(--c-bg) 94%, transparent);
+        color: var(--trips-muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.75rem;
+        font-weight: 400;
+        backdrop-filter: blur(18px);
+      }
+
+      .trips-list {
+        margin: 0;
+        padding: 0 0.5rem 0.5rem;
+        list-style: none;
+      }
+
+      .trip-card {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+        padding: 0.5rem 0.5rem 0.75rem;
+        border-radius: 0.875rem;
+        color: var(--c-text);
+        text-decoration: none;
+        transition: background-color 140ms ease;
+
+        &:hover {
+          background: var(--trips-hover);
+        }
+
+        & :global(.trip-cover) {
+          margin-bottom: 0.5rem;
+        }
+      }
+
+      .trip-card__title {
+        padding: 0 0.25rem;
+        font-size: 1.0625rem;
+        font-weight: 600;
+      }
+
+      .trip-card__dates,
+      .trip-card__totals {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0 0.25rem;
+        color: var(--trips-muted);
+        font-size: 0.875rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .trip-card__totals {
+        font-size: 0.8125rem;
+      }
+
+      .trips-page :global(.trip-status) {
+        flex-shrink: 0;
+        padding: 0.0625rem 0.4375rem;
+        border-radius: 999px;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+
+      .trips-page :global(.trip-status[data-trip-status='plan']) {
+        background: color-mix(in srgb, var(--accent, #3b82f6) 16%, transparent);
+        color: color-mix(in srgb, var(--accent, #3b82f6) 80%, var(--c-text));
+      }
+
+      .trips-page :global(.trip-status[data-trip-status='record']) {
+        background: var(--trips-hover);
+        color: var(--trips-muted);
+      }
+
+      /* 选中状态：无 JS 用 :target，有 JS 时由 hashchange 同步同一个片段。 */
+      .trips-page :global(.trip-detail) {
+        display: none;
+        padding-top: 1rem;
+      }
+
+      .trips-page :global(.trip-detail:target) {
+        display: block;
+      }
+
+      .trips-panel:has(:global(.trip-detail:target)) .trips-overview {
+        display: none;
+      }
+
+      /* —— 图例 —— */
+      .trips-legend {
+        position: absolute;
+        bottom: calc(1.5rem + env(safe-area-inset-bottom));
+        left: 50%;
+        z-index: 1;
+        display: flex;
+        gap: 0.875rem;
+        margin: 0;
+        padding: 0.5rem 0.875rem;
+        border: 1px solid var(--trips-glass-border);
+        border-radius: 999px;
+        background: var(--trips-glass);
+        color: color-mix(in srgb, var(--c-text) 72%, var(--c-bg));
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.8125rem;
+        list-style: none;
+        translate: calc(-50% - (var(--trips-panel-width) + 2rem) / 2) 0;
+        backdrop-filter: blur(14px);
+
+        & li {
+          display: flex;
+          align-items: center;
+          gap: 0.375rem;
+        }
+      }
+
+      .trips-page[data-trips-collapsed] .trips-legend {
+        translate: -50% 0;
+      }
+
+      .trips-page[data-trips-replaying] .trips-legend {
+        display: none;
+      }
+
+      .trips-legend__dot {
+        width: 0.625rem;
+        height: 0.625rem;
+        border-radius: 999px;
+        background: var(--trip-color);
+      }
+
+      .trips-legend__route {
+        padding-left: 0.875rem;
+        border-left: 1px solid var(--trips-line);
+        font-family: var(--font-sans, inherit);
+
+        & span {
+          width: 1rem;
+          height: 3px;
+          border-radius: 3px;
+          background: currentcolor;
+        }
+      }
+
+      /* —— 回放卡片 —— */
+      .trips-replay {
+        position: absolute;
+        bottom: calc(1.5rem + env(safe-area-inset-bottom));
+        left: 50%;
+        z-index: 3;
+        display: flex;
+        gap: 0.875rem;
+        align-items: center;
+        width: min(34rem, calc(100% - 2rem));
+        padding: 0.75rem;
+        border: 1px solid var(--trips-glass-border);
+        border-radius: 1.125rem;
+        background: color-mix(in srgb, var(--c-bg) 94%, transparent);
+        box-shadow: 0 12px 40px rgb(0 0 0 / 0.16);
+        translate: -50% 0;
+        backdrop-filter: blur(18px);
+
+        &[hidden] {
+          display: none;
+        }
+
+        & img {
+          flex-shrink: 0;
+          width: 5.5rem;
+          height: 5.5rem;
+          border-radius: 0.75rem;
+          object-fit: cover;
+        }
+
+        & h2 {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin: 0.125rem 0 0;
+          font-size: 1rem;
+          font-weight: 600;
+        }
+
+        & p {
+          margin: 0;
+          color: var(--trips-muted);
+          font-size: 0.8125rem;
+        }
+
+        & [hidden] {
+          display: none;
+        }
+      }
+
+      .trips-replay__text {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .trips-replay__number {
+        display: grid;
+        flex-shrink: 0;
+        place-items: center;
+        width: 1.375rem;
+        height: 1.375rem;
+        border-radius: 999px;
+        background: var(--c-text);
+        color: var(--c-bg);
+        font-size: 0.6875rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .trips-replay .trips-replay__note {
+        display: -webkit-box;
+        margin-top: 0.25rem;
+        overflow: hidden;
+        color: var(--c-text);
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+      }
+
+      .trips-replay__controls {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+
+        & .trips-tool {
+          width: 2.25rem;
+          height: 2.25rem;
+          box-shadow: none;
+        }
+      }
+
+      /* —— 照片对话框 —— */
+      .trips-photo {
+        width: min(64rem, 100vw);
+        max-width: none;
+        height: 100dvh;
+        max-height: none;
+        margin: auto;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: #fff;
+
+        &::backdrop {
+          background: rgb(0 0 0 / 0.86);
+        }
+
+        &[open] {
+          display: grid;
+          grid-template-rows: 1fr auto;
+          place-items: center;
+        }
+
+        & img {
+          max-width: calc(100% - 7rem);
+          max-height: calc(100dvh - 5rem);
+          border-radius: 0.5rem;
+          object-fit: contain;
+        }
+
+        & p {
+          margin: 0 0 1.25rem;
+          font-size: 0.875rem;
+          opacity: 0.8;
+        }
+
+        & button {
+          position: absolute;
+          display: grid;
+          place-items: center;
+          width: 2.75rem;
+          height: 2.75rem;
+          border: 0;
+          border-radius: 999px;
+          background: rgb(255 255 255 / 0.12);
+          color: #fff;
+          font-size: 1.375rem;
+          cursor: pointer;
+
+          &:disabled {
+            opacity: 0.3;
+            cursor: default;
+          }
+
+          &:focus-visible {
+            outline: 2px solid #fff;
+            outline-offset: 2px;
+          }
+        }
+      }
+
+      .trips-photo__prev {
+        top: 50%;
+        left: 0.75rem;
+        translate: 0 -50%;
+      }
+
+      .trips-photo__next {
+        top: 50%;
+        right: 0.75rem;
+        translate: 0 -50%;
+      }
+
+      .trips-photo__close {
+        top: 0.75rem;
+        right: 0.75rem;
+      }
+
+      /* —— 窄屏：面板成为底部面板 —— */
+      @media (max-width: 48rem) {
+        .trips-page {
+          --trips-panel-width: 0rem;
+        }
+
+        .trips-toolbar {
+          right: calc(1rem + env(safe-area-inset-right));
+        }
+
+        .trips-home span {
+          display: none;
+        }
+
+        .trips-home {
+          padding: 0 0.375rem;
+        }
+
+        .trips-panel {
+          top: auto;
+          right: 0.5rem;
+          bottom: 0.5rem;
+          left: 0.5rem;
+          width: auto;
+          height: 56dvh;
+        }
+
+        .trips-page[data-trips-collapsed] .trips-panel,
+        .trips-page[data-trips-replaying] .trips-panel {
+          translate: 0 calc(100% + 1rem);
+        }
+
+        .trips-legend {
+          display: none;
+        }
+
+        .trips-message {
+          top: 22%;
+          left: 50%;
+        }
+
+        .trips-replay {
+          bottom: calc(0.75rem + env(safe-area-inset-bottom));
+
+          & img {
+            width: 4.25rem;
+            height: 4.25rem;
+          }
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .trips-panel {
+          transition: none;
+        }
+      }
+    </style>
+  </body>
+</html>

@@ -232,3 +232,76 @@ export const interestTabSchema = z.object({
   title: z.string().trim().min(1),
   order: z.number().int().nonnegative(),
 })
+
+/* =====================================================
+   旅行 Schema - `src/data/trips/<id>/trip.json`，由导入脚本生成
+   ===================================================== */
+const isoDate = z.iso.date({ error: '日期必须是 YYYY-MM-DD。' })
+const clockTime = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, '时间必须是 HH:mm。')
+/** WGS84 `[经度, 纬度]`。 */
+const lngLat = z.tuple([
+  z.number().min(-180).max(180),
+  z.number().min(-90).max(90),
+])
+const optionalText = z.string().trim().min(1).optional()
+
+export const tripSchema = ({ image }: SchemaContext) =>
+  z
+    .object({
+      title: z.string().trim().min(1),
+      start: isoDate,
+      end: isoDate,
+      /** 封面候选，按优先级排列；拼图规则见 `src/utils/trips.js`。 */
+      cover: z.array(image()).default([]),
+      days: z
+        .array(
+          z.object({
+            date: isoDate,
+            summary: optionalText,
+            stops: z.array(
+              z.object({
+                name: z.string().trim().min(1),
+                category: optionalText,
+                emoji: optionalText,
+                address: optionalText,
+                coordinates: lngLat,
+                time: z
+                  .object({
+                    start: clockTime.optional(),
+                    end: clockTime.optional(),
+                  })
+                  .optional(),
+                note: optionalText,
+                photos: z.array(image()).default([]),
+                /** 去往下一站；最后一站没有。 */
+                route: z
+                  .object({
+                    mode: z.enum(['drive', 'walk', 'straight']),
+                    distance: z.number().nonnegative(),
+                    duration: z.number().nonnegative().optional(),
+                    path: z.array(lngLat).min(2),
+                  })
+                  .optional(),
+              })
+            ),
+          })
+        )
+        .min(1),
+    })
+    .superRefine((trip, ctx) => {
+      const dates = trip.days.map((day) => day.date)
+      if (dates.some((date, index) => index > 0 && date <= dates[index - 1]))
+        ctx.addIssue({
+          code: 'custom',
+          path: ['days'],
+          message: 'days 必须按日期递增且不重复。',
+        })
+      if (trip.start !== dates[0] || trip.end !== dates.at(-1))
+        ctx.addIssue({
+          code: 'custom',
+          path: ['start'],
+          message: 'start／end 必须等于第一天和最后一天。',
+        })
+    })

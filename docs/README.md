@@ -17,6 +17,7 @@
 | 配置首页屏幕时间与本机每小时同步 | [ActivityWatch 屏幕时间](./design/screen-time.md) | macOS / Windows 安装、公开数据边界 |
 | 接入或排查首页听歌接口 | [Last.fm 运行时接口与展示](./design/listening.md) | [环境变量与部署](./guides/development.md#services) |
 | 添加或排查拾趣歌单、运行时数据与导出 | [拾趣歌单](./design/playlists.md) | 固定配置、平台适配器与 CDN 暖缓存 |
+| 导入圆周旅迹行程、调整旅行页或地图 | [旅行](./design/trips.md) | [导入](./design/trips.md#导入)、[Mapbox token](./guides/development.md#services) |
 | 开关像素猫、改皮肤或访客隐藏 | [Oneko 像素猫](./design/oneko.md) | [全站功能配置](./guides/development.md#personalization) |
 | 跑检查、准备交付 | [检查与验收](./guides/development.md#verification) | 对应设计文档末尾的验证映射 |
 | 学习 Astro 组件、插槽和模板语法 | [Astro 学习笔记](./reference/astro.md) | 项目实现以架构文档和源码为准 |
@@ -32,6 +33,7 @@
 | [SEO 与全文订阅](./design/distribution.md) | canonical、sitemap、RSS 身份、内容降级、安全及失败语义 | 网站视觉布局 |
 | [Last.fm](./design/listening.md) | 运行时接口、缓存、专辑匹配、请求上限和页面状态 | 通用卡片与图片查看器实现 |
 | [拾趣歌单](./design/playlists.md) | 固定歌单、平台适配、运行时缓存、海报卡片与文本导出 | 播放器、任意 URL 导入 |
+| [旅行](./design/trips.md) | 全屏旅行页、中立行程数据、圆周旅迹导入、地图与回放 | 站内编辑、运行时同步圆周旅迹 |
 | [Oneko](./design/oneko.md) | 可选像素猫的托管集成、开关、换页和许可 | 本站内容与搜索 |
 | [Astro 学习笔记](./reference/astro.md) | 框架概念与教学例子 | 当前项目规范或完整官方 API 文档 |
 
@@ -49,6 +51,7 @@ docs/
     distribution.md         SEO 与全文订阅
     listening.md            Last.fm
     playlists.md            拾趣歌单
+    trips.md                旅行
     screen-time.md          ActivityWatch 屏幕时间
     oneko.md                Oneko
   reference/
