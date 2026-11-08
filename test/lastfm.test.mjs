@@ -23,6 +23,7 @@ const fixture = ({
   total = '1234',
   transform = (_method, data) => data,
   found = () => null,
+  albumInfo = () => ({ error: 6, message: 'Album not found' }),
 } = {}) => {
   const requests = []
   const lookups = []
@@ -41,7 +42,9 @@ const fixture = ({
           '@attr': { total: String(list.length * 3) },
         },
       }
-    } else assert.fail(`Unexpected method: ${method}`)
+    } else if (method === 'album.getInfo')
+      data = albumInfo(params.get('album'), params.get('artist'))
+    else assert.fail(`Unexpected method: ${method}`)
     return new Response(JSON.stringify(transform(method, data)))
   }
   const findCover = async (query) => {
@@ -123,6 +126,43 @@ test('missing artwork falls back to a sized NetEase cover, or stays empty', asyn
     [...new Set(options.lookups.map(({ kind, name }) => `${kind}:${name}`))],
     ['album:Shared', 'album:Unknown'],
     'every collage gap searches NetEase albums'
+  )
+})
+
+test('an edition without artwork borrows the base album cover from Last.fm first', async () => {
+  const options = fixture({
+    albums: () => [
+      album('Scorpion (Explicit)', 'Drake', []),
+      album('Other (Deluxe Version)', 'Drake', []),
+    ],
+    albumInfo: (name) =>
+      name === 'Scorpion'
+        ? { album: { image: image('scorpion') } }
+        : { error: 6, message: 'Album not found' },
+    found: () => 'https://p1.music.126.net/other.jpg',
+  })
+  const [period] = (await fetchLastfmSnapshot(options)).periods
+  assert.equal(
+    period.albums[0].coverLarge,
+    'https://lastfm-img.freetls.fastly.net/i/u/600x600/scorpion.jpg'
+  )
+  assert.equal(
+    period.albums[1].cover,
+    'https://p1.music.126.net/other.jpg?param=300y300',
+    'a base album Last.fm lacks still falls back to NetEase'
+  )
+  assert.deepEqual(
+    [...new Set(options.lookups.map(({ name }) => name))],
+    ['Other (Deluxe Version)'],
+    'NetEase is not asked once Last.fm has the base cover'
+  )
+  assert.deepEqual(
+    options.requests
+      .filter((r) => r.method === 'album.getInfo')
+      .map((r) => r.album)
+      .sort(),
+    ['Other', 'Scorpion'],
+    'each base album is asked once although it appears in all four periods'
   )
 })
 

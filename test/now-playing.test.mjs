@@ -96,6 +96,30 @@ test('tracks without Last.fm artwork take a sized NetEase song cover', async () 
   )
 })
 
+test('a recent track on an edition album borrows the base album cover from Last.fm', async () => {
+  const getInfo = []
+  const data = await fetchLastfmNowPlaying({
+    apiKey,
+    fetchImpl: async (url) => {
+      if (url.searchParams.get('method') === 'album.getInfo') {
+        getInfo.push(url.searchParams.get('album'))
+        return new Response(
+          JSON.stringify({ album: { image: [{ '#text': cover }] } })
+        )
+      }
+      return recent([
+        played('Nonstop', {
+          album: { '#text': 'Scorpion (Explicit)' },
+          image: [],
+        }),
+      ])(url)
+    },
+    findCover: noFallback,
+  })
+  assert.deepEqual(getInfo, ['Scorpion'])
+  assert.equal(data.tracks[0].cover, cover)
+})
+
 test('an account with no history is a valid empty answer', async () => {
   const data = await fetchLastfmNowPlaying({ apiKey, fetchImpl: recent([]) })
   assert.deepEqual(data, { playing: false, tracks: [] })
