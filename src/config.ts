@@ -59,17 +59,17 @@ export const AUTHOR_LINKS = [
 
 export const MORE_LINKS = [
   {
-    title: '简历',
-    description: '个人经历与项目实践',
-    href: '/resume/',
-    icon: 'i-ri-file-user-line',
-    external: false,
-  },
-  {
     title: '友链',
     description: '推荐与双向友链',
     href: '/friends/',
     icon: 'i-ri-links-line',
+    external: false,
+  },
+  {
+    title: '简历',
+    description: '个人经历与项目实践',
+    href: '/resume/',
+    icon: 'i-ri-file-user-line',
     external: false,
   },
   {
