@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { createNeteaseCoverFinder } from '../src/utils/netease-cover.mjs'
+import {
+  createNeteaseCoverFinder,
+  neteaseSized,
+} from '../src/utils/netease-cover.mjs'
 
 const pic = 'http://p1.music.126.net/abc==/1.jpg'
 const song = (name, artists, picUrl = pic) => ({
@@ -39,12 +42,15 @@ test('only a candidate whose name and artist both match supplies the cover', asy
     })
   )
   const find = createNeteaseCoverFinder({ fetchImpl })
-  assert.deepEqual(
-    await find({ kind: 'song', name: 'Deja Vu', artist: 'HAEWON (해원)' }),
-    {
-      cover: 'https://p1.music.126.net/abc==/1.jpg?param=300y300',
-      coverLarge: 'https://p1.music.126.net/abc==/1.jpg?param=600y600',
-    }
+  const found = await find({
+    kind: 'song',
+    name: 'Deja Vu',
+    artist: 'HAEWON (해원)',
+  })
+  assert.equal(found, 'https://p1.music.126.net/abc==/1.jpg')
+  assert.equal(
+    neteaseSized(found, 300),
+    'https://p1.music.126.net/abc==/1.jpg?param=300y300'
   )
   assert.deepEqual(requests, [
     { s: 'Deja Vu HAEWON (해원)', type: '1', limit: '5' },
@@ -65,6 +71,7 @@ test('notes are left out of the query and joint artists match one by one', async
     ok({
       albums: [
         { name: '0.5x', artist: { name: 'BikaBreezy' }, picUrl: pic },
+        { name: '0.5x', artist: { name: 'H.E.R.' }, picUrl: pic },
         { name: 'LA FAMA', artists: [{ name: 'ROSALÍA' }], picUrl: pic },
       ],
     })
@@ -85,6 +92,11 @@ test('notes are left out of the query and joint artists match one by one', async
       artist: 'Rosalía, The Weeknd',
     }),
     'one artist of a joint credit is enough'
+  )
+  // feat./ft. 只在独立成词时拆分：「Feather」不能被拆出一个「her」去匹配别人。
+  assert.equal(
+    await find({ kind: 'album', name: '0.5x', artist: 'Feather' }),
+    null
   )
 })
 
@@ -132,10 +144,7 @@ test('album search tolerates edition notes but rejects foreign image hosts', asy
     name: 'Album (10 Year Anniversary Edition) [Explicit]',
     artist: 'Artist',
   })
-  assert.equal(
-    found.cover,
-    'https://p1.music.126.net/abc==/1.jpg?param=300y300'
-  )
+  assert.equal(found, 'https://p1.music.126.net/abc==/1.jpg')
   assert.equal(requests[0].type, '10')
 })
 

@@ -64,7 +64,7 @@ test('without a playing track the latest scrobble leads with its time', async ()
   )
 })
 
-test('tracks without Last.fm artwork try a NetEase song lookup once each', async () => {
+test('tracks without Last.fm artwork take a sized NetEase song cover', async () => {
   const lookups = []
   const data = await fetchLastfmNowPlaying({
     apiKey,
@@ -75,17 +75,16 @@ test('tracks without Last.fm artwork try a NetEase song lookup once each', async
     ]),
     findCover: async (query) => {
       lookups.push(query)
-      return query.name === 'A'
-        ? { cover: 'https://p1.music.126.net/a.jpg?param=300y300' }
-        : null
+      return query.name === 'A' ? 'https://p1.music.126.net/a.jpg' : null
     },
   })
   assert.deepEqual(
-    lookups.map(({ kind, name, artist }) => [kind, name, artist]),
     [
-      ['song', 'A', 'Gareth.T'],
-      ['song', 'B', 'Gareth.T'],
-    ]
+      ...new Set(
+        lookups.map(({ kind, name, artist }) => `${kind}:${name}:${artist}`)
+      ),
+    ],
+    ['song:A:Gareth.T', 'song:B:Gareth.T']
   )
   assert.deepEqual(
     data.tracks.map((t) => t.cover),

@@ -6,7 +6,7 @@
  * 标记插入页面。
  */
 
-/** 封面墙时段：顺序与接口、页面按钮一致；`span` 用于「N 天里」等文案。 */
+/** 封面墙时段的唯一定义：键即 Last.fm period，顺序即请求、响应与按钮顺序；`span` 用于文案。 */
 export const PERIODS = {
   '7day': { short: '7d', span: '7 天' },
   '1month': { short: '30d', span: '30 天' },
@@ -14,8 +14,10 @@ export const PERIODS = {
   'overall': { short: 'all', span: '全部' },
 }
 export const DEFAULT_PERIOD = '1month'
-const COLLAGE_SIZE = 9
-const RECENT_SIZE = 6
+/** 封面墙张数（#1 占 2×2，其余八张）；适配器按它请求，页面按它截断与画骨架。 */
+export const COLLAGE_SIZE = 9
+/** 正在播放一首加最近五首；同样由适配器请求、页面截断。 */
+export const RECENT_SIZE = 6
 
 const isRecord = (value) =>
   typeof value === 'object' && value !== null && !Array.isArray(value)

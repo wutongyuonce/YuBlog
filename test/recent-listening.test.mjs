@@ -86,7 +86,15 @@ test('malformed now-playing answers are rejected as a whole', () => {
     { playing: 'yes', tracks: [track] },
     { playing: true, tracks: [] },
     { playing: false, tracks: [{ ...track, playedAt: null }] },
-    { playing: true, tracks: [track, { ...track, playedAt: null }] },
+    // 正在播放时第一首不带时间，其后的每首都必须带。
+    {
+      playing: true,
+      tracks: [
+        { ...track, playedAt: null },
+        { ...track, playedAt: null },
+      ],
+    },
+    { playing: true, tracks: [track] },
     { playing: false, tracks: [{ ...track, url: 'http://insecure' }] },
     { playing: false, tracks: null },
   ])
@@ -215,6 +223,12 @@ test('empty periods, an empty library and failures each get their own state', ()
     assert.equal(summary.textContent, '')
     assert.equal(message.textContent, text)
     assert.equal(message.hidden, false)
+    assert.ok(
+      root
+        .querySelectorAll('[data-listening-period]')
+        .every((button) => button.disabled === (state === 'error')),
+      'periods can be switched once any snapshot arrives'
+    )
   }
 })
 

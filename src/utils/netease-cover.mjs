@@ -16,8 +16,6 @@ const TTL = 30 * 60_000
 /** 失败只缓存一分钟：网易云不可用时不让每次回源都再等一遍超时。 */
 const FAILURE_TTL = 60_000
 const MAX_ENTRIES = 500
-const SIZE = 300
-const LARGE_SIZE = 600
 
 const isObject = (value) =>
   value !== null && typeof value === 'object' && !Array.isArray(value)
@@ -43,7 +41,7 @@ const forms = (value) => {
 const artistParts = (artist) => [
   artist,
   ...artist
-    .split(/\s*(?:,|，|、|&|＆|\/|;|\bfeat\.?|\bft\.?|\bx\b)\s*/i)
+    .split(/\s*(?:,|，|、|&|＆|\/|;|\b(?:feat|ft)\b\.?|\bx\b)\s*/i)
     .filter(Boolean),
 ]
 
@@ -95,7 +93,8 @@ const picture = (value) => {
   }
 }
 
-const sized = (url, size) => {
+/** 网易云图片按 `param=NyN` 取指定边长的缩略图；边长由调用方决定。 */
+export const neteaseSized = (url, size) => {
   const copy = new URL(url)
   copy.search = `param=${size}y${size}`
   return copy.href
@@ -121,7 +120,7 @@ const candidatesOf = (kind, result) => {
 
 /**
  * 建立一个带缓存的查找函数。返回的函数接收 `{ kind: 'song' | 'album', name, artist }`，
- * 解析为 `{ cover, coverLarge }`（300／600px）或 null，从不 reject。
+ * 解析为去掉参数的 https 图片地址（尺寸用 `neteaseSized` 另取）或 null，从不 reject。
  */
 export function createNeteaseCoverFinder({
   fetchImpl = fetch,
@@ -163,10 +162,7 @@ export function createNeteaseCoverFinder({
         )
       )
         return {
-          found: {
-            cover: sized(image, SIZE),
-            coverLarge: sized(image, LARGE_SIZE),
-          },
+          found: image.href,
           final: true,
         }
     }

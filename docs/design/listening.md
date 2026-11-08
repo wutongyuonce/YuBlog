@@ -22,13 +22,13 @@
 | L6 凭据 | API Key 仅来自环境变量，不能进入源码、响应、构建 HTML 或日志；构建与页面渲染都不访问 Last.fm 或网易云 |
 | L7 启动与导航 | 首页听歌模块先于 ClientRouter 等模块执行；非首页不请求听歌接口。离开首页取消未完成请求和时段切换监听，返回后重新加载，已取消请求不能覆盖新请求的状态 |
 
-API 多次查询期间用户仍可听歌，不提供跨接口事务一致性；缓存窗口内的访问看到的是同一份数据。每次 Last.fm 请求限时 15 秒，单次失败即终止整份快照，不重试。
+API 多次查询期间用户仍可听歌，不提供跨接口事务一致性；缓存窗口内的访问看到的是同一份数据。每次 Last.fm 请求限时 15 秒，单次失败即终止整份快照，不重试。一次快照最多 5 个 Last.fm 请求（`user.getInfo` 加四个时段的 `user.getTopAlbums`）和 36 次网易云搜索；一次正在播放最多 1 个 Last.fm 请求和 6 次网易云搜索。
 
 ### 网易云封面回退
 
 只在 Last.fm 没有可用图时触发：封面墙按专辑搜索（`type=10`），最近播放按单曲搜索（`type=1`），搜索词用去掉括号注记后的名称加歌手（注记会把结果带偏，例如「0.5x (零点五倍速)」搜不到「0.5x」），各取前五个候选。名称与歌手先统一全半角、大小写并去掉空白和标点，原名或去掉括号注记（版本、译名、Live）后的名字相等，或较短一方长度不少于另一方的 60% 且被其包含，才算对上（「陈小满」与「陈小满阿」算，「Lin」与「Linkin Park」不算）；歌手同时比对网易云给出的别名与译名；Last.fm 把合作歌手写成一串（「Rosalía, The Weeknd」）时，按逗号、`&`、`feat.`、`x` 等拆开，任一位对上即可。只接受 `p*.music.126.net` 图片，改为 https 并按 300px（大格用 600px）请求缩略图。
 
-每次搜索限时 2.5 秒，同名同歌手的条目共享一次查找，最多六个查找并行；整个回退阶段最多等 2.5 秒，到时仍缺图的条目保持缺图、接口照常返回，迟到的结果不再写入本次响应，但会留在缓存里给下一次请求。结果在函数实例内存里缓存：命中和「确认搜不到」缓存 30 分钟，超时、网络错误或异常响应缓存 1 分钟，避免网易云不可用时每次回源都再等一遍超时；缓存最多 500 条，超出时淘汰最早的条目。冷启动的实例从空缓存开始。这份缓存只在服务端，不进浏览器，也不增加页面体积；浏览器侧只看到接口的 CDN 缓存和图片本身的缓存头。
+每次搜索限时 2.5 秒，同名同歌手的条目由查找器合并成一次搜索，最多六个查找并行；整个回退阶段最多等 2.5 秒，到时仍缺图的条目保持缺图、接口照常返回，迟到的结果不再写入本次响应；若函数实例在响应后仍在运行，结果可能留在缓存里给下一次请求，但不作保证。结果在函数实例内存里缓存：命中和「确认搜不到」缓存 30 分钟，超时、网络错误或异常响应缓存 1 分钟，避免网易云不可用时每次回源都再等一遍超时；缓存最多 500 条，超出时淘汰最早的条目。冷启动的实例从空缓存开始。这份缓存只在服务端，不进浏览器，也不增加页面体积；浏览器侧只看到接口的 CDN 缓存和图片本身的缓存头。
 
 可接受取舍：网易云搜索是非官方接口，可能改版、限流或拒绝海外请求，此时退化为 Last.fm 原有的缺图表现；匹配规则宁缺毋滥：网易云没有收录的歌曲（例如部分欧美曲目）、繁简写法不同的名称，以及网易云上歌手名与 Last.fm 差异较大且没有别名（例如英文名与中文名）时，都会保持缺图。构建产物不含听歌数据，所以首屏（以及无脚本、接口失败的访问）没有可读内容，爬虫也拿不到这部分；冷缓存的一次访问要等 Last.fm 和可能的网易云查询完成，1 小时缓存承担其余访问，定时暖请求只降低访客撞上冷回源的概率。
 
@@ -51,19 +51,20 @@ API 多次查询期间用户仍可听歌，不提供跨接口事务一致性；�
 | --- | --- | --- | --- | --- |
 | L1、时段列表、API 错误与请求上限 | `src/utils/lastfm.mjs` | `fetchLastfmSnapshot({ apiKey, user, now, fetchImpl, findCover })` → `{ updatedAt, totalScrobbles, periods }` | 接口处理函数、单测 | `test/lastfm.test.mjs` |
 | L2 | 同上 | `fetchLastfmNowPlaying({ apiKey, user, fetchImpl, findCover })` → `{ playing, tracks }` | 同上 | `test/now-playing.test.mjs` |
-| L3 Last.fm 图片识别、何时回退、同条目合并、并发上限与 2.5 秒总等待 | 同上 | 两个函数共用；`findCover` 是可注入的 seam | 同上 | 两个属主单测 |
-| L3 网易云匹配、图片域名、超时与缓存 | `src/utils/netease-cover.mjs` | `createNeteaseCoverFinder({ fetchImpl, now })` → `findCover({ kind, name, artist })`，从不 reject；模块级 `findNeteaseCover` 为实例内共享 | `lastfm.mjs` | `test/netease-cover.test.mjs` |
+| L3 Last.fm 图片识别、何时回退、并发上限与 2.5 秒总等待 | 同上 | 两个函数共用；`findCover` 是可注入的 seam | 同上 | 两个属主单测 |
+| L3 网易云匹配、图片域名、超时、同名同歌手合并与缓存 | `src/utils/netease-cover.mjs` | `createNeteaseCoverFinder({ fetchImpl, now })` → `findCover({ kind, name, artist })` 解析为不带尺寸参数的图片地址或 null，从不 reject；`neteaseSized(url, size)` 按调用方给的边长取缩略图；模块级 `findNeteaseCover` 为实例内共享 | `lastfm.mjs` | `test/netease-cover.test.mjs` |
 | 用户身份、主页地址 | `src/utils/lastfm.mjs` | `LASTFM_USER`、`lastfmProfileUrl(user)` | 组件页头链接、适配器 | 产物检查 |
 | L4/L6、状态码、错误净化 | 两个接口共用 `api/_lastfm-response.js`；各自的缓存窗口在 `api/lastfm.js`／`api/lastfm-now.js` | `handleListening`／`handleNowPlaying(request, options)`；默认导出读取环境变量 | Vercel、dev 中间件、单测 | `test/listening-endpoint.test.mjs`、`test/now-playing.test.mjs` |
 | L4 部署前提：根目录 `api/` 被收集为函数 | `vercel.json`（`framework: null`、`buildCommand`、`outputDirectory`） | 平台按 Other 预设构建，静态产物仍是 `dist` | Vercel 部署 | 预览部署的接口响应 |
 | 本地 dev 提供同一接口 | `plugins/astro-listening-endpoint.ts` | 在 `/api/lastfm`、`/api/lastfm-now` 调用同一处理函数；密钥取环境变量或 `.env` | `pnpm dev` | 本地 `curl` 检查 |
 | L7、请求启动顺序、导航取消、时段切换监听 | `src/components/home/RecentListeningScript.astro` | `Head.astro` 在 ClientRouter 前输出；`astro:page-load` 加载、`astro:before-swap` 取消（同一个 `AbortSignal` 也移除点击监听） | 首页与站内导航 | 产物脚本顺序检查、`verify-listening-startup.mjs` |
-| L5 响应校验、时段文案、卡片／列表／封面墙渲染、骨架替换 | `src/utils/recent-listening.js` | `PERIODS`、`DEFAULT_PERIOD`、`parseListeningPayload`、`parseNowPlayingPayload`、`playedAgoLabel`、`renderNowPlaying`、`renderListening(root, snapshot, period)` | 组件（时段按钮文案）、脚本 | `test/recent-listening.test.mjs` |
+| 时段、封面墙张数与最近播放条数 | `src/utils/recent-listening.js` | `PERIODS`（键即 Last.fm period，顺序即请求、响应与按钮顺序）、`COLLAGE_SIZE`、`RECENT_SIZE` | 适配器按它请求，组件按它画骨架与按钮，校验按它截断 | 端点单测用页面校验器解析适配器输出 |
+| L5 响应校验、时段文案、卡片／列表／封面墙渲染、骨架替换 | `src/utils/recent-listening.js` | `DEFAULT_PERIOD`、`parseListeningPayload`、`parseNowPlayingPayload`、`playedAgoLabel`、`renderNowPlaying`、`renderListening(root, snapshot, period)` | 组件（时段按钮文案）、脚本 | `test/recent-listening.test.mjs` |
 | L5 骨架、布局、样式与无脚本说明 | `src/components/home/RecentListening.astro` | 容器查询切换两栏／堆叠；四列网格与 2×2 #1；运行时插入的节点由全局样式覆盖 | `index.astro` | built 首页检查、`verify-listening.mjs` |
 
-接口响应只包含页面需要的字段：快照为用户、主页地址、`updatedAt`、累计数和四个时段（`key`、`albumTotal`、至多九张专辑的名称、歌手、Last.fm 链接、次数、300px 与 600px 封面）；正在播放为 `playing` 与至多六首（名称、歌手、专辑、封面、链接、播放时间）。外链由属主从名称／歌手生成。页面侧的校验只要求可渲染的形状（名称非空、计数为非负安全整数、链接与封面为 HTTPS、时间可解析、时段齐全且顺序一致），封面来源仍由适配器负责。时段键在适配器（请求哪些时段）与页面（按钮与文案）各有一份；端点单测用页面校验器解析适配器输出，二者漂移会立刻失败。
+接口响应只包含页面需要的字段：快照为 `updatedAt`、累计数和四个时段（`key`、`albumTotal`、至多九张专辑的名称、歌手、Last.fm 链接、次数、300px 与 600px 封面）；正在播放为 `playing` 与至多六首（名称、歌手、专辑、封面、链接、播放时间）。外链由属主从名称／歌手生成。页面侧的校验只要求可渲染的形状（名称非空、计数为非负安全整数、链接与封面为 HTTPS、时间可解析、时段齐全且顺序一致），封面来源仍由适配器负责。
 
-封面是远程图片：Last.fm 图片路径的尺寸段可以换成任意边长，适配器据此生成 300px 和 600px 两个地址；网易云用 `param=NyN` 指定尺寸。列表和小格用 300px，#1 大格用 600px，都是懒加载的固定宽高 `img`，不把封面下载进仓库，也不要求构建联网。
+封面是远程图片：Last.fm 图片路径的尺寸段可以换成任意边长，封面边长（300px 与 600px）由适配器决定，Last.fm 换路径里的尺寸段，网易云经 `neteaseSized` 改 `param=NyN`。列表和小格用 300px，#1 大格用 600px，都是懒加载的固定宽高 `img`，不把封面下载进仓库，也不要求构建联网。
 
 ## 配置与运行
 
@@ -77,13 +78,13 @@ API 多次查询期间用户仍可听歌，不提供跨接口事务一致性；�
 | --- | --- | --- |
 | L1 时段、前九张、专辑总数、累计数，空账户 | 属主单测，注入固定响应 | 不依赖真实账户变动 |
 | L2 正在播放与最近五首、播放时间 | 属主单测 | 区分正在播放与已记录播放 |
-| L3 何时回退、同专辑只查一次、并发上限、超出总等待后保持缺图 | 属主单测，注入 `findCover`、Promise 闸门与模拟定时器 | 不以真实耗时断言并发与时限 |
-| L3 网易云匹配、拒绝错配与外域图片、30 分钟缓存、失败缓存 1 分钟 | `test/netease-cover.test.mjs`，注入假上游与时钟 | 直接检验匹配与缓存语义，不需要真实网络 |
+| L3 何时回退、并发上限、超出总等待后保持缺图 | 属主单测，注入 `findCover`、Promise 闸门与模拟定时器 | 不以真实耗时断言并发与时限 |
+| L3 网易云匹配、拒绝错配与外域图片、并发查找合并、30 分钟缓存、失败缓存 1 分钟 | `test/netease-cover.test.mjs`，注入假上游与时钟 | 直接检验匹配与缓存语义，不需要真实网络 |
 | L4/L6 缓存头、状态码、失败不外泄、地址与方法的边界 | 端点单测，注入假上游 | 直接检验缓存与失败语义 |
 | 接口输出能被页面校验接受 | 端点单测调用 `parseListeningPayload`／`parseNowPlayingPayload` | 跨模块 seam，形状漂移会立刻失败 |
-| L5 渲染：时段切换、#1 大图、缺封面文字格、汇总、空／失败状态、轮询失败保留 | `test/recent-listening.test.mjs`（最小 DOM） | 不依赖浏览器即可覆盖渲染分支 |
+| L5 渲染：时段切换、#1 大图、缺封面文字格、汇总、空／失败状态与时段按钮可用性、轮询失败保留 | `test/recent-listening.test.mjs`（最小 DOM） | 不依赖浏览器即可覆盖渲染分支 |
 | L5 骨架结构 | `test:built-restructure` 的首页契约检查 | 覆盖生成 HTML：五行列表骨架、九格骨架、禁用的时段按钮、无脚本说明 |
-| L5 布局与交互 | `scripts/verify-listening.mjs`（真实浏览器，固定载荷） | 1440／390／320px 的两栏与堆叠、版心缘线、方格与 2×2、悬停浮出、时段切换不重复请求、页尾替换不跳动、失败与空状态、无 JS |
+| L5 布局与交互 | `scripts/verify-listening.mjs`（真实浏览器，固定载荷） | 只验证需要真实浏览器的部分：1440／390／320px 的两栏与堆叠、版心缘线、方格与 2×2、悬停浮出、真实点击切换时段且不重复请求、页尾替换不跳动、失败与空数据时脚本接线离开加载态、无 JS 时正在播放被隐藏 |
 | L5 Safari 页尾位置稳定 | `scripts/verify-listening-safari.mjs`（macOS Safari，固定载荷） | 骨架时滚到底部后放行数据，断言页高、滚动位置和区块可见 |
 | L7 首个模块与独立启动 | built 首页检查、`scripts/verify-listening-startup.mjs`（暂扣 ClientRouter 响应） | 页面不等无关模块就能请求并呈现；站内往返时请求次数正确 |
 | 完整仓库门禁 | format、lint、check、test、build、built 检查 | 核对现有页面与内容回归 |

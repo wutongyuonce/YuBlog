@@ -1,7 +1,12 @@
 ---
 /* eslint-disable astro/jsx-a11y/anchor-has-content -- 正在播放的歌名由脚本按接口数据填入。 */
 import { LASTFM_USER, lastfmProfileUrl } from '~/utils/lastfm.mjs'
-import { DEFAULT_PERIOD, PERIODS } from '~/utils/recent-listening'
+import {
+  COLLAGE_SIZE,
+  DEFAULT_PERIOD,
+  PERIODS,
+  RECENT_SIZE,
+} from '~/utils/recent-listening'
 
 const profileUrl = lastfmProfileUrl(LASTFM_USER)
 ---
@@ -68,7 +73,7 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
       </div>
     </article>
     <ol class="recent-tracks" aria-label="最近播放" data-np-list>
-      {Array.from({ length: 5 }, () => (
+      {Array.from({ length: RECENT_SIZE - 1 }, () => (
         <li
           class="recent-tracks__item recent-tracks__skeleton"
           aria-hidden="true"
@@ -107,7 +112,7 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
       role="group"
       data-listening-grid
     >
-      {Array.from({ length: 9 }, (_, index) => (
+      {Array.from({ length: COLLAGE_SIZE }, (_, index) => (
         <span
           class:list={[
             'collage__skeleton',

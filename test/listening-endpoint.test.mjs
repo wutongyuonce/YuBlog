@@ -49,7 +49,6 @@ test('a plain GET answers with the snapshot and the CDN cache window', async () 
   assert.match(cache, /stale-if-error=86400/)
   const payload = await response.json()
   assert.equal(payload.totalScrobbles, 219)
-  assert.equal(payload.profileUrl, 'https://www.last.fm/user/ztyonce')
   assert.equal(payload.periods.length, 4)
   assert.equal(payload.periods[0].albums[0].cover, cover)
   assert.ok(

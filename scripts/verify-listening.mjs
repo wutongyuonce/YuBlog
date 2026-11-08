@@ -173,13 +173,12 @@ await page.waitForFunction(
     ).opacity === '1'
 )
 
-// 切换时段只重绘同一份快照；少于九张时只放实际数量。
+// 真实点击切换时段：只重绘同一份快照，不再请求接口；文案与少于九张的渲染由单测负责。
 await page.click('[data-listening-period="7day"]', {
   label: 'switch to 7 days',
 })
 const sparse = await page.evaluate(() => ({
   tiles: document.querySelectorAll('.collage__tile').length,
-  summary: document.querySelector('[data-listening-summary]').textContent,
   pressed: document
     .querySelector('[data-listening-period="7day"]')
     .getAttribute('aria-pressed'),
@@ -187,7 +186,6 @@ const sparse = await page.evaluate(() => ({
 }))
 assert.deepEqual(sparse, {
   tiles: 1,
-  summary: '7 天里听了 1 张专辑 · 这 1 张共 20 次',
   pressed: 'true',
   requests: 1,
 })
@@ -226,7 +224,7 @@ assert.ok(
   'scroll position stays at the bottom'
 )
 
-// 失败与真实空数据各有自己的状态，不停在“加载中”。
+// 脚本接线：失败与真实空数据都离开“加载中”，正在播放随之收起；各状态的文案与按钮由单测负责。
 const stateAfter = async (mode) => {
   await page.evaluate(
     (value) => window.localStorage.setItem('listening-stub', value),
@@ -238,51 +236,22 @@ const stateAfter = async (mode) => {
     const root = document.querySelector('[data-listening]')
     return {
       state: root.dataset.state,
-      message: root.querySelector('[data-listening-message]').textContent,
-      tiles: root.querySelectorAll('.collage__tile, .collage__skeleton').length,
       nowHidden: root.querySelector('[data-now-playing]').hidden,
-      buttonsDisabled: [
-        ...root.querySelectorAll('[data-listening-period]'),
-      ].every((b) => b.disabled),
     }
   })
 }
-assert.deepEqual(await stateAfter('fail'), {
-  state: 'error',
-  message: '暂时无法获取听歌数据。',
-  tiles: 0,
-  nowHidden: true,
-  buttonsDisabled: true,
-})
-assert.deepEqual(await stateAfter('empty'), {
-  state: 'empty',
-  message: '还没有听歌记录。',
-  tiles: 0,
-  nowHidden: true,
-  buttonsDisabled: false,
-})
+assert.deepEqual(await stateAfter('fail'), { state: 'error', nowHidden: true })
+assert.deepEqual(await stateAfter('empty'), { state: 'empty', nowHidden: true })
 await page.evaluate(() => window.localStorage.removeItem('listening-stub'))
 
-// 无脚本：只保留骨架与说明，按钮不可用，正在播放隐藏。
+// 无脚本：noscript 里的样式要真的把正在播放藏起来；骨架、按钮与说明由 built 检查负责。
 await page.cdp('Emulation.setScriptExecutionDisabled', { value: true })
 await page.goto(base)
-const nojs = await page.evaluate(() => {
-  const root = document.querySelector('[data-listening]')
-  return {
-    skeletons: root.querySelectorAll('.collage__skeleton').length,
-    nowDisplay: getComputedStyle(root.querySelector('[data-now-playing]'))
-      .display,
-    buttonsDisabled: [
-      ...root.querySelectorAll('[data-listening-period]'),
-    ].every((b) => b.disabled),
-    hint: root.querySelector('noscript')?.textContent ?? '',
-  }
-})
+const nowDisplay = await page.evaluate(
+  () => getComputedStyle(document.querySelector('[data-now-playing]')).display
+)
 await page.cdp('Emulation.setScriptExecutionDisabled', { value: false })
-assert.equal(nojs.skeletons, 9)
-assert.equal(nojs.nowDisplay, 'none')
-assert.equal(nojs.buttonsDisabled, true)
-assert.match(nojs.hint, /JavaScript/)
+assert.equal(nowDisplay, 'none')
 console.log(
   'Listening: two-column/stacked layout, content edges, 2×2 lead, hover, period switch, sparse periods, bottom anchor, failure/empty, no-JS passed'
 )

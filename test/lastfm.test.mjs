@@ -93,7 +93,7 @@ test('each period carries its album total and at most nine ranked albums', async
   assert.ok(!JSON.stringify(snapshot).includes(apiKey))
 })
 
-test('missing artwork falls back to NetEase once per album, or stays empty', async () => {
+test('missing artwork falls back to a sized NetEase cover, or stays empty', async () => {
   const fallback = {
     cover: 'https://p1.music.126.net/x.jpg?param=300y300',
     coverLarge: 'https://p1.music.126.net/x.jpg?param=600y600',
@@ -104,7 +104,8 @@ test('missing artwork falls back to NetEase once per album, or stays empty', asy
       album('Shared', 'Artist', [{ '#text': placeholder }]),
       album('Unknown', 'Artist', [{ '#text': 'https://evil.example/a.jpg' }]),
     ],
-    found: ({ name }) => (name === 'Shared' ? fallback : null),
+    found: ({ name }) =>
+      name === 'Shared' ? 'https://p1.music.126.net/x.jpg' : null,
   })
   const snapshot = await fetchLastfmSnapshot(options)
   for (const period of snapshot.periods) {
@@ -119,11 +120,9 @@ test('missing artwork falls back to NetEase once per album, or stays empty', asy
     assert.equal(period.albums[1].coverLarge, null)
   }
   assert.deepEqual(
-    options.lookups.map(({ kind, name }) => [kind, name]).sort(),
-    [
-      ['album', 'Shared'],
-      ['album', 'Unknown'],
-    ]
+    [...new Set(options.lookups.map(({ kind, name }) => `${kind}:${name}`))],
+    ['album:Shared', 'album:Unknown'],
+    'every collage gap searches NetEase albums'
   )
 })
 
@@ -145,8 +144,10 @@ test('cover fallbacks overlap within the concurrency budget', async () => {
     },
   })
   const pending = fetchLastfmSnapshot(options)
+  for (let tick = 0; tick < 50 && options.lookups.length < 6; tick++)
+    await new Promise(setImmediate)
   await new Promise(setImmediate)
-  assert.equal(options.lookups.length, 6, 'independent lookups start together')
+  assert.equal(options.lookups.length, 6, 'no lookup starts beyond the limit')
   release()
   await pending
   assert.equal(peak, 6)
