@@ -7,6 +7,7 @@ import {
   formatDayLabel,
   formatKilometers,
   formatStopTime,
+  xhsSearchUrl,
   todayInTripZone,
   tripMapData,
   tripStatus,
@@ -80,6 +81,10 @@ test('date labels', () => {
   assert.equal(formatStopTime({ start: '22:00' }), '22:00 起')
   assert.equal(formatStopTime({ end: '00:25' }), '至 00:25')
   assert.equal(formatStopTime(undefined), '')
+  assert.equal(
+    xhsSearchUrl('全季酒店(观音桥店)'),
+    'https://www.xiaohongshu.com/search_result/?keyword=%E5%85%A8%E5%AD%A3%E9%85%92%E5%BA%97(%E8%A7%82%E9%9F%B3%E6%A1%A5%E5%BA%97)'
+  )
 })
 
 test('year colours are fixed per year, so new years never recolour old ones', () => {

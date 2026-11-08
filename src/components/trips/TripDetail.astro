@@ -10,6 +10,7 @@ import {
   formatDayLabel,
   formatDuration,
   formatStopTime,
+  xhsSearchUrl,
   formatKilometers,
   tripDayCount,
   tripDistance,
@@ -153,11 +154,22 @@ const days = await Promise.all(
                     {stop.name}
                   </span>
                 </button>
-                {(stop.category || stop.time) && (
-                  <p class="trip-stop__meta">
-                    {[stop.category, stop.time].filter(Boolean).join(' · ')}
-                  </p>
-                )}
+                <div class="trip-stop__info">
+                  {(stop.category || stop.time) && (
+                    <p class="trip-stop__meta">
+                      {[stop.category, stop.time].filter(Boolean).join(' · ')}
+                    </p>
+                  )}
+                  <a
+                    class="trip-stop__xhs"
+                    href={xhsSearchUrl(stop.name)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`在小红书搜索「${stop.name}」（新窗口）`}
+                  >
+                    小红书 ↗
+                  </a>
+                </div>
                 {stop.note && <p class="trip-stop__note">{stop.note}</p>}
                 {stop.photos.length > 0 && (
                   <ul class="trip-stop__photos">
@@ -407,6 +419,35 @@ const days = await Promise.all(
 
   .trip-stop__emoji {
     margin-right: 0.3em;
+  }
+
+  .trip-stop__info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 0.625rem;
+    margin-top: 0.125rem;
+
+    & .trip-stop__meta {
+      margin: 0;
+    }
+  }
+
+  .trip-stop__xhs {
+    color: var(--trips-muted);
+    font-size: 0.75rem;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--accent, var(--c-text));
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--c-text);
+      outline-offset: 2px;
+      border-radius: 0.25rem;
+    }
   }
 
   .trip-stop__meta,

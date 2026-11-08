@@ -118,6 +118,14 @@ export function formatStopTime(time) {
   return ''
 }
 
+/**
+ * 用地点名搜小红书的链接。只是搜索入口，不保证结果就是这个地点。
+ * @param {string} name
+ */
+export function xhsSearchUrl(name) {
+  return `https://www.xiaohongshu.com/search_result/?keyword=${encodeURIComponent(name)}`
+}
+
 function monthDay({ month, day }) {
   return `${month}月${day}日`
 }
