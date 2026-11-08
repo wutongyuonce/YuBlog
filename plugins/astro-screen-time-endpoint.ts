@@ -1,11 +1,10 @@
 import { readFile } from 'node:fs/promises'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { join } from 'node:path'
 
 import type { AstroIntegration } from 'astro'
 
 import { handleScreenTime } from '../api/screen-time.js'
-import { SNAPSHOT_PATH } from '../scripts/sync-screen-time.mjs'
+import { screenTimeSnapshotPath } from '../scripts/sync-screen-time.mjs'
 
 /** 与 Vercel 上的函数路径一致；接口不受站点 base 影响。 */
 const ROUTE = '/api/screen-time'
@@ -14,8 +13,8 @@ const ROUTE = '/api/screen-time'
  * 让 `pnpm dev` 也有屏幕时间接口。
  *
  * 线上由 Vercel 函数读取 Blob 存储，本地没有对应凭据，页面只能停在加载状态。这里把
- * 本机同步脚本写下的 `.local/screen-time.json` 交给同一个处理函数，所以形状校验、
- * 状态码与缓存头和线上一致，只有数据来源不同。
+ * 本机应用目录里的快照交给同一个处理函数，所以形状校验、状态码与缓存头和线上一致，
+ * 只有数据来源不同。
  */
 export function screenTimeEndpointIntegration(): AstroIntegration {
   return {
@@ -54,9 +53,7 @@ async function respond(
       new Request(url, { method: request.method }),
       {
         read: async () =>
-          JSON.parse(
-            await readFile(join(process.cwd(), SNAPSHOT_PATH), 'utf8')
-          ),
+          JSON.parse(await readFile(screenTimeSnapshotPath(), 'utf8')),
       }
     )
   } catch (error) {

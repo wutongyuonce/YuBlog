@@ -97,7 +97,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 全站输入方式与鼠标／键盘焦点提示 | `BaseLayout.astro` 捕获 pointerdown／keydown，`main.css` 统一抑制指针焦点外框 | 在各个图片／相册组件重复跟踪输入方式，或 blur 导致焦点恢复丢失 |
 | 相册箭头／圆点状态、dialog 放大与正文大图相册翻页、焦点与滚动锁 release 生命周期、监听清理 | `src/utils/image-interactions.ts` | 把交互再放进 Astro widget；widget 在 BaseLayout 只接线；另起第二套 lightbox |
 | 共享 Markdown 标题排版 | `prose.css` 的 `.prose.markdown-content` | 为首页、拾趣、关于各写标题字号 |
-| 屏幕时间日期、公开形状与缺失值；Blob 地址与上传；柱高刻度与失败文案 | `src/utils/screen-time.js`、`src/utils/screen-time-store.mjs`、`src/utils/screen-time-view.js`；本机采集在 `scripts/sync-screen-time.mjs`，运行时接口在 `api/screen-time.js`，详见 [设计](./screen-time.md) | 在组件内推断活跃状态或连接本机 API |
+| 屏幕时间日期、公开形状与缺失值；Blob 地址与上传；柱高刻度与失败文案 | `src/utils/screen-time.js`、`src/utils/screen-time-store.mjs`、`src/utils/screen-time-view.js`；本机采集的权威实现在 `scripts/sync-screen-time.mjs`，每小时任务运行安装到本机应用目录的副本；运行时接口在 `api/screen-time.js`，详见 [设计](./screen-time.md) | 在组件内推断活跃状态或连接本机 API |
 | Last.fm 查询、统计、专辑匹配、资料缺失与请求上限 | `src/utils/lastfm.mjs`；缓存与失败语义在 `api/lastfm.js` | 在视图中重新调用 API 或推断排行／周总数 |
 | 拾趣固定歌单、平台资料归一化、运行时快照 | `src/data/playlists.json`、`src/utils/qq-playlist.mjs`／`netease-playlist.mjs` 与 `playlists.mjs`；缓存在 `api/playlists.js`，见 [拾趣歌单](./playlists.md) | 提交全量曲目、在页面抓远程封面或接受任意来源 URL |
 | 影音书游条目 | `src/data/media/items.json`；合页 `MediaHub`；排序／统计／标签色调 `src/utils/media-hub.js`；封面 `src/utils/media-covers.ts` | 在 Markdown `:::card` 目录页再维护一份电影／动漫／剧／游戏／书清单 |

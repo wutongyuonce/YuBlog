@@ -10,6 +10,7 @@
 
 ### 改进
 
+- 屏幕时间的每小时采集改为安装到本机应用目录，macOS 与 Windows 用同一条命令。装完后任务不再依赖仓库位置；写入凭证放进系统凭据库，本地预览改读这份快照。换 Node 或更新快照格式后需重跑安装器。[屏幕时间](docs/design/screen-time.md)
 - 拾趣电影／动漫／电视剧／游戏／书合并为「影音书游」页签合页：条目改由 `src/data/media/items.json` 维护，每类有统计、待看／已看封面墙和可前后切换的详情卡（标签、评分、短评、日期）；首页近期书影游改为自动取各类待看条目，不再维护 `recent.md`。旧子页路径跳转到对应页签。[拾趣](docs/design/architecture.md)
 - 拾趣设备与软件合并为「设备与软件」页签合页（电子设备／生活配件／订阅服务／Mac 软件／手机软件），各页仍是 Markdown；旧 `/interests/device/`、`/interests/software/` 跳转到对应页签。
 - 首页听歌区改名「近期在听」，新增正在播放卡片：每分钟从 Last.fm 取当前或最近一首，播放中显示均衡器动效，否则显示多久前播放。[Last.fm 听歌](docs/design/listening.md)

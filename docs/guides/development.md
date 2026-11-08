@@ -108,15 +108,16 @@ LASTFM_USER=你的_Lastfm_用户名
 
 ### ActivityWatch 屏幕时间
 
-首页屏幕时间在访问时从 `/api/screen-time` 获取，仓库不存快照。数据由本机脚本每小时读取 ActivityWatch 的七日聚合结果，覆盖写入 Vercel Blob 的一个固定对象。Vercel 项目需连接一个 **Public** 的 Blob 存储：连接后平台自动注入 `BLOB_STORE_ID`（读取用，不涉密）与 `BLOB_READ_WRITE_TOKEN`（写入用），接口不需要额外配置。访问模式创建后不能修改，建成 Private 时接口会一直返回 502。
+首页屏幕时间在访问时从 `/api/screen-time` 获取，仓库不存快照。可选：在 macOS 或 Windows 上安装本机采集程序，每小时读取 ActivityWatch 的七日聚合结果，覆盖写入 Vercel Blob 的一个固定对象。不安装不影响构建，首页这一块只是拿不到数据。
 
-本机只需要 `BLOB_READ_WRITE_TOKEN`，把它放在被忽略的 `.env`：`node scripts/sync-screen-time.mjs --publish` 先读环境变量，再读该文件。每小时任务按绝对路径执行仓库里的脚本并读取该 `.env`，因此仓库不能删除或移动；移动后重跑 `node scripts/install-screen-time-launchd.mjs`，删除前先卸载任务。
+Vercel 项目需连接一个 **Public** 的 Blob 存储。连接后平台注入 `BLOB_STORE_ID`（网站读取用，不涉密）。`BLOB_READ_WRITE_TOKEN` 只在安装采集程序时交给这台电脑，存进系统凭据库，不留在仓库。访问模式创建后不能修改，建成 Private 时接口会一直返回 502。
 
-```dotenv
-BLOB_READ_WRITE_TOKEN=vercel_blob_rw_...
+```bash
+pnpm install
+BLOB_READ_WRITE_TOKEN='从 Dashboard 复制' node scripts/install-screen-time.mjs
 ```
 
-缺少它时同步失败并且不改本地副本，也不影响静态博客的构建。状态码、快照边界、缓存，以及每小时任务的时刻、服务文件与卸载步骤，见 [屏幕时间设计](../design/screen-time.md)。
+装完后每小时任务不再读取仓库，移动或删除仓库不会停止采集。换 Node、或快照格式变了，在仓库里重跑同一条命令。`pnpm dev` 读的是本机应用目录里的快照，不是仓库文件。状态码、路径、Windows 任务与卸载见 [屏幕时间设计](../design/screen-time.md)。
 
 ### Giscus 评论
 

@@ -1,20 +1,113 @@
-/** 本机运行：读取 ActivityWatch 按日／应用聚合结果，不输出原始窗口信息。 */
+/** 本机运行：读取 ActivityWatch 按日／应用聚合结果，不输出原始窗口信息。
+ *
+ * 仓库里的这一份是权威实现。安装器把它连同旁边两份校验／上传模块复制到本机应用目录，
+ * 定时任务只跑复制品。旁边已有 `screen-time.js` 时用复制品，否则用仓库里的 `src/utils`。
+ */
+import { execFileSync } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
-import { hostname } from 'node:os'
-import { resolve } from 'node:path'
+import { homedir, hostname, userInfo } from 'node:os'
+import { join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { parseEnv } from 'node:util'
 
-import {
-  parseScreenTime,
-  SCREEN_TIME_ZONE,
-  screenTimePeriods,
-} from '../src/utils/screen-time.js'
-import { writeScreenTime } from '../src/utils/screen-time-store.mjs'
+const here = dirnameOf(import.meta.url)
+const bundled = existsSync(join(here, 'screen-time.js'))
+const moduleHref = (name) =>
+  pathToFileURL(bundled ? join(here, name) : join(here, '../src/utils', name))
+    .href
 
-/** 仅供本机预览的数据副本，不再进入仓库；线上读取由接口负责。 */
-export const SNAPSHOT_PATH = '.local/screen-time.json'
-const ROOT = fileURLToPath(new URL('../', import.meta.url))
+const { parseScreenTime, SCREEN_TIME_ZONE, screenTimePeriods } = await import(
+  moduleHref('screen-time.js')
+)
+const { writeScreenTime } = await import(moduleHref('screen-time-store.mjs'))
+
+function dirnameOf(url) {
+  return fileURLToPath(new URL('.', url))
+}
+
+/** 登录钥匙串与 Windows 计划任务共用的名字。凭证不进仓库、不进任务定义。 */
+export const CREDENTIAL_SERVICE = 'site.wutongyu.screen-time'
+
+/** 本机快照文件名。目录由 `agentHome` 决定，不在仓库里。 */
+export const SNAPSHOT_PATH = 'screen-time.json'
+
+/** macOS 与 Windows 各有一处用户级应用目录；其它系统不能安装采集任务。 */
+export function agentHome({
+  platform = process.platform,
+  env = process.env,
+  home = homedir(),
+} = {}) {
+  if (platform === 'win32')
+    return join(env.LOCALAPPDATA || join(home, 'AppData', 'Local'), 'YuBlog')
+  if (platform === 'darwin')
+    return join(home, 'Library', 'Application Support', 'YuBlog')
+  throw new Error('Screen time: unsupported platform')
+}
+
+export const screenTimeSnapshotPath = (home = agentHome()) =>
+  join(home, SNAPSHOT_PATH)
+
+const WINDOWS_READ = `
+$ErrorActionPreference = 'Stop'
+$secure = Get-Content -Raw -LiteralPath $env:YUBLOG_TOKEN_FILE | ConvertTo-SecureString
+$bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
+try { [Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr) }
+finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr) }
+`
+
+/** 读取安装器保存的写入凭证。失败时不带出命令参数。 */
+export function readSavedToken({
+  platform = process.platform,
+  env = process.env,
+  home = homedir(),
+} = {}) {
+  try {
+    const stdout =
+      platform === 'darwin'
+        ? execFileSync(
+            '/usr/bin/security',
+            [
+              'find-generic-password',
+              '-s',
+              CREDENTIAL_SERVICE,
+              '-a',
+              userInfo().username,
+              '-w',
+            ],
+            { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
+          )
+        : execFileSync(
+            join(
+              env.SystemRoot || 'C:\\Windows',
+              'System32',
+              'WindowsPowerShell',
+              'v1.0',
+              'powershell.exe'
+            ),
+            ['-NoProfile', '-NonInteractive', '-Command', WINDOWS_READ],
+            {
+              encoding: 'utf8',
+              stdio: ['ignore', 'pipe', 'pipe'],
+              env: {
+                ...env,
+                YUBLOG_TOKEN_FILE: join(
+                  agentHome({ platform, env, home }),
+                  'blob-token.dpapi'
+                ),
+              },
+            }
+          )
+    const token = stdout.trim()
+    if (!token) throw new Error('empty')
+    return token
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith('Screen time:'))
+      throw error
+    throw new Error('Screen time: missing BLOB_READ_WRITE_TOKEN', {
+      cause: error,
+    })
+  }
+}
 
 export async function fetchScreenTime({
   now = new Date(),
@@ -120,23 +213,26 @@ export async function fetchScreenTime({
 /** 只看七天数据；只用于报告这次运行是否带来新活跃记录。 */
 const sameDays = (a, b) => JSON.stringify(a) === JSON.stringify(b)
 
-/** launchd 不加载 `.env`，这里按 Astro 的约定补读工作目录下的同名文件。 */
-async function publishToken(root) {
-  const fromEnv = process.env.BLOB_READ_WRITE_TOKEN
-  if (fromEnv) return fromEnv
-  const contents = await readFile(resolve(root, '.env'), 'utf8').catch(() => '')
-  return parseEnv(contents).BLOB_READ_WRITE_TOKEN
+/** 环境变量只在这一次运行里覆盖已保存的凭证，不回读仓库 `.env`。 */
+async function publishToken({ token, readCredential }) {
+  if (token) return token
+  if (process.env.BLOB_READ_WRITE_TOKEN)
+    return process.env.BLOB_READ_WRITE_TOKEN
+  const saved = await readCredential()
+  if (!saved) throw new Error('Screen time: missing BLOB_READ_WRITE_TOKEN')
+  return saved
 }
 
 export async function syncScreenTime({
-  root = ROOT,
+  root = agentHome(),
   publish = false,
   client,
+  token,
+  readCredential = readSavedToken,
   ...options
 } = {}) {
-  const local = resolve(root, '.local')
-  await mkdir(local, { recursive: true })
-  const lock = resolve(local, 'screen-time-sync.lock')
+  await mkdir(root, { recursive: true })
+  const lock = resolve(root, 'screen-time-sync.lock')
   await mkdir(lock)
   const target = resolve(root, SNAPSHOT_PATH)
   const temporary = `${target}.tmp`
@@ -150,7 +246,7 @@ export async function syncScreenTime({
     // 更不能证明它没被删掉；每小时覆盖一次仍在 Blob 的额度内。
     const url = publish
       ? await writeScreenTime(snapshot, {
-          token: await publishToken(root),
+          token: await publishToken({ token, readCredential }),
           client,
         })
       : null

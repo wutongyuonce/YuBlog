@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
-import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { execFileSync } from 'node:child_process'
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import {
   buildScreenTimeChart,
@@ -13,14 +15,22 @@ import {
   screenTimePeriods,
 } from '../src/utils/screen-time.js'
 import {
+  agentHome,
   fetchScreenTime,
   SNAPSHOT_PATH,
   syncScreenTime,
 } from '../scripts/sync-screen-time.mjs'
 import {
-  launchAgentPlist,
+  installAgentFiles,
+  installedPaths,
   LABEL,
-} from '../scripts/install-screen-time-launchd.mjs'
+  launchAgentPlist,
+  migrateSnapshot,
+  resolveInstallToken,
+  scheduledTaskXml,
+  stripEnvKey,
+  stripRepoToken,
+} from '../scripts/install-screen-time.mjs'
 
 const now = new Date('2026-10-27T12:00:00Z')
 const host = 'test-machine'
@@ -311,7 +321,6 @@ test('seven days share weekly colors, retain tiny apps and regroup after a new s
 
 test('failed sync retains the previous preview and releases the lock for a later retry', async (t) => {
   const root = await sandbox(t)
-  await mkdir(join(root, '.local'), { recursive: true })
   const target = join(root, SNAPSHOT_PATH)
   await writeFile(target, 'previous snapshot')
   await assert.rejects(
@@ -331,11 +340,11 @@ test('failed sync retains the previous preview and releases the lock for a later
 
 test('publishing overwrites one fixed path and keeps the preview outside the repository', async (t) => {
   const root = await sandbox(t)
-  await writeFile(join(root, '.env'), 'BLOB_READ_WRITE_TOKEN=file-token\n')
   const store = blobStore()
   const { snapshot, changed, url } = await syncScreenTime({
     root,
     publish: true,
+    token: 'file-token',
     client: store.client,
     ...fixture(),
   })
@@ -356,10 +365,10 @@ test('publishing overwrites one fixed path and keeps the preview outside the rep
 
 test('a failed upload keeps the previous preview so the next run publishes again', async (t) => {
   const root = await sandbox(t)
-  await writeFile(join(root, '.env'), 'BLOB_READ_WRITE_TOKEN=file-token\n')
   await syncScreenTime({
     root,
     publish: true,
+    token: 'file-token',
     client: blobStore().client,
     ...fixture(),
   })
@@ -371,6 +380,7 @@ test('a failed upload keeps the previous preview so the next run publishes again
     syncScreenTime({
       root,
       publish: true,
+      token: 'file-token',
       client: broken.client,
       ...fixture(newDay()),
     }),
@@ -381,6 +391,7 @@ test('a failed upload keeps the previous preview so the next run publishes again
   const { snapshot, changed } = await syncScreenTime({
     root,
     publish: true,
+    token: 'file-token',
     client: retry.client,
     ...fixture(newDay()),
   })
@@ -389,7 +400,7 @@ test('a failed upload keeps the previous preview so the next run publishes again
   assert.deepEqual(JSON.parse(retry.writes[0].body), snapshot)
 })
 
-test('the environment token wins over .env for publishing', async (t) => {
+test('the environment token wins over the saved credential, which wins over a repository file', async (t) => {
   const root = await sandbox(t)
   await writeFile(join(root, '.env'), 'BLOB_READ_WRITE_TOKEN=file-token\n')
   const store = blobStore()
@@ -400,6 +411,7 @@ test('the environment token wins over .env for publishing', async (t) => {
       root,
       publish: true,
       client: store.client,
+      readCredential: async () => 'saved-token',
       ...fixture(),
     })
   } finally {
@@ -407,15 +419,30 @@ test('the environment token wins over .env for publishing', async (t) => {
     else process.env.BLOB_READ_WRITE_TOKEN = previous
   }
   assert.equal(store.writes[0].options.token, 'env-token')
+  delete process.env.BLOB_READ_WRITE_TOKEN
+  const saved = blobStore()
+  try {
+    await syncScreenTime({
+      root,
+      publish: true,
+      client: saved.client,
+      readCredential: async () => 'saved-token',
+      ...fixture(newDay()),
+    })
+  } finally {
+    if (previous === undefined) delete process.env.BLOB_READ_WRITE_TOKEN
+    else process.env.BLOB_READ_WRITE_TOKEN = previous
+  }
+  assert.equal(saved.writes[0].options.token, 'saved-token')
 })
 
 test('an idle hour still republishes and reports no new activity', async (t) => {
   const root = await sandbox(t)
-  await writeFile(join(root, '.env'), 'BLOB_READ_WRITE_TOKEN=file-token\n')
   const store = blobStore()
   const first = await syncScreenTime({
     root,
     publish: true,
+    token: 'file-token',
     client: store.client,
     ...fixture(),
   })
@@ -426,6 +453,7 @@ test('an idle hour still republishes and reports no new activity', async (t) => 
   const later = await syncScreenTime({
     root,
     publish: true,
+    token: 'file-token',
     client: store.client,
     ...fixture(),
     now: new Date(now.getTime() + 3_600_000),
@@ -451,6 +479,7 @@ test('an idle hour still republishes and reports no new activity', async (t) => 
   const grown = await syncScreenTime({
     root,
     publish: true,
+    token: 'file-token',
     client: store.client,
     ...fixture(rows),
     now: new Date(now.getTime() + 7_200_000),
@@ -474,4 +503,125 @@ test('the launch agent runs every hour at minute 50', () => {
   )
   assert.ok(!plist.includes('<key>Hour</key>'))
   assert.match(plist, /<string>--publish<\/string>/)
+})
+
+test('the hourly task stays in the agent directory and does not embed the token', () => {
+  assert.equal(
+    agentHome({ platform: 'darwin', home: '/Users/a' }),
+    '/Users/a/Library/Application Support/YuBlog'
+  )
+  assert.equal(
+    agentHome({
+      platform: 'win32',
+      env: { LOCALAPPDATA: 'C:\\Users\\a\\AppData\\Local' },
+      home: 'C:\\Users\\a',
+    }),
+    join('C:\\Users\\a\\AppData\\Local', 'YuBlog')
+  )
+  assert.throws(
+    () => agentHome({ platform: 'linux', home: '/tmp' }),
+    /platform/
+  )
+  const home = agentHome({ platform: 'darwin', home: '/Users/a' })
+  const paths = installedPaths(home)
+  const plist = launchAgentPlist({
+    node: '/n',
+    script: paths.script,
+    cwd: home,
+    log: paths.log,
+  })
+  assert.match(plist, /Application Support\/YuBlog/)
+  assert.match(plist, /<key>WorkingDirectory<\/key><string>.*YuBlog<\/string>/)
+  assert.ok(!plist.includes('BLOB') && !plist.includes('.env'))
+  const xml = scheduledTaskXml({
+    node: 'C:\\node.exe',
+    script: 'C:\\Users\\a\\AppData\\Local\\YuBlog\\sync-screen-time.mjs',
+    cwd: 'C:\\Users\\a\\AppData\\Local\\YuBlog',
+  })
+  assert.match(xml, /PT1H/)
+  assert.match(xml, /PT23H/)
+  assert.match(xml, /00:50:00/)
+  assert.match(xml, /InteractiveToken/)
+  assert.match(xml, /StartWhenAvailable/)
+  assert.match(xml, /--publish/)
+  assert.ok(!xml.includes('BLOB') && !xml.includes('.env'))
+})
+
+test('installer takes a repository token once, otherwise the saved one', async () => {
+  const fromFile = await resolveInstallToken({
+    envFile: 'BLOB_READ_WRITE_TOKEN=from-file\nLASTFM_API_KEY=keep\n',
+    readSaved: async () => 'saved',
+  })
+  assert.deepEqual(fromFile, { token: 'from-file', source: 'env-file' })
+  assert.equal(
+    (
+      await resolveInstallToken({
+        env: 'from-env',
+        envFile: 'BLOB_READ_WRITE_TOKEN=from-file\n',
+        readSaved: async () => 'saved',
+      })
+    ).source,
+    'env'
+  )
+  const saved = await resolveInstallToken({
+    envFile: 'LASTFM_API_KEY=keep\n',
+    readSaved: async () => 'saved',
+  })
+  assert.deepEqual(saved, { token: 'saved', source: 'saved' })
+  await assert.rejects(
+    resolveInstallToken({ envFile: '', readSaved: async () => '' }),
+    /BLOB_READ_WRITE_TOKEN/
+  )
+  const stripped = stripEnvKey(
+    'LASTFM_API_KEY=keep\nBLOB_READ_WRITE_TOKEN=from-file\n# note\n',
+    'BLOB_READ_WRITE_TOKEN'
+  )
+  assert.match(stripped, /LASTFM_API_KEY=keep/)
+  assert.match(stripped, /# note/)
+  assert.ok(!stripped.includes('from-file'))
+})
+
+test('migration keeps the agent snapshot and removes the repository preview', async (t) => {
+  const repo = await sandbox(t)
+  const home = await sandbox(t)
+  await mkdir(join(repo, '.local'), { recursive: true })
+  await writeFile(join(repo, '.local', 'screen-time.json'), 'repo')
+  await writeFile(join(home, 'screen-time.json'), 'agent')
+  await migrateSnapshot(repo, home)
+  assert.equal(await readFile(join(home, 'screen-time.json'), 'utf8'), 'agent')
+  await assert.rejects(readFile(join(repo, '.local', 'screen-time.json')))
+  await writeFile(
+    join(repo, '.env'),
+    'BLOB_READ_WRITE_TOKEN=from-file\nLASTFM_API_KEY=keep\n'
+  )
+  assert.equal(await stripRepoToken(repo), true)
+  assert.equal(
+    await readFile(join(repo, '.env'), 'utf8'),
+    'LASTFM_API_KEY=keep\n'
+  )
+  await writeFile(join(repo, '.local', 'screen-time.json'), 'only-repo')
+  await rm(join(home, 'screen-time.json'))
+  await migrateSnapshot(repo, home)
+  assert.equal(
+    await readFile(join(home, 'screen-time.json'), 'utf8'),
+    'only-repo'
+  )
+})
+
+test('the installed agent loads its own copies and the blob client', async (t) => {
+  const home = await sandbox(t)
+  const repoRoot = fileURLToPath(new URL('../', import.meta.url))
+  await installAgentFiles({ repoRoot, home })
+  assert.equal(await readFile(join(home, 'version'), 'utf8'), '1\n')
+  const { fetchScreenTime: installedFetch } = await import(
+    pathToFileURL(join(home, 'sync-screen-time.mjs')).href
+  )
+  const snapshot = await installedFetch(fixture())
+  assert.equal(snapshot.days.at(-1).apps[0].name, 'Safari')
+  const probe = join(home, 'probe.mjs')
+  await writeFile(
+    probe,
+    "import { put } from '@vercel/blob'\nif (typeof put !== 'function') process.exit(1)\n"
+  )
+  execFileSync(process.execPath, [probe], { cwd: home, stdio: 'pipe' })
 })
