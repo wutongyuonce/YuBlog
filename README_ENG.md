@@ -36,7 +36,7 @@ Blog categories use filtering URLs such as `/blogs/#技术`; interest categories
 - Pagefind search loaded when opened; full RSS with static, reader-friendly content conversion.
 - Writing heatmap, [ActivityWatch screen time](docs/design/screen-time.md), Last.fm, Giscus, Umami and an optional hosted Oneko cat.
 
-See the [custom-style article](src/content/blogs/image-layout-demo.md) for working examples and copyable syntax. Detailed design documents are currently maintained in Chinese.
+See the [custom-style article](src/content/blogs/content-style-guide.md) for working examples and copyable syntax. Detailed design documents are currently maintained in Chinese.
 
 ## Quick start
 

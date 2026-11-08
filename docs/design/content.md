@@ -150,7 +150,7 @@ scroll 不接受 columns／widths，全部图片静态存在，原生横滚与 s
 
 ## 横卡与竖方陈列架
 
-`:::card` 可写在共享管线的博客、拾趣、关于和首页 MD 内容中，由 `plugins/remark-media-card.ts` 唯一解析。
+`:::card` 可写在共享管线的博客、拾趣和关于内容中，由 `plugins/remark-media-card.ts` 唯一解析；首页近期书影游不经插件，直接输出同一竖卡结构。
 
 ### 横卡：封面、介绍、评分与日期
 
@@ -221,7 +221,7 @@ Excalidraw 嵌入及其预览／导出图始终排除；作者另写独立 Markd
 作者链接包图如 `[![图](./photo.jpg)](https://example.com/)` 或混合文字链接仍跳转，链接外另留仅键盘焦点显露的大图入口，不劫持链接。
 链接包图可用于普通正文，不能用作 gallery／figure 要求的直接图片。
 
-同一 `.markdown-content` 根下已经参与放大的 `.image-view` 构成相册，含首页近期书影游、专辑陈列架源封面，不另外发现图片。
+同一 `.markdown-content` 根下已经参与放大的 `.image-view` 构成相册，含竖卡／方卡陈列架与首页近期书影游的源封面，不另外发现图片。
 仅排除 `data-marquee-clone` 副本，不排除整个陈列架；从副本打开时按 template 原尺寸 src、缺失时可见 src 对齐回源张，打开即定位该张。
 灯箱面板占满视口内留白后的区域，以 Grid 分配图片区、alt 说明和底部控件；图片等比居中且不放大超过固有尺寸，说明随图更新、最多三行高，超出可滚动，支持 Tab 聚焦后用上下键阅读。底部控件固定在面板底部、水平居中，不随图片尺寸或说明长度移动：左侧“当前/总数”、中间前后箭头、右侧关闭；图片和说明不遮挡控件。
 首尾禁用相应方向，不循环；打开期间左右键翻页，边界 no-op；单张仍显示 1/1 与禁用双箭头。
@@ -456,7 +456,7 @@ disconnect 用 AbortController 清监听、释放 dialog 和页面资源；Excal
 | `test/scroll-lock.test.mjs` | 补偿、旧样式恢复与不污染替换 body |
 | `test/remark-media-card.test.mjs` | 卡片语法、评分／日期、额外媒体拒绝及分组 |
 | `test/card-rail-marquee.test.mjs`／`test/card-scrollbars.test.mjs` | 循环条件、复制／暂停／销毁，以及两区独立、滚动续期与收尾 |
-| `scripts/verify-card-rails.mjs` | 真实轨道、书页同类一排、循环／大图与 Astro 导航后的卡片行为 |
+| `scripts/verify-card-rails.mjs` | 样式指南中竖卡／方卡栏的真实轨道：每组一条、同排、按布局裁切、不撑宽页面；自动栏的循环副本、暂停、副本点开大图与焦点回到源卡、减少动态时退回手动 |
 | `test/media-assets.test.mjs` | 引用分类、编码／后缀、源根、改写与源行号；镜像幂等、旧产物、目录／源链接拒绝、目标链接安全，临时根不碰真实仓库 |
 | `test/remark-excalidraw.test.mjs`／`test/excalidraw-viewport.test.mjs` | 作者入口、源／预览／失败；fit、中心缩放、拖动、resize、倍率边界 |
 | Excalidraw 浏览器验收 | 正文／展开、真实拖动／双指、下载字节、焦点／滚动恢复、主题、站内导航，不能用类型声明替代 |

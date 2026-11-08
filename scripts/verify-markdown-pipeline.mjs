@@ -289,7 +289,7 @@ test('full RSS covers every built article and uses real, standalone content asse
   )
 })
 
-test('home and interest cards preserve authored content through the shared pipeline', async () => {
+test('home and authored cards preserve their content through the shared pipeline', async () => {
   const home = fromHtml(await html('index.html'))
   const recent = elements(home, 'div').find((node) =>
     node.properties.className?.includes('recent-media__body')
@@ -325,17 +325,30 @@ test('home and interest cards preserve authored content through the shared pipel
           )
           .map(textOf),
       }))
-  const files = (
-    await readdir(new URL('../src/content/interests/', import.meta.url))
-  ).filter((file) => /\.(md|mdx)$/.test(file))
+  // 只有写了 `:::card` 的文章需要比对；没有卡片的页面比对的是两个空列表。
+  const files = []
+  for (const file of await readdir(
+    new URL('../src/content/blogs/', import.meta.url)
+  ))
+    if (
+      /\.(md|mdx)$/.test(file) &&
+      (
+        await readFile(
+          new URL(`../src/content/blogs/${file}`, import.meta.url),
+          'utf8'
+        )
+      ).includes(':::card')
+    )
+      files.push(file)
+  assert.ok(files.length > 0, 'at least one article exercises :::card')
   for (const file of files) {
     const source = await readFile(
-      new URL(`../src/content/interests/${file}`, import.meta.url),
+      new URL(`../src/content/blogs/${file}`, import.meta.url),
       'utf8'
     )
     const { code } = await processor.render(source)
     const page = fromHtml(
-      await html(`interests/${file.replace(/\.(md|mdx)$/, '')}/index.html`)
+      await html(`blogs/${file.replace(/\.(md|mdx)$/, '')}/index.html`)
     )
     const groups = (tree) =>
       elements(tree, 'div')
@@ -370,11 +383,6 @@ test('home and interest cards preserve authored content through the shared pipel
         await access(localImage(url))
       }
     }
-  }
-  for (const id of ['recent']) {
-    await assert.rejects(access(built(`interests/${id}/index.html`)), {
-      code: 'ENOENT',
-    })
   }
 })
 

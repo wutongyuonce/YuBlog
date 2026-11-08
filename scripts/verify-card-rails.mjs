@@ -5,7 +5,8 @@ const task = await taskSpace(Number('__TASK_SPACE_ID__'))
 const page = task.page('p1')
 const base = '__BASE_URL__'
 
-await page.goto(new URL('interests/book/', base).href)
+// 样式指南里的竖卡栏与方卡栏：每组一条轨道、同排、按布局裁切、不撑宽页面。
+await page.goto(new URL('blogs/content-style-guide/', base).href)
 await page.waitForSelector('.media-cards--rail')
 for (const width of [1440, 390, 320]) {
   await page.cdp('Emulation.setDeviceMetricsOverride', {
@@ -16,36 +17,51 @@ for (const width of [1440, 390, 320]) {
   })
   const groups = await page.evaluate(() =>
     [...document.querySelectorAll('.media-cards--rail')].map((rail) => {
-      const frames = [...rail.querySelectorAll('.media-card .image-view')].map(
-        (view) => view.getBoundingClientRect()
+      const cards = [
+        ...rail.querySelectorAll('.media-card:not([data-marquee-clone])'),
+      ]
+      const layout = cards[0].classList.contains('media-card--portrait')
+        ? 'portrait'
+        : 'square'
+      const ratio = layout === 'portrait' ? 2 / 3 : 1
+      const frames = cards.map((card) =>
+        card.querySelector('.image-view').getBoundingClientRect()
       )
       return {
+        layout,
         hasTrack: !!rail.querySelector(':scope > .media-cards__track'),
+        sameLayout: cards.every((card) =>
+          card.classList.contains(`media-card--${layout}`)
+        ),
         sameRow: frames.every(
           (frame) => Math.abs(frame.top - frames[0].top) < 1
         ),
-        portrait: frames.every(
-          (frame) => Math.abs(frame.width / frame.height - 2 / 3) < 0.01
+        cropped: frames.every(
+          (frame) => Math.abs(frame.width / frame.height - ratio) < 0.01
         ),
         pageOverflow: document.documentElement.scrollWidth > innerWidth,
       }
     })
   )
-  assert.ok(groups.length > 0)
-  for (const group of groups)
+  assert.deepEqual(groups.map((group) => group.layout).sort(), [
+    'portrait',
+    'square',
+  ])
+  for (const { layout, ...group } of groups)
     assert.deepEqual(
       group,
       {
         hasTrack: true,
+        sameLayout: true,
         sameRow: true,
-        portrait: true,
+        cropped: true,
         pageOverflow: false,
       },
-      `${width}: same-category books share a portrait rail`
+      `${width}: the ${layout} rail keeps one row of cropped covers`
     )
 }
 
-// 样式指南里的方卡自动滚动栏：循环副本、暂停、副本点开大图与焦点回退、减少动态。
+// 方卡自动滚动栏：循环副本、暂停、副本点开大图与焦点回退、减少动态。
 await page.cdp('Emulation.setDeviceMetricsOverride', {
   width: 1440,
   height: 900,
@@ -151,5 +167,5 @@ await page.waitForFunction(
 )
 await page.cdp('Emulation.setEmulatedMedia', { features: [] })
 console.log(
-  'Card rails: book grouping, auto-rail loop/clones/pause/zoom/focus, reduced motion passed'
+  'Card rails: portrait/square rail shape, auto-rail loop/clones/pause/zoom/focus, reduced motion passed'
 )

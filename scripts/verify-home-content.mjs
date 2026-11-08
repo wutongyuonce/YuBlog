@@ -15,23 +15,35 @@ for (const width of [1440, 390, 320]) {
     mobile: false,
   })
   assert.equal(await page.evaluate(() => innerWidth), width)
-  await page.waitForFunction(() =>
-    [
-      ...document.querySelectorAll(
-        '.recent-media .media-card:not([data-marquee-clone]) img'
-      ),
-    ].every((img) => img.complete && img.naturalWidth > 0)
+  // 封面懒加载且条目超出横滑栏：只要求滚到区块后栏内可见的封面都已加载。
+  await page.evaluate(() =>
+    document
+      .querySelector('.recent-media')
+      .scrollIntoView({ block: 'center', behavior: 'instant' })
   )
+  await page.waitForFunction(() => {
+    const rail = document
+      .querySelector('.recent-media .media-cards--rail')
+      .getBoundingClientRect()
+    const visible = [
+      ...document.querySelectorAll('.recent-media .media-card img'),
+    ].filter((img) => {
+      const box = img.getBoundingClientRect()
+      return box.right > rail.left && box.left < rail.right
+    })
+    return (
+      visible.length > 0 &&
+      visible.every((img) => img.complete && img.naturalWidth > 0)
+    )
+  })
   for (const dark of [false, true]) {
     await page.evaluate(
       (dark) => document.documentElement.classList.toggle('dark', dark),
       dark
     )
-    const layout = await page.evaluate(() => {
+    // 区块顺序、「全部拾趣」与不自动滚动由 built 首页检查负责；这里只看需要真实渲染的可读性与裁切。
+    const { readable, bodiesFit } = await page.evaluate(() => {
       const body = document.querySelector('.recent-media__body')
-      const section = body.closest('.recent-media')
-      const listening = document.querySelector('.recent-listening')
-      const writing = document.querySelector('.recent-writing')
       const ctx = document.createElement('canvas').getContext('2d')
       const surface = getComputedStyle(
         document.documentElement
@@ -54,61 +66,38 @@ for (const width of [1440, 390, 320]) {
           b = luminance(bg)
         return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
       }
+      const titles = [
+        ...body.querySelectorAll(
+          '.media-card:not([data-marquee-clone]) .media-card__title'
+        ),
+      ]
       return {
-        aboveListening:
-          section.getBoundingClientRect().bottom <=
-          listening.getBoundingClientRect().top,
-        belowWriting:
-          writing.getBoundingClientRect().bottom <=
-          section.getBoundingClientRect().top,
-        hasIndexLink: [...section.querySelectorAll('a')].some(
-          (link) => link.textContent.trim() === '全部拾趣'
-        ),
-        noAutoScroll: !section.querySelector('.media-cards--auto'),
-        coversLoaded: [
-          ...body.querySelectorAll('.media-card:not([data-marquee-clone]) img'),
-        ].every((img) => img.complete && img.naturalWidth > 0),
-        readable: [
-          ...body.querySelectorAll('.media-card__title, .media-card__label'),
-        ].every((node) => {
-          const style = getComputedStyle(node)
-          const background = node.classList.contains('media-card__label')
-            ? style.backgroundColor
-            : getComputedStyle(node.closest('.media-card')).backgroundColor
-          return contrast(style.color, background) >= 4.5
-        }),
-        headings: [...body.querySelectorAll('h1,h2,h3,h4,h5,h6')].every(
-          (heading) =>
-            heading.querySelector('.header-anchor')?.getAttribute('href') ===
-            `#${heading.id}`
-        ),
-        scoresFit: [...body.querySelectorAll('.media-card__body')].every(
-          (card) => card.scrollWidth <= card.clientWidth + 1
-        ),
+        readable:
+          titles.length > 0 &&
+          titles.every((node) => {
+            const style = getComputedStyle(node)
+            const background = getComputedStyle(
+              node.closest('.media-card')
+            ).backgroundColor
+            return contrast(style.color, background) >= 4.5
+          }),
+        // 窄卡里标题与短评不能横向溢出被裁掉。
+        bodiesFit: [
+          ...body.querySelectorAll(
+            '.media-card:not([data-marquee-clone]) .media-card__body'
+          ),
+        ].every((card) => card.scrollWidth <= card.clientWidth + 1),
       }
     })
-    for (const name of [
-      'aboveListening',
-      'belowWriting',
-      'hasIndexLink',
-      'noAutoScroll',
-      'coversLoaded',
-    ])
-      assert.equal(layout[name], true, `${width}/${dark}: ${name}`)
     assert.equal(
-      layout.readable,
+      readable,
       true,
-      'card labels and titles reach 4.5:1 contrast'
+      `${width}/${dark}: card titles reach 4.5:1 contrast`
     )
     assert.equal(
-      layout.headings,
+      bodiesFit,
       true,
-      'home retains ordinary Markdown anchors'
-    )
-    assert.equal(
-      layout.scoresFit,
-      true,
-      'scores must not be cropped by a narrow card'
+      `${width}/${dark}: card text is not clipped by a narrow card`
     )
   }
 }

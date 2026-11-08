@@ -40,7 +40,7 @@
 - **搜索与订阅**：Pagefind 构建全文索引，打开搜索时才加载；RSS 保留全文图文与代码，复杂组件转换为阅读器可用的基础内容。
 - **个人站点功能**：写作热力、[ActivityWatch 屏幕时间](docs/design/screen-time.md)、近期书影游、Last.fm 近期在听、Giscus 评论、Umami 统计及可选 Oneko 像素猫。
 
-功能参数、资源边界与实现细节集中在 [docs](docs/README.md)。[正文样式指南文章](src/content/blogs/image-layout-demo.md) 提供可运行效果与可复制写法。
+功能参数、资源边界与实现细节集中在 [docs](docs/README.md)。[正文样式指南文章](src/content/blogs/content-style-guide.md) 提供可运行效果与可复制写法。
 
 ## 快速开始
 

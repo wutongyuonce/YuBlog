@@ -1,15 +1,15 @@
 /**
  * Gallery discovery for the body-image lightbox.
  *
- * Scope: one `.markdown-content` root (blog body, interests MD, homepage
- * 「近期书影游」等凡 Markdown 渲染进该根的内容).
+ * Scope: one `.markdown-content` root (blog body, interests MD, about, and the
+ * homepage「近期书影游」, which renders the same card markup into such a root).
  *
  * Included once each: every `.image-view` that already participates in zoom —
  * ordinary images, gallery/figure, and `:::card` covers (竖／方陈列架与带外链
- * 的影游卡封面，含首页 MD 陈列架的**源**卡片).
+ * 的影游卡封面，含首页近期书影游的**源**卡片).
  *
  * Excluded:
- * - `[data-marquee-clone]` — JS 为无缝横滑复制的 DOM 副本（首页专辑陈列架等同理）；
+ * - `[data-marquee-clone]` — JS 为无缝横滑复制的 DOM 副本；
  *   源卡封面仍进相册，每张逻辑图只一次。点副本用 src 对齐源张。
  * - `.excalidraw-embed`（及其内部预览／导出图）— **始终**不进照片 lightbox：画布是
  *   交互嵌入不是照片，有独立展开查看器；即使用 img 呈现也不并入相册。

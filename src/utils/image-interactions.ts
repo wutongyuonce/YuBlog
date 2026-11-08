@@ -158,11 +158,6 @@ export class ImageInteractions extends HTMLElement {
       },
       { signal }
     )
-    // 脚本注入的图片视图在首次扫描之后才出现，由注入方要求重新接管。
-    document.addEventListener('content:added', () => this.bindViews(), {
-      signal,
-    })
-
     this.bindViews()
 
     for (const gallery of document.querySelectorAll<HTMLElement>(
@@ -212,12 +207,11 @@ export class ImageInteractions extends HTMLElement {
     this.showSlide()
   }
 
-  /** 给带作者链接的视图补上仅键盘可见的大图入口；克隆副本和已接管的视图跳过。 */
+  /** 给带作者链接的视图补上仅键盘可见的大图入口；克隆副本与画布跳过。 */
   private bindViews() {
     for (const view of document.querySelectorAll<HTMLElement>(
       '.markdown-content .image-view'
     )) {
-      if (view.dataset.imageViewBound) continue
       if (
         view.closest('[data-marquee-clone]') ||
         view.closest('.excalidraw-embed')
@@ -225,7 +219,6 @@ export class ImageInteractions extends HTMLElement {
         continue
       const image = view.querySelector<HTMLImageElement>('img')
       if (!image) continue
-      view.dataset.imageViewBound = ''
       const link = image.closest('a')
       let trigger: HTMLElement = image
       if (link) {
