@@ -4,251 +4,188 @@ import { fetchLastfmSnapshot } from '../src/utils/lastfm.mjs'
 
 const now = new Date('2026-10-10T12:00:00Z')
 const apiKey = 'test-only-key'
-const cover = 'https://lastfm-img.freetls.fastly.net/i/u/300x300/album.jpg'
+const image = (id) => [
+  { '#text': `https://lastfm-img.freetls.fastly.net/i/u/174s/${id}.jpg` },
+  { '#text': `https://lastfm-img.freetls.fastly.net/i/u/300x300/${id}.jpg` },
+]
 const placeholder =
   'https://lastfm-img.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png'
-const track = (name = 'Song', artist = 'Artist') => ({
+const album = (name, artist = 'Artist', images = image(name), plays = '4') => ({
   name,
   artist: { name: artist },
-  playcount: '4',
-})
-const played = (name = 'Song', artist = 'Artist', album = 'Album') => ({
-  name,
-  artist: { '#text': artist },
-  album: { '#text': album },
-  image: [{ '#text': cover, 'size': 'extralarge' }],
-  date: { uts: String(now.getTime() / 1000 - 60) },
+  playcount: plays,
+  image: images,
 })
 
+/** 假上游：每个时段一份专辑排行；`findCover` 记录网易云回退的查找。 */
 const fixture = ({
-  tracks = [track()],
-  pages = [[played()]],
-  weekly = '42',
+  albums = () => [album('Album')],
   total = '1234',
-  artists = [{ name: 'Favourite Artist' }],
-  albumInfo = () => ({ album: { image: [] } }),
   transform = (_method, data) => data,
+  found = () => null,
 } = {}) => {
   const requests = []
+  const lookups = []
   const fetchImpl = async (url, options) => {
     assert.ok(options.signal instanceof AbortSignal)
     const params = url.searchParams
     requests.push(Object.fromEntries(params))
     const method = params.get('method')
     let data
-    if (method === 'user.getTopTracks') data = { toptracks: { track: tracks } }
-    else if (method === 'user.getInfo') data = { user: { playcount: total } }
-    else if (method === 'user.getTopArtists')
-      data = { topartists: { artist: artists } }
-    else if (method === 'user.getRecentTracks')
+    if (method === 'user.getInfo') data = { user: { playcount: total } }
+    else if (method === 'user.getTopAlbums') {
+      const list = albums(params.get('period'))
       data = {
-        recenttracks: {
-          '@attr': { total: weekly, totalPages: String(pages.length) },
-          'track': pages[Number(params.get('page')) - 1] || [],
+        topalbums: {
+          'album': list,
+          '@attr': { total: String(list.length * 3) },
         },
       }
-    else if (method === 'album.getInfo')
-      data = await albumInfo(params.get('album'), params.get('artist'))
-    else assert.fail(`Unexpected method: ${method}`)
+    } else assert.fail(`Unexpected method: ${method}`)
     return new Response(JSON.stringify(transform(method, data)))
   }
-  return { apiKey, now, fetchImpl, requests }
+  const findCover = async (query) => {
+    lookups.push(query)
+    return found(query)
+  }
+  return { apiKey, now, fetchImpl, findCover, requests, lookups }
 }
 
-test('seven-day statistics count the full library, not just the displayed Top 10', async () => {
+test('each period carries its album total and at most nine ranked albums', async () => {
   const options = fixture({
-    tracks: Array.from({ length: 12 }, (_, i) => track(`Song ${i}`)),
+    albums: (period) =>
+      Array.from({ length: period === '7day' ? 1 : 12 }, (_, i) =>
+        album(`${period} ${i}`)
+      ),
   })
   const snapshot = await fetchLastfmSnapshot(options)
-  assert.equal(snapshot.tracks.length, 10)
-  assert.deepEqual(
-    snapshot.tracks.map(({ name }) => name),
-    Array.from({ length: 10 }, (_, i) => `Song ${i}`)
-  )
-  assert.equal(snapshot.weeklyScrobbles, 42)
   assert.equal(snapshot.totalScrobbles, 1234)
-  assert.equal(snapshot.topArtist, 'Favourite Artist')
   assert.equal(snapshot.updatedAt, now.toISOString())
-  for (const method of ['user.getTopTracks', 'user.getTopArtists'])
-    assert.equal(
-      options.requests.find((r) => r.method === method).period,
-      '7day'
-    )
-  const recent = options.requests.find(
-    (r) => r.method === 'user.getRecentTracks'
+  assert.deepEqual(
+    snapshot.periods.map((p) => [p.key, p.albumTotal, p.albums.length]),
+    [
+      ['7day', 3, 1],
+      ['1month', 36, 9],
+      ['12month', 36, 9],
+      ['overall', 36, 9],
+    ]
   )
-  assert.equal(Number(recent.to) - Number(recent.from), 604800)
-  assert.equal(Number(recent.to), now.getTime() / 1000)
-  assert.equal(recent.limit, '200')
+  assert.deepEqual(snapshot.periods[1].albums[0], {
+    name: '1month 0',
+    artist: 'Artist',
+    playcount: 4,
+    url: 'https://www.last.fm/music/Artist/1month%200',
+    cover: 'https://lastfm-img.freetls.fastly.net/i/u/300x300/1month%200.jpg',
+    coverLarge:
+      'https://lastfm-img.freetls.fastly.net/i/u/600x600/1month%200.jpg',
+  })
+  const tops = options.requests.filter((r) => r.method === 'user.getTopAlbums')
+  assert.deepEqual(
+    tops.map((r) => [r.period, r.limit]),
+    [
+      ['7day', '9'],
+      ['1month', '9'],
+      ['12month', '9'],
+      ['overall', '9'],
+    ]
+  )
+  assert.equal(options.lookups.length, 0, 'Last.fm artwork needs no fallback')
   assert.ok(!JSON.stringify(snapshot).includes(apiKey))
 })
 
-test('album metadata uses the newest recorded match for both song and artist, across pages', async () => {
-  const playing = {
-    ...played('Song', 'Artist', 'Playing album'),
-    '@attr': { nowplaying: 'true' },
+test('missing artwork falls back to NetEase once per album, or stays empty', async () => {
+  const fallback = {
+    cover: 'https://p1.music.126.net/x.jpg?param=300y300',
+    coverLarge: 'https://p1.music.126.net/x.jpg?param=600y600',
   }
-  delete playing.date
-  const outside = played('Song', 'Artist', 'Outside week')
-  outside.date.uts = String(now.getTime() / 1000 - 604801)
   const options = fixture({
-    pages: [
-      [playing, outside, played('Song', 'Other Artist', 'Wrong album')],
-      [
-        played('Song', 'Artist', 'Correct album'),
-        played('Song', 'Artist', 'Older album'),
-      ],
+    // 同一张缺图专辑出现在四个时段里；另一张网易云也查不到。
+    albums: () => [
+      album('Shared', 'Artist', [{ '#text': placeholder }]),
+      album('Unknown', 'Artist', [{ '#text': 'https://evil.example/a.jpg' }]),
     ],
+    found: ({ name }) => (name === 'Shared' ? fallback : null),
   })
-  const { tracks } = await fetchLastfmSnapshot(options)
-  assert.equal(tracks[0].album, 'Correct album')
-  assert.equal(tracks[0].cover, cover)
-  assert.equal(tracks[0].fullCover, cover.replace('/300x300/', '/ar0/'))
-  assert.equal(
-    options.requests.filter((r) => r.method === 'user.getRecentTracks').length,
-    2
-  )
-  assert.equal(
-    options.requests.filter((r) => r.method === 'album.getInfo').length,
-    0
-  )
-})
-
-test('missing artwork can use a base album cover while retaining the scrobbled edition name', async () => {
-  const missing = played('Song', 'Artist', 'Album (Deluxe Version)')
-  missing.image = [{ '#text': placeholder }, { '#text': 'javascript:bad' }]
-  const options = fixture({
-    pages: [[missing]],
-    albumInfo: (name) => ({
-      album: { image: [{ '#text': name === 'Album' ? cover : placeholder }] },
-    }),
-  })
-  const { tracks } = await fetchLastfmSnapshot(options)
-  assert.equal(tracks[0].album, 'Album (Deluxe Version)')
-  assert.equal(tracks[0].cover, cover)
+  const snapshot = await fetchLastfmSnapshot(options)
+  for (const period of snapshot.periods) {
+    assert.deepEqual(
+      {
+        cover: period.albums[0].cover,
+        coverLarge: period.albums[0].coverLarge,
+      },
+      fallback
+    )
+    assert.equal(period.albums[1].cover, null)
+    assert.equal(period.albums[1].coverLarge, null)
+  }
   assert.deepEqual(
-    options.requests
-      .filter((r) => r.method === 'album.getInfo')
-      .map((r) => r.album),
-    ['Album (Deluxe Version)', 'Album']
+    options.lookups.map(({ kind, name }) => [kind, name]).sort(),
+    [
+      ['album', 'Shared'],
+      ['album', 'Unknown'],
+    ]
   )
 })
 
-test('catalogue gaps keep real track text and a null cover without inventing artwork', async () => {
-  const missing = played()
-  missing.image = [{ '#text': 'https://untrusted.example/cover.jpg' }]
-  const options = fixture({
-    pages: [[missing]],
-    albumInfo: () => ({ error: 6 }),
-  })
-  const snapshot = await fetchLastfmSnapshot(options)
-  assert.equal(snapshot.tracks[0].cover, null)
-  assert.equal(snapshot.tracks[0].fullCover, null)
-  assert.equal(snapshot.tracks[0].album, 'Album')
-  const empty = await fetchLastfmSnapshot(
-    fixture({ tracks: [], pages: [[]], artists: [], weekly: '0', total: '0' })
-  )
-  assert.deepEqual(empty.tracks, [])
-  assert.equal(empty.topArtist, null)
-  assert.equal(empty.weeklyScrobbles, 0)
-  assert.equal(empty.totalScrobbles, 0)
-})
-
-test('metadata scans stop at ten pages and preserve the complete ranking and total', async () => {
-  const options = fixture({ pages: Array.from({ length: 11 }, () => []) })
-  const snapshot = await fetchLastfmSnapshot(options)
-  assert.equal(snapshot.tracks.length, 1)
-  assert.equal(snapshot.tracks[0].album, null)
-  assert.equal(snapshot.weeklyScrobbles, 42)
-  assert.equal(
-    options.requests.filter((r) => r.method === 'user.getRecentTracks').length,
-    10
-  )
-})
-
-test('cover lookups overlap in bounded batches without reordering the ranking', async () => {
+test('cover fallbacks overlap within the concurrency budget', async () => {
   let release
   const gate = new Promise((resolve) => {
     release = resolve
   })
   let active = 0
   let peak = 0
-  let started = 0
   const options = fixture({
-    tracks: Array.from({ length: 7 }, (_, i) => track(`Song ${i}`)),
-    pages: [
-      Array.from({ length: 7 }, (_, i) => ({
-        ...played(`Song ${i}`, 'Artist', `Album ${i}`),
-        image: [],
-      })),
-    ],
-    albumInfo: async () => {
-      started++
+    albums: (period) =>
+      Array.from({ length: 9 }, (_, i) => album(`${period} ${i}`, 'A', [])),
+    found: async () => {
       peak = Math.max(peak, ++active)
       await gate
       active--
-      return { album: { image: [{ '#text': cover }] } }
+      return null
     },
   })
   const pending = fetchLastfmSnapshot(options)
   await new Promise(setImmediate)
-  const firstBatch = started
+  assert.equal(options.lookups.length, 6, 'independent lookups start together')
   release()
-  const snapshot = await pending
-  assert.equal(firstBatch, 3, 'independent covers must not wait one by one')
-  assert.equal(
-    peak,
-    3,
-    'cover requests must stay below the upstream concurrency budget'
-  )
-  assert.equal(started, 7)
-  assert.deepEqual(
-    snapshot.tracks.map((t) => t.name),
-    Array.from({ length: 7 }, (_, i) => `Song ${i}`)
-  )
+  await pending
+  assert.equal(peak, 6)
+  assert.equal(options.lookups.length, 36)
 })
 
-test('songs share edition and base-album queries only for the same artist', async () => {
-  const names = ['First', 'Second', 'Third', 'Fourth']
-  const editions = [
-    'Shared (Explicit)',
-    'Shared (Explicit)',
-    'Shared',
-    'Shared',
-  ]
+test('a slow fallback stops waiting at the budget and keeps the gap', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
   const options = fixture({
-    tracks: names.map((name, i) => track(name, i === 3 ? 'Other' : 'Artist')),
-    pages: [
-      names.map((name, i) => ({
-        ...played(name, i === 3 ? 'Other' : 'Artist', editions[i]),
-        image: [],
-      })),
-    ],
-    albumInfo: (album) => ({
-      album: { image: [{ '#text': album === 'Shared' ? cover : placeholder }] },
-    }),
+    albums: () => [album('Slow', 'Artist', [])],
+    // 永不结束的查找：只有总等待时限能让快照返回。
+    found: () => new Promise(() => undefined),
   })
-  const snapshot = await fetchLastfmSnapshot(options)
-  assert.deepEqual(
-    snapshot.tracks.map((t) => t.album),
-    editions
-  )
-  assert.ok(snapshot.tracks.every((t) => t.cover === cover))
-  const queries = options.requests.filter((r) => r.method === 'album.getInfo')
-  assert.deepEqual(queries.map((r) => [r.artist, r.album]).sort(), [
-    ['Artist', 'Shared'],
-    ['Artist', 'Shared (Explicit)'],
-    ['Other', 'Shared'],
-  ])
+  const pending = fetchLastfmSnapshot(options)
+  while (!options.lookups.length) await new Promise(setImmediate)
+  t.mock.timers.tick(2_500)
+  const snapshot = await pending
+  assert.ok(snapshot.periods.every((p) => p.albums[0].cover === null))
 })
 
-test('API errors and malformed counts fail without exposing credentials or upstream messages', async () => {
+test('an empty library is a valid answer', async () => {
+  const snapshot = await fetchLastfmSnapshot(
+    fixture({ albums: () => [], total: '0' })
+  )
+  assert.equal(snapshot.totalScrobbles, 0)
+  assert.ok(
+    snapshot.periods.every((p) => p.albumTotal === 0 && p.albums.length === 0)
+  )
+})
+
+test('API errors and malformed fields fail without exposing credentials', async () => {
   for (const options of [
     fixture({
       transform: (method, data) =>
         method === 'user.getInfo' ? { error: 10, message: apiKey } : data,
     }),
-    fixture({ weekly: 'not-a-count' }),
+    fixture({ total: 'not-a-count' }),
+    fixture({ albums: () => [album('')] }),
+    fixture({ albums: () => [album('A', 'B', [], '-1')] }),
     {
       apiKey,
       now,
@@ -265,21 +202,4 @@ test('API errors and malformed counts fail without exposing credentials or upstr
     })
   }
   await assert.rejects(fetchLastfmSnapshot({ now }), /LASTFM_API_KEY/)
-})
-
-test('malformed album responses fail the whole snapshot instead of hiding the cover', async () => {
-  const missing = played()
-  missing.image = []
-  for (const response of [
-    {},
-    [],
-    { album: {} },
-    { album: { image: 'invalid' } },
-  ])
-    await assert.rejects(
-      fetchLastfmSnapshot(
-        fixture({ pages: [[missing]], albumInfo: () => response })
-      ),
-      /Last\.fm: invalid album\.getInfo response/
-    )
 })

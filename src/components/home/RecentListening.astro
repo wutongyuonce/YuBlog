@@ -1,14 +1,14 @@
 ---
-/* eslint-disable astro/jsx-a11y/no-noninteractive-tabindex -- 轨道本身不是滚动容器；聚焦它是为了暂停循环。 */
-/* eslint-disable astro/jsx-a11y/anchor-has-content, astro/jsx-a11y/anchor-is-valid -- 卡片模板的文字与链接由脚本按接口数据填入。 */
+/* eslint-disable astro/jsx-a11y/anchor-has-content -- 正在播放的歌名由脚本按接口数据填入。 */
 import { LASTFM_USER, lastfmProfileUrl } from '~/utils/lastfm.mjs'
+import { DEFAULT_PERIOD, PERIODS } from '~/utils/recent-listening'
 
 const profileUrl = lastfmProfileUrl(LASTFM_USER)
 ---
 
 <!--
-  听歌数据只在运行时取得，所以这里只输出加载态骨架卡、卡片模板和失败说明；
-  统计、卡片和更新时间都由 `~/utils/recent-listening` 在校验响应后填入。
+  听歌数据只在运行时取得，所以这里只输出加载态骨架与固定壳层（时段按钮、统计位）；
+  卡片、列表、封面墙与文案都由 `~/utils/recent-listening` 在校验响应后填入。
 -->
 <section
   class="recent-listening"
@@ -16,6 +16,7 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
   aria-busy="true"
   data-listening
   data-state="loading"
+  data-period={DEFAULT_PERIOD}
 >
   <header class="home-section-header">
     <h2 id="recent-listening-title">近期在听</h2>
@@ -23,94 +24,112 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
       Last.fm ↗
     </a>
   </header>
-  <!-- 正在播放／最近播放：加载时是骨架，失败或无记录时整张收起。 -->
-  <article
-    class="now-playing"
-    aria-labelledby="now-playing-status"
+
+  <!-- 正在播放／最近播放 + 其后五首；加载时是骨架，失败或无记录时整块收起。 -->
+  <div
+    class="listening-now"
     aria-busy="true"
     data-now-playing
     data-state="loading"
   >
-    <div class="now-playing__ambient" aria-hidden="true">
-      <img data-np-ambient alt="" />
-    </div>
-    <div class="now-playing__cover">
-      <img data-np-cover alt="" width="300" height="300" decoding="async" />
-      <span class="now-playing__placeholder" aria-hidden="true">
-        ♪
-      </span>
-    </div>
-    <div class="now-playing__body">
-      <p class="now-playing__status">
-        <span class="now-playing__bars" aria-hidden="true">
-          <i></i>
-          <i></i>
-          <i></i>
-        </span>
-        <span id="now-playing-status" data-np-status>
-          正在播放
-        </span>
-      </p>
-      <a
-        class="now-playing__title"
-        data-np-title
-        href={profileUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-      ></a>
-      <p class="now-playing__artist" data-np-artist></p>
-      <p class="now-playing__album" data-np-album></p>
-    </div>
-  </article>
-  <div class="recent-listening__stats" aria-label="听歌统计">
-    <span>
-      过去 7 天 <strong data-listening-stat>—</strong> 次
-    </span>
-    <span>
-      累计 <strong data-listening-stat>—</strong> 次
-    </span>
-    <span>
-      常听歌手{' '}
-      <strong data-listening-stat class="recent-listening__artist">
-        —
-      </strong>
-    </span>
+    <article class="now-playing" aria-labelledby="now-playing-status">
+      <div class="now-playing__ambient" aria-hidden="true">
+        <img data-np-ambient alt="" />
+      </div>
+      <div class="now-playing__art">
+        <span class="now-playing__disc" aria-hidden="true"></span>
+        <div class="now-playing__cover">
+          <img data-np-cover alt="" width="300" height="300" decoding="async" />
+          <span class="now-playing__placeholder" aria-hidden="true">
+            ♪
+          </span>
+        </div>
+      </div>
+      <div class="now-playing__body">
+        <p class="now-playing__status">
+          <span class="now-playing__bars" aria-hidden="true">
+            <i></i>
+            <i></i>
+            <i></i>
+          </span>
+          <span id="now-playing-status" data-np-status>
+            正在播放
+          </span>
+        </p>
+        <a
+          class="now-playing__title"
+          data-np-title
+          href={profileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        ></a>
+        <p class="now-playing__artist" data-np-artist></p>
+        <p class="now-playing__album" data-np-album></p>
+      </div>
+    </article>
+    <ol class="recent-tracks" aria-label="最近播放" data-np-list>
+      {Array.from({ length: 5 }, () => (
+        <li
+          class="recent-tracks__item recent-tracks__skeleton"
+          aria-hidden="true"
+        >
+          <span class="recent-tracks__cover" />
+          <span class="recent-tracks__bar" />
+          <span class="recent-tracks__bar recent-tracks__bar--time" />
+        </li>
+      ))}
+    </ol>
   </div>
-  <div class="prose markdown-content recent-listening__body">
-    <div
-      class="media-cards media-cards--rail media-cards--auto"
-      tabindex="0"
-      role="region"
-      aria-label="过去 7 天常听歌曲"
-    >
-      <div class="media-cards__track" role="list" data-listening-track>
-        {Array.from({ length: 10 }, () => (
-          <article
-            class="recent-listening__skeleton"
-            aria-hidden="true"
-            data-listening-skeleton
+
+  <div class="collage">
+    <div class="collage__bar">
+      <div class="collage__periods" role="group" aria-label="封面墙时段">
+        {Object.entries(PERIODS).map(([key, { short, span }]) => (
+          <button
+            type="button"
+            class="collage__period font-mono"
+            title={span}
+            aria-pressed={key === DEFAULT_PERIOD ? 'true' : 'false'}
+            data-listening-period={key}
+            disabled
           >
-            <div class="recent-listening__skeleton-cover"></div>
-            <div class="recent-listening__skeleton-body">
-              <span class="recent-listening__skeleton-line"></span>
-              <span class="recent-listening__skeleton-line recent-listening__skeleton-line--meta"></span>
-            </div>
-          </article>
+            {short}
+          </button>
         ))}
       </div>
+      <p class="collage__total">
+        <strong data-listening-total>—</strong> scrobbles
+      </p>
+    </div>
+    <div
+      class="collage__grid"
+      aria-label="常听专辑"
+      role="group"
+      data-listening-grid
+    >
+      {Array.from({ length: 9 }, (_, index) => (
+        <span
+          class:list={[
+            'collage__skeleton',
+            { 'collage__skeleton--lead': index === 0 },
+          ]}
+          aria-hidden="true"
+        />
+      ))}
+    </div>
+    <p class="collage__message" data-listening-message hidden></p>
+    <div class="collage__foot">
+      <p class="collage__summary" data-listening-summary></p>
+      <time class="collage__updated" data-listening-time></time>
     </div>
   </div>
-  <p class="recent-listening__message" data-listening-message hidden></p>
-  <p class="recent-listening__updated">
-    更新于 <time data-listening-time>—</time>（北京时间）
-  </p>
   <noscript>
     <style>
-      .now-playing {
+      .listening-now {
         display: none !important;
       }
     </style>
-    <p class="recent-listening__message">
+    <p class="collage__message">
       听歌数据由 Last.fm 实时提供，需要启用 JavaScript；也可以直接访问{' '}
       <a href={profileUrl} target="_blank" rel="noopener noreferrer">
         Last.fm 主页
@@ -118,54 +137,42 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
       。
     </p>
   </noscript>
-  <template data-listening-card>
-    <article class="media-card media-card--square" role="listitem">
-      <div class="image-view">
-        <img
-          class="media-card__cover"
-          width="300"
-          height="300"
-          loading="lazy"
-          decoding="async"
-          alt=""
-        />
-        <template class="image-view__source">
-          <img alt="" />
-        </template>
-      </div>
-      <div class="media-card__body">
-        <a
-          class="media-card__title"
-          target="_blank"
-          rel="noopener noreferrer"
-        ></a>
-        <p class="media-card__meta" tabindex="0"></p>
-      </div>
-    </article>
-  </template>
 </section>
 
-<style>
-  /* 正在播放：封面 + 三行文字，底色由封面的模糊色晕轻染；不假造进度条。 */
+<style is:global>
+  /* 必须是全局作用域：列表行与封面墙格子在运行时插入，拿不到 Astro 的 scoped 属性。 */
+  .recent-listening {
+    container-type: inline-size;
+    margin-top: 3rem;
+  }
+
+  /* —— 正在播放 + 最近播放：宽时左右两栏，窄时上下堆叠 —— */
+  .listening-now {
+    display: grid;
+    grid-template-columns: minmax(0, 14.5rem) minmax(0, 1fr);
+    gap: 1.5rem;
+    margin-top: 1rem;
+  }
+  .listening-now[hidden] {
+    display: none;
+  }
+  .listening-now[data-solo] {
+    grid-template-columns: minmax(0, 21rem);
+  }
+
+  /* 卡片：封面（背后露出一张唱片）+ 状态、歌名、歌手、专辑；底色由封面的模糊色晕轻染。 */
   .now-playing {
-    --np-cover: 4.75rem;
+    --np-cover: 5.25rem;
     position: relative;
     isolation: isolate;
     display: grid;
-    grid-template-columns: var(--np-cover) minmax(0, 1fr);
-    align-items: center;
-    gap: 1rem;
-    /* 窄卡贴版心左缘，桌面与手机都不铺满。 */
-    width: min(21rem, 100%);
-    margin-top: 1rem;
-    padding: 0.875rem;
+    align-content: start;
+    gap: 0.9rem;
+    padding: 1rem;
     overflow: hidden;
     border: 1px solid color-mix(in srgb, var(--c-text) 9%, transparent);
     border-radius: 14px;
     background: color-mix(in srgb, var(--c-text) 3%, var(--c-bg));
-  }
-  .now-playing[hidden] {
-    display: none;
   }
   .now-playing__ambient {
     position: absolute;
@@ -182,16 +189,53 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
     opacity: 0.16;
     transform: scale(1.4);
   }
+  .dark .now-playing__ambient img {
+    opacity: 0.22;
+  }
   .now-playing__ambient img:not([src]),
   .now-playing__cover img:not([src]) {
     display: none;
   }
-  :global(.dark) .now-playing__ambient img {
-    opacity: 0.22;
+  .now-playing__art {
+    position: relative;
+    width: calc(var(--np-cover) * 1.3);
+    height: var(--np-cover);
+  }
+  /* 唱片：细密的同心纹 + 强调色圆标；只在播放时缓慢转动。 */
+  .now-playing__disc {
+    position: absolute;
+    top: 4%;
+    right: 0;
+    width: 92%;
+    max-width: calc(var(--np-cover) * 0.92);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background:
+      radial-gradient(
+        circle,
+        #111 0 5%,
+        var(--accent) 5.5% 24%,
+        #161616 24.5% 26%,
+        transparent 26.5%
+      ),
+      repeating-radial-gradient(circle, #1b1b1b 0 1px, #262626 1px 2.5px);
+    /* 深色底上靠一圈极淡的高光勾出唇片边缘。 */
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 8%),
+      0 4px 12px -6px rgb(0 0 0 / 45%);
+  }
+  .listening-now[data-state='playing'] .now-playing__disc {
+    animation: now-playing-spin 6s linear infinite;
+  }
+  @keyframes now-playing-spin {
+    to {
+      transform: rotate(1turn);
+    }
   }
   .now-playing__cover {
     position: relative;
-    aspect-ratio: 1;
+    width: var(--np-cover);
+    height: var(--np-cover);
     overflow: hidden;
     border-radius: 8px;
     background: color-mix(in srgb, var(--c-text) 8%, var(--c-bg));
@@ -212,7 +256,7 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
     font-family: var(--font-heading);
     font-size: 1.5rem;
   }
-  .now-playing[data-no-cover] .now-playing__placeholder {
+  .listening-now[data-no-cover] .now-playing__placeholder {
     display: grid;
   }
   .now-playing__body {
@@ -235,29 +279,30 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
     letter-spacing: 0.06em;
     color: color-mix(in srgb, var(--c-text) 55%, var(--c-bg));
   }
-  .now-playing[data-state='playing'] .now-playing__status {
+  .listening-now[data-state='playing'] .now-playing__status {
     color: var(--accent);
   }
-  /* 三根均衡器细条，播放时跳动。 */
+  /* 三根均衡器细条，只在播放时出现并跳动。 */
   .now-playing__bars {
     display: inline-flex;
     align-items: flex-end;
     gap: 2px;
     height: 0.625rem;
   }
+  .listening-now:not([data-state='playing']) .now-playing__bars {
+    display: none;
+  }
   .now-playing__bars i {
     width: 2px;
     height: 30%;
     border-radius: 1px;
     background: currentColor;
-  }
-  .now-playing[data-state='playing'] .now-playing__bars i {
     animation: now-playing-bar 0.9s ease-in-out infinite alternate;
   }
-  .now-playing[data-state='playing'] .now-playing__bars i:nth-child(2) {
+  .now-playing__bars i:nth-child(2) {
     animation-delay: -0.45s;
   }
-  .now-playing[data-state='playing'] .now-playing__bars i:nth-child(3) {
+  .now-playing__bars i:nth-child(3) {
     animation-delay: -0.2s;
   }
   @keyframes now-playing-bar {
@@ -275,13 +320,6 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
     color: var(--c-text);
     text-decoration: none;
   }
-  /* 标题族：docs/design/site.md#visuals */
-  .now-playing__title:is(:hover, :focus-visible) {
-    color: var(--accent);
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.2em;
-  }
   .now-playing__artist,
   .now-playing__album {
     font-size: 0.8125rem;
@@ -295,171 +333,450 @@ const profileUrl = lastfmProfileUrl(LASTFM_USER)
   .now-playing__album[hidden] {
     display: none;
   }
-  /* 加载态：封面与三行文字占位，尺寸与就绪后一致。 */
-  .now-playing[data-state='loading'] :is(.now-playing__body > *) {
+
+  /* 最近播放：小封面、歌名、歌手、点线引导与相对时间。 */
+  .recent-tracks {
+    display: grid;
+    align-content: start;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .recent-tracks[hidden] {
+    display: none;
+  }
+  .recent-tracks__item {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-width: 0;
+    height: 2.75rem;
+    margin: 0;
+    font-size: 0.8125rem;
+  }
+  .recent-tracks__item + .recent-tracks__item {
+    border-top: 1px solid color-mix(in srgb, var(--c-text) 7%, transparent);
+  }
+  .recent-tracks__cover {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 1.625rem;
+    height: 1.625rem;
+    overflow: hidden;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--c-text) 7%, var(--c-bg));
+    color: color-mix(in srgb, var(--c-text) 45%, var(--c-bg));
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+  }
+  .recent-tracks__cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .recent-tracks__text {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .recent-tracks__title {
+    color: var(--c-text);
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .recent-tracks__artist {
+    margin-left: 0.55em;
+    color: color-mix(in srgb, var(--c-text) 48%, var(--c-bg));
+  }
+  .recent-tracks__leader {
+    flex: 1 1 1.5rem;
+    min-width: 0.75rem;
+    border-bottom: 1px dotted color-mix(in srgb, var(--c-text) 22%, transparent);
+  }
+  .recent-tracks__time {
+    flex: none;
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    color: color-mix(in srgb, var(--c-text) 50%, var(--c-bg));
+  }
+  /* 标题族：docs/design/site.md#visuals */
+  :is(.now-playing__title, .recent-tracks__title):is(:hover, :focus-visible) {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+
+  /* 窄容器：卡片在上、封面与文字横排，列表在下。 */
+  @container (max-width: 34rem) {
+    .listening-now {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.5rem;
+    }
+    .now-playing {
+      --np-cover: 4.75rem;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 1rem;
+      padding: 0.875rem;
+    }
+  }
+
+  /* —— 封面墙：时段切换 + 累计，#1 占 2×2 的九宫格 —— */
+  .collage {
+    margin-top: 2rem;
+  }
+  .collage__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .collage__periods {
+    display: flex;
+    gap: 0.25rem;
+  }
+  .collage__period {
+    padding: 0.2rem 0.6rem;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: color-mix(in srgb, var(--c-text) 50%, var(--c-bg));
+    cursor: pointer;
+    transition:
+      color 0.15s,
+      background-color 0.15s;
+  }
+  .collage__period:not(:disabled):is(:hover, :focus-visible) {
+    color: var(--c-text);
+    background: color-mix(in srgb, var(--c-text) 6%, transparent);
+  }
+  .collage__period[aria-pressed='true'] {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+  .collage__period:disabled {
+    cursor: default;
+  }
+  .collage__period:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+  .collage__total {
+    margin: 0;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    color: color-mix(in srgb, var(--c-text) 55%, var(--c-bg));
+  }
+  .collage__total strong,
+  .collage__summary strong {
+    color: var(--c-text);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .collage__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.375rem;
+    margin-top: 0.75rem;
+  }
+  .collage__grid:empty {
+    display: none;
+  }
+  .collage__skeleton,
+  .collage__tile {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--c-text) 7%, var(--c-bg));
+  }
+  :is(.collage__skeleton--lead, .collage__tile--lead) {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+  .collage__skeleton {
+    animation: recent-listening-pulse 1.4s ease-in-out infinite;
+  }
+  .collage__tile {
+    display: block;
+    color: #fff;
+    text-decoration: none;
+  }
+  .collage__tile:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .collage__tile img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+  .collage__tile:is(:hover, :focus-visible) img {
+    transform: scale(1.04);
+  }
+  /* 缺封面：浅斜纹底，专辑名与歌手始终可见。 */
+  .collage__tile[data-no-cover] {
+    color: var(--c-text);
+    background: repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--c-text) 4%, var(--c-bg)) 0 7px,
+      color-mix(in srgb, var(--c-text) 7%, var(--c-bg)) 7px 14px
+    );
+  }
+
+  /* 小格：左上名次、左下次数，都是贴角的半透明小片，浅色封面上也看得清；
+     悬停或聚焦时浮出专辑名与歌手。 */
+  .collage__rank,
+  .collage__plays {
+    position: absolute;
+    left: 0;
+    padding: 0.05rem 0.4rem;
+    background: rgb(0 0 0 / 50%);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    font-variant-numeric: tabular-nums;
+    transition: opacity 0.2s;
+  }
+  .collage__rank {
+    top: 0;
+    border-bottom-right-radius: 6px;
+  }
+  .collage__plays {
+    bottom: 0;
+    border-top-right-radius: 6px;
+  }
+  .collage__info {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 0.1rem;
+    padding: 0.5rem;
+    background: linear-gradient(to top, rgb(0 0 0 / 82%), rgb(0 0 0 / 40%));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .collage__tile:is(:hover, :focus-visible) .collage__info {
+    opacity: 1;
+  }
+  .collage__tile:not([data-no-cover]):is(:hover, :focus-visible)
+    :is(.collage__rank, .collage__plays) {
+    opacity: 0;
+  }
+  .collage__kicker {
+    font-size: 0.625rem;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+    color: color-mix(in srgb, var(--accent) 45%, #fff);
+  }
+  .collage__name {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .collage__artist {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 0.6875rem;
+    opacity: 0.75;
+  }
+  .collage__tile[data-no-cover] .collage__info {
+    background: none;
+    opacity: 1;
+  }
+  /* 文字居中，上下留出角标的高度，名次与次数不压在专辑名上。 */
+  .collage__tile[data-no-cover]:not(.collage__tile--lead) .collage__info {
+    justify-content: center;
+    padding: 1.15rem 0.6rem;
+    overflow: hidden;
+  }
+  .collage__tile[data-no-cover]:not(.collage__tile--lead) .collage__kicker {
+    display: none;
+  }
+  .collage__tile[data-no-cover] :is(.collage__rank, .collage__plays) {
+    background: color-mix(in srgb, var(--c-text) 10%, var(--c-bg));
+  }
+  .collage__tile[data-no-cover] .collage__kicker {
+    color: var(--accent);
+  }
+
+  /* #1 大格：信息常驻，右下角大号次数。 */
+  .collage__tile--lead .collage__info {
+    gap: 0.2rem;
+    padding: 1rem 5rem 1rem 1rem;
+    background: linear-gradient(
+      to top,
+      rgb(0 0 0 / 82%),
+      rgb(0 0 0 / 45%) 45%,
+      transparent 75%
+    );
+    opacity: 1;
+  }
+
+  .collage__tile--lead .collage__kicker {
+    font-size: 0.6875rem;
+    color: color-mix(in srgb, var(--accent) 30%, #fff);
+  }
+  .collage__tile--lead .collage__name {
+    font-size: 1.125rem;
+    line-height: 1.3;
+  }
+  .collage__tile--lead .collage__artist {
+    font-size: 0.8125rem;
+  }
+  .collage__count {
+    position: absolute;
+    right: 1rem;
+    bottom: 0.9rem;
+    display: grid;
+    justify-items: end;
+    line-height: 1;
+  }
+  .collage__count strong {
+    font-size: 1.875rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .collage__count span {
+    margin-top: 0.3rem;
+    font-size: 0.6875rem;
+    opacity: 0.75;
+  }
+  @container (max-width: 26rem) {
+    .collage__tile--lead .collage__info {
+      padding: 0.75rem 3.25rem 0.75rem 0.75rem;
+    }
+    .collage__tile--lead .collage__name {
+      font-size: 0.9375rem;
+    }
+    .collage__tile--lead .collage__artist {
+      font-size: 0.75rem;
+    }
+    .collage__count {
+      right: 0.75rem;
+      bottom: 0.7rem;
+    }
+    .collage__count strong {
+      font-size: 1.5rem;
+    }
+    /* 窄屏小格只有七十像素左右：专辑名与歌手各一行，放得进角标之间。 */
+    .collage__tile[data-no-cover]:not(.collage__tile--lead) .collage__name {
+      -webkit-line-clamp: 1;
+      font-size: 0.6875rem;
+    }
+    .collage__tile[data-no-cover]:not(.collage__tile--lead) .collage__artist {
+      font-size: 0.625rem;
+    }
+  }
+
+  .collage__message {
+    margin: 0.75rem 0 0;
+    font-size: 0.75rem;
+    color: color-mix(in srgb, var(--c-text) 65%, var(--c-bg));
+  }
+  /* 无脚本回退：正文族，docs/design/site.md#visuals */
+  .collage__message a {
+    text-decoration: underline;
+    text-decoration-color: var(--link-underline);
+    text-underline-offset: 0.2em;
+  }
+  .collage__message a:is(:hover, :focus-visible) {
+    color: var(--accent);
+    text-decoration-color: var(--accent);
+  }
+  /* 汇总在左、更新时间贴右缘；换行后时间仍留在右侧。加载时也占住一行高度，
+     数据就绪时不把页面撑高。 */
+  .collage__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 1rem;
+    box-sizing: content-box;
+    min-height: 1.2rem;
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid color-mix(in srgb, var(--c-text) 8%, transparent);
+    font-size: 0.75rem;
+    line-height: 1.6;
+    color: color-mix(in srgb, var(--c-text) 55%, var(--c-bg));
+  }
+  .recent-listening[data-state='error'] .collage__foot {
+    display: none;
+  }
+  .collage__summary {
+    margin: 0;
+  }
+  .collage__dot {
+    color: color-mix(in srgb, var(--c-text) 30%, var(--c-bg));
+  }
+  .collage__updated {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* —— 加载态：卡片、列表与九宫格占位，尺寸与就绪后一致 —— */
+  .listening-now[data-state='loading'] .now-playing__body > * {
     width: 60%;
     height: 0.8rem;
     margin: 0.2rem 0;
     border-radius: 4px;
     background: color-mix(in srgb, var(--c-text) 8%, var(--c-bg));
     color: transparent;
-    animation: recent-listening-skeleton-pulse 1.4s ease-in-out infinite;
+    animation: recent-listening-pulse 1.4s ease-in-out infinite;
   }
-  .now-playing[data-state='loading'] .now-playing__status {
+  .listening-now[data-state='loading'] .now-playing__status {
     width: 30%;
   }
-  /* 均衡器只在播放时出现；静止的三个矮点像省略号，会被误读。 */
-  .now-playing:not([data-state='playing']) .now-playing__bars {
-    display: none;
+  .listening-now[data-state='loading'] .now-playing__disc {
+    opacity: 0.35;
   }
-  @media (prefers-reduced-motion: reduce) {
-    .now-playing[data-state='playing'] .now-playing__bars i {
-      height: 70%;
-      animation: none;
-    }
-    .now-playing[data-state='loading'] :is(.now-playing__body > *) {
-      animation: none;
-    }
+  .recent-tracks__skeleton :is(.recent-tracks__cover, .recent-tracks__bar) {
+    animation: recent-listening-pulse 1.4s ease-in-out infinite;
   }
-  .recent-listening {
-    /* Two title lines, two metadata lines, and their shared gap. */
-    --listening-copy-height: calc(3rem + 0.35rem + 2.625rem);
-    margin-top: 3rem;
-  }
-  .recent-listening__stats {
-    display: grid;
-    grid-template-columns: max-content max-content minmax(0, 1fr);
-    gap: 0.5rem 1.25rem;
-    margin-top: 1rem;
-    font-size: 0.75rem;
-    line-height: 1.7;
-    color: color-mix(in srgb, var(--c-text) 65%, var(--c-bg));
-  }
-  .recent-listening__stats > span {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  @media (max-width: 600px) {
-    .recent-listening__stats {
-      grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
-    }
-    .recent-listening__stats > :last-child {
-      grid-column: 1 / -1;
-    }
-  }
-  .recent-listening__stats strong {
-    color: var(--c-text);
-    font-weight: 500;
-    font-variant-numeric: tabular-nums;
-    overflow-wrap: anywhere;
-  }
-  /* 常听歌手名：与写作热力摘要数值同级，仅值用强调色，标签保持 muted。
-     选择器需压过 `.recent-listening__stats strong` 的正文色。 */
-  .recent-listening__stats strong.recent-listening__artist {
-    color: var(--accent);
-  }
-  .recent-listening__body {
-    margin-top: 0.75rem;
-  }
-  .recent-listening__body .media-cards {
-    margin: 0;
-    overflow: hidden;
-    scroll-snap-type: none;
-  }
-  /* 远程封面尚未下载时延续骨架底色，避免就绪首帧露出透明空框。 */
-  .recent-listening__body .media-card > .image-view {
-    background: color-mix(in srgb, var(--c-text) 8%, var(--c-bg));
-  }
-  .recent-listening__body .media-card__body,
-  .recent-listening__skeleton-body {
-    height: var(--listening-copy-height);
-  }
-  .recent-listening__body .media-card__body {
-    padding: 0;
-    gap: 0.35rem;
-  }
-  .recent-listening__body .media-card__title {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-  }
-  /* 加载态：方卡轨距与真实方卡一致，避免就绪后布局跳动；骨架不参与陈列架循环。 */
-  .recent-listening[data-state='loading'] .media-cards--rail {
-    --rail-gap: 0.85rem;
-    --rail-gaps: 5;
-    --rail-visible: 5.5;
-  }
-  .recent-listening__skeleton {
-    display: grid;
-    gap: 0.75rem;
-    min-width: 0;
-  }
-  .recent-listening__skeleton-cover {
-    aspect-ratio: 1;
-    border-radius: 0.375rem;
-    background: color-mix(in srgb, var(--c-text) 8%, var(--c-bg));
-    box-shadow: 0 4px 10px rgb(0 0 0 / 6%);
-  }
-  .recent-listening__skeleton-body {
-    display: grid;
-    align-content: start;
-    gap: 0.35rem;
-  }
-  .recent-listening__skeleton-line {
-    display: block;
-    height: 0.85rem;
-    border-radius: 0.25rem;
-    background: color-mix(in srgb, var(--c-text) 8%, var(--c-bg));
-  }
-  .recent-listening__skeleton-line--meta {
-    width: 72%;
+  .recent-tracks__bar {
+    flex: 0 1 55%;
     height: 0.7rem;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--c-text) 8%, var(--c-bg));
   }
-  .recent-listening__skeleton-cover,
-  .recent-listening__skeleton-line {
-    animation: recent-listening-skeleton-pulse 1.4s ease-in-out infinite;
+  .recent-tracks__bar--time {
+    flex: 0 0 2.5rem;
+    margin-left: auto;
   }
-  @keyframes recent-listening-skeleton-pulse {
+  @keyframes recent-listening-pulse {
     50% {
       opacity: 0.55;
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .recent-listening__skeleton-cover,
-    .recent-listening__skeleton-line {
+    .listening-now[data-state='playing'] .now-playing__disc,
+    .collage__skeleton,
+    .recent-tracks__skeleton :is(.recent-tracks__cover, .recent-tracks__bar),
+    .listening-now[data-state='loading'] .now-playing__body > * {
       animation: none;
     }
-  }
-  .recent-listening:is([data-state='empty'], [data-state='error'])
-    .recent-listening__body {
-    display: none;
-  }
-  .recent-listening__placeholder {
-    display: grid;
-    place-items: center;
-    width: 100%;
-    height: 100%;
-    background: color-mix(in srgb, var(--c-text) 5%, var(--c-bg));
-    color: color-mix(in srgb, var(--c-text) 45%, var(--c-bg));
-    font-family: var(--font-heading);
-    font-size: 2rem;
-  }
-  .recent-listening__message,
-  .recent-listening__updated {
-    margin: 0.75rem 0 0;
-    font-size: 0.75rem;
-    color: color-mix(in srgb, var(--c-text) 65%, var(--c-bg));
-  }
-  /* 无脚本回退：正文族，docs/design/site.md#visuals */
-  .recent-listening__message a {
-    text-decoration: underline;
-    text-decoration-color: var(--link-underline);
-    text-underline-offset: 0.2em;
-  }
-  .recent-listening__message a:is(:hover, :focus-visible) {
-    color: var(--accent);
-    text-decoration-color: var(--accent);
+    .now-playing__bars i {
+      height: 70%;
+      animation: none;
+    }
+    .collage__tile img {
+      transition: none;
+    }
   }
 </style>

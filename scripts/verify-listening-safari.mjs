@@ -12,17 +12,18 @@ assert.ok(response.ok, 'the local homepage must be available')
 const original = await response.text()
 const snapshot = {
   updatedAt: '2026-01-01T00:00:00Z',
-  weeklyScrobbles: 10,
   totalScrobbles: 100,
-  topArtist: 'Artist',
-  tracks: Array.from({ length: 10 }, (_, index) => ({
-    name: `Song ${index}`,
-    artist: 'Artist',
-    album: 'Album',
-    cover: null,
-    fullCover: null,
-    url: 'https://www.last.fm/music/Artist',
-    playcount: 1,
+  periods: ['7day', '1month', '12month', 'overall'].map((key) => ({
+    key,
+    albumTotal: 9,
+    albums: Array.from({ length: 9 }, (_, index) => ({
+      name: `Album ${index}`,
+      artist: 'Artist',
+      url: 'https://www.last.fm/music/Artist',
+      playcount: 9 - index,
+      cover: null,
+      coverLarge: null,
+    })),
   })),
 }
 
@@ -30,10 +31,15 @@ function checkInBrowser(snapshot) {
   const realFetch = window.fetch.bind(window)
   let release
   const gate = new Promise((resolve) => (release = resolve))
+  // 正在播放立刻返回空记录（整块收起），只让封面墙快照等闸门。
   window.fetch = (input, init) =>
     String(input) === '/api/lastfm'
       ? gate.then(() => new Response(JSON.stringify(snapshot)))
-      : realFetch(input, init)
+      : String(input) === '/api/lastfm-now'
+        ? Promise.resolve(
+            new Response(JSON.stringify({ playing: false, tracks: [] }))
+          )
+        : realFetch(input, init)
   const frame = () => new Promise(requestAnimationFrame)
   document.addEventListener('DOMContentLoaded', async () => {
     let result
@@ -42,6 +48,10 @@ function checkInBrowser(snapshot) {
       const root = document.querySelector('[data-listening]')
       if (root?.dataset.state !== 'loading')
         throw new Error('the test must begin with the skeleton')
+      while (
+        root.querySelector('[data-now-playing]').dataset.state === 'loading'
+      )
+        await frame()
       document.documentElement.style.scrollBehavior = 'auto'
       window.scrollTo(0, document.documentElement.scrollHeight)
       await frame()
@@ -66,9 +76,8 @@ function checkInBrowser(snapshot) {
           height: document.documentElement.scrollHeight,
         },
         state: root.dataset.state,
-        cards: root.querySelectorAll('.media-card:not([data-marquee-clone])')
-          .length,
-        skeletons: root.querySelectorAll('[data-listening-skeleton]').length,
+        cards: root.querySelectorAll('.collage__tile').length,
+        skeletons: root.querySelectorAll('.collage__skeleton').length,
         bottom: root.getBoundingClientRect().bottom,
         viewport: window.innerHeight,
         browser: navigator.userAgent,
@@ -139,7 +148,7 @@ try {
   ])
   assert.ifError(result.error)
   assert.equal(result.state, 'ready')
-  assert.equal(result.cards, 10)
+  assert.equal(result.cards, 9)
   assert.equal(result.skeletons, 0)
   assert.ok(
     Math.abs(result.after.height - result.before.height) <= 1,

@@ -95,16 +95,16 @@ draft: true
 
 ### Last.fm
 
-首页排行在访问时从 `/api/lastfm` 获取，仓库不存听歌快照。Vercel Production 与 Preview 环境均需配置 `LASTFM_API_KEY`；可选 `LASTFM_USER` 覆盖默认账户。本地将同名变量放在被忽略的 `.env`，由 dev 中间件调用同一个接口处理函数。
+首页「近期在听」在访问时从 `/api/lastfm`（封面墙）与 `/api/lastfm-now`（正在播放与最近播放）获取，仓库不存听歌快照。Vercel Production 与 Preview 环境均需配置 `LASTFM_API_KEY`；可选 `LASTFM_USER` 覆盖默认账户。本地将同名变量放在被忽略的 `.env`，由 dev 中间件调用同一个接口处理函数。
 
 ```dotenv
 LASTFM_API_KEY=你的_API_Key
 LASTFM_USER=你的_Lastfm_用户名
 ```
 
-`LASTFM_USER` 环境变量仅覆盖接口查询账户。首页标题和无脚本说明中的主页链接在构建时读取 `src/utils/lastfm.mjs` 的 `LASTFM_USER` 常量；换成自己的账户时还需同步修改该常量并重新构建，避免排行与主页链接指向不同用户。
+`LASTFM_USER` 环境变量仅覆盖接口查询账户。首页标题和无脚本说明中的主页链接在构建时读取 `src/utils/lastfm.mjs` 的 `LASTFM_USER` 常量；换成自己的账户时还需同步修改该常量并重新构建，避免听歌数据与主页链接指向不同用户。
 
-缺密钥时接口返回 503，页面显示失败说明；不影响静态博客的构建。接口缓存、扫描上限、空数据与取消请求语义见 [Last.fm 设计](../design/listening.md)。密钥只在服务端使用，不写入源码或公开配置。
+缺密钥时接口返回 503，页面显示失败说明；不影响静态博客的构建。缺封面时由网易云搜索补齐，不需要额外凭据。接口缓存、封面回退、空数据与取消请求语义见 [Last.fm 设计](../design/listening.md)。密钥只在服务端使用，不写入源码或公开配置。
 
 ### ActivityWatch 屏幕时间
 
@@ -194,7 +194,7 @@ sed -e 's/__TASK_SPACE_ID__/<id>/g' \
   scripts/verify-nav-dropdown.mjs | ego-browser nodejs
 ```
 
-按功能选用 `verify-home-content.mjs`、`verify-toc-navigation.mjs`、`verify-theme-refresh.mjs`、`verify-accent-palette.mjs`、`verify-background-layering.mjs`、`verify-shell-alignment.mjs`、`verify-prose-overflow.mjs`、`verify-media-focus.mjs`、`verify-card-rails.mjs`、`verify-giscus.mjs` 和 `verify-listening-startup.mjs`；以脚本内的占位符说明为准。目录检查覆盖 1200px 阈值。
+按功能选用 `verify-home-content.mjs`、`verify-toc-navigation.mjs`、`verify-theme-refresh.mjs`、`verify-accent-palette.mjs`、`verify-background-layering.mjs`、`verify-shell-alignment.mjs`、`verify-prose-overflow.mjs`、`verify-media-focus.mjs`、`verify-card-rails.mjs`、`verify-giscus.mjs`、`verify-listening.mjs` 和 `verify-listening-startup.mjs`；以脚本内的占位符说明为准。目录检查覆盖 1200px 阈值。
 
 `verify-image-layouts.mjs` 还需将 `__REPO_ROOT__` 替换为当前 worktree 的绝对路径，它会创建并清理临时草稿和 SVG 夹具，不应修改真实文章。评论脚本不发送留言，OAuth 和评论持久化需单独用账号验收。
 

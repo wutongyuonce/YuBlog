@@ -14,7 +14,7 @@ WutongRain’s personal blog, built with Astro 7, TypeScript and Markdown/MDX. I
 
 | Page | Route | Purpose |
 | --- | --- | --- |
-| Home | `/` | Author, socials, writing heatmap, time progress, five recent posts, screen time, recent media and Last.fm seven-day TOP 10 |
+| Home | `/` | Author, socials, writing heatmap, time progress, five recent posts, screen time, recent media and Last.fm listening (now playing and an album collage) |
 | Blog | `/blogs/` | All posts, category/tag filters, eight posts per page and random browsing |
 | Tags | `/tags/` | Sortable tags with multi-select AND filtering |
 | Archives | `/archives/` | One yearly timeline with category badges and tag links |
