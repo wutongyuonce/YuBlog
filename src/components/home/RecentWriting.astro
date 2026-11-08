@@ -132,14 +132,22 @@ const posts = await getRecentBlogPosts()
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
+  /* 窄屏标题独占一行，日期与分类同行并仍贴版心右缘。 */
   @media (max-width: 640px) {
     .recent-writing__item {
-      grid-template-columns: 2rem minmax(0, 1fr);
       column-gap: 0.75rem;
     }
-    .recent-writing__date {
+    .recent-writing__content {
+      display: contents;
+    }
+    .recent-writing__link {
+      grid-column: 2 / -1;
+    }
+    .recent-writing__category {
       grid-column: 2;
-      margin-top: 0.25rem;
+    }
+    .recent-writing__date {
+      grid-area: 2 / 3;
     }
   }
 </style>

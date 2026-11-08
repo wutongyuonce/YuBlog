@@ -223,6 +223,7 @@ RSS 使用同一份已渲染正文；内容降级、订阅身份与失败规则�
 | 对象 | 规则与属主 |
 | --- | --- |
 | 内容与导航宽度 | `main.css` 配置 `--blog-shell-width`，`--site-nav-width` 引用它，使顶栏与正文宽度一致，更多右侧保留剩余空白。版心目标 660px（与正文图片的 `ARTICLE_COLUMN_WIDTH` 同源），同时受 `100vw - 两侧外边距` 限制；1200px 及以上让出右侧目录留白。页面和目录只读这个变量，不另写宽度。普通长无空格 token 由 `.prose` 断行，防撑宽职责见 [架构](./architecture.md) |
+| 视觉对齐 | 页面内容的左右外缘对齐版心，与顶栏外框同缘：同一列的标题、正文、卡片、统计与控件共用左缘，行内次级信息（日期、计数、板块次级入口）贴版心右缘；窄屏换行后仍守这两条缘线，不让次级信息因换行漂到左侧另起一行。容器自身的内边距与描边属于容器内部，不据此偏移外缘；新增或调整布局时，在桌面与手机宽度核对元素到版心的偏差 |
 | 文稿列表封面列 | `ListItem.astro` 固定有图 250px、无图 222px。版心宽度变化只进入左侧文字，不在 `main.css` 再写一份列宽 |
 | 图标 | 经 UnoCSS `presetIcons` 使用 Iconify，属主是 `unocss.config.ts`：壳层 UI 默认 Remix（`ri`），品牌社交用 `simple-icons`（X／Instagram／Bilibili／小红书）与 `uil`（GitHub）。外链新标签示意只有一种 Iconify 箭头 `i-ri-arrow-right-up-line`（名片 RSS，以及 `UI.externalLink.showNewTabIcon` 开启时的 `Link`／rehype 外链）；菜单与首页次级入口等紧凑处用文本 `↗`，不另引图标集。配置里的动态类名由 `unocss.config.ts` 自动进 safelist，内容里的静态类由 content 扫描收集；Favicon／manifest、Excalidraw 与图片查看器等手写 SVG 不走这套 |
 | 页面顶部间距 | 所有页面共用 `shell.css` 的 `.site-main`：桌面与 799px 及以下两档顶部内边距，保证可见顶栏与内容之间留出固定空白 |

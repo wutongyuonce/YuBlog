@@ -268,8 +268,9 @@ Avatar: ${friendInfo.avatar}`
       monospace;
     font-size: 0.82rem;
     line-height: 1.7;
-    overflow-x: auto;
-    white-space: pre;
+    /* 长网址在卡片内换行，不被右缘裁掉；复制的仍是原文。 */
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
 
   .friends-apply__copy {
