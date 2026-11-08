@@ -24,11 +24,11 @@ Avatar: ${friendInfo.avatar}`
     <ol class="friends-apply__rules">
       <li>
         <span class="friends-apply__index">01</span>
-        <span class="friends-apply__rule-text">先友后链</span>
+        <span>先友后链</span>
       </li>
       <li>
         <span class="friends-apply__index">02</span>
-        <span class="friends-apply__rule-text">使用 https 协议</span>
+        <span>使用 https 协议</span>
       </li>
     </ol>
     <p class="friends-apply__hint">
@@ -121,12 +121,11 @@ Avatar: ${friendInfo.avatar}`
     padding: 0;
   }
 
+  /* 规则纵向列出、不加下划线，避免误认为链接。 */
   .friends-apply__rules {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 0.45rem 1rem;
-    overflow-x: auto;
-    margin: 0;
+    display: grid;
+    gap: 0.35rem;
+    margin: 0 0 0.35rem;
     padding: 0;
     list-style: none;
   }
@@ -137,21 +136,15 @@ Avatar: ${friendInfo.avatar}`
     align-items: baseline;
     color: var(--c-text);
     font-size: 0.95rem;
-    white-space: nowrap;
+    font-weight: 600;
   }
 
   .friends-apply__index {
     color: var(--friends-subtle);
     font-size: 0.78rem;
+    font-weight: 400;
     letter-spacing: 0.04em;
     font-variant-numeric: tabular-nums;
-  }
-
-  .friends-apply__rule-text {
-    text-decoration: underline;
-    text-decoration-color: currentColor;
-    text-decoration-thickness: 0.08em;
-    text-underline-offset: 0.18em;
   }
 
   .friends-apply__hint {
