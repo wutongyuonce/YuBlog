@@ -34,12 +34,28 @@
       console.warn('Last.fm listening request failed', error)
     }
     if (signal.aborted || !root.isConnected) return
-    renderListening(root, snapshot)
-    // 注入的卡片需要重新接管：陈列架重算循环副本，图片查看器补键盘入口。
-    document.dispatchEvent(new Event('content:added'))
+    renderListening(root, snapshot, root.dataset.period)
+    if (!snapshot) return
+    // 切换时段只重绘同一份快照，不再请求接口。
+    root.addEventListener(
+      'click',
+      (event) => {
+        const button = (event.target as Element).closest<HTMLElement>(
+          '[data-listening-period]'
+        )
+        const period = button?.dataset.listeningPeriod
+        if (period && period !== root.dataset.period)
+          renderListening(root, snapshot, period)
+      },
+      { signal }
+    )
   }
 
-  const fillNow = async (card: HTMLElement, signal: AbortSignal) => {
+  /** 轮询序号：只有最新一次轮询的结果能写入，迟到的旧响应直接丢弃。 */
+  let nowSequence = 0
+
+  const fillNow = async (block: HTMLElement, signal: AbortSignal) => {
+    const sequence = ++nowSequence
     let data = null
     try {
       data = parseNowPlayingPayload(await getJson(NOW_ENDPOINT, signal))
@@ -47,8 +63,8 @@
       if (signal.aborted) return
       console.warn('Last.fm now-playing request failed', error)
     }
-    if (signal.aborted || !card.isConnected) return
-    renderNowPlaying(card, data)
+    if (signal.aborted || sequence !== nowSequence || !block.isConnected) return
+    renderNowPlaying(block, data)
   }
 
   const stop = () => {
@@ -63,13 +79,13 @@
     if (!root || root.dataset.state !== 'loading' || request) return
     const current = new AbortController()
     request = current
-    const card = root.querySelector<HTMLElement>('[data-now-playing]')
-    if (card) {
-      void fillNow(card, current.signal)
+    const block = root.querySelector<HTMLElement>('[data-now-playing]')
+    if (block) {
+      void fillNow(block, current.signal)
       // 只在页面可见时轮询；隐藏的标签页不打接口。
       nowTimer = setInterval(() => {
         if (document.visibilityState === 'visible')
-          void fillNow(card, current.signal)
+          void fillNow(block, current.signal)
       }, NOW_INTERVAL)
     }
     void fill(root, current.signal)

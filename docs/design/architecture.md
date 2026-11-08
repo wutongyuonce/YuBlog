@@ -26,7 +26,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 
 | 路由 | 人看到的 | 入口 | 数据权威 |
 | :--- | :--- | :--- | :--- |
-| `/` | 作者介绍、写作热力、近期五篇笔墨、屏幕时间、近期书影游与 Last.fm 听歌排行 | `src/pages/index.astro` | 已发布 `blogs`、`src/data/media/items.json`、运行时 `/api/lastfm` 与 `/api/screen-time` |
+| `/` | 作者介绍、写作热力、近期五篇笔墨、屏幕时间、近期书影游与 Last.fm 近期在听 | `src/pages/index.astro` | 已发布 `blogs`、`src/data/media/items.json`、运行时 `/api/lastfm`、`/api/lastfm-now` 与 `/api/screen-time` |
 | `/blogs/` | 完整文稿列表，八篇分页，原始分类共用 URL 片段精确筛选 | `src/pages/blogs/index.astro` | `blogs` 集合 |
 | `/interests/`、`/interests/<id>/` | 分类入口与按内容自动生成的独立页面 | `src/pages/interests.astro`、`src/pages/interests/[id].astro` | `interests` 集合：顶层 `*.{md,mdx}`；`interestTabs`：`<id>/<tab>.md` |
 | `/tags/` | 标签芯片；多选 AND；未选不列出文章 | `src/pages/tags.astro` | 同上，标签从文章 frontmatter 汇总 |
@@ -98,7 +98,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | 相册箭头／圆点状态、dialog 放大与正文大图相册翻页、焦点与滚动锁 release 生命周期、监听清理 | `src/utils/image-interactions.ts` | 把交互再放进 Astro widget；widget 在 BaseLayout 只接线；另起第二套 lightbox |
 | 共享 Markdown 标题排版 | `prose.css` 的 `.prose.markdown-content` | 为首页、拾趣、关于各写标题字号 |
 | 屏幕时间日期、公开形状与缺失值；Blob 地址与上传；柱高刻度与失败文案 | `src/utils/screen-time.js`、`src/utils/screen-time-store.mjs`、`src/utils/screen-time-view.js`；本机采集的权威实现在 `scripts/sync-screen-time.mjs`，每小时任务运行安装到本机应用目录的副本；运行时接口在 `api/screen-time.js`，详见 [设计](./screen-time.md) | 在组件内推断活跃状态或连接本机 API |
-| Last.fm 查询、统计、专辑匹配、资料缺失与请求上限 | `src/utils/lastfm.mjs`；缓存与失败语义在 `api/lastfm.js` | 在视图中重新调用 API 或推断排行／周总数 |
+| Last.fm 查询、时段排行、最近播放、封面来源与请求上限 | `src/utils/lastfm.mjs`（网易云封面回退在 `src/utils/netease-cover.mjs`）；缓存与失败语义在 `api/lastfm.js`／`api/lastfm-now.js` | 在视图中重新调用 API、推断排行或另找封面 |
 | 拾趣固定歌单、平台资料归一化、运行时快照 | `src/data/playlists.json`、`src/utils/qq-playlist.mjs`／`netease-playlist.mjs` 与 `playlists.mjs`；缓存在 `api/playlists.js`，见 [拾趣歌单](./playlists.md) | 提交全量曲目、在页面抓远程封面或接受任意来源 URL |
 | 影音书游条目 | `src/data/media/items.json`；合页 `MediaHub`；排序／统计／标签色调 `src/utils/media-hub.js`；封面 `src/utils/media-covers.ts` | 在 Markdown `:::card` 目录页再维护一份电影／动漫／剧／游戏／书清单 |
 | 写作热力统计与失败语义 | `blog-heatmap.js` | 在组件重算年度字数、将缺失字数当 0 |
@@ -220,7 +220,7 @@ KaTeX 样式与字体来自本地 `katex` 包，由 Vite 打包到 `/_astro/`；
 
 #### Last.fm 运行时接口 seam
 
-`src/utils/lastfm.mjs` 拥有查询、校验与快照；`api/lastfm.js` 拥有缓存、状态码及错误响应，dev 中间件复用同一处理函数。`RecentListening` 仅输出模板，客户端从接口校验后写入 DOM，以 `content:added` 通知现有陈列架与图片查看器接管。启动顺序、取消请求、资源上限与失败语义见 [Last.fm 设计](./listening.md)。
+`src/utils/lastfm.mjs` 拥有查询、校验与快照，缺图时经 `src/utils/netease-cover.mjs` 补网易云封面；`api/lastfm.js`／`api/lastfm-now.js` 拥有各自的缓存窗口，状态码及错误响应在 `api/_lastfm-response.js`，dev 中间件复用同一处理函数。`RecentListening` 只输出骨架与固定壳层，客户端由 `recent-listening.js` 校验响应后写入 DOM；听歌区块不使用陈列架或图片查看器。启动顺序、取消请求、资源上限与失败语义见 [Last.fm 设计](./listening.md)。
 
 ### 4.7 TOC seam
 
@@ -317,7 +317,7 @@ plugins/
 
 ### 首页 `/`
 
-`BlogProfile` 无卡片背景：头像与作者信息作为一组居中，头像右侧的名字与 INTJ 上下两行排列，INTJ 在名字下方且字明显更小；RSS 居右；下方依次是一行居中的六个社交图标和一行居中的斜体名言「我与我周旋久，宁做我」。名言较长时在版心内自动换行，没有全站总数。社交入口由 `config.ts` 的 `AUTHOR_LINKS` 维护，名称保留给读屏器和悬停提示。窄屏仍保持作者组居中、RSS 靠右同一行，社交仍为单行、名言在其下方，缩小图标间隔；时间进度标签和数字上下排列。`WritingHeatmap` 放在名片下方，首页随后呈现独立的 `ProgressStats` 三列细时间进度，再显示近期笔墨和屏幕时间。屏幕时间在访问时从 `/api/screen-time` 读取本机同步的七日聚合结果，数据边界与本机同步见 [设计](./screen-time.md)。标题与近期笔墨左对齐，年份在标题右侧以自定义下拉选择（多一年时；列表在触发器下方展开）；日历按上海时区自然年、周一起始，只计已发布文章。每年摘要显示篇数、字数和有文章的天数。单篇格子是链接，多篇在脚本启用后从提示层进入。`RecentWriting` 在其下显示最近五篇已发布文稿，无卡片底色，标题大小接近正文。`RecentMedia` 再往下用 `items.json` 的待看条目渲染竖卡横滑栏，不另画边框，宽度跟首页版心走。正文标题和卡片仅使用共享 `prose.css`，没有首页专用覆盖；近期条目使用连续 `:::card{layout="portrait"}` 组成一排，原封面、标题和顺序保留，原评论精简后放入 `meta`，不显示评分或类别角标，作品标题 `href` 直接指向对应 Wiki；不写 `scroll="auto"`，仅手动横滑。标题右侧「全部拾趣」进入拾趣入口。Markdown 标题按原层级分段并保留锚点。该文件排除出拾趣集合，不生成子页。`RecentListening` 接在近期书影游下方展示 Last.fm 听歌排行。首页不显示文章分页或个人侧栏。首页带 `?page=`、`?category=`、`?tag=` 的兼容书签在客户端转到 `/blogs/`。
+`BlogProfile` 无卡片背景：头像与作者信息作为一组居中，头像右侧的名字与 INTJ 上下两行排列，INTJ 在名字下方且字明显更小；RSS 居右；下方依次是一行居中的六个社交图标和一行居中的斜体名言「我与我周旋久，宁做我」。名言较长时在版心内自动换行，没有全站总数。社交入口由 `config.ts` 的 `AUTHOR_LINKS` 维护，名称保留给读屏器和悬停提示。窄屏仍保持作者组居中、RSS 靠右同一行，社交仍为单行、名言在其下方，缩小图标间隔；时间进度标签和数字上下排列。`WritingHeatmap` 放在名片下方，首页随后呈现独立的 `ProgressStats` 三列细时间进度，再显示近期笔墨和屏幕时间。屏幕时间在访问时从 `/api/screen-time` 读取本机同步的七日聚合结果，数据边界与本机同步见 [设计](./screen-time.md)。标题与近期笔墨左对齐，年份在标题右侧以自定义下拉选择（多一年时；列表在触发器下方展开）；日历按上海时区自然年、周一起始，只计已发布文章。每年摘要显示篇数、字数和有文章的天数。单篇格子是链接，多篇在脚本启用后从提示层进入。`RecentWriting` 在其下显示最近五篇已发布文稿，无卡片底色，标题大小接近正文。`RecentMedia` 再往下用 `items.json` 的待看条目直接输出竖卡横滑栏的同一结构，样式只用共享 `prose.css`，展示规则见 [站点与页面](./site.md)。`RecentListening` 接在近期书影游下方展示 Last.fm 近期在听（正在播放、最近播放与专辑封面墙）。首页不显示文章分页或个人侧栏。首页带 `?page=`、`?category=`、`?tag=` 的兼容书签在客户端转到 `/blogs/`。
 
 ### 文稿 `/blogs/`
 

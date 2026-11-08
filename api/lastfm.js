@@ -1,7 +1,7 @@
 /**
- * 首页听歌数据的运行时接口。
+ * 首页封面墙的运行时接口。
  *
- * 只有这里决定七日快照的缓存窗口；状态码与失败语义在 `_lastfm-response.js`，
+ * 只有这里决定封面墙快照的缓存窗口；状态码与失败语义在 `_lastfm-response.js`，
  * Last.fm 的查询、校验与错误消息由 `src/utils/lastfm.mjs` 负责。
  */
 
@@ -18,12 +18,13 @@ const CACHE =
 /** 处理一次听歌数据请求。 */
 export function handleListening(
   request,
-  { apiKey, user, fetchImpl, now } = {}
+  { apiKey, user, fetchImpl, findCover, now } = {}
 ) {
   return respondWithLastfm(request, {
     apiKey,
     cache: CACHE,
-    load: () => fetchLastfmSnapshot({ apiKey, user, now, fetchImpl }),
+    load: () =>
+      fetchLastfmSnapshot({ apiKey, user, now, fetchImpl, findCover }),
   })
 }
 
