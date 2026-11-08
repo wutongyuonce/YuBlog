@@ -5,8 +5,9 @@ import {
   gcj02ToWgs84,
   parseJourneyId,
   toTripDraft,
+  wgs84ToGcj02,
 } from '../src/utils/pitravel.mjs'
-import { haversine } from '../src/utils/trip-routes.mjs'
+import { haversine } from '../src/utils/geo.mjs'
 
 const poi = (lng, lat, extra = {}) => ({
   location: { longitude: String(lng), latitude: String(lat) },
@@ -95,9 +96,11 @@ test('journey ids come from share links or bare digits only', () => {
   assert.throws(() => parseJourneyId('https://www.pitravel.cn/plan/'))
 })
 
-test('GCJ-02 moves Chinese coordinates a few hundred metres, others stay', () => {
-  const shift = haversine([106.5957, 29.5575], gcj02ToWgs84(106.5957, 29.5575))
-  assert.ok(shift > 100 && shift < 1000, `shift ${shift}`)
+test('GCJ-02 converts back to the WGS84 point it came from', () => {
+  const wgs = [106.5957, 29.5575]
+  const gcj = wgs84ToGcj02(...wgs)
+  assert.ok(haversine(wgs, gcj) > 100, 'China is offset')
+  assert.ok(haversine(wgs, gcj02ToWgs84(...gcj)) < 0.5)
   assert.deepEqual(gcj02ToWgs84(2.35, 48.85), [2.35, 48.85])
 })
 
@@ -128,6 +131,22 @@ test('drafts keep dated days in order and map stops to neutral fields', () => {
   assert.equal(alley.travel, 'walk')
   assert.equal(alley.time, undefined)
   assert.equal(draft.days[1].stops[0].travel, 'straight')
+})
+
+test('two plans on the same date merge instead of dropping stops', () => {
+  const day = (name) => ({
+    day_index: 1,
+    timestamp: DAY1,
+    events: [{ name, start_poi_info: poi(106.5, 29.5) }],
+  })
+  const draft = toTripDraft({
+    code: 0,
+    data: { journey: { name: 'x', day_plans: [day('甲'), day('乙')] } },
+  })
+  assert.deepEqual(
+    draft.days.map((item) => item.stops.map((stop) => stop.name)),
+    [['甲', '乙']]
+  )
 })
 
 test('drafts carry no source identity', () => {

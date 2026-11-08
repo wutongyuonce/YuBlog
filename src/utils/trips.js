@@ -4,7 +4,7 @@
  * 数据形状见 `tripSchema`（src/content/schema.ts）。
  */
 
-export const TRIP_TIME_ZONE = 'Asia/Shanghai'
+const TRIP_TIME_ZONE = 'Asia/Shanghai'
 export const STATUS_LABELS = { plan: '计划', record: '记录' }
 export const ROUTE_MODE_LABELS = {
   drive: '驾车',
@@ -167,7 +167,7 @@ export function collageImages(trip, key) {
 /**
  * `/trips/map.json` 里一段旅程的几何：各站坐标与全程序号，及逐段路径。
  * @param {string} id
- * @param {{ title: string, start: string, end: string, days: { stops: { name: string, coordinates: [number, number], route?: { mode: string, distance: number, path: [number, number][] } }[] }[] }} trip
+ * @param {{ title: string, start: string, end: string, days: { stops: { name: string, coordinates: [number, number], route?: { path: [number, number][] } }[] }[] }} trip
  */
 export function tripMapData(id, trip) {
   const all = stops(trip)
@@ -177,25 +177,13 @@ export function tripMapData(id, trip) {
     dates: formatDateRange(trip.start, trip.end),
     color: yearColor(tripYear(trip)),
     year: tripYear(trip),
-    stops: trip.days.flatMap((day, dayIndex) =>
-      day.stops.map((stop) => ({
-        name: stop.name,
-        coordinates: stop.coordinates,
-        day: dayIndex,
-        index: all.indexOf(stop),
-      }))
-    ),
+    stops: all.map((stop, index) => ({
+      name: stop.name,
+      coordinates: stop.coordinates,
+      index,
+    })),
     legs: all.flatMap((stop, index) =>
-      stop.route
-        ? [
-            {
-              from: index,
-              mode: stop.route.mode,
-              distance: stop.route.distance,
-              path: stop.route.path,
-            },
-          ]
-        : []
+      stop.route ? [{ from: index, path: stop.route.path }] : []
     ),
   }
 }

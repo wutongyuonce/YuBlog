@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
+import { haversine } from '../src/utils/geo.mjs'
 import {
   decodePolyline,
-  haversine,
   requestRoute,
   simplifyPath,
 } from '../src/utils/trip-routes.mjs'
@@ -85,6 +85,27 @@ test('routed legs keep the service distance and join the stops', async () => {
   assert.equal(route.duration, 1800)
   assert.deepEqual(route.path[0], from)
   assert.deepEqual(route.path.at(-1), to)
+})
+
+test('a truncated route shape falls back instead of inventing a point', async () => {
+  const shape = encode([
+    [106.501, 29.501],
+    [106.519, 29.509],
+  ])
+  const { route, warning } = await requestRoute(
+    { from, to, mode: 'drive' },
+    {
+      fetchImpl: async () =>
+        Response.json({
+          trip: {
+            summary: { length: 2.5 },
+            legs: [{ shape: shape.slice(0, -1) }],
+          },
+        }),
+    }
+  )
+  assert.equal(route.mode, 'straight')
+  assert.match(warning, /不完整/)
 })
 
 test('failures and unknown modes fall back to a straight line', async () => {

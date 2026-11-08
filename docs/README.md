@@ -17,7 +17,7 @@
 | 配置首页屏幕时间与本机每小时同步 | [ActivityWatch 屏幕时间](./design/screen-time.md) | macOS / Windows 安装、公开数据边界 |
 | 接入或排查首页听歌接口 | [Last.fm 运行时接口与展示](./design/listening.md) | [环境变量与部署](./guides/development.md#services) |
 | 添加或排查拾趣歌单、运行时数据与导出 | [拾趣歌单](./design/playlists.md) | 固定配置、平台适配器与 CDN 暖缓存 |
-| 导入圆周旅迹行程、调整旅行页或地图 | [旅行](./design/trips.md) | [导入](./design/trips.md#导入)、[Mapbox token](./guides/development.md#services) |
+| 导入圆周旅迹行程、调整旅行页或地图 | [旅行](./design/trips.md) | [导入](./design/trips.md#导入)、[地图](./design/trips.md#地图) |
 | 开关像素猫、改皮肤或访客隐藏 | [Oneko 像素猫](./design/oneko.md) | [全站功能配置](./guides/development.md#personalization) |
 | 跑检查、准备交付 | [检查与验收](./guides/development.md#verification) | 对应设计文档末尾的验证映射 |
 | 学习 Astro 组件、插槽和模板语法 | [Astro 学习笔记](./reference/astro.md) | 项目实现以架构文档和源码为准 |

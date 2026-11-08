@@ -3,9 +3,14 @@
  * 减少动态效果时不画动画，只逐站切换。时间线是纯数据（`buildTimeline`），
  * 地图图层与帧循环在 `createReplay`。
  */
-import type { Marker, PaddingOptions } from 'mapbox-gl'
+import type {
+  ExpressionSpecification,
+  Marker,
+  PaddingOptions,
+} from 'maplibre-gl'
 
-import type { TripGeo, TripMap } from '~/utils/trip-map'
+import { haversine as distance } from './geo.mjs'
+import type { TripGeo, TripMap } from './trip-map'
 
 const DWELL_MS = 2200
 const REDUCED_DWELL_MS = 3000
@@ -33,20 +38,6 @@ type Step =
       from: number
       to: number
     }
-
-const EARTH_RADIUS = 6_371_008.8
-function distance(
-  [lng1, lat1]: [number, number],
-  [lng2, lat2]: [number, number]
-) {
-  const rad = Math.PI / 180
-  const h =
-    Math.sin(((lat2 - lat1) * rad) / 2) ** 2 +
-    Math.cos(lat1 * rad) *
-      Math.cos(lat2 * rad) *
-      Math.sin(((lng2 - lng1) * rad) / 2) ** 2
-  return 2 * EARTH_RADIUS * Math.asin(Math.min(1, Math.sqrt(h)))
-}
 
 /**
  * 全程路径、沿线累计距离与时间线。路段的 `from`／`to` 是沿线距离（米）。
@@ -145,21 +136,20 @@ export interface ReplayOptions {
 export async function createReplay(options: ReplayOptions) {
   const { tripMap, trip, getPadding } = options
   const { map } = tripMap
-  const { default: mapboxgl } = await import('mapbox-gl')
+  const maplibregl = await import('maplibre-gl')
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
   const timeline = buildTimeline(trip, reducedMotion)
   const head = document.createElement('span')
   head.className = 'trips-replay-head'
   head.style.setProperty('--trip-color', trip.color)
-  const marker: Marker = new mapboxgl.Marker({ element: head })
-    .setLngLat(timeline.path[0])
-    .addTo(map)
+  const marker: Marker = new maplibregl.Marker({ element: head }).setLngLat(
+    timeline.path[0]
+  )
 
   let elapsed = 0
   let startedAt = 0
   let frame = 0
   let playing = false
-  let currentStop = -1
   let stepIndex = -1
   let finished = false
 
@@ -192,23 +182,22 @@ export async function createReplay(options: ReplayOptions) {
       source: LINE_SOURCE,
       layout: { 'line-cap': 'round', 'line-join': 'round' },
       paint: {
-        'line-color': trip.color,
         'line-width': 4,
-        'line-trim-offset': [0, 1],
+        'line-gradient': progress(0),
       },
     })
     tripMap.setBaseLayersVisible(false)
   }
 
+  /** 路线进度 `ratio` 之前着色、之后透明。数据只发一次，每帧只改这个表达式。 */
+  function progress(ratio: number): ExpressionSpecification {
+    return ['step', ['line-progress'], trip.color, ratio, 'rgba(0, 0, 0, 0)']
+  }
+
   function drawn(at: number) {
     if (!map.getLayer(LINE_LAYER) || timeline.length === 0) return
     const ratio = Math.min(1, Math.max(0, at / timeline.length))
-    // [ratio, 1] 是被裁掉的部分；全画完时裁掉空段。
-    map.setPaintProperty(
-      LINE_LAYER,
-      'line-trim-offset',
-      ratio >= 1 ? [1, 1] : [ratio, 1]
-    )
+    map.setPaintProperty(LINE_LAYER, 'line-gradient', progress(ratio))
   }
 
   function zoomFor(step: Extract<Step, { kind: 'travel' }>) {
@@ -232,7 +221,6 @@ export async function createReplay(options: ReplayOptions) {
   function enter(step: Step) {
     const stop = trip.stops[step.stop]
     if (step.kind === 'dwell') {
-      currentStop = step.stop
       options.onStop(step.stop)
       drawn(step.at)
       marker.setLngLat(stop.coordinates)
@@ -299,7 +287,6 @@ export async function createReplay(options: ReplayOptions) {
       finished = false
       elapsed = 0
       stepIndex = -1
-      currentStop = -1
       drawn(0)
     }
     map.stop()
@@ -322,31 +309,21 @@ export async function createReplay(options: ReplayOptions) {
     options.onEnd()
   }
 
-  function onStyleLoad() {
-    addLayers()
-  }
-
+  // 换底图前页面会先退出回放，所以图层只加一次。
   addLayers()
-  map.on('style.load', onStyleLoad)
+  // 图层加好之后才放标记，加图层失败时地图上不会留下孤立的标记。
+  marker.addTo(map)
 
   return {
     play,
-    pause,
     toggle() {
       if (playing) pause()
       else play()
-    },
-    get playing() {
-      return playing
-    },
-    get stop() {
-      return currentStop
     },
     /** 退出回放：拆掉图层与标记，恢复总览图层。 */
     destroy() {
       cancelAnimationFrame(frame)
       playing = false
-      map.off('style.load', onStyleLoad)
       marker.remove()
       if (map.getLayer(LINE_LAYER)) map.removeLayer(LINE_LAYER)
       if (map.getLayer(PLANNED_LAYER)) map.removeLayer(PLANNED_LAYER)

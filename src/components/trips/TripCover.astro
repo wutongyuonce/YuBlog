@@ -41,7 +41,7 @@ function outlinePoints(points: [number, number][]) {
       <Image
         src={image}
         alt=""
-        widths={[320, 640, 960].filter((width) => width <= image.width)}
+        widths={[320, 640, 960]}
         {sizes}
         format="webp"
         loading={priority ? 'eager' : 'lazy'}

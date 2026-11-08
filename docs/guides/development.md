@@ -120,16 +120,6 @@ BLOB_READ_WRITE_TOKEN='从 Dashboard 复制' node scripts/install-screen-time.mj
 
 装完后每小时任务不再读取仓库，移动或删除仓库不会停止采集。换 Node、或快照格式变了，在仓库里重跑同一条命令。`pnpm dev` 读的是本机应用目录里的快照，不是仓库文件。状态码、路径、Windows 任务与卸载见 [屏幕时间设计](../design/screen-time.md)。
 
-### Mapbox 地图
-
-旅行页的地图使用 Mapbox GL JS，在 [Mapbox 控制台](https://console.mapbox.com/account/access-tokens/) 复制公开 token（`pk.` 开头），并在 URL restrictions 里只允许自己的域名和 `localhost`。Vercel Production 与 Preview 都配置，本地写进被忽略的 `.env`：
-
-```dotenv
-PUBLIC_MAPBOX_TOKEN=pk.…
-```
-
-token 在构建时写进页面，是公开值，靠 URL 限制防滥用。缺少时不影响构建，旅行页只显示面板，地图处给出说明。导入脚本不需要 token。
-
 ### Giscus 评论
 
 在自己的公开 GitHub 仓库启用 Discussions 并安装 Giscus App，用生成的仓库和分类信息替换 `src/config.ts` 的 `GISCUS`。评论出现在博客文章、友链页和全部拾趣分类子页，访客用 GitHub 登录后留言。
@@ -189,7 +179,7 @@ pnpm test:built-markdown
 | 布局、导航、主题、搜索、评论 | 对应真实浏览器脚本、深浅主题及 1440／390／320px 可读性与横向溢出；字体声明或 CSS 拆分改动另跑 `scripts/verify-navigation-fonts.mjs`，检查切页时已加载字体不回退 |
 | Last.fm 接口 | 属主和端点单测、固定载荷浏览器检查，部署后再验真实凭据与缓存 |
 | 屏幕时间接口与区块 | 属主、端点、渲染单测，骨架／就绪与失败的真实浏览器检查，部署后再验 Blob 写入与缓存 |
-| 旅行导入与页面 | [旅行验证](../design/trips.md#验证)；地图、选中与回放需要有 token 的真实浏览器检查 |
+| 旅行导入与页面 | [旅行验证](../design/trips.md#验证)；地图、选中与回放需要真实浏览器检查 |
 
 ```bash
 python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog src/content/blogs/slug.md

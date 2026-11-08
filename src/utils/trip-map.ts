@@ -1,28 +1,28 @@
 /**
- * 旅行页的 Mapbox 地图：全部路线与聚合停靠点、选中旅程的序号点、悬停提示与主题底图。
+ * 旅行页的地图（MapLibre GL + OpenFreeMap 底图）：全部路线与聚合停靠点、
+ * 选中旅程的序号点、悬停提示与主题底图。
  * 只管地图；面板、地址片段和回放由页面脚本与 `trip-replay.ts` 调度。
  */
 import type {
   ExpressionSpecification,
   GeoJSONSource,
   LngLatBoundsLike,
-  Map as MapboxMap,
+  Map as MaplibreMap,
   MapMouseEvent,
   PaddingOptions,
   Popup,
-} from 'mapbox-gl'
+} from 'maplibre-gl'
+// 打包后 worker 不在 MapLibre 默认推算的位置，由 Vite 给出实际地址。
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 
 export interface TripStopGeo {
   name: string
   coordinates: [number, number]
-  day: number
   index: number
 }
 
 export interface TripLegGeo {
   from: number
-  mode: string
-  distance: number
   path: [number, number][]
 }
 
@@ -38,7 +38,6 @@ export interface TripGeo {
 
 export interface TripMapOptions {
   container: HTMLElement
-  token: string
   trips: TripGeo[]
   dark: boolean
   /** 地图四周被面板等遮住的部分，取景时让开。 */
@@ -61,19 +60,23 @@ const LAYERS = {
   selected: 'trips-selected',
   selectedNumber: 'trips-selected-number',
 } as const
-const FONT = ['DIN Pro Medium', 'Arial Unicode MS Regular']
+// OpenFreeMap 的字形服务只提供 Noto Sans；中文字形由浏览器本地字体绘制。
+const FONT = ['Noto Sans Bold']
 const EMPTY = { type: 'FeatureCollection' as const, features: [] }
+/** 底图地名优先简体中文。 */
+const CHINESE_NAME: ExpressionSpecification = [
+  'coalesce',
+  ['get', 'name:zh-Hans'],
+  ['get', 'name:zh'],
+  ['get', 'name'],
+]
 
-export function mapStyleUrl(dark: boolean) {
-  return dark
-    ? 'mapbox://styles/mapbox/dark-v11'
-    : 'mapbox://styles/mapbox/light-v11'
+function mapStyleUrl(dark: boolean) {
+  return `https://tiles.openfreemap.org/styles/${dark ? 'dark' : 'liberty'}`
 }
 
 /** 一组坐标的外接框；空数组返回 undefined。 */
-export function boundsOf(
-  points: [number, number][]
-): LngLatBoundsLike | undefined {
+function boundsOf(points: [number, number][]): LngLatBoundsLike | undefined {
   if (points.length === 0) return undefined
   let [west, south] = points[0]
   let [east, north] = points[0]
@@ -90,8 +93,9 @@ export function boundsOf(
 }
 
 export async function createTripMap(options: TripMapOptions) {
-  const { container, token, trips, getPadding } = options
-  const { default: mapboxgl } = await import('mapbox-gl')
+  const { container, trips, getPadding } = options
+  const maplibregl = await import('maplibre-gl')
+  maplibregl.setWorkerUrl(workerUrl)
   const byId = new Map(trips.map((trip) => [trip.id, trip]))
   const allPoints = trips.flatMap((trip) =>
     trip.stops.map((stop) => stop.coordinates)
@@ -109,36 +113,33 @@ export async function createTripMap(options: TripMapOptions) {
   let dark = options.dark
   let destroyed = false
   let failed = false
+  let loaded = false
 
-  const map: MapboxMap = new mapboxgl.Map({
+  const map: MaplibreMap = new maplibregl.Map({
     container,
-    accessToken: token,
     style: mapStyleUrl(dark),
-    projection: 'mercator',
-    language: 'zh-Hans',
-    worldview: 'CN',
     bounds: boundsOf(allPoints) ?? [
       [73, 18],
       [135, 54],
     ],
     fitBoundsOptions: { padding: getPadding(), maxZoom: 10 },
     attributionControl: false,
-    logoPosition: 'bottom-left',
-    cooperativeGestures: false,
   })
+  // OpenFreeMap 要求保留署名。
   map.addControl(
-    new mapboxgl.AttributionControl({ compact: true }),
+    new maplibregl.AttributionControl({ compact: true }),
     'bottom-left'
   )
 
-  map.on('error', (event) => {
-    const status = (event.error as { status?: number } | undefined)?.status
-    if (failed || (status !== 401 && status !== 403)) return
+  // 只在首次加载完成前上报；之后个别瓦片失败不打断浏览。
+  map.once('load', () => (loaded = true))
+  map.on('error', () => {
+    if (failed || loaded) return
     failed = true
-    options.onError('地图凭据无效，暂时无法显示地图。')
+    options.onError('地图暂时无法加载，旅程仍可在面板里浏览。')
   })
 
-  const popup: Popup = new mapboxgl.Popup({
+  const popup: Popup = new maplibregl.Popup({
     closeButton: false,
     closeOnClick: false,
     offset: 12,
@@ -151,7 +152,7 @@ export async function createTripMap(options: TripMapOptions) {
       features: trips.flatMap((trip) =>
         trip.legs.map((leg) => ({
           type: 'Feature' as const,
-          properties: { trip: trip.id, color: trip.color, mode: leg.mode },
+          properties: { trip: trip.id, color: trip.color },
           geometry: { type: 'LineString' as const, coordinates: leg.path },
         }))
       ),
@@ -189,7 +190,19 @@ export async function createTripMap(options: TripMapOptions) {
     }
   }
 
+  /** 底图的地名标注改为中文；道路编号等非名称字段保持原样。 */
+  function useChineseLabels() {
+    for (const layer of map.getStyle().layers) {
+      if (layer.type !== 'symbol') continue
+      const field = map.getLayoutProperty(layer.id, 'text-field')
+      if (field && JSON.stringify(field).includes('name')) {
+        map.setLayoutProperty(layer.id, 'text-field', CHINESE_NAME)
+      }
+    }
+  }
+
   function addLayers() {
+    useChineseLabels()
     if (map.getSource(SOURCES.routes)) return
     map.addSource(SOURCES.routes, { type: 'geojson', data: routeFeatures() })
     map.addSource(SOURCES.stops, {
@@ -330,9 +343,10 @@ export async function createTripMap(options: TripMapOptions) {
     const clusterId = feature?.properties?.cluster_id
     if (clusterId === undefined || feature?.geometry.type !== 'Point') return
     const center = feature.geometry.coordinates as [number, number]
-    source.getClusterExpansionZoom(clusterId, (error, zoom) => {
-      if (!error && zoom != null) map.easeTo({ center, zoom })
-    })
+    source
+      .getClusterExpansionZoom(clusterId)
+      .then((zoom) => map.easeTo({ center, zoom }))
+      .catch(() => undefined)
   })
   map.on(
     'mouseenter',
@@ -429,7 +443,8 @@ export async function createTripMap(options: TripMapOptions) {
     setDark(next: boolean) {
       if (next === dark) return
       dark = next
-      map.setStyle(mapStyleUrl(dark))
+      // 不做样式差分，确保 `style.load` 触发并重新加上旅程图层。
+      map.setStyle(mapStyleUrl(dark), { diff: false })
     },
     resize() {
       map.resize()

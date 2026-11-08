@@ -30,7 +30,6 @@ const groups = years.map((year) => ({
   trips: trips.filter((trip) => tripYear(trip.data) === year),
 }))
 const statusOf = (end: string) => tripStatus(end, today)
-const token = import.meta.env.PUBLIC_MAPBOX_TOKEN ?? ''
 const outline = (trip: (typeof trips)[number]) =>
   trip.data.days.flatMap((day) =>
     day.stops.flatMap((stop) => stop.route?.path ?? [stop.coordinates])
@@ -44,13 +43,12 @@ const outline = (trip: (typeof trips)[number]) =>
       title="旅行"
       description="旅行计划与行程记录，在地图上回看每一段路。"
     />
-    <link rel="preconnect" href="https://api.mapbox.com" crossorigin />
+    <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin />
   </head>
   <body class="trips-body">
     <main
       class="trips-page"
       data-trips
-      data-token={token}
       data-map-url={withBasePath('/trips/map.json')}
     >
       <div
@@ -59,9 +57,7 @@ const outline = (trip: (typeof trips)[number]) =>
         role="region"
         aria-label="旅行地图"
       ></div>
-      <p class="trips-message" data-trips-message hidden={Boolean(token)}>
-        {token ? '' : '地图未配置，旅程仍可在面板里浏览。'}
-      </p>
+      <p class="trips-message" data-trips-message hidden></p>
 
       <header class="trips-toolbar">
         <a
@@ -247,8 +243,8 @@ const outline = (trip: (typeof trips)[number]) =>
     </main>
 
     <script>
-      import 'mapbox-gl/dist/mapbox-gl.css'
-      import type { PaddingOptions } from 'mapbox-gl'
+      import 'maplibre-gl/dist/maplibre-gl.css'
+      import type { PaddingOptions } from 'maplibre-gl'
 
       import { observeTheme } from '~/utils/theme-observer.js'
       import {
@@ -278,9 +274,10 @@ const outline = (trip: (typeof trips)[number]) =>
         const narrow = matchMedia(NARROW)
         let tripMap: TripMap | undefined
         let replay: Replay | undefined
+        /** 每次开始或停止回放都会递增，用来作废还在创建中的旧回放。 */
+        let replayRun = 0
         let selected: string | undefined
-
-        page.dataset.tripsJs = ''
+        let activeStop: number | undefined
 
         // 状态按访问当天重算，构建日期只是无 JS 时的初值。
         const today = todayInTripZone()
@@ -296,6 +293,10 @@ const outline = (trip: (typeof trips)[number]) =>
           message.textContent = text
           message.hidden = false
           page.dataset.tripsMapFailed = ''
+          for (const button of page.querySelectorAll<HTMLButtonElement>(
+            '[data-trip-replay]'
+          ))
+            button.disabled = true
         }
 
         function collapsed() {
@@ -337,20 +338,26 @@ const outline = (trip: (typeof trips)[number]) =>
 
         /** 地址片段是选中状态的唯一来源。 */
         function syncFromHash() {
-          const id = decodeURIComponent(location.hash.slice(1))
+          let id = ''
+          try {
+            id = decodeURIComponent(location.hash.slice(1))
+          } catch {
+            // 编码损坏的片段按总览处理。
+          }
           const next = detail(id) ? id : undefined
           if (next === selected) return
           stopReplay()
           for (const item of page.querySelectorAll('.trip-stop[data-active]'))
             delete (item as HTMLElement).dataset.active
           selected = next
-          page.toggleAttribute('data-trips-selected', Boolean(next))
+          activeStop = undefined
           if (next && collapsed()) setCollapsed(false)
           scroller.scrollTop = 0
           tripMap?.select(next)
         }
 
         function activateStop(index: number | undefined, fly: boolean) {
+          activeStop = index
           const root = detail(selected)
           for (const item of root?.querySelectorAll<HTMLElement>(
             '.trip-stop'
@@ -369,17 +376,14 @@ const outline = (trip: (typeof trips)[number]) =>
             `[data-trip-stop="${index}"]`
           )
           const day = item?.closest('.trip-day')?.querySelector('h3')
+          // 详情里的文字带模板缩进，合并成单个空格。
+          const text = (node: Node | null | undefined) =>
+            node?.textContent?.replace(/\s+/g, ' ').trim() ?? ''
           return {
-            day: day?.firstChild?.textContent?.trim() ?? '',
-            name:
-              item?.querySelector('.trip-stop__name')?.textContent?.trim() ??
-              '',
-            meta:
-              item?.querySelector('.trip-stop__meta')?.textContent?.trim() ??
-              '',
-            note:
-              item?.querySelector('.trip-stop__note')?.textContent?.trim() ??
-              '',
+            day: text(day?.firstChild),
+            name: text(item?.querySelector('.trip-stop__name')),
+            meta: text(item?.querySelector('.trip-stop__meta')),
+            note: text(item?.querySelector('.trip-stop__note')),
             photo:
               item?.querySelector<HTMLAnchorElement>('[data-trip-photo]')?.href,
           }
@@ -418,8 +422,9 @@ const outline = (trip: (typeof trips)[number]) =>
         }
 
         function stopReplay() {
-          if (!replay) return
-          replay.destroy()
+          replayRun++
+          if (!page.hasAttribute('data-trips-replaying')) return
+          replay?.destroy()
           replay = undefined
           replayCard.hidden = true
           page.removeAttribute('data-trips-replaying')
@@ -428,18 +433,39 @@ const outline = (trip: (typeof trips)[number]) =>
 
         async function startReplay(id: string) {
           const trip = tripMap?.trip(id)
-          if (!tripMap || !trip || replay) return
+          if (
+            !tripMap ||
+            !trip ||
+            trip.stops.length < 2 ||
+            page.hasAttribute('data-trips-replaying') ||
+            page.hasAttribute('data-trips-map-failed') ||
+            // 换主题后新底图还在加载时不能加图层。
+            !tripMap.map.isStyleLoaded()
+          )
+            return
+          const run = ++replayRun
           page.toggleAttribute('data-trips-replaying', true)
           replayCard.hidden = false
-          replay = await createReplay({
-            tripMap,
-            trip,
-            getPadding,
-            onStop: showReplayStop,
-            onPlayingChange: setReplayPlaying,
-            onEnd: () => setReplayPlaying(false),
-          })
-          replay.play()
+          try {
+            const created = await createReplay({
+              tripMap,
+              trip,
+              getPadding,
+              onStop: showReplayStop,
+              onPlayingChange: setReplayPlaying,
+              onEnd: () => setReplayPlaying(false),
+            })
+            // 创建期间换了旅程、换了主题或离开了本页：丢弃这次回放。
+            if (run !== replayRun) {
+              if (!signal.aborted) created.destroy()
+              return
+            }
+            replay = created
+            replay.play()
+          } catch (error) {
+            console.error(error)
+            if (run === replayRun) stopReplay()
+          }
         }
 
         // —— 照片对话框：同一段旅程内前后翻看 ——
@@ -466,6 +492,20 @@ const outline = (trip: (typeof trips)[number]) =>
           'click',
           (event) => {
             const target = event.target as Element
+            // 同页片段链接由这里接管：ClientRouter 用 pushState 改地址，不会触发 hashchange。
+            const fragment = target.closest<HTMLAnchorElement>('a[href^="#"]')
+            if (
+              fragment &&
+              event.button === 0 &&
+              !event.metaKey &&
+              !event.ctrlKey &&
+              !event.shiftKey &&
+              !event.altKey
+            ) {
+              event.preventDefault()
+              location.hash = fragment.hash
+              return
+            }
             const photo = target.closest<HTMLAnchorElement>('[data-trip-photo]')
             if (photo) {
               event.preventDefault()
@@ -508,6 +548,19 @@ const outline = (trip: (typeof trips)[number]) =>
             )
             if (selected && !replay && stop)
               tripMap?.activateStop(Number(stop.dataset.tripStop))
+          },
+          { signal }
+        )
+        page.addEventListener(
+          'pointerout',
+          (event) => {
+            const from = (event.target as Element).closest('[data-trip-stop]')
+            const to = (event.relatedTarget as Element | null)?.closest?.(
+              '[data-trip-stop]'
+            )
+            // 离开停靠点条目时恢复到当前选中的站。
+            if (selected && !replay && from && from !== to)
+              tripMap?.activateStop(activeStop)
           },
           { signal }
         )
@@ -568,8 +621,6 @@ const outline = (trip: (typeof trips)[number]) =>
         syncFromHash()
 
         // —— 地图 ——
-        const token = page.dataset.token
-        if (!token) return
         fetch(page.dataset.mapUrl!, { signal })
           .then((response) => {
             if (!response.ok) throw new Error(`HTTP ${response.status}`)
@@ -579,7 +630,6 @@ const outline = (trip: (typeof trips)[number]) =>
             if (signal.aborted) return
             const instance = await createTripMap({
               container: $<HTMLElement>('[data-trips-canvas]'),
-              token,
               trips,
               dark: document.documentElement.classList.contains('dark'),
               getPadding,
@@ -600,7 +650,10 @@ const outline = (trip: (typeof trips)[number]) =>
               for (const button of page.querySelectorAll<HTMLButtonElement>(
                 '[data-trip-replay]'
               ))
-                button.disabled = page.hasAttribute('data-trips-map-failed')
+                button.disabled =
+                  page.hasAttribute('data-trips-map-failed') ||
+                  (tripMap?.trip(button.dataset.tripReplay!)?.stops.length ??
+                    0) < 2
               if (selected) tripMap?.select(selected)
             })
             const unobserve = observeTheme(() => {
@@ -645,7 +698,7 @@ const outline = (trip: (typeof trips)[number]) =>
         overscroll-behavior: none;
       }
 
-      .trips-popup .mapboxgl-popup-content {
+      .trips-popup .maplibregl-popup-content {
         display: grid;
         gap: 0.125rem;
         padding: 0.5rem 0.75rem;
@@ -663,7 +716,7 @@ const outline = (trip: (typeof trips)[number]) =>
         }
       }
 
-      .trips-popup .mapboxgl-popup-tip {
+      .trips-popup .maplibregl-popup-tip {
         display: none;
       }
 

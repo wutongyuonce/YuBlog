@@ -47,7 +47,6 @@
     "@expressive-code/plugin-collapsible-sections": "^0.44.0",
     "@expressive-code/plugin-line-numbers": "^0.44.0",
     "@iconify/json": "^2.2.534",
-    "@types/geojson": "^7946.0.16",
     "@types/hast": "^3.0.4",
     "@types/mdast": "^4.0.4",
     "@types/node": "^24.19.0",
@@ -97,7 +96,7 @@
   "dependencies": {
     "@excalidraw/excalidraw": "0.18.1",
     "@vercel/blob": "^2.8.2",
-    "mapbox-gl": "^3.34.2",
+    "maplibre-gl": "^6.16.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   }

@@ -383,7 +383,7 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
    - 图片下载失败会被跳过。
 5. 照片会公开展示。提醒用户确认都是自己可以公开的图片；不想公开的，在圆周旅迹里删掉后重新导入。
 6. 不要手改 `trip.json` 或图片：内容有误就先在圆周旅迹里改，再用同一个 `--id` 重新导入。删除旅程就删整个目录。
-7. 运行 `pnpm check`、`pnpm build`、`pnpm test:built-restructure`。需要预览时启动或复用 dev，打开 `/trips/#<id>`。地图依赖环境变量 `PUBLIC_MAPBOX_TOKEN`；本地没有配置时，页面只显示面板，这不是导入失败。
+7. 运行 `pnpm check`、`pnpm build`、`pnpm test:built-restructure`。需要预览时启动或复用 dev，打开 `/trips/#<id>`。地图底图来自在线的 OpenFreeMap，断网时页面只显示面板，这不是导入失败。
 8. 交接时说明：`id`，天数、地点数、照片数和封面候选数，直线路段数，全部警告，以及目录大小。
 
 圆周旅迹接口和公共路线服务都可能变化或限流。导入失败时原样报告错误，不要手工伪造数据。

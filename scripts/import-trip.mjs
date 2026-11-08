@@ -191,9 +191,16 @@ try {
   }
   await writeFile(join(staging, 'trip.json'), serialize(trip))
 
-  const previous = `${target}.previous-${process.pid}`
-  if (existsSync(target)) await rename(target, previous)
-  await rename(staging, target)
+  // 点开头的目录不会被内容集合收录；替换失败时把旧目录搬回去。
+  const previous = join(TRIPS_DIR, `.previous-${id}-${process.pid}`)
+  const hadPrevious = existsSync(target)
+  if (hadPrevious) await rename(target, previous)
+  try {
+    await rename(staging, target)
+  } catch (error) {
+    if (hadPrevious) await rename(previous, target)
+    throw error
+  }
   await rm(previous, { recursive: true, force: true })
 
   const photoCount = days.reduce(

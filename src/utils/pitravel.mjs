@@ -67,7 +67,13 @@ function transformLng(x, y) {
   return r
 }
 
-function wgs84ToGcj02(lng, lat) {
+/**
+ * WGS84 → GCJ-02（中国境外原样返回）。
+ * @param {number} lng
+ * @param {number} lat
+ * @returns {[number, number]}
+ */
+export function wgs84ToGcj02(lng, lat) {
   if (outOfChina(lng, lat)) return [lng, lat]
   const radLat = (lat / 180) * Math.PI
   let magic = Math.sin(radLat)
@@ -185,21 +191,25 @@ export function toTripDraft(response) {
   const timeZone = validTimeZone(journey.timezone)
   const skipped = []
 
-  const days = (Array.isArray(journey.day_plans) ? journey.day_plans : [])
+  const days = []
+  for (const day of (Array.isArray(journey.day_plans) ? journey.day_plans : [])
     .filter((day) => day?.day_index !== -1 && Number.isFinite(day?.timestamp))
-    .toSorted((a, b) => a.timestamp - b.timestamp)
-    .map((day) => ({
-      date: dateIn(timeZone, day.timestamp),
-      summary: text(day.remark),
-      stops: (Array.isArray(day.events) ? day.events : []).flatMap((event) => {
+    .toSorted((a, b) => a.timestamp - b.timestamp)) {
+    const stops = (Array.isArray(day.events) ? day.events : []).flatMap(
+      (event) => {
         const stop = toStop(event)
         if (!stop) skipped.push(text(event?.name) ?? '（未命名）')
         return stop ? [stop] : []
-      }),
-    }))
-    .filter(
-      (day, index, all) => index === 0 || day.date !== all[index - 1].date
+      }
     )
+    const date = dateIn(timeZone, day.timestamp)
+    const previous = days.at(-1)
+    // 两个日程落在同一天时合并，不丢地点。
+    if (previous?.date === date) {
+      previous.stops.push(...stops)
+      previous.summary ??= text(day.remark)
+    } else days.push({ date, summary: text(day.remark), stops })
+  }
   if (days.length === 0) throw new Error('行程里没有已安排日期的日程。')
 
   const coverUrls = [

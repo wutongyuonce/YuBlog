@@ -74,9 +74,13 @@ test('date labels', () => {
   assert.equal(formatDayLabel('2026-11-06'), '11月6日 周五')
 })
 
-test('year colours are stable per year and differ for neighbours', () => {
-  assert.equal(yearColor(2026), yearColor(2026))
-  assert.notEqual(yearColor(2025), yearColor(2026))
+test('year colours are fixed per year, so new years never recolour old ones', () => {
+  assert.deepEqual([2024, 2025, 2026].map(yearColor), [
+    '#3b82f6',
+    '#8b5cf6',
+    '#f59e0b',
+  ])
+  assert.equal(yearColor(2030), yearColor(2024))
 })
 
 test('collage prefers covers, then distinct stop photos, up to three', () => {
@@ -96,19 +100,16 @@ test('collage prefers covers, then distinct stop photos, up to three', () => {
 test('map data numbers stops across days and keeps legs from their stop', () => {
   const data = tripMapData('2026-11-06', trip)
   assert.deepEqual(
-    data.stops.map(({ index, day }) => [index, day]),
+    data.stops.map(({ index, name }) => [index, name]),
     [
-      [0, 0],
-      [1, 0],
-      [2, 1],
+      [0, 'A'],
+      [1, 'B'],
+      [2, 'A'],
     ]
   )
   assert.deepEqual(
-    data.legs.map(({ from, distance }) => [from, distance]),
-    [
-      [0, 1200],
-      [1, 800],
-    ]
+    data.legs.map(({ from }) => from),
+    [0, 1]
   )
   assert.equal(data.color, yearColor(2026))
 })

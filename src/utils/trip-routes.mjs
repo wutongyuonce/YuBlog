@@ -3,6 +3,8 @@
  * 失败或没有结果时降级为直线，不让整次导入失败。只在导入时运行。
  */
 
+import { haversine } from './geo.mjs'
+
 const VALHALLA_URL = 'https://valhalla1.openstreetmap.de/route'
 const COSTING = { drive: 'auto', walk: 'pedestrian' }
 const TIMEOUT_MS = 15_000
@@ -10,21 +12,6 @@ const TOLERANCE_METERS = 5
 const EARTH_RADIUS = 6_371_008.8
 
 const round = (value) => Math.round(value * 1e5) / 1e5
-
-/**
- * 两点大圆距离（米）。
- * @param {[number, number]} a
- * @param {[number, number]} b
- */
-export function haversine([lng1, lat1], [lng2, lat2]) {
-  const rad = Math.PI / 180
-  const dLat = (lat2 - lat1) * rad
-  const dLng = (lng2 - lng1) * rad
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLng / 2) ** 2
-  return 2 * EARTH_RADIUS * Math.asin(Math.min(1, Math.sqrt(h)))
-}
 
 /**
  * 解码 Valhalla 的 polyline6，返回 `[经度, 纬度]`。
@@ -43,10 +30,11 @@ export function decodePolyline(encoded, precision = 6) {
       let shift = 0
       let byte
       do {
+        if (index >= encoded.length) throw new Error('路线编码不完整')
         byte = encoded.charCodeAt(index++) - 63
         result |= (byte & 0x1f) << shift
         shift += 5
-      } while (byte >= 0x20 && index < encoded.length)
+      } while (byte >= 0x20)
       const delta = result & 1 ? ~(result >> 1) : result >> 1
       if (axis === 0) lat += delta
       else lng += delta
