@@ -1,6 +1,6 @@
 /**
  * Last.fm 听歌数据的唯一属主：用户身份、查询与校验、各时段专辑排行、最近播放，以及
- * 封面来源（Last.fm 自带图优先，缺图时交给网易云回退）。
+ * 封面来源（Last.fm 自带图优先，其次 Last.fm 普通版专辑图，最后交给网易云回退）。
  *
  * 只在服务端运行：Vercel 函数（`api/lastfm.js`、`api/lastfm-now.js`）、本地 dev
  * 中间件和单测。构建页面与访问页面都不调用 Last.fm，听歌数据一律经运行时接口取得。
@@ -103,22 +103,66 @@ const musicUrl = (...parts) =>
   `https://www.last.fm/music/${parts.map(encodeURIComponent).join('/')}`
 
 /**
- * 给缺封面的条目补网易云封面：最多 `COVER_CONCURRENCY` 个查找同时进行；`findCover`
- * 从不 reject，查不到就保持缺图，同名同歌手由查找器合并成一次搜索。整个阶段受
- * `COVER_BUDGET` 限制：到时不再开始新查找，也不再写入迟到的结果。
+ * 末尾的再版标记：Explicit、Clean，或含 Deluxe／Expanded／Anniversary／Special／Bonus／
+ * Remaster 的注记。「Taylor's Version」「Live Version」是另一张专辑，不算。
  */
-async function fillCovers(items, kind, findCover, apply) {
+const EDITION =
+  /\s*[([](?:explicit|clean|[^)\]]*\b(?:deluxe|expanded|anniversary|special|bonus|remaster(?:ed)?)\b[^)\]]*)[)\]]\s*$/i
+
+/** 去掉末尾所有版本标记后的专辑名；没有标记时原样返回。 */
+const baseAlbum = (name) => {
+  let base = name
+  while (EDITION.test(base)) base = base.replace(EDITION, '')
+  return base.trim() || name
+}
+
+/**
+ * 版本条目（「Scorpion (Explicit)」）在 Last.fm 上常没有图，普通版却有：用去掉版本
+ * 标记的名字查一次 `album.getInfo`。同一次请求内同名专辑只查一次；查询失败或没有图
+ * 都只当作缺图，不让接口失败。
+ */
+const createAlbumCoverFinder = (request) => {
+  const seen = new Map()
+  return (artist, album) => {
+    const base = album && baseAlbum(album)
+    if (!base || base === album) return Promise.resolve(null)
+    const key = JSON.stringify([artist, base])
+    if (!seen.has(key))
+      seen.set(
+        key,
+        request('album.getInfo', { artist, album: base }).then(
+          (data) => coverOf(data.album?.image),
+          () => null
+        )
+      )
+    return seen.get(key)
+  }
+}
+
+/**
+ * 给缺封面的条目补图：先查 Last.fm 普通版专辑，再查网易云。最多 `COVER_CONCURRENCY`
+ * 个条目同时进行；两个查找都从不 reject，查不到就保持缺图，同名同歌手由网易云查找器
+ * 合并成一次搜索。整个阶段受 `COVER_BUDGET` 限制：到时不再开始新查找，也不再写入
+ * 迟到的结果。`apply(item, sized)` 收到一个按边长取地址的函数。
+ */
+async function fillCovers(items, { kind, albumOf }, finders, apply) {
   const queue = items.filter((item) => !item.cover)
   if (!queue.length) return
   let expired = false
+  const sizedFor = async (item) => {
+    const lastfm = await finders.album(item.artist, albumOf(item))
+    if (lastfm) return (size) => lastfmSized(lastfm, size)
+    const netease = await finders.netease({
+      kind,
+      name: item.name,
+      artist: item.artist,
+    })
+    return netease && ((size) => neteaseSized(netease, size))
+  }
   const worker = async () => {
     for (let item; !expired && (item = queue.shift());) {
-      const found = await findCover({
-        kind,
-        name: item.name,
-        artist: item.artist,
-      })
-      if (found && !expired) apply(item, found)
+      const sized = await sizedFor(item)
+      if (sized && !expired) apply(item, sized)
     }
   }
   let timer
@@ -178,9 +222,14 @@ export async function fetchLastfmNowPlaying({
               ).toISOString(),
       }
     })
-  await fillCovers(tracks, 'song', findCover, (track, found) => {
-    track.cover = neteaseSized(found, COVER_SIZE)
-  })
+  await fillCovers(
+    tracks,
+    { kind: 'song', albumOf: (track) => track.album },
+    { album: createAlbumCoverFinder(request), netease: findCover },
+    (track, sized) => {
+      track.cover = sized(COVER_SIZE)
+    }
+  )
   return { playing, tracks }
 }
 
@@ -226,11 +275,11 @@ export async function fetchLastfmSnapshot({
   }))
   await fillCovers(
     periods.flatMap((period) => period.albums),
-    'album',
-    findCover,
-    (album, found) => {
-      album.cover = neteaseSized(found, COVER_SIZE)
-      album.coverLarge = neteaseSized(found, LARGE_COVER_SIZE)
+    { kind: 'album', albumOf: (album) => album.name },
+    { album: createAlbumCoverFinder(request), netease: findCover },
+    (album, sized) => {
+      album.cover = sized(COVER_SIZE)
+      album.coverLarge = sized(LARGE_COVER_SIZE)
     }
   )
   return {
