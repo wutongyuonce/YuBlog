@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { buildTimeline, pointAlong } from '../src/utils/trip-replay.ts'
+import {
+  buildTimeline,
+  drawnRatio,
+  pointAlong,
+} from '../src/utils/trip-replay.ts'
 
 // 三站，前两段各有路径；第二段终点与第三站重合。
 const trip = {
@@ -60,6 +64,34 @@ test('reduced motion only dwells at each stop', () => {
     timeline.steps.map((step) => step.kind),
     ['dwell', 'dwell', 'dwell']
   )
+})
+
+test('drawn progress follows map length, so the line head stays on the marker', () => {
+  // 由赤道向北到 60°：墨卡托越往北拉得越长，地面走了一半时图上还没到一半。
+  const north = buildTimeline(
+    {
+      ...trip,
+      stops: [
+        { name: 'S', coordinates: [100, 0], index: 0 },
+        { name: 'N', coordinates: [100, 60], index: 1 },
+      ],
+      legs: [
+        {
+          from: 0,
+          path: [
+            [100, 0],
+            [100, 30],
+            [100, 60],
+          ],
+        },
+      ],
+    },
+    false
+  )
+  assert.equal(drawnRatio(north, 0), 0)
+  assert.equal(drawnRatio(north, north.length), 1)
+  // 墨卡托里 30° 约在 0–60° 的 42% 处。
+  assert.ok(Math.abs(drawnRatio(north, north.cumulative[1]) - 0.417) < 0.01)
 })
 
 test('points along the path interpolate and clamp at both ends', () => {

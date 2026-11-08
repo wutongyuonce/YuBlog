@@ -114,6 +114,8 @@ export async function createTripMap(options: TripMapOptions) {
   let destroyed = false
   let failed = false
   let loaded = false
+  /** 当前底图已加载且旅程图层已加上；换主题重新加载底图期间为 false。 */
+  let ready = false
 
   const map: MaplibreMap = new maplibregl.Map({
     container,
@@ -335,7 +337,10 @@ export async function createTripMap(options: TripMapOptions) {
   const escape = (text: string) =>
     text.replace(/[&<>"]/g, (char) => `&#${char.charCodeAt(0)};`)
 
-  map.on('style.load', addLayers)
+  map.on('style.load', () => {
+    addLayers()
+    ready = true
+  })
 
   map.on('click', LAYERS.clusters, (event) => {
     const feature = event.features?.[0]
@@ -394,6 +399,8 @@ export async function createTripMap(options: TripMapOptions) {
 
   return {
     map,
+    /** 能否在地图上加回放图层。瓦片加载中也可以，只有换底图时不行。 */
+    ready: () => ready && !failed,
     trip: (id: string) => byId.get(id),
     /** 打开某段旅程或回到总览。 */
     select(id: string | undefined) {
@@ -443,6 +450,7 @@ export async function createTripMap(options: TripMapOptions) {
     setDark(next: boolean) {
       if (next === dark) return
       dark = next
+      ready = false
       // 不做样式差分，确保 `style.load` 触发并重新加上旅程图层。
       map.setStyle(mapStyleUrl(dark), { diff: false })
     },

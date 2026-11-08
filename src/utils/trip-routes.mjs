@@ -3,13 +3,12 @@
  * 失败或没有结果时降级为直线，不让整次导入失败。只在导入时运行。
  */
 
-import { haversine } from './geo.mjs'
+import { EARTH_RADIUS, haversine } from './geo.mjs'
 
 const VALHALLA_URL = 'https://valhalla1.openstreetmap.de/route'
 const COSTING = { drive: 'auto', walk: 'pedestrian' }
 const TIMEOUT_MS = 15_000
 const TOLERANCE_METERS = 5
-const EARTH_RADIUS = 6_371_008.8
 
 const round = (value) => Math.round(value * 1e5) / 1e5
 

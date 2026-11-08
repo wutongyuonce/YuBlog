@@ -438,9 +438,8 @@ const outline = (trip: (typeof trips)[number]) =>
             !trip ||
             trip.stops.length < 2 ||
             page.hasAttribute('data-trips-replaying') ||
-            page.hasAttribute('data-trips-map-failed') ||
-            // 换主题后新底图还在加载时不能加图层。
-            !tripMap.map.isStyleLoaded()
+            // 地图失败，或换主题后新底图还在加载时不能加图层。
+            !tripMap.ready()
           )
             return
           const run = ++replayRun

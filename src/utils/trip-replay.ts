@@ -39,18 +39,34 @@ type Step =
       to: number
     }
 
+/** Web 墨卡托坐标（0–1），与地图 `line-progress` 的度量一致。 */
+function mercator([lng, lat]: [number, number]) {
+  const sin = Math.sin((lat * Math.PI) / 180)
+  return [
+    (lng + 180) / 360,
+    0.5 - Math.log((1 + sin) / (1 - sin)) / (4 * Math.PI),
+  ]
+}
+
 /**
  * 全程路径、沿线累计距离与时间线。路段的 `from`／`to` 是沿线距离（米）。
+ * `projected` 是同一条路径在墨卡托平面上的累计长度，只用来换算画线进度。
  */
 export function buildTimeline(trip: TripGeo, reducedMotion: boolean) {
   const path: [number, number][] = []
   const cumulative: number[] = []
+  const projected: number[] = []
   const legRange = new Map<number, { from: number; to: number }>()
   const stopAt = new Map<number, number>()
   const push = (point: [number, number]) => {
     const last = path.at(-1)
     if (last && last[0] === point[0] && last[1] === point[1]) return
     cumulative.push(last ? cumulative.at(-1)! + distance(last, point) : 0)
+    if (last) {
+      const [x1, y1] = mercator(last)
+      const [x2, y2] = mercator(point)
+      projected.push(projected.at(-1)! + Math.hypot(x2 - x1, y2 - y1))
+    } else projected.push(0)
     path.push(point)
   }
   for (const stop of trip.stops) {
@@ -94,10 +110,27 @@ export function buildTimeline(trip: TripGeo, reducedMotion: boolean) {
   return {
     path,
     cumulative,
+    projected,
     steps,
     total: clock,
     length: cumulative.at(-1) ?? 0,
   }
+}
+
+/** 沿线距离 `at` 落在哪一小段，以及在段内的比例。 */
+function locate(cumulative: number[], at: number) {
+  if (cumulative.length < 2 || at <= 0) return { low: 0, high: 0, t: 0 }
+  const last = cumulative.length - 1
+  if (at >= cumulative[last]) return { low: last, high: last, t: 0 }
+  let low = 0
+  let high = last
+  while (high - low > 1) {
+    const middle = (low + high) >> 1
+    if (cumulative[middle] <= at) low = middle
+    else high = middle
+  }
+  const span = cumulative[high] - cumulative[low] || 1
+  return { low, high, t: (at - cumulative[low]) / span }
 }
 
 /** 沿线距离 `at` 处的坐标。 */
@@ -106,21 +139,23 @@ export function pointAlong(
   cumulative: number[],
   at: number
 ): [number, number] {
-  if (path.length === 1 || at <= 0) return path[0]
-  if (at >= cumulative.at(-1)!) return path.at(-1)!
-  let low = 0
-  let high = cumulative.length - 1
-  while (high - low > 1) {
-    const middle = (low + high) >> 1
-    if (cumulative[middle] <= at) low = middle
-    else high = middle
-  }
-  const span = cumulative[high] - cumulative[low] || 1
-  const t = (at - cumulative[low]) / span
+  const { low, high, t } = locate(cumulative, at)
   return [
     path[low][0] + (path[high][0] - path[low][0]) * t,
     path[low][1] + (path[high][1] - path[low][1]) * t,
   ]
+}
+
+/** 沿线距离 `at` 对应的画线进度（0–1），按墨卡托长度换算，线头与标记对齐。 */
+export function drawnRatio(
+  timeline: Pick<ReturnType<typeof buildTimeline>, 'cumulative' | 'projected'>,
+  at: number
+): number {
+  const total = timeline.projected.at(-1) ?? 0
+  if (total === 0) return at > 0 ? 1 : 0
+  const { low, high, t } = locate(timeline.cumulative, at)
+  const { projected } = timeline
+  return (projected[low] + (projected[high] - projected[low]) * t) / total
 }
 
 export interface ReplayOptions {
@@ -153,8 +188,23 @@ export async function createReplay(options: ReplayOptions) {
   let stepIndex = -1
   let finished = false
 
+  function removeLayers() {
+    if (map.getLayer(LINE_LAYER)) map.removeLayer(LINE_LAYER)
+    if (map.getLayer(PLANNED_LAYER)) map.removeLayer(PLANNED_LAYER)
+    if (map.getSource(LINE_SOURCE)) map.removeSource(LINE_SOURCE)
+  }
+
+  /** 加到一半失败时拆掉已加的部分，不给下一次回放留下半套图层。 */
   function addLayers() {
-    if (map.getSource(LINE_SOURCE)) return
+    try {
+      addLayersOnce()
+    } catch (error) {
+      removeLayers()
+      throw error
+    }
+  }
+
+  function addLayersOnce() {
     map.addSource(LINE_SOURCE, {
       type: 'geojson',
       lineMetrics: true,
@@ -195,9 +245,12 @@ export async function createReplay(options: ReplayOptions) {
   }
 
   function drawn(at: number) {
-    if (!map.getLayer(LINE_LAYER) || timeline.length === 0) return
-    const ratio = Math.min(1, Math.max(0, at / timeline.length))
-    map.setPaintProperty(LINE_LAYER, 'line-gradient', progress(ratio))
+    if (!map.getLayer(LINE_LAYER)) return
+    map.setPaintProperty(
+      LINE_LAYER,
+      'line-gradient',
+      progress(drawnRatio(timeline, at))
+    )
   }
 
   function zoomFor(step: Extract<Step, { kind: 'travel' }>) {
@@ -325,9 +378,7 @@ export async function createReplay(options: ReplayOptions) {
       cancelAnimationFrame(frame)
       playing = false
       marker.remove()
-      if (map.getLayer(LINE_LAYER)) map.removeLayer(LINE_LAYER)
-      if (map.getLayer(PLANNED_LAYER)) map.removeLayer(PLANNED_LAYER)
-      if (map.getSource(LINE_SOURCE)) map.removeSource(LINE_SOURCE)
+      removeLayers()
       tripMap.setBaseLayersVisible(true)
     },
   }
