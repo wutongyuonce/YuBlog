@@ -267,5 +267,14 @@
     "category": "双向",
     "siteLabel": "自动化 / 效率工具 / AI 工作流",
     "order": 32
+  },
+  {
+    "id": "magren",
+    "name": "Magren's Blog",
+    "link": "https://magren.cc",
+    "avatar": "https://magren.cc/avatar.png",
+    "desc": "不为繁华易匠心",
+    "category": "双向",
+    "order": 33
   }
 ]

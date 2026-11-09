@@ -25,7 +25,7 @@ title: About
 * 前端：了解一些 Vue、React、Astro
 * 工具：Docker、Git、GitHub
 
-我的简历放在这：...
+我的简历放在这：[我的简历](/resume/)
 
 欢迎联系：
 
