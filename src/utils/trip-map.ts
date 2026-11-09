@@ -384,6 +384,34 @@ export async function createTripMap(options: TripMapOptions) {
   }
 
   /**
+   * MapLibre 6 合并选项时会用 `maxZoom: undefined` 覆盖默认的 transform.maxZoom，
+   * 随后 `Math.min(zoom, undefined)` 得到 NaN，镜头中心变成 Invalid LngLat。
+   * 未指定或非有限值时不写入该项，让地图沿用自身上限。
+   */
+  function boundsCameraOptions(
+    padding: PaddingOptions,
+    maxZoom?: number,
+    pitch?: number
+  ) {
+    return {
+      padding,
+      ...(pitch === undefined ? {} : { pitch }),
+      ...(Number.isFinite(maxZoom) ? { maxZoom } : {}),
+    }
+  }
+
+  function tryCameraForBounds(
+    bounds: LngLatBoundsLike,
+    options: ReturnType<typeof boundsCameraOptions>
+  ) {
+    try {
+      return map.cameraForBounds(bounds, options)
+    } catch {
+      return undefined
+    }
+  }
+
+  /**
    * 框住一组坐标时用的倾斜角。打开 3D 时先按平视算出落点缩放，再取该缩放的倾斜角，
    * 取景时就把落定后的倾斜算进去，近处的点不会被裁出画面。
    */
@@ -393,7 +421,10 @@ export async function createTripMap(options: TripMapOptions) {
     maxZoom?: number
   ) {
     if (!tilt) return 0
-    const flat = map.cameraForBounds(bounds, { padding, maxZoom, pitch: 0 })
+    const flat = tryCameraForBounds(
+      bounds,
+      boundsCameraOptions(padding, maxZoom, 0)
+    )
     return pitchAtZoom(flat?.zoom ?? map.getZoom())
   }
 
@@ -405,11 +436,14 @@ export async function createTripMap(options: TripMapOptions) {
   ) {
     const bounds = boundsOf(points)
     if (!bounds) return undefined
-    return map.cameraForBounds(bounds, {
-      padding,
-      maxZoom,
-      pitch: framingPitch(bounds, padding, maxZoom),
-    })
+    return tryCameraForBounds(
+      bounds,
+      boundsCameraOptions(
+        padding,
+        maxZoom,
+        framingPitch(bounds, padding, maxZoom)
+      )
+    )
   }
 
   function fit(points: [number, number][], maxZoom: number) {
