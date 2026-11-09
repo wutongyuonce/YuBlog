@@ -1,0 +1,126 @@
+---
+import type { ImageMetadata } from 'astro'
+import { Image } from 'astro:assets'
+
+// 旅程封面：一张铺满，两张并排，三张为左大右二小。没有图片时用标题首字与路线轮廓占位。
+interface Props {
+  images: ImageMetadata[]
+  title: string
+  /** 全程坐标，占位时画成轮廓。 */
+  outline: [number, number][]
+  color: string
+  sizes: string
+  priority?: boolean
+}
+
+const { images, title, outline, color, sizes, priority = false } = Astro.props
+const tiles = images.slice(0, 3)
+
+function outlinePoints(points: [number, number][]) {
+  if (points.length < 2) return ''
+  const lngs = points.map(([lng]) => lng)
+  const lats = points.map(([, lat]) => lat)
+  const [minX, maxX] = [Math.min(...lngs), Math.max(...lngs)]
+  const [minY, maxY] = [Math.min(...lats), Math.max(...lats)]
+  const span = Math.max(maxX - minX, maxY - minY) || 1
+  const k = 80 / span
+  const dx = (100 - (maxX - minX) * k) / 2
+  const dy = (100 - (maxY - minY) * k) / 2
+  return points
+    .map(
+      ([lng, lat]) =>
+        `${((lng - minX) * k + dx).toFixed(1)},${((maxY - lat) * k + dy).toFixed(1)}`
+    )
+    .join(' ')
+}
+---
+
+{tiles.length > 0 ? (
+  <div class:list={['trip-cover', `trip-cover--${tiles.length}`]}>
+    {tiles.map((image, index) => (
+      <Image
+        src={image}
+        alt=""
+        widths={[320, 640, 960]}
+        {sizes}
+        format="webp"
+        loading={priority ? 'eager' : 'lazy'}
+        fetchpriority={priority && index === 0 ? 'high' : undefined}
+      />
+    ))}
+  </div>
+) : (
+  <div class="trip-cover trip-cover--empty" style={`--trip-color: ${color}`}>
+    <svg
+      viewBox="0 0 100 100"
+      preserveAspectRatio="xMidYMid meet"
+      aria-hidden="true"
+    >
+      <polyline points={outlinePoints(outline)} />
+    </svg>
+    <span aria-hidden="true">{[...title][0]}</span>
+  </div>
+)}
+
+<style>
+  .trip-cover {
+    display: grid;
+    overflow: hidden;
+    border-radius: 0.625rem;
+    aspect-ratio: 16 / 10;
+    background: color-mix(in srgb, var(--c-text) 6%, var(--c-bg));
+
+    & img {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      object-fit: cover;
+    }
+  }
+
+  .trip-cover--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .trip-cover--3 {
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+
+    & img:first-child {
+      grid-row: span 2;
+    }
+  }
+
+  .trip-cover--empty {
+    position: relative;
+    place-items: center;
+    background:
+      radial-gradient(
+        circle at 30% 20%,
+        color-mix(in srgb, var(--trip-color) 28%, transparent),
+        transparent 70%
+      ),
+      color-mix(in srgb, var(--trip-color) 10%, var(--c-bg));
+
+    & svg {
+      position: absolute;
+      inset: 12% 20%;
+      width: 60%;
+      height: 76%;
+      fill: none;
+      stroke: color-mix(in srgb, var(--trip-color) 55%, transparent);
+      stroke-width: 1.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      vector-effect: non-scaling-stroke;
+    }
+
+    & span {
+      position: relative;
+      color: color-mix(in srgb, var(--trip-color) 70%, var(--c-text));
+      font-family: var(--font-heading);
+      font-size: 2.75rem;
+      font-weight: 600;
+    }
+  }
+</style>

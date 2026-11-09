@@ -8,6 +8,7 @@ import {
   friendSchema,
   postSchema,
   projectSchema,
+  tripSchema,
 } from '~/content/schema'
 
 const blogs = defineCollection({
@@ -47,6 +48,16 @@ const interestTabs = defineCollection({
   schema: interestTabSchema,
 })
 
+// 一段旅程一个目录，目录名即 id（`/trips/#<id>`）。
+const trips = defineCollection({
+  loader: glob({
+    base: './src/data/trips',
+    pattern: '*/trip.json',
+    generateId: ({ entry }) => entry.split('/')[0],
+  }),
+  schema: tripSchema,
+})
+
 export const collections = {
   interests,
   interestTabs,
@@ -54,4 +65,5 @@ export const collections = {
   projects,
   friends,
   about,
+  trips,
 }

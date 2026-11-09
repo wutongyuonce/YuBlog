@@ -73,6 +73,13 @@ export const MORE_LINKS = [
     external: false,
   },
   {
+    title: '旅行',
+    description: '行程计划与地图记录',
+    href: '/trips/',
+    icon: 'i-ri-map-2-line',
+    external: false,
+  },
+  {
     title: '相册',
     description: '光影与日常',
     href: 'https://photos.wutongyu.site/',

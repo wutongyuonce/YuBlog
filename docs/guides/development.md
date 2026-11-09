@@ -35,7 +35,7 @@ Markdown 插件修改后若 dev 仍输出旧结构，用 `pnpm dev --force` 清�
 | --- | --- | --- |
 | 站名、域名、语言、默认分享图与部署 base | `src/config.ts` → `SITE` | 换域名／base／文章 slug 会影响永久地址、RSS 身份与评论关联，见 [SEO 与订阅](../design/distribution.md#canonical) |
 | 顶栏入口、仓库 GitHub 与工具顺序 | `src/config.ts` → `UI` | 顶栏 GitHub 是仓库地址；个人主页属于 `AUTHOR_LINKS` |
-| 更多菜单中的友链、相册、访问统计 | `src/config.ts` → `MORE_LINKS` | 相册和统计看板是外部站点，不由本项目生成 |
+| 更多菜单中的友链、简历、旅行、相册、访问统计 | `src/config.ts` → `MORE_LINKS` | 相册和统计看板是外部站点，不由本项目生成 |
 | 首页社交入口 | `src/config.ts` → `AUTHOR_LINKS` | 关于正文里的联系方式独立维护 |
 | 作者展示名 | `src/config.ts` → `AUTHOR_DISPLAY_NAME` | 同时用于首页名字、页脚署名和文章版权卡 |
 | 首页 INTJ、名言 | `src/components/blog/BlogProfile.astro` | 品牌文案在 `src/components/nav/NavBar.astro`，不随 `SITE.title` 自动同步 |
@@ -64,6 +64,7 @@ Markdown 插件修改后若 dev 仍输出旧结构，用 `pnpm dev --force` 清�
 | 友链 | `src/content/friends/data.json` | `category` 为推荐或双向，组内按 `order`／名称排序 |
 | 拾趣分类 | `src/content/interests/<id>.md` 或 `.mdx` | 顶层文件自动生成子页、入口和菜单；无草稿开关 |
 | 首页近期书影游 | 自动取 `src/data/media/items.json` 的待看条目 | 无需单独维护 |
+| 旅行 | `src/data/trips/<id>/`（`trip.json` 与图片） | 用 `pnpm trips:import '<圆周旅迹分享链接>'` 生成，不手写；规则见 [旅行](../design/trips.md#导入) |
 
 新博客的最小起点：
 
@@ -178,6 +179,7 @@ pnpm test:built-markdown
 | 布局、导航、主题、搜索、评论 | 对应真实浏览器脚本、深浅主题及 1440／390／320px 可读性与横向溢出；字体声明或 CSS 拆分改动另跑 `scripts/verify-navigation-fonts.mjs`，检查切页时已加载字体不回退 |
 | Last.fm 接口 | 属主和端点单测、固定载荷浏览器检查，部署后再验真实凭据与缓存 |
 | 屏幕时间接口与区块 | 属主、端点、渲染单测，骨架／就绪与失败的真实浏览器检查，部署后再验 Blob 写入与缓存 |
+| 旅行导入与页面 | [旅行验证](../design/trips.md#验证)；地图、选中与回放需要真实浏览器检查 |
 
 ```bash
 python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog src/content/blogs/slug.md
