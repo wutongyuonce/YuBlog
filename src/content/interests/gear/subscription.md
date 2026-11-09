@@ -12,7 +12,7 @@ order: 2
 | AI | [Deepseek API](https://platform.deepseek.com/usage) | | 320¥+ | |
 | 代码 | [阿里云云服务2核2GB](https://ecs.console.aliyun.com/) | 2027.10.25 到期 | 大学生 300 元优惠劵 | |
 | 音乐 | qq 音乐 | 2027.11.13 到期 | | 移动电话卡每月能领一个月的会员 |
-| 音乐 | ~~apple music~~（已停） | | | |
+| 音乐 | apple music | 2027.2.9 到期 | ipad 新设备 3 个月免费 | |
 | 视频 | b 站年会 | 2027.1.6 到期 | 80¥ | |
 | 网络 | vpn | 2026.10.22-2027.10.22 | 188¥/年 | |
 | 视频 | ~~netflix~~（已停） | | | |
