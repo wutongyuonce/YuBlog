@@ -14,7 +14,7 @@ WutongRain’s personal blog, built with Astro 7, TypeScript and Markdown/MDX. I
 
 | Page | Route | Purpose |
 | --- | --- | --- |
-| Home | `/` | Author, socials, writing heatmap, time progress, five recent posts, screen time, recent media and Last.fm seven-day TOP 10 |
+| Home | `/` | Author, socials, writing heatmap, time progress, five recent posts, screen time, recent media and Last.fm listening (now playing and an album collage) |
 | Blog | `/blogs/` | All posts, category/tag filters, eight posts per page and random browsing |
 | Tags | `/tags/` | Sortable tags with multi-select AND filtering |
 | Archives | `/archives/` | One yearly timeline with category badges and tag links |
@@ -37,7 +37,7 @@ Blog categories use filtering URLs such as `/blogs/#技术`; interest categories
 - Pagefind search loaded when opened; full RSS with static, reader-friendly content conversion.
 - Writing heatmap, [ActivityWatch screen time](docs/design/screen-time.md), Last.fm, Giscus, Umami and an optional hosted Oneko cat.
 
-See the [custom-style article](src/content/blogs/image-layout-demo.md) for working examples and copyable syntax. Detailed design documents are currently maintained in Chinese.
+See the [custom-style article](src/content/blogs/content-style-guide.md) for working examples and copyable syntax. Detailed design documents are currently maintained in Chinese.
 
 ## Quick start
 

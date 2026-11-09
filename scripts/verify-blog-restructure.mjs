@@ -854,7 +854,7 @@ test('article covers do not replace the standalone page heading', () => {
   }
 })
 
-test('home listening ships ten loading skeletons the runtime endpoint fills', async () => {
+test('home listening ships skeletons the runtime endpoints fill', async () => {
   const head = elements(home, (node) => node.tagName === 'head')[0]
   const firstModule = elements(
     head,
@@ -890,99 +890,46 @@ test('home listening ships ten loading skeletons the runtime endpoint fills', as
   assert.equal(profile.properties.target, '_blank')
   assert.ok(profile.properties.rel.includes('noopener'))
 
-  // 构建产物里没有听歌数据：统计停在占位，轨道先放十张骨架卡。
-  const stats = elements(section, (node) =>
-    hasClass(node, 'recent-listening__stats')
-  )[0]
+  // 构建产物里没有听歌数据：最近播放是五行骨架，封面墙是九格骨架，统计停在占位。
+  const recent = elements(section, (node) => 'dataNpList' in node.properties)[0]
+  const rows = elements(recent, (node) => node.tagName === 'li')
+  assert.equal(rows.length, 5)
+  for (const row of rows) assert.equal(row.properties.ariaHidden, 'true')
+  const periods = elements(
+    section,
+    (node) => 'dataListeningPeriod' in node.properties
+  )
   assert.deepEqual(
-    elements(stats, (node) => 'dataListeningStat' in node.properties).map(
-      (node) => textOf(node).trim()
-    ),
-    ['—', '—', '—']
+    periods.map((node) => [
+      textOf(node).trim(),
+      node.properties.ariaPressed,
+      node.properties.disabled,
+    ]),
+    [
+      ['7d', 'false', true],
+      ['30d', 'true', true],
+      ['1y', 'false', true],
+      ['all', 'false', true],
+    ],
+    'period buttons wait for data, with 30 days preselected'
   )
-  assert.match(textOf(stats), /过去 7 天/)
-  assert.match(textOf(stats), /累计/)
-  assert.match(textOf(stats), /常听歌手/)
-  const rail = elements(section, (node) =>
-    hasClass(node, 'media-cards--rail')
-  )[0]
-  assert.equal(rail.properties.tabIndex, 0)
-  assert.equal(rail.properties.role, 'region')
-  assert.ok(hasClass(rail, 'media-cards--auto'))
-  const track = elements(
+  const total = elements(
     section,
-    (node) => 'dataListeningTrack' in node.properties
+    (node) => 'dataListeningTotal' in node.properties
   )[0]
-  assert.ok(track, 'the rail needs its track container before the script runs')
-  const skeletons = elements(
-    track,
-    (node) => 'dataListeningSkeleton' in node.properties
-  )
-  assert.equal(skeletons.length, 10, 'loading shows ten inert skeleton cards')
-  for (const skeleton of skeletons) {
-    assert.equal(skeleton.tagName, 'article')
-    assert.ok(hasClass(skeleton, 'recent-listening__skeleton'))
-    assert.equal(skeleton.properties.ariaHidden, 'true')
-    assert.equal(
-      elements(skeleton, (node) => node.tagName === 'a').length,
-      0,
-      'skeletons stay out of the tab order'
-    )
-    assert.equal(
-      elements(skeleton, (node) => node.tagName === 'img').length,
-      0,
-      'skeletons are not a second image-loading system'
-    )
-    assert.ok(
-      elements(skeleton, (node) =>
-        hasClass(node, 'recent-listening__skeleton-cover')
-      )[0],
-      'cover block'
-    )
-    assert.equal(
-      elements(skeleton, (node) =>
-        hasClass(node, 'recent-listening__skeleton-line')
-      ).length,
-      2,
-      'two text-line placeholders'
-    )
-  }
+  assert.equal(textOf(total).trim(), '—')
+  const grid = elements(
+    section,
+    (node) => 'dataListeningGrid' in node.properties
+  )[0]
+  const tiles = elements(grid, (node) => hasClass(node, 'collage__skeleton'))
+  assert.equal(tiles.length, 9, 'loading shows nine inert collage cells')
+  assert.ok(hasClass(tiles[0], 'collage__skeleton--lead'))
   assert.equal(
-    elements(track, (node) => hasClass(node, 'media-card')).length,
+    elements(grid, (node) => ['a', 'img'].includes(node.tagName)).length,
     0,
-    'skeletons must not use media-card so marquee ignores them'
+    'skeletons stay out of the tab order and load no images'
   )
-
-  // 卡片模板是脚本填充时唯一的结构来源，页面不再自带第二份标记。
-  const template = elements(
-    section,
-    (node) =>
-      node.tagName === 'template' && 'dataListeningCard' in node.properties
-  )[0]
-  assert.ok(
-    template,
-    'card markup stays in the component for the script to clone'
-  )
-  const card = elements(template.content, (node) =>
-    hasClass(node, 'media-card')
-  )[0]
-  assert.ok(hasClass(card, 'media-card--square'))
-  assert.equal(card.properties.role, 'listitem')
-  const cover = elements(card, (node) => hasClass(node, 'media-card__cover'))[0]
-  assert.equal(cover.properties.width, 300)
-  assert.equal(cover.properties.height, 300)
-  assert.equal(cover.properties.loading, 'lazy')
-  assert.equal(cover.properties.src, undefined)
-  const source = elements(card, (node) => node.tagName === 'template')[0]
-  assert.ok(source, 'author artwork stays inert until the viewer opens')
-  assert.ok(elements(source.content, (node) => node.tagName === 'img')[0])
-  const title = elements(card, (node) => hasClass(node, 'media-card__title'))[0]
-  assert.equal(title.tagName, 'a')
-  assert.equal(title.properties.href, undefined)
-  assert.equal(title.properties.target, '_blank')
-  assert.ok(title.properties.rel.includes('noopener'))
-  const meta = elements(card, (node) => hasClass(node, 'media-card__meta'))[0]
-  assert.equal(meta.properties.tabIndex, 0)
 
   // 无脚本时给出去处，而不是停在占位。
   const noscript = elements(section, (node) => node.tagName === 'noscript')[0]

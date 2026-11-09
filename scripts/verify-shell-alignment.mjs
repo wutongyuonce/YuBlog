@@ -11,7 +11,7 @@ const paths = [
   'tags/',
   'archives/',
   'interests/',
-  'interests/book/',
+  'interests/media/',
   'projects/',
   'about/',
   'friends/',

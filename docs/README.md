@@ -31,7 +31,7 @@
 | [架构与模块边界](./design/architecture.md) | 规则由谁定义、调用链路、改功能应落在哪（含 `--link-underline`／首页次级入口的样式属主） | 链接反馈交互细则与专题重复的媒体契约（细则见 [visuals](./design/site.md#visuals)） |
 | [正文与媒体](./design/content.md) | 图片、卡片、相册、HTML／音视频、绘图与博文卡的写法、设计及资源边界 | 订阅器中的输出策略 |
 | [SEO 与全文订阅](./design/distribution.md) | canonical、sitemap、RSS 身份、内容降级、安全及失败语义 | 网站视觉布局 |
-| [Last.fm](./design/listening.md) | 运行时接口、缓存、专辑匹配、请求上限和页面状态 | 通用卡片与图片查看器实现 |
+| [Last.fm](./design/listening.md) | 运行时接口、缓存、封面回退、请求上限和页面状态 | 通用卡片与图片查看器实现 |
 | [拾趣歌单](./design/playlists.md) | 固定歌单、平台适配、运行时缓存、海报卡片与文本导出 | 播放器、任意 URL 导入 |
 | [旅行](./design/trips.md) | 全屏旅行页、中立行程数据、圆周旅迹导入、地图与回放 | 站内编辑、运行时同步圆周旅迹 |
 | [Oneko](./design/oneko.md) | 可选像素猫的托管集成、开关、换页和许可 | 本站内容与搜索 |

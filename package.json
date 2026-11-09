@@ -97,6 +97,7 @@
     "@excalidraw/excalidraw": "0.18.1",
     "@vercel/blob": "^2.8.2",
     "maplibre-gl": "^6.16.0",
+    "opencc-js": "^1.4.2",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   }

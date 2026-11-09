@@ -104,7 +104,10 @@ function createElement(tag, ownerDocument) {
       return on
     },
     append(...nodes) {
-      for (const child of nodes) {
+      for (const item of nodes) {
+        // 与真实 DOM 一致：字符串参数作为文本节点插入。
+        const child =
+          typeof item === 'string' ? { nodeType: 3, data: item } : item
         if (child.parentNode)
           child.parentNode.childNodes = child.parentNode.childNodes.filter(
             (n) => n !== child

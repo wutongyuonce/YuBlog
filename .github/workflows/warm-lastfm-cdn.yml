@@ -27,7 +27,8 @@ jobs:
           python3 - <<'PY'
           import json
           data = json.load(open('/tmp/lastfm.json'))
-          assert isinstance(data.get('tracks'), list), data
+          assert isinstance(data.get('periods'), list), data
           assert 'updatedAt' in data
-          print(f"tracks={len(data['tracks'])} updatedAt={data['updatedAt']}")
+          albums = {p['key']: len(p['albums']) for p in data['periods']}
+          print(f"albums={albums} updatedAt={data['updatedAt']}")
           PY

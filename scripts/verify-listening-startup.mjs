@@ -10,20 +10,21 @@ const page = task.page('p1')
 const dist = resolve('__DIST_DIR__')
 const snapshot = {
   updatedAt: '2026-10-10T12:00:00Z',
-  weeklyScrobbles: 7,
   totalScrobbles: 42,
-  topArtist: 'Artist',
-  tracks: [
-    {
-      name: 'Song',
-      artist: 'Artist',
-      album: null,
-      cover: null,
-      fullCover: null,
-      url: 'https://www.last.fm/music/Artist/_/Song',
-      playcount: 7,
-    },
-  ],
+  periods: ['7day', '1month', '12month', 'overall'].map((key) => ({
+    key,
+    albumTotal: 1,
+    albums: [
+      {
+        name: 'Album',
+        artist: 'Artist',
+        url: 'https://www.last.fm/music/Artist/Album',
+        playcount: 7,
+        cover: null,
+        coverLarge: null,
+      },
+    ],
+  })),
 }
 let releaseModules
 const modules = new Promise((resolve) => {
@@ -31,6 +32,7 @@ const modules = new Promise((resolve) => {
 })
 let held = false
 let requests = 0
+let nowRequests = 0
 const mime = {
   '.js': 'text/javascript',
   '.html': 'text/html; charset=utf-8',
@@ -47,6 +49,12 @@ const server = createServer(async (request, response) => {
     requests++
     response.setHeader('content-type', 'application/json')
     response.end(JSON.stringify(snapshot))
+    return
+  }
+  if (url.pathname === '/api/lastfm-now') {
+    nowRequests++
+    response.setHeader('content-type', 'application/json')
+    response.end(JSON.stringify({ playing: false, tracks: [] }))
     return
   }
   const pathname = decodeURIComponent(url.pathname)
@@ -94,10 +102,9 @@ try {
   assert.equal(
     await page.evaluate(
       () =>
-        document.querySelector('[data-listening] .media-card__title')
-          .textContent
+        document.querySelector('[data-listening] .collage__name').textContent
     ),
-    'Song'
+    'Album'
   )
   releaseModules()
   await page.waitForLoadState('domcontentloaded')
@@ -109,6 +116,11 @@ try {
   await page.click('a[aria-label="文稿"]')
   await page.waitForURL(base + 'blogs/')
   assert.equal(requests, 1, 'non-home pages must not fetch listening data')
+  assert.equal(
+    nowRequests,
+    1,
+    'non-home pages must not fetch or poll now playing'
+  )
   await page.click('a.nav-bar__brand')
   await page.waitForURL(base)
   await page.waitForFunction(
@@ -120,6 +132,7 @@ try {
     'exercise ClientRouter, not a hard navigation'
   )
   assert.equal(requests, 2, 'returning home fetches exactly one fresh snapshot')
+  assert.equal(nowRequests, 2, 'returning home fetches now playing once more')
   console.log(
     'Listening renders with other modules pending; ClientRouter round-trip and single requests: passed'
   )
