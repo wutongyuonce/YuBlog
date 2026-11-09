@@ -68,7 +68,7 @@ See [verification](docs/guides/development.md#verification) for format, lint, te
 | Interest categories and assets | `src/content/interests/<id>.md` or `.mdx`, with matching asset directories |
 | Playlists | `src/data/playlists.json`; covers in `src/content/interests/playlists/` |
 | Home recent media | To-do entries in `src/data/media/items.json` |
-| Trips | `pnpm trips:import '<Pi Travel share link>'` writes `src/data/trips/<id>/`; see the [trips design](docs/design/trips.md) |
+| Trips | `pnpm trips:import '<Pi Travel share link>'` or `--from <draft.json>` writes `src/data/trips/<id>/`; see the [trips design](docs/design/trips.md) |
 | Author introduction | `src/content/about/about.md` |
 | Projects / friends | `src/content/projects/data.json` / `src/content/friends/data.json` |
 

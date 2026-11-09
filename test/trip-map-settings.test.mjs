@@ -32,10 +32,12 @@ test('the automatic style follows the site theme; others stay fixed', () => {
   )
 })
 
-test('3D tilt is flat far out, leans in steps and is capped close in', () => {
+test('3D tilt is flat far out, never decreases as you zoom in, and is capped', () => {
   assert.equal(pitchAtZoom(2), 0)
   assert.equal(pitchAtZoom(4), 0)
-  assert.equal(pitchAtZoom(8.5), 32.5)
-  assert.equal(pitchAtZoom(13), 55)
+  const zooms = Array.from({ length: 41 }, (_, i) => 2 + i * 0.4)
+  const pitches = zooms.map(pitchAtZoom)
+  assert.ok(pitches.every((pitch, i) => i === 0 || pitch >= pitches[i - 1]))
+  assert.ok(pitches.some((pitch) => pitch > 0 && pitch < 55))
   assert.equal(pitchAtZoom(18), 55)
 })

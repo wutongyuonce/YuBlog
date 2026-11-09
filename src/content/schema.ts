@@ -1,6 +1,8 @@
 import { z } from 'astro/zod' // 导入与 Astro 同版本的 Zod 验证库
 import type { SchemaContext } from 'astro:content'
 
+import { CLOCK_TIME } from '../utils/trips.js'
+
 /* =====================================================
    文章 Schema - 用于博客文章
    ===================================================== */
@@ -237,9 +239,7 @@ export const interestTabSchema = z.object({
    旅行 Schema - `src/data/trips/<id>/trip.json`，由导入脚本生成
    ===================================================== */
 const isoDate = z.iso.date({ error: '日期必须是 YYYY-MM-DD。' })
-const clockTime = z
-  .string()
-  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, '时间必须是 HH:mm。')
+const clockTime = z.string().regex(CLOCK_TIME, '时间必须是 HH:mm。')
 /** WGS84 `[经度, 纬度]`。 */
 const lngLat = z.tuple([
   z.number().min(-180).max(180),

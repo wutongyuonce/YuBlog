@@ -59,9 +59,8 @@ test('simplification drops near-collinear points and rounds to 5 decimals', () =
 })
 
 test('routed legs keep the service distance and join the stops', async () => {
-  const fetchImpl = async (_url, init) => {
-    assert.equal(JSON.parse(init.body).costing, 'pedestrian')
-    return Response.json({
+  const fetchImpl = async () =>
+    Response.json({
       trip: {
         summary: { length: 2.5, time: 1800 },
         legs: [
@@ -74,7 +73,6 @@ test('routed legs keep the service distance and join the stops', async () => {
         ],
       },
     })
-  }
   const { route, warning } = await requestRoute(
     { from, to, mode: 'walk' },
     { fetchImpl }
@@ -129,18 +127,19 @@ test('flights, trains, boats and transit are straight lines that keep their mode
     )
 })
 
-test('bike legs ask Valhalla for a bicycle route', async () => {
-  let costing
-  await requestRoute(
-    { from, to, mode: 'bike' },
-    {
-      fetchImpl: async (_url, init) => {
-        costing = JSON.parse(init.body).costing
-        return new Response('busy', { status: 503 })
-      },
-    }
-  )
-  assert.equal(costing, 'bicycle')
+test('road modes ask Valhalla for the matching costing', async () => {
+  const asked = []
+  for (const mode of ['drive', 'walk', 'bike'])
+    await requestRoute(
+      { from, to, mode },
+      {
+        fetchImpl: async (_url, init) => {
+          asked.push(JSON.parse(init.body).costing)
+          return new Response('busy', { status: 503 })
+        },
+      }
+    )
+  assert.deepEqual(asked, ['auto', 'pedestrian', 'bicycle'])
 })
 
 test('failures and unknown modes fall back to a straight line', async () => {

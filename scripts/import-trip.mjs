@@ -1,15 +1,16 @@
 #!/usr/bin/env node
 /**
- * 圆周旅迹分享链接 → `src/data/trips/<id>/`（trip.json + 图片）。
+ * 圆周旅迹分享链接或手写草稿 → `src/data/trips/<id>/`（trip.json + 图片）。
  *
  *   pnpm trips:import '<分享链接或行程 ID>' [--id <站内 id>]
+ *   pnpm trips:import --from <草稿.json> [--id <站内 id>]
  *
- * 转换规则在 `src/utils/pitravel.mjs`，路线在 `src/utils/trip-routes.mjs`；
- * 这里只负责网络、图片和原子落盘。设计见 docs/design/trips.md。
+ * 转换规则在 `src/utils/pitravel.mjs` 与 `src/utils/trip-draft.mjs`，路线在
+ * `src/utils/trip-routes.mjs`；这里只负责网络、图片和原子落盘。设计见 docs/design/trips.md。
  */
-import { mkdir, rename, rm, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 import sharp from 'sharp'
 
@@ -18,6 +19,7 @@ import {
   parseJourneyId,
   toTripDraft,
 } from '../src/utils/pitravel.mjs'
+import { parseTripDraft } from '../src/utils/trip-draft.mjs'
 import { requestRoute } from '../src/utils/trip-routes.mjs'
 
 const TRIPS_DIR = resolve(import.meta.dirname, '../src/data/trips')
@@ -32,11 +34,12 @@ const HEADERS = {
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
-  options: { id: { type: 'string' } },
+  options: { id: { type: 'string' }, from: { type: 'string' } },
 })
-if (positionals.length !== 1) {
+if (positionals.length !== (values.from ? 0 : 1)) {
   console.error(
-    "用法：pnpm trips:import '<圆周旅迹分享链接或行程 ID>' [--id <站内 id>]"
+    "用法：pnpm trips:import '<圆周旅迹分享链接或行程 ID>' [--id <站内 id>]\n" +
+      '　　　pnpm trips:import --from <草稿.json> [--id <站内 id>]'
   )
   process.exit(1)
 }
@@ -52,15 +55,23 @@ async function fetchJson(url) {
   return response.json()
 }
 
-/** 下载一张图，缩到长边 1280 内转 JPEG；失败返回 undefined 并记警告。 */
+async function readImage(url) {
+  if (!/^https?:\/\//.test(url)) return readFile(url)
+  const response = await fetch(url, {
+    headers: HEADERS,
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  })
+  if (!response.ok) throw new Error(`HTTP ${response.status}`)
+  return Buffer.from(await response.arrayBuffer())
+}
+
+/**
+ * 取一张图（远程或本地），缩到长边 1280 内转 JPEG。远程失败返回 undefined 并记警告；
+ * 本地文件读不到是草稿写错了，直接报错终止导入。
+ */
 async function saveImage(url, dir, name) {
   try {
-    const response = await fetch(url, {
-      headers: HEADERS,
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    })
-    if (!response.ok) throw new Error(`HTTP ${response.status}`)
-    const input = Buffer.from(await response.arrayBuffer())
+    const input = await readImage(url)
     await sharp(input)
       .rotate()
       .resize({
@@ -73,6 +84,10 @@ async function saveImage(url, dir, name) {
       .toFile(join(dir, name))
     return `./${name}`
   } catch (error) {
+    if (!/^https?:\/\//.test(url))
+      throw new Error(`本地图片读取失败：${url}（${error.message}）`, {
+        cause: error,
+      })
     warnings.push(`图片下载失败，已跳过：${url}（${error.message}）`)
     return undefined
   }
@@ -92,8 +107,14 @@ function serialize(trip) {
   return `${json.replace(/"__INLINE_(\d+)__"/g, (_, index) => inline[index])}\n`
 }
 
-const journeyId = parseJourneyId(positionals[0])
-const draft = toTripDraft(await fetchJson(journeyDetailUrl(journeyId)))
+const draft = values.from
+  ? parseTripDraft(
+      JSON.parse(await readFile(values.from, 'utf8')),
+      dirname(resolve(values.from))
+    )
+  : toTripDraft(
+      await fetchJson(journeyDetailUrl(parseJourneyId(positionals[0])))
+    )
 const id = values.id ?? draft.start
 if (!ID_PATTERN.test(id)) {
   console.error(`站内 id「${id}」只能包含小写字母、数字和连字符。`)
@@ -158,8 +179,8 @@ try {
     days.push({ date: day.date, summary: day.summary, stops })
   }
 
-  // 拼图优先用本人在各站上传的照片；一张都没有时，
-  // 才依次用圆周的行程封面和地点实景图兜底，最多三张。
+  // 拼图优先用本人在各站的照片；一张都没有时，
+  // 才依次用草稿的封面候选和地点实景图兜底，最多三张。
   const cover = []
   const hasStopPhotos = days.some((day) =>
     day.stops.some((stop) => stop.photos.length > 0)

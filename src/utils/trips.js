@@ -5,6 +5,8 @@
  */
 
 const TRIP_TIME_ZONE = 'Asia/Shanghai'
+/** 停靠点时刻 `HH:mm`；schema、圆周适配器和草稿校验共用。 */
+export const CLOCK_TIME = /^([01]\d|2[0-3]):[0-5]\d$/
 export const STATUS_LABELS = { plan: '计划', record: '记录' }
 export const ROUTE_MODE_LABELS = {
   drive: '驾车',

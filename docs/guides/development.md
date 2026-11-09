@@ -64,7 +64,7 @@ Markdown 插件修改后若 dev 仍输出旧结构，用 `pnpm dev --force` 清�
 | 友链 | `src/content/friends/data.json` | `category` 为推荐或双向，组内按 `order`／名称排序 |
 | 拾趣分类 | `src/content/interests/<id>.md` 或 `.mdx` | 顶层文件自动生成子页、入口和菜单；无草稿开关 |
 | 首页近期书影游 | 自动取 `src/data/media/items.json` 的待看条目 | 无需单独维护 |
-| 旅行 | `src/data/trips/<id>/`（`trip.json` 与图片） | 用 `pnpm trips:import '<圆周旅迹分享链接>'` 生成，不手写；规则见 [旅行](../design/trips.md#导入) |
+| 旅行 | `src/data/trips/<id>/`（`trip.json` 与图片） | 用 `pnpm trips:import '<圆周旅迹分享链接>'` 或 `--from <草稿.json>` 生成，不手写；规则见 [旅行](../design/trips.md#导入) |
 
 新博客的最小起点：
 

@@ -3,6 +3,7 @@
  * 只做纯转换，不发请求、不读写文件；网络与落盘在 `scripts/import-trip.mjs`。
  * 产出的草稿只含行程内容，不带圆周的行程 ID、链接或用户资料。
  */
+import { CLOCK_TIME } from './trips.js'
 
 const DETAIL_URL =
   'https://www.pitravel.cn/api/slytherin/v1/web/journey/detail?journey_id='
@@ -35,7 +36,6 @@ const MODE_EMOJI = {
 }
 /** 铁路车次：字母前缀或纯数字；航班号都带航司代码。 */
 const TRAIN_NUMBER = /^([GDCZTKSY]\d{1,4}|\d{1,4})$/i
-const CLOCK = /^([01]\d|2[0-3]):[0-5]\d$/
 
 /**
  * 从分享链接或纯数字取出行程 ID。
@@ -137,7 +137,7 @@ function text(value) {
 }
 
 function clock(value) {
-  return typeof value === 'string' && CLOCK.test(value) ? value : undefined
+  return typeof value === 'string' && CLOCK_TIME.test(value) ? value : undefined
 }
 
 function dateIn(timeZone, timestamp) {

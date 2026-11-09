@@ -102,7 +102,7 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | Last.fm 查询、时段排行、最近播放、封面来源与请求上限 | `src/utils/lastfm.mjs`（网易云封面回退在 `src/utils/netease-cover.mjs`）；缓存与失败语义在 `api/lastfm.js`／`api/lastfm-now.js` | 在视图中重新调用 API、推断排行或另找封面 |
 | 拾趣固定歌单、平台资料归一化、运行时快照 | `src/data/playlists.json`、`src/utils/qq-playlist.mjs`／`netease-playlist.mjs` 与 `playlists.mjs`；缓存在 `api/playlists.js`，见 [拾趣歌单](./playlists.md) | 提交全量曲目、在页面抓远程封面或接受任意来源 URL |
 | 影音书游条目 | `src/data/media/items.json`；合页 `MediaHub`；排序／统计／标签色调 `src/utils/media-hub.js`；封面 `src/utils/media-covers.ts` | 在 Markdown `:::card` 目录页再维护一份电影／动漫／剧／游戏／书清单 |
-| 旅行数据、圆周旅迹适配、状态与统计、地图与回放 | `tripSchema`；`pitravel.mjs`；`trips.js`；`trip-map.ts`／`trip-replay.ts`，完整权威表见 [旅行](./trips.md#地图) | 手写 `trip.json`、在页面里重算状态或里程、运行时请求圆周旅迹 |
+| 旅行数据、圆周旅迹与草稿适配、状态与统计、地图与回放 | `tripSchema`；`pitravel.mjs`／`trip-draft.mjs`；`trips.js`；`trip-map.ts`／`trip-replay.ts`，完整权威表见 [旅行](./trips.md#地图) | 手写 `trip.json`、在页面里重算状态或里程、运行时请求圆周旅迹 |
 | 写作热力统计与失败语义 | `blog-heatmap.js` | 在组件重算年度字数、将缺失字数当 0 |
 | 热力提示交互与页面清理 | `WritingHeatmap.astro` | 用旧根节点的定时器关闭新页面的提示层 |
 | 内容图片的路径与写入规则 | `src/content/**` 里的相对路径；正文宽度标记由 `plugins/remark-image-width.ts` 解析 | 把图片放进 `public/`、在正文写原始 `<img>`（相对路径会构建报错）、手写 `_astro` 地址 |

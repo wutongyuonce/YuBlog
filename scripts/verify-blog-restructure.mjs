@@ -957,7 +957,7 @@ test('the trips page lists every trip, renders each detail and ships its map dat
   )
   const homeLink = elements(page, (node) => hasClass(node, 'trips-home'))[0]
   assert.equal(homeLink.properties.href, sitePath('/'))
-  assert.match(textOf(page), /行程数据采集自圆周旅迹/)
+  assert.match(textOf(page), /行程数据主要采集自圆周旅迹/)
 
   const cards = elements(page, (node) => 'dataTripLink' in node.properties)
   assert.deepEqual(

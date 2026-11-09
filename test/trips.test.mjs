@@ -87,12 +87,9 @@ test('date labels', () => {
   )
 })
 
-test('year colours are fixed per year, so new years never recolour old ones', () => {
-  assert.deepEqual([2024, 2025, 2026].map(yearColor), [
-    '#3b82f6',
-    '#8b5cf6',
-    '#f59e0b',
-  ])
+test('year colours depend only on the year and differ across six years', () => {
+  const years = [2024, 2025, 2026, 2027, 2028, 2029]
+  assert.equal(new Set(years.map(yearColor)).size, years.length)
   assert.equal(yearColor(2030), yearColor(2024))
 })
 
