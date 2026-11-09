@@ -134,8 +134,8 @@ test('drafts keep dated days in order and map stops to neutral fields', () => {
 })
 
 test('a transport event becomes a departure and an arrival joined by its mode', () => {
-  const flight = (number) => ({
-    event_type: 201,
+  const flight = (number, type = 201) => ({
+    event_type: type,
     name: '南京 出发 至 重庆',
     start_time: '22:00',
     end_time: '00:25',
@@ -159,8 +159,8 @@ test('a transport event becomes a departure and an arrival joined by its mode', 
             timestamp: DAY1,
             events: [
               flight('PN6458'),
-              flight('G1234'),
-              flight('1461'),
+              flight('G1234', 200),
+              flight('1461', 200),
               { ...flight('MU7718'), end_poi_info: undefined },
               { ...flight('MU7719'), start_poi_info: { name: '无坐标' } },
               {
@@ -200,6 +200,52 @@ test('a transport event becomes a departure and an arrival joined by its mode', 
   assert.equal(draft.days[0].stops[8].travelSeconds, undefined)
   assert.equal(draft.days[0].stops.length, 10)
   assert.deepEqual(draft.skipped, [])
+})
+
+test('the transport family maps by event_type_v2 to its mode', () => {
+  const event = (fields) => ({
+    name: 'x',
+    route_transportation_type: 2,
+    start_poi_info: poi(106.5, 29.5, { name: '甲' }),
+    end_poi_info: poi(106.6, 29.6, { name: '乙' }),
+    ...fields,
+  })
+  const draft = toTripDraft({
+    code: 0,
+    data: {
+      journey: {
+        name: 'x',
+        day_plans: [
+          {
+            day_index: 1,
+            timestamp: DAY1,
+            events: [
+              event({ event_type: 103, event_type_v2: 202 }),
+              event({ event_type: 203 }),
+              event({ event_type: 204 }),
+              event({ event_type: 208 }),
+              event({ event_type: 200 }),
+              event({ event_type: 103, route_transportation_type: 3 }),
+            ],
+          },
+        ],
+      },
+    },
+  })
+  const stops = draft.days[0].stops
+  assert.deepEqual(
+    [0, 2, 4, 6, 8].map((index) => [stops[index].travel, stops[index].emoji]),
+    [
+      ['train', '🚄'],
+      ['ferry', '⛴️'],
+      ['drive', '🚗'],
+      ['transit', '🚌'],
+      ['transit', '🚌'],
+    ]
+  )
+  // 到达站之后的骑行、普通地点之后的公共交通。
+  assert.equal(stops[1].travel, 'bike')
+  assert.equal(stops[10].travel, 'transit')
 })
 
 test('two plans on the same date merge instead of dropping stops', () => {

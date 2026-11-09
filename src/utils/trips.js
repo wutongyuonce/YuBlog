@@ -9,8 +9,11 @@ export const STATUS_LABELS = { plan: '计划', record: '记录' }
 export const ROUTE_MODE_LABELS = {
   drive: '驾车',
   walk: '步行',
+  bike: '骑行',
   flight: '飞机',
   train: '火车',
+  ferry: '船',
+  transit: '公共交通',
   straight: '直线',
 }
 const COLLAGE_SIZE = 3

@@ -7,11 +7,33 @@
 const DETAIL_URL =
   'https://www.pitravel.cn/api/slytherin/v1/web/journey/detail?journey_id='
 const DEFAULT_TIME_ZONE = 'Asia/Shanghai'
-/** `route_transportation_type` → 站内交通方式；未列出的编码按直线处理。 */
-const TRAVEL_MODES = { 0: 'drive', 1: 'walk' }
-/** `event_type` 201 是航班、火车等交通事件，带出发与到达两个地点。 */
-const TRANSPORT_EVENT = 201
-/** 铁路车次：字母前缀或纯数字；航班号都带航司代码，其余按航班处理。 */
+/** `route_transportation_type`（去往下一站）→ 站内交通方式；未列出的编码按直线处理。 */
+const TRAVEL_MODES = { 0: 'drive', 1: 'walk', 2: 'bike', 3: 'transit' }
+/**
+ * 事件类型优先取 `event_type_v2`。200–208 是交通事件，带出发与到达两个地点：
+ * 201 飞机、202 火车、203 船、204 驾车、205 步行、206 骑行、207／208 公交；
+ * 200 未细分，按班次号推断。
+ */
+const TRANSPORT_MODES = {
+  201: 'flight',
+  202: 'train',
+  203: 'ferry',
+  204: 'drive',
+  205: 'walk',
+  206: 'bike',
+  207: 'transit',
+  208: 'transit',
+}
+const MODE_EMOJI = {
+  flight: '✈️',
+  train: '🚄',
+  ferry: '⛴️',
+  drive: '🚗',
+  walk: '🚶',
+  bike: '🚲',
+  transit: '🚌',
+}
+/** 铁路车次：字母前缀或纯数字；航班号都带航司代码。 */
 const TRAIN_NUMBER = /^([GDCZTKSY]\d{1,4}|\d{1,4})$/i
 const CLOCK = /^([01]\d|2[0-3]):[0-5]\d$/
 
@@ -184,8 +206,8 @@ function placeStop(event) {
 }
 
 /**
- * 交通事件拆成出发与到达两站：出发站到到达站是飞机或火车，
- * 时长取班次起止时间；到达站之后按事件自己的交通方式去下一站。
+ * 交通事件拆成出发与到达两站：两站之间的方式由事件类型定，班次起止时间给出的时长
+ * 只用于不走路网的方式；到达站之后按事件自己的交通方式去下一站。
  */
 function transportStops(event) {
   const from = event.start_poi_info
@@ -202,13 +224,15 @@ function transportStops(event) {
     })
   const info = event.transport_info ?? {}
   const number = text(info.transport_num)
-  const mode = number && TRAIN_NUMBER.test(number) ? 'train' : 'flight'
+  const mode =
+    TRANSPORT_MODES[eventType(event)] ??
+    (number ? (TRAIN_NUMBER.test(number) ? 'train' : 'flight') : 'transit')
   // 起止时间都是有效时间戳时才算时长。
   const departs = Number(info.transport_start_time)
   const arrives = Number(info.transport_end_time)
   const seconds =
     departs > 0 && arrives > departs ? (arrives - departs) / 1000 : 0
-  const common = { category: '交通', emoji: mode === 'train' ? '🚄' : '✈️' }
+  const common = { category: '交通', emoji: MODE_EMOJI[mode] }
   const start = clock(event.start_time)
   const end = clock(event.end_time)
   return [
@@ -238,10 +262,13 @@ function transportStops(event) {
   ]
 }
 
+function eventType(event) {
+  return Number(event.event_type_v2 ?? event.event_type)
+}
+
 function toStops(event) {
-  return event?.event_type === TRANSPORT_EVENT
-    ? transportStops(event)
-    : placeStop(event)
+  const type = eventType(event)
+  return type >= 200 && type <= 208 ? transportStops(event) : placeStop(event)
 }
 
 /**

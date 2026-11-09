@@ -108,19 +108,39 @@ test('a truncated route shape falls back instead of inventing a point', async ()
   assert.match(warning, /不完整/)
 })
 
-test('flights and trains are straight lines that keep their mode and timetable', async () => {
+test('flights, trains, boats and transit are straight lines that keep their mode', async () => {
+  const noFetch = {
+    fetchImpl: () => {
+      throw new Error('should not be called')
+    },
+  }
   const { route } = await requestRoute(
     { from, to, mode: 'flight', duration: 8700 },
-    {
-      fetchImpl: () => {
-        throw new Error('should not be called')
-      },
-    }
+    noFetch
   )
   assert.deepEqual(
     [route.mode, route.duration, route.path.length],
     ['flight', 8700, 2]
   )
+  for (const mode of ['train', 'ferry', 'transit'])
+    assert.equal(
+      (await requestRoute({ from, to, mode }, noFetch)).route.mode,
+      mode
+    )
+})
+
+test('bike legs ask Valhalla for a bicycle route', async () => {
+  let costing
+  await requestRoute(
+    { from, to, mode: 'bike' },
+    {
+      fetchImpl: async (_url, init) => {
+        costing = JSON.parse(init.body).costing
+        return new Response('busy', { status: 503 })
+      },
+    }
+  )
+  assert.equal(costing, 'bicycle')
 })
 
 test('failures and unknown modes fall back to a straight line', async () => {

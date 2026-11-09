@@ -20,6 +20,8 @@
 
 **回放。** 至少有两个停靠点的旅程才能回放。回放时面板收起，底部卡片依次显示天次、停靠点序号、名称、时间、备注和第一张照片。地图沿路线逐段画线，一个标记沿线前进，镜头跟随；到站后停留片刻再出发。可以暂停、继续或退出，退出后回到详情。系统开启「减少动态效果」时不播放线条和镜头动画，只逐站切换。
 
+**地图设置。** 工具栏的图层按钮打开设置面板，可以选底图风格（跟随主题、彩色、明亮、浅灰、深色、深蓝），也可以开关「3D 视角」：打开时远看全国平视、越靠近街道越倾斜，缩放到 14 级以上显示立体楼块；关闭时始终平视。默认跟随主题、打开 3D。设置立即生效并只保存在当前浏览器，可以恢复默认；点面板外或按 Esc 关闭。换风格会退出正在进行的回放。
+
 **降级。** 没有 JavaScript 时，面板以静态列表呈现，卡片通过 `#<id>` 锚点用 `:target` 展开详情。地图脚本、几何数据或底图在首次加载完成前出错时，地图区域显示原因，回放停止且按钮停用，列表、详情和照片照常可用。加载完成后个别瓦片失败不打断浏览。
 
 ## 数据
@@ -47,7 +49,7 @@
           "note": "…",                 // 可选
           "photos": ["./s01-1.jpg"],
           "route": {                   // 到下一站，最后一站没有
-            "mode": "drive",           // drive / walk / flight / train / straight
+            "mode": "drive",           // drive / walk / bike / flight / train / ferry / transit / straight
             "distance": 6200,          // 米
             "duration": 900,           // 秒，straight 时没有
             "path": [[106.53, 29.6], …]
@@ -62,7 +64,7 @@
 - **中立性。** 数据里不保存圆周旅迹的行程 ID、分享链接、用户 ID、昵称或头像。
 - **日期。** `start` 是第一天，`end` 是最后一天；`days` 按日期递增且不重复，没有安排的日子保留空的 `stops`。
 - **坐标。** 统一为 WGS84，与 OpenStreetMap 底图一致；GCJ-02 的转换只在导入时做一次。
-- **路线。** `route` 属于出发的那一站，相邻两天之间也连起来，地图上就是一条连续的线。路径保留 5 位小数（约 1 米），并做约 5 米容差的抽稀。`flight`／`train` 是航班或火车，按两点直线画出，时长取班次的起止时间。`straight` 表示路线服务没有结果，按两点直线计算距离，不提供时长。各种方式的距离都计入旅程公里数。
+- **路线。** `route` 属于出发的那一站，相邻两天之间也连起来，地图上就是一条连续的线。路径保留 5 位小数（约 1 米），并做约 5 米容差的抽稀。`drive`／`walk`／`bike` 是路网路线；`flight`／`train`／`ferry`／`transit` 按两点直线画出，来自交通事件时时长取班次的起止时间。`straight` 表示路线服务没有结果，按两点直线计算距离，不提供时长。各种方式的距离都计入旅程公里数。
 - **封面拼图。** 最多取三张，先取 `cover`，再取各站 `photos`（去重）。导入时只在各站都没有本人照片时才写 `cover`，所以实际的顺序是：本人照片 → 圆周的行程封面 → 地点实景图。都没有时，显示带标题首字和路线轮廓的文字占位。
 - **图片。** 导入时把长边缩到 1280px 以内，转成质量 80 的 JPEG；构建时由 Astro 再生成 WebP 的多种尺寸。图片不从外站热链。
 
@@ -78,10 +80,11 @@ pnpm trips:import '<圆周旅迹分享链接或行程 ID>' [--id <站内 id>]
    - `code !== 0`、行程不存在或不公开时，报错退出。
    - 名称、日期、每天的概要和停靠点按原顺序映射。日期取每天的 `timestamp`，按行程自己的时区换算（缺失或无效时用上海），落在同一天的日程合并；`day_index` 为 -1 的「待计划」不导入。
    - 坐标从 GCJ-02 转为 WGS84；分类取 `category[0].display_name`，图标取 `category[0].icon`。
-   - 交通方式取 `route_transportation_type`：0 为驾车，1 为步行，其余按直线处理。
-   - `event_type` 为 201 的交通事件（航班、火车）拆成出发和到达两站，分类写「交通」，班次号写进出发站备注。班次号以 G、D、C、Z、T、K、S、Y 开头或是纯数字的按火车，其余按航班；只有一端地点可用时按普通地点导入。到达站去往下一站仍按事件的 `route_transportation_type`。
+   - 去往下一站的交通方式取 `route_transportation_type`：0 驾车、1 步行、2 骑行、3 公共交通，其余按直线处理。
+   - 事件类型优先取 `event_type_v2`，没有时取 `event_type`。200–208 是交通事件，拆成出发和到达两站，分类写「交通」，班次号写进出发站备注，两站之间的方式按类型定：201 飞机、202 火车、203 船、204 驾车、205 步行、206 骑行、207／208 公共交通；200 未细分，班次号以 G、D、C、Z、T、K、S、Y 开头或是纯数字的按火车，其余班次按航班，没有班次按公共交通。只有一端地点可用时按普通地点导入。到达站去往下一站仍按事件的 `route_transportation_type`。
+   - 其余类型（吃喝、住宿、游玩、购物、出发地等）都按普通地点导入；没有坐标的事件（如「其他」里的纯文字安排）会被跳过并给出警告。
    - 只读取上面列出的字段，用户资料不会被读出。
-2. `src/utils/trip-routes.mjs` 对航班和火车直接画直线，其余按交通方式向公共 Valhalla（`valhalla1.openstreetmap.de`，`auto`／`pedestrian`）逐段请求路线，每次请求 15 秒超时、不重试。失败或没有结果的那一段降级为 `straight` 并给出警告，不会让整次导入失败。
+2. `src/utils/trip-routes.mjs` 对飞机、火车、船和公共交通直接画直线，驾车、步行和骑行向公共 Valhalla（`valhalla1.openstreetmap.de`，`auto`／`pedestrian`／`bicycle`）逐段请求路线，每次请求 15 秒超时、不重试。失败或没有结果的那一段降级为 `straight` 并给出警告，不会让整次导入失败。
 3. `scripts/import-trip.mjs` 负责落盘：
    - 下载封面和照片，并缩放、转码。
    - 各站有本人照片时不保存任何兜底封面（圆周的行程封面多是它自动配的图）；一张都没有时，依次取行程封面和地点实景图，最多三张。
@@ -93,10 +96,12 @@ pnpm trips:import '<圆周旅迹分享链接或行程 ID>' [--id <站内 id>]
 
 ## 地图
 
-- **引擎与底图。** 渲染用开源的 MapLibre GL JS，底图用 [OpenFreeMap](https://openfreemap.org) 的矢量瓦片：深色主题为 `dark`，浅色为 `liberty`。不需要账号、token 或配置，左下角保留 OpenFreeMap 要求的署名。底图地名改为优先显示 `name:zh-Hans`，没有时依次退回 `name:zh` 和当地名。底图是 OpenStreetMap 数据，国境线不是中国视角。地图脚本只在本页按需加载，worker 地址由构建工具给出。
+- **引擎与底图。** 渲染用开源的 MapLibre GL JS，底图用 [OpenFreeMap](https://openfreemap.org) 的矢量瓦片：五套风格对应 `liberty`、`bright`、`positron`、`dark`、`fiord`，「跟随主题」在浅色下用 `liberty`、深色下用 `dark`。不需要账号、token 或配置，左下角保留 OpenFreeMap 要求的署名。底图地名改为优先显示 `name:zh-Hans`，没有时依次退回 `name:zh` 和当地名。底图是 OpenStreetMap 数据，国境线不是中国视角。地图脚本只在本页按需加载，worker 地址由构建工具给出。
 - **回放画线。** 整条路线只发给地图一次，每帧改 `line-gradient` 里 `line-progress` 的分界：已走过的部分着色，其余透明。
 - **几何数据。** 由静态端点 `/trips/map.json` 提供：每段旅程的 id、标题与日期（用于悬停提示）、年份颜色、各站坐标与序号，以及逐段路径。页面 HTML 放其余文字和图片。
-- **主题与换页。** 主题切换时换底图并重新添加图层。ClientRouter 离开本页时销毁地图、取消动画和监听。
+- **3D 视角。** 倾斜角由 `transformCameraUpdate` 按缩放级别给出（4 级及以下 0°，逐档过渡到 13 级及以上 55°），取景和回放镜头都自动跟随；取景先按平视算出落点缩放，再按该缩放的倾斜角框住全部地点。立体楼块是本页自己加的 `fill-extrusion` 图层，读瓦片 `building` 的 `render_height`／`render_min_height`，颜色按底图深浅取值；底图自带的立体楼块一律隐藏，五套风格表现一致。没有地形起伏，OpenFreeMap 不提供高程数据。
+- **设置保存。** 存在 `localStorage` 的 `trips-map-settings`，读取时校验并对未知取值回到默认；存储不可用时用默认值，不影响地图。
+- **主题与换页。** 底图风格变化（包括「跟随主题」时切换站点主题）会换底图并重新添加图层；只改 3D 视角时就地切换。ClientRouter 离开本页时销毁地图、取消动画和监听。
 
 | 规则 | 权威 |
 | --- | --- |
@@ -107,7 +112,8 @@ pnpm trips:import '<圆周旅迹分享链接或行程 ID>' [--id <站内 id>]
 | 下载、缩放和原子落盘 | `scripts/import-trip.mjs` |
 | 状态、统计、配色、日期文案、拼图取图和小红书搜索链接 | `src/utils/trips.js` |
 | 集合读取、排序与图片解析 | `src/utils/trip-entries.ts` |
-| 地图、图层、选中与主题 | `src/utils/trip-map.ts` |
+| 地图、图层、选中、底图切换与 3D 应用 | `src/utils/trip-map.ts` |
+| 地图设置的取值、默认值、风格解析与倾斜角度 | `src/utils/trip-map-settings.js` |
 | 回放的时间线与镜头 | `src/utils/trip-replay.ts` |
 | 面板、地址片段、照片对话框和页面生命周期 | `src/pages/trips/index.astro` 的页面脚本 |
 
@@ -120,13 +126,14 @@ pnpm trips:import '<圆周旅迹分享链接或行程 ID>' [--id <站内 id>]
 ## 验证
 
 ```bash
-node --test test/pitravel.test.mjs test/trip-routes.test.mjs test/trips.test.mjs test/trip-replay.test.mjs test/content-schema.test.mjs
+node --test test/pitravel.test.mjs test/trip-routes.test.mjs test/trips.test.mjs test/trip-replay.test.mjs test/trip-map-settings.test.mjs test/content-schema.test.mjs
 ```
 
-- `pitravel.test.mjs`：链接解析、坐标转换的往返、待计划日的排除与同日合并、字段映射、航班和火车拆成两站及缺一端时的回退，以及不导出用户资料。
-- `trip-routes.test.mjs`：Valhalla 解码与抽稀、航班与火车保留方式和时长的直线、失败或编码不完整时降级为直线。
+- `pitravel.test.mjs`：链接解析、坐标转换的往返、待计划日的排除与同日合并、字段映射、交通事件拆成两站（按 `event_type_v2` 定方式、200 按班次推断）及缺一端时的回退、骑行与公共交通，以及不导出用户资料。
+- `trip-routes.test.mjs`：Valhalla 解码与抽稀、骑行请求 `bicycle`、飞机／火车／船／公共交通保留方式的直线、失败或编码不完整时降级为直线。
 - `trips.test.mjs`：状态的日期边界、统计、时间与日期文案、小红书链接、年份配色和拼图兜底。
 - `trip-replay.test.mjs`：回放时间线的步骤、沿线距离与减少动态效果。
+- `trip-map-settings.test.mjs`：存储取值的校验与回退、跟随主题的风格解析、按缩放的倾斜角度。
 - `content-schema.test.mjs`：`tripSchema` 的边界。
 
 `test:built-restructure` 检查 `/trips/` 的结构、无 JS 列表、`map.json` 形状和「更多」菜单入口。
@@ -135,5 +142,6 @@ node --test test/pitravel.test.mjs test/trip-routes.test.mjs test/trips.test.mjs
 
 - 深浅主题，以及 1440／390／320px 三种宽度。
 - 选中、后退和回放（含减少动态效果）。
+- 地图设置：各风格切换、街道级的立体楼块与关闭 3D 后平视、刷新后保留、恢复默认、Esc 关闭。
 - 照片对话框。
 - 地图加载失败时的降级。

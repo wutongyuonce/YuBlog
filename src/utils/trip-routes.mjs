@@ -6,7 +6,9 @@
 import { EARTH_RADIUS, haversine } from './geo.mjs'
 
 const VALHALLA_URL = 'https://valhalla1.openstreetmap.de/route'
-const COSTING = { drive: 'auto', walk: 'pedestrian' }
+const COSTING = { drive: 'auto', walk: 'pedestrian', bike: 'bicycle' }
+/** 不走路网的交通方式：直接画两点直线并保留方式。 */
+const LINE_MODES = new Set(['flight', 'train', 'ferry', 'transit'])
 const TIMEOUT_MS = 15_000
 const TOLERANCE_METERS = 5
 
@@ -115,7 +117,7 @@ function straight(from, to, mode = 'straight', duration) {
 
 /**
  * 一段路线。`warning` 只在降级为直线时出现。
- * 飞机和火车不请求路网，直接画直线。
+ * 飞机、火车、船和公共交通不请求路网，直接画直线。
  * @param {{ from: [number, number], to: [number, number], mode: string, duration?: number }} leg
  * @param {{ fetchImpl?: typeof fetch, timeoutMs?: number }} [options]
  */
@@ -124,8 +126,7 @@ export async function requestRoute(
   { fetchImpl = fetch, timeoutMs = TIMEOUT_MS } = {}
 ) {
   const costing = COSTING[mode]
-  if (mode === 'flight' || mode === 'train')
-    return { route: straight(from, to, mode, duration) }
+  if (LINE_MODES.has(mode)) return { route: straight(from, to, mode, duration) }
   if (!costing) return { route: straight(from, to) }
   try {
     const response = await fetchImpl(VALHALLA_URL, {

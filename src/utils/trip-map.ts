@@ -1,6 +1,6 @@
 /**
  * 旅行页的地图（MapLibre GL + OpenFreeMap 底图）：全部路线与聚合停靠点、
- * 选中旅程的序号点、悬停提示与主题底图。
+ * 选中旅程的序号点、悬停提示，以及按设置应用底图风格和 3D 视角。
  * 只管地图；面板、地址片段和回放由页面脚本与 `trip-replay.ts` 调度。
  */
 import type {
@@ -14,6 +14,18 @@ import type {
 } from 'maplibre-gl'
 // 打包后 worker 不在 MapLibre 默认推算的位置，由 Vite 给出实际地址。
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
+
+import {
+  isDarkMapStyle,
+  mapStyleUrl,
+  pitchAtZoom,
+  resolveMapStyle,
+} from './trip-map-settings.js'
+
+export interface MapSettings {
+  style: string
+  tilt: boolean
+}
 
 export interface TripStopGeo {
   name: string
@@ -39,7 +51,9 @@ export interface TripGeo {
 export interface TripMapOptions {
   container: HTMLElement
   trips: TripGeo[]
+  /** 站点是否为深色主题。 */
   dark: boolean
+  settings: MapSettings
   /** 地图四周被面板等遮住的部分，取景时让开。 */
   getPadding: () => PaddingOptions
   onSelectTrip: (id: string) => void
@@ -60,6 +74,9 @@ const LAYERS = {
   selected: 'trips-selected',
   selectedNumber: 'trips-selected-number',
 } as const
+const BUILDINGS = 'trips-buildings'
+/** OpenFreeMap 各样式共用的矢量源与建筑图层。 */
+const BASEMAP_SOURCE = 'openmaptiles'
 // OpenFreeMap 的字形服务只提供 Noto Sans；中文字形由浏览器本地字体绘制。
 const FONT = ['Noto Sans Bold']
 const EMPTY = { type: 'FeatureCollection' as const, features: [] }
@@ -70,10 +87,6 @@ const CHINESE_NAME: ExpressionSpecification = [
   ['get', 'name:zh'],
   ['get', 'name'],
 ]
-
-function mapStyleUrl(dark: boolean) {
-  return `https://tiles.openfreemap.org/styles/${dark ? 'dark' : 'liberty'}`
-}
 
 /** 一组坐标的外接框；空数组返回 undefined。 */
 function boundsOf(points: [number, number][]): LngLatBoundsLike | undefined {
@@ -110,7 +123,8 @@ export async function createTripMap(options: TripMapOptions) {
   let selected: string | undefined
   let lifted: string | undefined
   let activeStop: number | undefined
-  let dark = options.dark
+  let style = resolveMapStyle(options.settings, options.dark)
+  let tilt = options.settings.tilt
   let destroyed = false
   let failed = false
   let loaded = false
@@ -119,7 +133,7 @@ export async function createTripMap(options: TripMapOptions) {
 
   const map: MaplibreMap = new maplibregl.Map({
     container,
-    style: mapStyleUrl(dark),
+    style: mapStyleUrl(style),
     bounds: boundsOf(allPoints) ?? [
       [73, 18],
       [135, 54],
@@ -135,9 +149,10 @@ export async function createTripMap(options: TripMapOptions) {
 
   // 只在首次加载完成前上报；之后个别瓦片失败不打断浏览。
   map.once('load', () => (loaded = true))
-  map.on('error', () => {
+  map.on('error', (event) => {
     if (failed || loaded) return
     failed = true
+    console.error(event.error)
     options.onError('地图暂时无法加载，旅程仍可在面板里浏览。')
   })
 
@@ -203,8 +218,58 @@ export async function createTripMap(options: TripMapOptions) {
     }
   }
 
+  /**
+   * 3D 视角：倾斜角度跟随缩放，靠近街道时显示立体楼块；关闭时平视。
+   * 底图自带的立体楼块一律隐藏，楼块只由这里管理，各风格表现一致。
+   */
+  function applyTilt() {
+    map.setTransformCameraUpdate(({ zoom }) => ({
+      pitch: tilt ? pitchAtZoom(zoom) : 0,
+    }))
+    // 镜头正在动时不打断，新的倾斜角在下一次镜头变化时生效。
+    if (!map.isMoving())
+      map.jumpTo({ pitch: tilt ? pitchAtZoom(map.getZoom()) : 0 })
+    if (map.getLayer(BUILDINGS)) map.removeLayer(BUILDINGS)
+    if (!tilt || !map.getSource(BASEMAP_SOURCE)) return
+    map.addLayer(
+      {
+        'id': BUILDINGS,
+        'type': 'fill-extrusion',
+        'source': BASEMAP_SOURCE,
+        'source-layer': 'building',
+        'minzoom': 14,
+        'filter': ['!', ['has', 'hide_3d']],
+        'paint': {
+          'fill-extrusion-color': isDarkMapStyle(style)
+            ? '#2a2f3a'
+            : 'hsl(35, 8%, 85%)',
+          'fill-extrusion-base': ['get', 'render_min_height'],
+          'fill-extrusion-height': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            14,
+            0,
+            15,
+            ['get', 'render_height'],
+          ],
+          'fill-extrusion-opacity': 0.8,
+        },
+      },
+      map.getLayer(LAYERS.routes) ? LAYERS.routes : undefined
+    )
+  }
+
+  function hideBasemapExtrusions() {
+    for (const layer of map.getStyle().layers) {
+      if (layer.type === 'fill-extrusion' && layer.id !== BUILDINGS)
+        map.setLayoutProperty(layer.id, 'visibility', 'none')
+    }
+  }
+
   function addLayers() {
     useChineseLabels()
+    hideBasemapExtrusions()
     if (map.getSource(SOURCES.routes)) return
     map.addSource(SOURCES.routes, { type: 'geojson', data: routeFeatures() })
     map.addSource(SOURCES.stops, {
@@ -318,12 +383,43 @@ export async function createTripMap(options: TripMapOptions) {
     )
   }
 
+  /**
+   * 框住一组坐标时用的倾斜角。打开 3D 时先按平视算出落点缩放，再取该缩放的倾斜角，
+   * 取景时就把落定后的倾斜算进去，近处的点不会被裁出画面。
+   */
+  function framingPitch(
+    bounds: LngLatBoundsLike,
+    padding: PaddingOptions,
+    maxZoom?: number
+  ) {
+    if (!tilt) return 0
+    const flat = map.cameraForBounds(bounds, { padding, maxZoom, pitch: 0 })
+    return pitchAtZoom(flat?.zoom ?? map.getZoom())
+  }
+
+  /** 框住一组坐标的镜头（含 3D 下的倾斜），只计算不移动。 */
+  function cameraFor(
+    points: [number, number][],
+    padding: PaddingOptions,
+    maxZoom?: number
+  ) {
+    const bounds = boundsOf(points)
+    if (!bounds) return undefined
+    return map.cameraForBounds(bounds, {
+      padding,
+      maxZoom,
+      pitch: framingPitch(bounds, padding, maxZoom),
+    })
+  }
+
   function fit(points: [number, number][], maxZoom: number) {
     const bounds = boundsOf(points)
     if (!bounds) return
+    const padding = getPadding()
     map.fitBounds(bounds, {
-      padding: getPadding(),
+      padding,
       maxZoom,
+      pitch: framingPitch(bounds, padding, maxZoom),
       duration: matchMedia('(prefers-reduced-motion: reduce)').matches
         ? 0
         : 900,
@@ -337,8 +433,14 @@ export async function createTripMap(options: TripMapOptions) {
   const escape = (text: string) =>
     text.replace(/[&<>"]/g, (char) => `&#${char.charCodeAt(0)};`)
 
+  // 构造时按平视取景；首次加载后按 3D 的倾斜重新框住总览，边缘的点不被裁掉。
+  map.once('style.load', () => {
+    const camera = cameraFor(allPoints, getPadding(), 10)
+    if (camera) map.jumpTo(camera)
+  })
   map.on('style.load', () => {
     addLayers()
+    applyTilt()
     ready = true
   })
 
@@ -402,6 +504,7 @@ export async function createTripMap(options: TripMapOptions) {
     /** 能否在地图上加回放图层。瓦片加载中也可以，只有换底图时不行。 */
     ready: () => ready && !failed,
     trip: (id: string) => byId.get(id),
+    cameraFor,
     /** 打开某段旅程或回到总览。 */
     select(id: string | undefined) {
       selected = id && byId.has(id) ? id : undefined
@@ -447,12 +550,20 @@ export async function createTripMap(options: TripMapOptions) {
         map.setLayoutProperty(id, 'visibility', visible ? 'visible' : 'none')
       if (visible) applyState()
     },
-    setDark(next: boolean) {
-      if (next === dark) return
-      dark = next
-      ready = false
-      // 不做样式差分，确保 `style.load` 触发并重新加上旅程图层。
-      map.setStyle(mapStyleUrl(dark), { diff: false })
+    /**
+     * 站点主题或地图设置变化后调用。底图风格变了会重新加载样式，
+     * 回放图层会随之消失，调用方先退出回放；只改 3D 视角时就地切换。
+     */
+    setAppearance(dark: boolean, settings: MapSettings) {
+      const nextStyle = resolveMapStyle(settings, dark)
+      const tiltChanged = settings.tilt !== tilt
+      tilt = settings.tilt
+      if (nextStyle !== style) {
+        style = nextStyle
+        ready = false
+        // 不做样式差分，确保 `style.load` 触发并重新加上旅程图层。
+        map.setStyle(mapStyleUrl(style), { diff: false })
+      } else if (tiltChanged && ready) applyTilt()
     },
     resize() {
       map.resize()

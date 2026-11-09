@@ -4,6 +4,7 @@ import TripCover from '~/components/trips/TripCover.astro'
 import TripDetail from '~/components/trips/TripDetail.astro'
 import { AUTHOR_DISPLAY_NAME } from '~/config'
 import { getTrips } from '~/utils/trip-entries'
+import { MAP_STYLES } from '~/utils/trip-map-settings.js'
 import { withBasePath } from '~/utils/path'
 import {
   STATUS_LABELS,
@@ -77,6 +78,18 @@ const outline = (trip: (typeof trips)[number]) =>
           <button
             class="trips-tool"
             type="button"
+            data-trips-settings-toggle
+            aria-controls="trips-settings"
+            aria-expanded="false"
+            aria-label="地图设置"
+            title="地图设置"
+            disabled
+          >
+            <span class="i-ri-stack-line" aria-hidden="true"></span>
+          </button>
+          <button
+            class="trips-tool"
+            type="button"
             data-trips-fit
             aria-label="显示全部旅程"
             title="显示全部旅程"
@@ -97,6 +110,51 @@ const outline = (trip: (typeof trips)[number]) =>
           </button>
         </div>
       </header>
+
+      <section
+        class="trips-settings"
+        id="trips-settings"
+        data-trips-settings
+        aria-labelledby="trips-settings-title"
+        hidden
+      >
+        <header class="trips-settings__header">
+          <p>保存在此浏览器</p>
+          <h2 id="trips-settings-title">地图设置</h2>
+          <button
+            class="trips-settings__close"
+            type="button"
+            data-trips-settings-close
+            aria-label="关闭地图设置"
+          >
+            <span class="i-ri-close-line" aria-hidden="true"></span>
+          </button>
+        </header>
+        <fieldset class="trips-settings__styles">
+          <legend>风格</legend>
+          {MAP_STYLES.map((style) => (
+            <label class="trips-style">
+              <input type="radio" name="trips-style" value={style.id} />
+              <strong>{style.label}</strong>
+              <small>{style.note}</small>
+            </label>
+          ))}
+        </fieldset>
+        <label class="trips-switch">
+          <span>
+            <strong>3D 视角</strong>
+            <small>随缩放倾斜，靠近街道时显示立体楼块</small>
+          </span>
+          <input type="checkbox" role="switch" data-trips-tilt />
+        </label>
+        <button
+          class="trips-settings__reset"
+          type="button"
+          data-trips-settings-reset
+        >
+          恢复默认
+        </button>
+      </section>
 
       <aside
         class="trips-panel"
@@ -252,6 +310,11 @@ const outline = (trip: (typeof trips)[number]) =>
         type TripGeo,
         type TripMap,
       } from '~/utils/trip-map'
+      import {
+        DEFAULT_MAP_SETTINGS,
+        MAP_SETTINGS_KEY,
+        parseMapSettings,
+      } from '~/utils/trip-map-settings.js'
       import { createReplay, type Replay } from '~/utils/trip-replay'
       import {
         STATUS_LABELS,
@@ -271,6 +334,10 @@ const outline = (trip: (typeof trips)[number]) =>
         const toggle = $<HTMLButtonElement>('[data-trips-panel-toggle]')
         const replayCard = $<HTMLElement>('[data-trips-replay]')
         const dialog = $<HTMLDialogElement>('[data-trips-photo]')
+        const settingsToggle = $<HTMLButtonElement>(
+          '[data-trips-settings-toggle]'
+        )
+        const settingsPanel = $<HTMLElement>('[data-trips-settings]')
         const narrow = matchMedia(NARROW)
         let tripMap: TripMap | undefined
         let replay: Replay | undefined
@@ -304,8 +371,9 @@ const outline = (trip: (typeof trips)[number]) =>
         }
 
         function getPadding(): PaddingOptions {
-          const gap = 24
-          const base = { top: 80, right: gap, bottom: 72, left: gap }
+          // 留出比停靠点圆点更宽的边距，边缘上的点不会被切掉一半。
+          const gap = 48
+          const base = { top: 88, right: gap, bottom: 72, left: gap }
           if (page.hasAttribute('data-trips-replaying')) {
             const card = replayCard.getBoundingClientRect()
             return { ...base, bottom: card.height + 48 }
@@ -608,11 +676,93 @@ const outline = (trip: (typeof trips)[number]) =>
           },
           { signal }
         )
+        // —— 地图设置：风格与 3D 视角，保存在本机 ——
+        let settings = DEFAULT_MAP_SETTINGS
+        try {
+          settings = parseMapSettings(localStorage.getItem(MAP_SETTINGS_KEY))
+        } catch {
+          // 禁止本地存储时用默认值。
+        }
+        const isDark = () => document.documentElement.classList.contains('dark')
+
+        function renderSettings() {
+          for (const input of settingsPanel.querySelectorAll<HTMLInputElement>(
+            'input[name="trips-style"]'
+          ))
+            input.checked = input.value === settings.style
+          settingsPanel.querySelector<HTMLInputElement>(
+            '[data-trips-tilt]'
+          )!.checked = settings.tilt
+        }
+
+        function applySettings(next: typeof settings) {
+          if (next.style !== settings.style) stopReplay()
+          settings = next
+          renderSettings()
+          try {
+            localStorage.setItem(MAP_SETTINGS_KEY, JSON.stringify(settings))
+          } catch {
+            // 保存失败只影响下次打开。
+          }
+          tripMap?.setAppearance(isDark(), settings)
+        }
+
+        function setSettingsOpen(open: boolean, restoreFocus = false) {
+          settingsPanel.hidden = !open
+          settingsToggle.setAttribute('aria-expanded', String(open))
+          if (!open && restoreFocus) settingsToggle.focus()
+        }
+
+        renderSettings()
+        settingsToggle.addEventListener(
+          'click',
+          () => setSettingsOpen(settingsPanel.hidden),
+          { signal }
+        )
+        settingsPanel.addEventListener(
+          'change',
+          (event) => {
+            const target = event.target as HTMLInputElement
+            if (target.name === 'trips-style')
+              applySettings({ ...settings, style: target.value })
+            else if (target.matches('[data-trips-tilt]'))
+              applySettings({ ...settings, tilt: target.checked })
+          },
+          { signal }
+        )
+        settingsPanel.addEventListener(
+          'click',
+          (event) => {
+            const target = event.target as Element
+            if (target.closest('[data-trips-settings-close]'))
+              setSettingsOpen(false, true)
+            else if (target.closest('[data-trips-settings-reset]'))
+              applySettings(DEFAULT_MAP_SETTINGS)
+          },
+          { signal }
+        )
+        // 点面板外关闭。
+        document.addEventListener(
+          'pointerdown',
+          (event) => {
+            const target = event.target as Node
+            if (
+              !settingsPanel.hidden &&
+              !settingsPanel.contains(target) &&
+              !settingsToggle.contains(target)
+            )
+              setSettingsOpen(false)
+          },
+          { signal }
+        )
+
         addEventListener('hashchange', syncFromHash, { signal })
         addEventListener(
           'keydown',
           (event) => {
-            if (event.key === 'Escape' && replay && !dialog.open) stopReplay()
+            if (event.key !== 'Escape' || dialog.open) return
+            if (!settingsPanel.hidden) setSettingsOpen(false, true)
+            else if (replay) stopReplay()
           },
           { signal }
         )
@@ -630,7 +780,8 @@ const outline = (trip: (typeof trips)[number]) =>
             const instance = await createTripMap({
               container: $<HTMLElement>('[data-trips-canvas]'),
               trips,
-              dark: document.documentElement.classList.contains('dark'),
+              dark: isDark(),
+              settings,
               getPadding,
               onSelectTrip: (id) => (location.hash = id),
               onSelectStop: (index) => activateStop(index, false),
@@ -646,6 +797,9 @@ const outline = (trip: (typeof trips)[number]) =>
             tripMap = instance
             tripMap.map.once('load', () => {
               fitButton.disabled = false
+              settingsToggle.disabled = page.hasAttribute(
+                'data-trips-map-failed'
+              )
               for (const button of page.querySelectorAll<HTMLButtonElement>(
                 '[data-trip-replay]'
               ))
@@ -656,10 +810,9 @@ const outline = (trip: (typeof trips)[number]) =>
               if (selected) tripMap?.select(selected)
             })
             const unobserve = observeTheme(() => {
-              stopReplay()
-              tripMap?.setDark(
-                document.documentElement.classList.contains('dark')
-              )
+              // 「跟随主题」时会换底图，回放图层随之消失。
+              if (settings.style === 'auto') stopReplay()
+              tripMap?.setAppearance(isDark(), settings)
             })
             signal.addEventListener('abort', () => {
               unobserve()
@@ -850,9 +1003,210 @@ const outline = (trip: (typeof trips)[number]) =>
 
       .trips-home:focus-visible,
       .trips-tool:focus-visible,
-      .trip-card:focus-visible {
+      .trip-card:focus-visible,
+      .trips-settings :focus-visible {
         outline: 2px solid var(--c-text);
         outline-offset: 2px;
+      }
+
+      .trips-tool[aria-expanded='true'] {
+        color: var(--c-text);
+      }
+
+      /* —— 地图设置：工具栏下方弹出，与工具栏右对齐 —— */
+      .trips-settings {
+        position: absolute;
+        top: calc(4.25rem + env(safe-area-inset-top));
+        right: calc(var(--trips-panel-width) + 2.5rem);
+        z-index: 4;
+        display: grid;
+        gap: 1rem;
+        width: min(20rem, calc(100% - 2rem));
+        max-height: calc(100dvh - 6rem);
+        overflow-y: auto;
+        padding: 1rem;
+        border: 1px solid var(--trips-glass-border);
+        border-radius: 1.125rem;
+        background: color-mix(in srgb, var(--c-bg) 94%, transparent);
+        box-shadow: 0 12px 40px rgb(0 0 0 / 0.16);
+        backdrop-filter: blur(18px);
+
+        &[hidden] {
+          display: none;
+        }
+      }
+
+      .trips-page[data-trips-collapsed] .trips-settings,
+      .trips-page[data-trips-replaying] .trips-settings {
+        right: calc(1rem + env(safe-area-inset-right));
+      }
+
+      .trips-settings__header {
+        position: relative;
+
+        & p {
+          margin: 0;
+          color: var(--trips-muted);
+          font-size: 0.75rem;
+        }
+
+        & h2 {
+          margin: 0.125rem 0 0;
+          font-size: 1.0625rem;
+          font-weight: 600;
+        }
+      }
+
+      .trips-settings__close {
+        position: absolute;
+        top: -0.25rem;
+        right: -0.25rem;
+        display: grid;
+        place-items: center;
+        width: 2rem;
+        height: 2rem;
+        border: 0;
+        border-radius: 999px;
+        background: none;
+        color: var(--trips-muted);
+        font-size: 1.125rem;
+        cursor: pointer;
+
+        &:hover {
+          background: var(--trips-hover);
+          color: var(--c-text);
+        }
+      }
+
+      .trips-settings__styles {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+        margin: 0;
+        padding: 0;
+        border: 0;
+
+        & legend {
+          margin-bottom: 0.5rem;
+          padding: 0;
+          color: var(--trips-muted);
+          font-size: 0.75rem;
+        }
+      }
+
+      .trips-style {
+        display: grid;
+        gap: 0.125rem;
+        padding: 0.5rem 0.625rem;
+        border: 1px solid var(--trips-line);
+        border-radius: 0.75rem;
+        cursor: pointer;
+
+        & input {
+          position: absolute;
+          opacity: 0;
+          pointer-events: none;
+        }
+
+        & strong {
+          font-size: 0.875rem;
+          font-weight: 500;
+        }
+
+        & small {
+          color: var(--trips-muted);
+          font-size: 0.6875rem;
+          line-height: 1.4;
+        }
+
+        &:hover {
+          background: var(--trips-hover);
+        }
+
+        &:has(input:checked) {
+          border-color: var(--c-text);
+          background: var(--c-text);
+          color: var(--c-bg);
+
+          & small {
+            color: color-mix(in srgb, var(--c-bg) 70%, var(--c-text));
+          }
+        }
+
+        &:has(input:focus-visible) {
+          outline: 2px solid var(--c-text);
+          outline-offset: 2px;
+        }
+      }
+
+      .trips-switch {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        cursor: pointer;
+
+        & span {
+          display: grid;
+          gap: 0.125rem;
+        }
+
+        & strong {
+          font-size: 0.875rem;
+          font-weight: 500;
+        }
+
+        & small {
+          color: var(--trips-muted);
+          font-size: 0.75rem;
+        }
+
+        & input {
+          flex-shrink: 0;
+          width: 2.5rem;
+          height: 1.5rem;
+          margin: 0;
+          appearance: none;
+          border-radius: 999px;
+          background: var(--trips-line);
+          cursor: pointer;
+          transition: background-color 160ms ease;
+
+          &::before {
+            display: block;
+            width: 1.125rem;
+            height: 1.125rem;
+            margin: 0.1875rem;
+            border-radius: 999px;
+            background: var(--c-bg);
+            box-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+            content: '';
+            transition: translate 160ms ease;
+          }
+
+          &:checked {
+            background: var(--c-text);
+
+            &::before {
+              translate: 1rem 0;
+            }
+          }
+        }
+      }
+
+      .trips-settings__reset {
+        justify-self: start;
+        padding: 0.25rem 0;
+        border: 0;
+        background: none;
+        color: var(--trips-muted);
+        font: inherit;
+        font-size: 0.8125rem;
+        cursor: pointer;
+
+        &:hover {
+          color: var(--c-text);
+        }
       }
 
       /* —— 面板 —— */
@@ -1238,7 +1592,8 @@ const outline = (trip: (typeof trips)[number]) =>
           --trips-panel-width: 0rem;
         }
 
-        .trips-toolbar {
+        .trips-toolbar,
+        .trips-settings {
           right: calc(1rem + env(safe-area-inset-right));
         }
 
@@ -1284,7 +1639,9 @@ const outline = (trip: (typeof trips)[number]) =>
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .trips-panel {
+        .trips-panel,
+        .trips-switch input,
+        .trips-switch input::before {
           transition: none;
         }
       }

@@ -281,8 +281,11 @@ export const tripSchema = ({ image }: SchemaContext) =>
                     mode: z.enum([
                       'drive',
                       'walk',
+                      'bike',
                       'flight',
                       'train',
+                      'ferry',
+                      'transit',
                       'straight',
                     ]),
                     distance: z.number().nonnegative(),

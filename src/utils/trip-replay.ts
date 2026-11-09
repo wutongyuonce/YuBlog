@@ -256,15 +256,9 @@ export async function createReplay(options: ReplayOptions) {
   function zoomFor(step: Extract<Step, { kind: 'travel' }>) {
     const from = timeline.cumulative.findIndex((value) => value >= step.from)
     const to = timeline.cumulative.findIndex((value) => value >= step.to)
-    const points = timeline.path.slice(from, to + 1)
-    const lngs = points.map(([lng]) => lng)
-    const lats = points.map(([, lat]) => lat)
-    const camera = map.cameraForBounds(
-      [
-        [Math.min(...lngs), Math.min(...lats)],
-        [Math.max(...lngs), Math.max(...lats)],
-      ],
-      { padding: getPadding() }
+    const camera = tripMap.cameraFor(
+      timeline.path.slice(from, to + 1),
+      getPadding()
     )
     return Math.min(15, camera?.zoom ?? 14)
   }
