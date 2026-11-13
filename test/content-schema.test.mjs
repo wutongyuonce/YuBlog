@@ -163,6 +163,7 @@ test('calendar entries coerce YAML Date values and validate optional place and t
   assert.equal(parsed.title, '南京博物院')
   assert.equal(parsed.date, '2026-11-12')
   assert.deepEqual(parsed.photos, [])
+  assert.equal(calendar.parse({ date: '2026-10-13' }).title, undefined)
   assert.equal(
     calendar.safeParse({ title: 'x', date: '2026-02-30' }).success,
     false

@@ -111,7 +111,7 @@ photos:
   - ./museum-1.jpg
 ---
 
-正文写 Markdown，也可以只有文字、不放 `photos` 或 `place`。
+正文写 Markdown，也可以只有文字、不放 `title`、`photos` 或 `place`。
 ```
 
 ## 导入与照片脚本
