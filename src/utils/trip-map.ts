@@ -897,14 +897,23 @@ export async function createTripMap(options: TripMapOptions) {
         pitch: tilt ? pitchAtZoom(maxZoom) : 0,
       }
     }
-    const flat = map.cameraForBounds(bounds, {
-      padding: safe,
-      maxZoom,
-      absolutePadding: true,
-    })
-    if (!flat) return undefined
-    const zoom = flat.zoom ?? maxZoom
-    return { ...flat, zoom, padding: safe, pitch: tilt ? pitchAtZoom(zoom) : 0 }
+    try {
+      const flat = map.cameraForBounds(bounds, {
+        padding: safe,
+        maxZoom,
+        absolutePadding: true,
+      })
+      if (!flat) return undefined
+      const zoom = flat.zoom ?? maxZoom
+      return {
+        ...flat,
+        zoom,
+        padding: safe,
+        pitch: tilt ? pitchAtZoom(zoom) : 0,
+      }
+    } catch {
+      return undefined
+    }
   }
 
   function fit(points: [number, number][], maxZoom = 14) {

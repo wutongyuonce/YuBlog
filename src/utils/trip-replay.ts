@@ -22,6 +22,7 @@ const MIN_TRAVEL_MS = 1200
 const MAX_TRAVEL_MS = 4500
 const MS_PER_KM = 450
 export const SPEEDS = [1, 1.5, 2] as const
+const MAX_TRAVEL_ZOOM = 15
 const LINE_SOURCE = 'trips-replay'
 const LINE_LAYER = 'trips-replay'
 const PLANNED_LAYER = 'trips-replay-planned'
@@ -366,9 +367,10 @@ export async function createReplay(options: ReplayOptions) {
     const to = timeline.cumulative.findIndex((value) => value >= step.to)
     const camera = tripMap.cameraFor(
       timeline.path.slice(from, to + 1),
-      getPadding()
+      getPadding(),
+      MAX_TRAVEL_ZOOM
     )
-    return Math.min(15, camera?.zoom ?? 14)
+    return Math.min(MAX_TRAVEL_ZOOM, camera?.zoom ?? map.getZoom())
   }
 
   let travelZoom: { from: number; to: number } | undefined
@@ -426,40 +428,44 @@ export async function createReplay(options: ReplayOptions) {
 
   function render(now: number) {
     if (!playing) return
-    const at = elapsed + (now - startedAt) * speed
-    if (at >= timeline.total) {
-      elapsed = timeline.total
-      drawn(timeline.length)
-      options.onProgress?.(trip.stops.length - 1, 1)
-      finish()
-      return
+    try {
+      const at = elapsed + (now - startedAt) * speed
+      if (at >= timeline.total) {
+        elapsed = timeline.total
+        drawn(timeline.length)
+        options.onProgress?.(trip.stops.length - 1, 1)
+        finish()
+        return
+      }
+      let index = stepIndex
+      while (
+        index + 1 < timeline.steps.length &&
+        timeline.steps[index + 1].start <= at
+      )
+        index++
+      if (index !== stepIndex) {
+        stepIndex = index
+        enter(timeline.steps[index])
+      }
+      const step = timeline.steps[index]
+      reportProgress(step, at)
+      if (step.kind === 'travel') {
+        const t = Math.min(1, (at - step.start) / step.duration)
+        const eased = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2
+        const along = step.from + (step.to - step.from) * eased
+        const point = pointAlong(timeline.path, timeline.cumulative, along)
+        drawn(along)
+        marker.setLngLat(point)
+        const zoomT = Math.min(1, t / 0.3)
+        const zoom = travelZoom
+          ? travelZoom.from + (travelZoom.to - travelZoom.from) * zoomT
+          : map.getZoom()
+        map.jumpTo({ center: point, zoom, padding: getPadding() })
+      }
+    } catch (error) {
+      console.error(error)
     }
-    let index = stepIndex
-    while (
-      index + 1 < timeline.steps.length &&
-      timeline.steps[index + 1].start <= at
-    )
-      index++
-    if (index !== stepIndex) {
-      stepIndex = index
-      enter(timeline.steps[index])
-    }
-    const step = timeline.steps[index]
-    reportProgress(step, at)
-    if (step.kind === 'travel') {
-      const t = Math.min(1, (at - step.start) / step.duration)
-      const eased = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2
-      const along = step.from + (step.to - step.from) * eased
-      const point = pointAlong(timeline.path, timeline.cumulative, along)
-      drawn(along)
-      marker.setLngLat(point)
-      const zoomT = Math.min(1, t / 0.3)
-      const zoom = travelZoom
-        ? travelZoom.from + (travelZoom.to - travelZoom.from) * zoomT
-        : map.getZoom()
-      map.jumpTo({ center: point, zoom, padding: getPadding() })
-    }
-    frame = requestAnimationFrame(render)
+    if (playing) frame = requestAnimationFrame(render)
   }
 
   function setPlaying(next: boolean) {
