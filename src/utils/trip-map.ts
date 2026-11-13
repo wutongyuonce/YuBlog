@@ -486,32 +486,41 @@ export async function createTripMap(options: TripMapOptions) {
     const meta = `${count} 条记录`
     const button = document.createElement('button')
     button.type = 'button'
-    button.className = 'trips-pin trips-pin--cluster'
+    button.className = 'trips-pin'
     button.style.setProperty('--trip-color', cluster.color)
     button.setAttribute('aria-label', `${meta} · ${title}`)
-
-    // 三张扇形叠片：取前 3 张照片（不足用年份色片补齐），最后一张在最上面。
+    // 只用真实存在的照片（最多 3 张）；全都无图时只画一个圆点，绝不画空相框。
     const photos = members
       .flatMap((member) => (member.photo ? [member.photo] : []))
       .slice(0, 3)
-    while (photos.length < 3) photos.push(undefined as unknown as string)
-    const stack = document.createElement('span')
-    stack.className = 'trips-pin__stack'
-    stack.setAttribute('aria-hidden', 'true')
-    for (const photo of photos.toReversed())
-      stack.append(createPhotoCard(photo))
-    const badge = document.createElement('span')
-    badge.className = 'trips-pin__count'
-    badge.setAttribute('aria-hidden', 'true')
-    badge.textContent = String(count)
-    button.append(stack, badge)
-
+    if (photos.length === 0) {
+      const dot = document.createElement('span')
+      dot.className = 'trips-pin__dot'
+      dot.setAttribute('aria-hidden', 'true')
+      button.append(dot)
+    } else {
+      button.classList.add('trips-pin--cluster')
+      const stack = document.createElement('span')
+      stack.className = 'trips-pin__stack'
+      stack.setAttribute('aria-hidden', 'true')
+      for (const photo of photos.toReversed())
+        stack.append(createPhotoCard(photo))
+      const badge = document.createElement('span')
+      badge.className = 'trips-pin__count'
+      badge.setAttribute('aria-hidden', 'true')
+      badge.textContent = String(count)
+      button.append(stack, badge)
+    }
     const html = `<span>${escape(meta)}</span><strong>${escape(title)}</strong>`
     button.addEventListener('mouseenter', () => {
       if (selected) return
       popup.setLngLat(cluster.coordinates).setHTML(html).addTo(map)
+      if (lead.trip) lift(lead.trip)
     })
-    button.addEventListener('mouseleave', () => popup.remove())
+    button.addEventListener('mouseleave', () => {
+      popup.remove()
+      lift(undefined)
+    })
     button.addEventListener('click', (event) => {
       event.stopPropagation()
       popup.remove()
@@ -579,6 +588,8 @@ export async function createTripMap(options: TripMapOptions) {
     const used = new Set<PinItem>()
     const visible = new Map<string, () => Marker>()
     const radius2 = CLUSTER_RADIUS_PX * CLUSTER_RADIUS_PX
+    const cover2 = 20 * 20
+    const dot2 = 18 * 18
 
     for (const seed of ordered) {
       if (used.has(seed)) continue
@@ -589,36 +600,72 @@ export async function createTripMap(options: TripMapOptions) {
         continue
       }
       const [sx, sy] = projected.get(seed)!
-      const members = ordered.filter((candidate) => {
-        if (used.has(candidate)) return false
-        const [cx, cy] = projected.get(candidate)!
-        const dx = cx - sx
-        const dy = cy - sy
-        return dx * dx + dy * dy <= radius2
-      })
-      if (members.length < CLUSTER_MIN_POINTS) {
-        used.add(seed)
-        markerCoords.set(seed.key, seed.coordinates)
-        visible.set(seed.key, () => createSingleMarker(seed))
+      if (seed.photo) {
+        const nearby = ordered.filter((candidate) => {
+          if (used.has(candidate)) return false
+          const [cx, cy] = projected.get(candidate)!
+          const dx = cx - sx
+          const dy = cy - sy
+          return dx * dx + dy * dy <= radius2
+        })
+        const withPhotos = nearby.filter((item) => item.photo)
+        // 至少有 2 个带照片的地点靠在一起时才叠成照片摞；只有 1 张照片时直接画单张照片标记。
+        if (withPhotos.length < CLUSTER_MIN_POINTS) {
+          used.add(seed)
+          for (const item of nearby) {
+            if (item.photo) continue
+            const [cx, cy] = projected.get(item)!
+            if ((cx - sx) ** 2 + (cy - sy) ** 2 <= cover2) used.add(item)
+          }
+          markerCoords.set(seed.key, seed.coordinates)
+          visible.set(seed.key, () => createSingleMarker(seed))
+          continue
+        }
+        for (const member of nearby) used.add(member)
+        const latestYear = Math.max(...nearby.map((item) => item.year))
+        const color = yearColors.get(latestYear) ?? seed.color
+        const key = `cluster:${zoom}:${nearby.map((item) => item.key).join(',')}`
+        markerCoords.set(key, seed.coordinates)
+        visible.set(key, () =>
+          createClusterMarker(
+            {
+              coordinates: seed.coordinates,
+              year: latestYear,
+              color,
+              members: nearby,
+            },
+            zoom
+          )
+        )
         continue
       }
-      for (const member of members) used.add(member)
-      const lng =
-        members.reduce((sum, item) => sum + item.coordinates[0], 0) /
-        members.length
-      const lat =
-        members.reduce((sum, item) => sum + item.coordinates[1], 0) /
-        members.length
-      const latestYear = Math.max(...members.map((item) => item.year))
-      const color = yearColors.get(latestYear) ?? seed.color
-      const key = `cluster:${zoom}:${members.map((item) => item.key).join(',')}`
-      markerCoords.set(key, [lng, lat])
-      visible.set(key, () =>
-        createClusterMarker(
-          { coordinates: [lng, lat], year: latestYear, color, members },
-          zoom
+      // 无图节点：只把视觉上重叠在一起的无图点合为一个圆点，永远不用图片框样式。
+      const overlapping = ordered.filter((candidate) => {
+        if (used.has(candidate) || candidate.photo) return false
+        const [cx, cy] = projected.get(candidate)!
+        return (cx - sx) ** 2 + (cy - sy) ** 2 <= dot2
+      })
+      for (const item of overlapping) used.add(item)
+      if (overlapping.length === 1) {
+        markerCoords.set(seed.key, seed.coordinates)
+        visible.set(seed.key, () => createSingleMarker(seed))
+      } else {
+        const latestYear = Math.max(...overlapping.map((item) => item.year))
+        const color = yearColors.get(latestYear) ?? seed.color
+        const key = `cluster:${zoom}:${overlapping.map((item) => item.key).join(',')}`
+        markerCoords.set(key, seed.coordinates)
+        visible.set(key, () =>
+          createClusterMarker(
+            {
+              coordinates: seed.coordinates,
+              year: latestYear,
+              color,
+              members: overlapping,
+            },
+            zoom
+          )
         )
-      )
+      }
     }
 
     for (const [key, build] of visible) {
