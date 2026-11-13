@@ -1,13 +1,21 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import test from 'node:test'
 
 import {
   gcj02ToWgs84,
+  legRequests,
   parseJourneyId,
   toTripDraft,
   wgs84ToGcj02,
 } from '../src/utils/pitravel.mjs'
 import { haversine } from '../src/utils/geo.mjs'
+import { SCHEDULED_MODES } from '../src/utils/trips.js'
+
+const fixture = (name) =>
+  JSON.parse(
+    readFileSync(new URL(`./fixtures/pitravel/${name}`, import.meta.url))
+  )
 
 const poi = (lng, lat, extra = {}) => ({
   location: { longitude: String(lng), latitude: String(lat) },
@@ -51,6 +59,7 @@ const response = {
             {
               name: '鹅岭公园',
               start_poi_info: poi(106.53, 29.55),
+              // 最后一站的编码不会被读取。
               route_transportation_type: 9,
             },
           ],
@@ -76,7 +85,7 @@ const response = {
             {
               name: '下浩里',
               start_poi_info: poi(106.6, 29.56),
-              route_transportation_type: 1,
+              route_transportation_type: 5,
             },
           ],
         },
@@ -84,6 +93,17 @@ const response = {
     },
   },
 }
+
+const journey = (events) => ({
+  code: 0,
+  data: {
+    journey: {
+      name: 'x',
+      day_plans: [{ day_index: 1, timestamp: DAY1, events }],
+    },
+  },
+})
+const kinds = (draft) => draft.issues.map((issue) => issue.kind)
 
 test('journey ids come from share links or bare digits only', () => {
   assert.equal(
@@ -116,7 +136,9 @@ test('drafts keep dated days in order and map stops to neutral fields', () => {
       ['2026-11-07', undefined, 1],
     ]
   )
-  assert.deepEqual(draft.skipped, ['坏数据'])
+  // 缺坐标的条目跳过并记为数据问题；最后一站的未知编码不报。
+  assert.deepEqual(kinds(draft), ['data'])
+  assert.match(draft.issues[0].message, /坏数据/)
   assert.deepEqual(draft.coverUrls, ['https://cdn.example/cover.png'])
 
   const [park, alley] = draft.days[0].stops
@@ -128,12 +150,12 @@ test('drafts keep dated days in order and map stops to neutral fields', () => {
   assert.equal(park.placeImageUrl, 'https://cdn.example/place.png')
   assert.notDeepEqual(park.coordinates, [106.5957, 29.5575])
   assert.equal(park.travel, 'drive')
-  assert.equal(alley.travel, 'walk')
+  assert.equal(alley.travel, 'taxi')
   assert.equal(alley.time, undefined)
-  assert.equal(draft.days[1].stops[0].travel, 'straight')
+  assert.equal(draft.days[1].stops[0].travel, undefined)
 })
 
-test('a transport event becomes a departure and an arrival joined by its mode', () => {
+test('a transport event becomes two stops joined by a scheduled leg', () => {
   const flight = (number, type = 201) => ({
     event_type: type,
     name: '南京 出发 至 重庆',
@@ -148,58 +170,48 @@ test('a transport event becomes a departure and an arrival joined by its mode', 
     start_poi_info: poi(118.87, 31.73, { name: '禄口机场' }),
     end_poi_info: poi(106.66, 29.71, { name: '江北机场' }),
   })
-  const draft = toTripDraft({
-    code: 0,
-    data: {
-      journey: {
-        name: 'x',
-        day_plans: [
-          {
-            day_index: 1,
-            timestamp: DAY1,
-            events: [
-              flight('PN6458'),
-              flight('G1234', 200),
-              flight('1461', 200),
-              { ...flight('MU7718'), end_poi_info: undefined },
-              { ...flight('MU7719'), start_poi_info: { name: '无坐标' } },
-              {
-                ...flight('CA1234'),
-                transport_info: {
-                  transport_num: 'CA1234',
-                  transport_start_time: null,
-                  transport_end_time: DAY1,
-                },
-              },
-            ],
-          },
-        ],
+  const draft = toTripDraft(
+    journey([
+      flight('PN6458'),
+      flight('G1234', 200),
+      flight('1461', 200),
+      { ...flight('MU7718'), end_poi_info: undefined },
+      { ...flight('MU7719'), start_poi_info: { name: '无坐标' } },
+      {
+        ...flight('CA1234'),
+        transport_info: {
+          transport_num: 'CA1234',
+          transport_start_time: null,
+          transport_end_time: DAY1,
+        },
       },
-    },
+    ])
+  )
+  const stops = draft.days[0].stops
+  const [departure, arrival, train, , slowTrain, , oneEnded] = stops
+  assert.deepEqual(
+    [departure.name, departure.travel, departure.travelSeconds],
+    ['禄口机场', 'flight', 8700]
+  )
+  // 班次号和时刻属于两站之间的路段，不再写进备注或重复成站点时间。
+  assert.deepEqual(departure.service, {
+    number: 'PN6458',
+    depart: '22:00',
+    arrive: '00:25',
   })
-  const [departure, arrival, train, , slowTrain, , oneEnded] =
-    draft.days[0].stops
-  assert.deepEqual(
-    [departure.name, departure.travel, departure.travelSeconds, departure.note],
-    ['禄口机场', 'flight', 8700, 'PN6458']
-  )
-  assert.deepEqual(departure.time, { start: '22:00' })
-  assert.deepEqual(
-    [arrival.name, arrival.travel, arrival.time],
-    ['江北机场', 'drive', { end: '00:25' }]
-  )
+  assert.equal(departure.note, undefined)
+  assert.deepEqual([departure.time, arrival.time], [undefined, undefined])
+  assert.deepEqual([arrival.name, arrival.travel], ['江北机场', 'drive'])
   assert.deepEqual([train.travel, slowTrain.travel], ['train', 'train'])
+  assert.equal(train.service.number, 'G1234')
   // 只剩出发地时按普通地点导入。
   assert.equal(oneEnded.name, '南京 出发 至 重庆')
   // 出发地不可用时用到达地。
-  assert.deepEqual(
-    draft.days[0].stops[7].coordinates,
-    draft.days[0].stops[1].coordinates
-  )
+  assert.deepEqual(stops[7].coordinates, stops[1].coordinates)
   // 缺起飞时间时不编时长。
-  assert.equal(draft.days[0].stops[8].travelSeconds, undefined)
-  assert.equal(draft.days[0].stops.length, 10)
-  assert.deepEqual(draft.skipped, [])
+  assert.equal(stops[8].travelSeconds, undefined)
+  assert.equal(stops.length, 10)
+  assert.deepEqual(kinds(draft), ['data', 'data'])
 })
 
 test('the transport family maps by event_type_v2 to its mode', () => {
@@ -210,28 +222,17 @@ test('the transport family maps by event_type_v2 to its mode', () => {
     end_poi_info: poi(106.6, 29.6, { name: '乙' }),
     ...fields,
   })
-  const draft = toTripDraft({
-    code: 0,
-    data: {
-      journey: {
-        name: 'x',
-        day_plans: [
-          {
-            day_index: 1,
-            timestamp: DAY1,
-            events: [
-              event({ event_type: 103, event_type_v2: 202 }),
-              event({ event_type: 203 }),
-              event({ event_type: 204 }),
-              event({ event_type: 208 }),
-              event({ event_type: 200 }),
-              event({ event_type: 103, route_transportation_type: 3 }),
-            ],
-          },
-        ],
-      },
-    },
-  })
+  const draft = toTripDraft(
+    journey([
+      event({ event_type: 103, event_type_v2: 202 }),
+      event({ event_type: 203 }),
+      event({ event_type: 204 }),
+      event({ event_type: 208 }),
+      event({ event_type: 200 }),
+      event({ event_type: 103, route_transportation_type: 3 }),
+      event({ event_type: 103 }),
+    ])
+  )
   const stops = draft.days[0].stops
   assert.deepEqual(
     [0, 2, 4, 6, 8].map((index) => [stops[index].travel, stops[index].emoji]),
@@ -246,6 +247,91 @@ test('the transport family maps by event_type_v2 to its mode', () => {
   // 到达站之后的骑行、普通地点之后的公共交通。
   assert.equal(stops[1].travel, 'bike')
   assert.equal(stops[10].travel, 'transit')
+  assert.deepEqual(draft.issues, [])
+})
+
+test('values the adapter does not cover are reported by kind', () => {
+  const draft = toTripDraft(
+    journey([
+      {
+        name: '甲',
+        start_poi_info: poi(106.5, 29.5),
+        route_transportation_type: 7,
+      },
+      { name: '乙', event_type: 209, start_poi_info: poi(106.6, 29.6) },
+      {
+        name: '丙',
+        start_poi_info: poi(106.7, 29.7, { coordinate_type: 'BD09' }),
+        image_list: [
+          { image_url: 'https://cdn.example/v.png', video_url: 'x' },
+        ],
+      },
+    ])
+  )
+  assert.deepEqual(kinds(draft).toSorted(), [
+    'schema',
+    'source',
+    'source',
+    'source',
+  ])
+  for (const pattern of [/route_transportation_type=7/, /209/, /BD09/])
+    assert.ok(draft.issues.some((issue) => pattern.test(issue.message)))
+  // 未知编码按驾车继续，一次报出全部问题。
+  assert.equal(draft.days[0].stops[0].travel, 'drive')
+})
+
+test('route legs are requested once and their answers become hints', () => {
+  const detail = journey([
+    {
+      name: '甲',
+      start_poi_info: poi(106.5, 29.5, { inner_poi_id: 'a' }),
+      route_transportation_type: 3,
+    },
+    {
+      name: '乙',
+      start_poi_info: poi(106.6, 29.6, { inner_poi_id: 'b' }),
+      route_transportation_type: 3,
+    },
+    // 同一地点之间不请求。
+    { name: '乙', start_poi_info: poi(106.6, 29.6, { inner_poi_id: 'b' }) },
+  ])
+  assert.deepEqual(legRequests(detail), [
+    { originPoiId: 'a', destinationPoiId: 'b', travelType: 3 },
+  ])
+  const transit = fixture('transit-route.json')
+  transit.data.routeData[0].originPoiId = 'a'
+  transit.data.routeData[0].destinationPoiId = 'b'
+  const [first] = toTripDraft(detail, transit).days[0].stops
+  assert.equal(first.routeHint.distance, 7722)
+  assert.equal(first.routeHint.duration, 2489)
+  assert.deepEqual(first.routeHint.transit, {
+    fare: '3元',
+    lines: [{ name: '轨道交通9号线', from: '溉澜溪', to: '观音桥', stops: 5 }],
+  })
+  // 路线接口失败只降级，不终止。
+  const failed = toTripDraft(detail, { success: false, msg: '限流' })
+  assert.equal(failed.days[0].stops[0].routeHint, undefined)
+  assert.deepEqual(kinds(failed), ['data'])
+})
+
+test('a real journey and its routes convert without issues', () => {
+  const detail = fixture('journey.json')
+  const routes = fixture('route.json')
+  assert.equal(legRequests(detail).length, routes.data.routeData.length)
+  const draft = toTripDraft(detail, routes)
+  assert.deepEqual(draft.issues, [])
+  const stops = draft.days.flatMap((day) => day.stops)
+  // 除最后一站外，每站要么是班次，要么拿到了圆周的路线。
+  for (const stop of stops.slice(0, -1))
+    assert.ok(
+      SCHEDULED_MODES.has(stop.travel) ? stop.service : stop.routeHint,
+      stop.name
+    )
+  assert.ok(stops.some((stop) => stop.travel === 'taxi'))
+  assert.deepEqual(
+    stops.filter((stop) => stop.service).map((stop) => stop.service.number),
+    ['PN6458', 'MU7718']
+  )
 })
 
 test('two plans on the same date merge instead of dropping stops', () => {

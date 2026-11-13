@@ -102,34 +102,65 @@ test('a truncated route shape falls back instead of inventing a point', async ()
         }),
     }
   )
-  assert.equal(route.mode, 'straight')
+  assert.deepEqual([route.mode, route.straight], ['drive', true])
   assert.match(warning, /不完整/)
 })
 
-test('flights, trains, boats and transit are straight lines that keep their mode', async () => {
-  const noFetch = {
-    fetchImpl: () => {
-      throw new Error('should not be called')
-    },
-  }
+const noFetch = {
+  fetchImpl: () => {
+    throw new Error('should not be called')
+  },
+}
+
+test('scheduled legs are plain straight lines; transit without a route is marked', async () => {
   const { route } = await requestRoute(
     { from, to, mode: 'flight', duration: 8700 },
     noFetch
   )
   assert.deepEqual(
-    [route.mode, route.duration, route.path.length],
-    ['flight', 8700, 2]
+    [route.mode, route.duration, route.path.length, route.straight],
+    ['flight', 8700, 2, undefined]
   )
-  for (const mode of ['train', 'ferry', 'transit'])
+  for (const mode of ['train', 'ferry'])
     assert.equal(
-      (await requestRoute({ from, to, mode }, noFetch)).route.mode,
-      mode
+      (await requestRoute({ from, to, mode }, noFetch)).route.straight,
+      undefined
     )
+  const transit = await requestRoute({ from, to, mode: 'transit' }, noFetch)
+  assert.deepEqual([transit.route.straight, transit.warning], [true, undefined])
+})
+
+test('a route hint from the source is used without asking a service', async () => {
+  const transit = { lines: [{ name: '轨道交通9号线' }] }
+  const { route } = await requestRoute(
+    {
+      from,
+      to,
+      mode: 'transit',
+      hint: {
+        distance: 7722,
+        duration: 2489,
+        path: [[106.51, 29.52]],
+        transit,
+      },
+    },
+    noFetch
+  )
+  assert.deepEqual(route, {
+    mode: 'transit',
+    distance: 7722,
+    duration: 2489,
+    path: [from, [106.51, 29.52], to],
+    transit,
+  })
+  // 同一点之间是零里程，不请求。
+  const still = await requestRoute({ from, to: from, mode: 'walk' }, noFetch)
+  assert.equal(still.route.distance, 0)
 })
 
 test('road modes ask Valhalla for the matching costing', async () => {
   const asked = []
-  for (const mode of ['drive', 'walk', 'bike'])
+  for (const mode of ['drive', 'taxi', 'walk', 'bike'])
     await requestRoute(
       { from, to, mode },
       {
@@ -139,27 +170,17 @@ test('road modes ask Valhalla for the matching costing', async () => {
         },
       }
     )
-  assert.deepEqual(asked, ['auto', 'pedestrian', 'bicycle'])
+  assert.deepEqual(asked, ['auto', 'auto', 'pedestrian', 'bicycle'])
 })
 
-test('failures and unknown modes fall back to a straight line', async () => {
+test('a failed road request falls back to a straight line', async () => {
   const failed = await requestRoute(
     { from, to, mode: 'drive' },
     { fetchImpl: async () => new Response('busy', { status: 503 }) }
   )
-  assert.equal(failed.route.mode, 'straight')
+  // 降级保留交通方式，只标出没有路线。
+  assert.deepEqual([failed.route.mode, failed.route.straight], ['drive', true])
   assert.match(failed.warning, /503/)
   assert.equal(failed.route.distance, Math.round(haversine(from, to)))
   assert.equal(failed.route.duration, undefined)
-
-  const unknown = await requestRoute(
-    { from, to, mode: 'straight' },
-    {
-      fetchImpl: () => {
-        throw new Error('should not be called')
-      },
-    }
-  )
-  assert.equal(unknown.route.mode, 'straight')
-  assert.equal(unknown.warning, undefined)
 })

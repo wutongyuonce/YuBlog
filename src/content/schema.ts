@@ -1,7 +1,7 @@
 import { z } from 'astro/zod' // 导入与 Astro 同版本的 Zod 验证库
 import type { SchemaContext } from 'astro:content'
 
-import { CLOCK_TIME } from '../utils/trips.js'
+import { CLOCK_TIME, ROUTE_MODES, SCHEDULED_MODES } from '../utils/trips.js'
 
 /* =====================================================
    文章 Schema - 用于博客文章
@@ -247,6 +247,57 @@ const lngLat = z.tuple([
 ])
 const optionalText = z.string().trim().min(1).optional()
 
+/** 两站之间的一段路：方式、里程、路径，以及班次或公交明细。 */
+const tripRoute = z
+  .object({
+    mode: z.enum(ROUTE_MODES),
+    /** 米。 */
+    distance: z.number().nonnegative(),
+    /** 秒。 */
+    duration: z.number().nonnegative().optional(),
+    /** 本该有路线却没有取到，路径是两点直线、里程按直线计；班次本来就画直线，不标。 */
+    straight: z.literal(true).optional(),
+    path: z.array(lngLat).min(2),
+    /** 飞机、火车、船的班次。 */
+    service: z
+      .object({
+        number: optionalText,
+        depart: clockTime.optional(),
+        arrive: clockTime.optional(),
+      })
+      .optional(),
+    /** 公共交通的乘坐明细。 */
+    transit: z
+      .object({
+        fare: optionalText,
+        lines: z
+          .array(
+            z.object({
+              name: z.string().trim().min(1),
+              from: optionalText,
+              to: optionalText,
+              stops: z.number().int().positive().optional(),
+            })
+          )
+          .min(1),
+      })
+      .optional(),
+  })
+  .superRefine((route, ctx) => {
+    if (route.service && !SCHEDULED_MODES.has(route.mode))
+      ctx.addIssue({
+        code: 'custom',
+        path: ['service'],
+        message: '只有飞机、火车、船有班次。',
+      })
+    if (route.transit && route.mode !== 'transit')
+      ctx.addIssue({
+        code: 'custom',
+        path: ['transit'],
+        message: '只有公共交通有乘坐明细。',
+      })
+  })
+
 export const tripSchema = ({ image }: SchemaContext) =>
   z
     .object({
@@ -276,23 +327,7 @@ export const tripSchema = ({ image }: SchemaContext) =>
                 note: optionalText,
                 photos: z.array(image()).default([]),
                 /** 去往下一站；最后一站没有。 */
-                route: z
-                  .object({
-                    mode: z.enum([
-                      'drive',
-                      'walk',
-                      'bike',
-                      'flight',
-                      'train',
-                      'ferry',
-                      'transit',
-                      'straight',
-                    ]),
-                    distance: z.number().nonnegative(),
-                    duration: z.number().nonnegative().optional(),
-                    path: z.array(lngLat).min(2),
-                  })
-                  .optional(),
+                route: tripRoute.optional(),
               })
             ),
           })

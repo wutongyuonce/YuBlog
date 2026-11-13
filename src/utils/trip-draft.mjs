@@ -7,11 +7,13 @@
 import { isAbsolute, resolve } from 'node:path'
 
 import { gcj02ToWgs84 } from './pitravel.mjs'
-import { CLOCK_TIME } from './trips.js'
+import {
+  CLOCK_TIME,
+  ROAD_MODES,
+  ROUTE_MODES,
+  SCHEDULED_MODES,
+} from './trips.js'
 
-/** 去下一站的方式；后四种画直线，`travelMinutes` 只对它们生效。 */
-const ROAD_MODES = new Set(['drive', 'walk', 'bike'])
-const LINE_MODES = new Set(['transit', 'flight', 'train', 'ferry'])
 const TRIP_KEYS = new Set(['title', 'coordinateSystem', 'cover', 'days'])
 const DAY_KEYS = new Set(['date', 'summary', 'stops'])
 const STOP_KEYS = new Set([
@@ -25,7 +27,12 @@ const STOP_KEYS = new Set([
   'photos',
   'travel',
   'travelMinutes',
+  'service',
+  'transit',
 ])
+const SERVICE_KEYS = new Set(['number', 'depart', 'arrive'])
+const TRANSIT_KEYS = new Set(['fare', 'lines'])
+const LINE_KEYS = new Set(['name', 'from', 'to', 'stops'])
 
 function isObject(value) {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
@@ -71,6 +78,55 @@ function clock(value, where) {
   return value
 }
 
+/** 飞机、火车、船的班次：班次号与起止时刻，至少写一项。 */
+function toService(value, travel, at) {
+  if (value === undefined) return undefined
+  if (!SCHEDULED_MODES.has(travel))
+    throw new Error(`${at} 的 service 只用于 flight／train／ferry。`)
+  if (!isObject(value)) throw new Error(`${at} 的 service 必须是对象。`)
+  knownKeys(value, SERVICE_KEYS, `${at} 的 service`)
+  const service = {
+    number: optionalText(value.number, `${at} 的 service.number`),
+    depart: clock(value.depart, `${at} 的 service.depart`),
+    arrive: clock(value.arrive, `${at} 的 service.arrive`),
+  }
+  if (!service.number && !service.depart && !service.arrive)
+    throw new Error(`${at} 的 service 至少要有 number、depart 或 arrive。`)
+  return service
+}
+
+/** 公共交通的乘坐明细：线路列表和可选票价。 */
+function toTransit(value, travel, at) {
+  if (value === undefined) return undefined
+  if (travel !== 'transit')
+    throw new Error(`${at} 的 transit 只用于 travel: transit。`)
+  if (!isObject(value)) throw new Error(`${at} 的 transit 必须是对象。`)
+  knownKeys(value, TRANSIT_KEYS, `${at} 的 transit`)
+  if (!Array.isArray(value.lines) || value.lines.length === 0)
+    throw new Error(`${at} 的 transit.lines 至少要有一条线路。`)
+  return {
+    fare: optionalText(value.fare, `${at} 的 transit.fare`),
+    lines: value.lines.map((line, index) => {
+      const where = `${at} 的 transit.lines 第 ${index + 1} 项`
+      if (!isObject(line)) throw new Error(`${where} 必须是对象。`)
+      knownKeys(line, LINE_KEYS, where)
+      const name = optionalText(line.name, `${where} 的 name`)
+      if (!name) throw new Error(`${where} 缺少 name。`)
+      if (
+        line.stops !== undefined &&
+        !(Number.isInteger(line.stops) && line.stops > 0)
+      )
+        throw new Error(`${where} 的 stops 必须是正整数。`)
+      return {
+        name,
+        from: optionalText(line.from, `${where} 的 from`),
+        to: optionalText(line.to, `${where} 的 to`),
+        stops: line.stops,
+      }
+    }),
+  }
+}
+
 function toStop(stop, where, gcj02, baseDir) {
   if (!isObject(stop)) throw new Error(`${where} 必须是对象。`)
   const name = optionalText(stop.name, `${where} 的 name`)
@@ -87,13 +143,14 @@ function toStop(stop, where, gcj02, baseDir) {
   )
     throw new Error(`${at} 的 coordinates 必须是 [经度, 纬度]。`)
   const travel = stop.travel === undefined ? 'drive' : stop.travel
-  if (!ROAD_MODES.has(travel) && !LINE_MODES.has(travel))
-    throw new Error(`${at} 的 travel 不是已知交通方式。`)
+  if (!ROUTE_MODES.includes(travel))
+    throw new Error(`${at} 的 travel 只能是 ${ROUTE_MODES.join('／')}。`)
   const minutes = stop.travelMinutes
   if (minutes !== undefined) {
-    if (!LINE_MODES.has(travel))
+    // 路网方式的时长由路线服务给出。
+    if (ROAD_MODES.has(travel))
       throw new Error(
-        `${at} 的 travelMinutes 只用于 ${[...LINE_MODES].join('／')}。`
+        `${at} 的 travelMinutes 只用于 flight／train／ferry／transit。`
       )
     if (!(Number.isFinite(minutes) && minutes > 0))
       throw new Error(`${at} 的 travelMinutes 必须是正数。`)
@@ -119,6 +176,8 @@ function toStop(stop, where, gcj02, baseDir) {
     placeImageUrl: undefined,
     travel,
     travelSeconds: minutes === undefined ? undefined : Math.round(minutes * 60),
+    service: toService(stop.service, travel, at),
+    transit: toTransit(stop.transit, travel, at),
   }
 }
 
@@ -155,18 +214,24 @@ export function parseTripDraft(value, baseDir) {
       ),
     }
   })
-  // 最后一站没有下一站，写了交通方式也不会生效。
+  // 最后一站没有下一站，写了交通字段也不会生效。
   const last = value.days.flatMap((day) => day.stops ?? []).at(-1)
-  if (last && (last.travel !== undefined || last.travelMinutes !== undefined))
-    throw new Error(
-      `最后一站「${last.name}」没有下一站，不要写 travel 或 travelMinutes。`
+  if (
+    last &&
+    ['travel', 'travelMinutes', 'service', 'transit'].some(
+      (key) => last[key] !== undefined
     )
+  )
+    throw new Error(
+      `最后一站「${last.name}」没有下一站，不要写 travel、travelMinutes、service 或 transit。`
+    )
+
   return {
     title,
     start: days[0].date,
     end: days.at(-1).date,
     coverUrls: sources(value.cover, baseDir, 'cover '),
     days,
-    skipped: [],
+    issues: [],
   }
 }

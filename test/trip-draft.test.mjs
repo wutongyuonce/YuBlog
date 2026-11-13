@@ -21,6 +21,7 @@ const draft = (extra = {}) => ({
           photos: ['./a.jpg', 'https://cdn.example/b.jpg'],
           travel: 'train',
           travelMinutes: 12,
+          service: { number: 'G1234', depart: '09:40' },
         }),
         stop({ name: '解放碑' }),
       ],
@@ -44,6 +45,11 @@ test('a hand-written draft becomes the neutral import draft', () => {
   ])
   assert.deepEqual(first.time, { start: '09:30', end: undefined })
   assert.deepEqual([first.travel, first.travelSeconds], ['train', 720])
+  assert.deepEqual(first.service, {
+    number: 'G1234',
+    depart: '09:40',
+    arrive: undefined,
+  })
   assert.deepEqual([second.travel, second.time], ['drive', undefined])
   assert.deepEqual(first.coordinates, [106.5, 29.6])
 })
@@ -64,8 +70,18 @@ test('invalid drafts fail with the reason instead of dropping data', () => {
     [{ days: [{ date: '2026-02-30' }] }, /真实存在/],
     [{ days: [{ date: '2026-12-06' }, { date: '2026-12-05' }] }, /晚于前一天/],
     [day([stop({ coordinates: [200, 0] })]), /coordinates/],
-    [day([stop({ travel: 'rocket' })]), /travel 不是/],
+    [day([stop({ travel: 'rocket' })]), /travel 只能是/],
     [day([stop({ travelMinutes: 5 })]), /travelMinutes 只用于/],
+    [
+      day([stop({ travel: 'taxi', service: { number: 'X' } })]),
+      /service 只用于/,
+    ],
+    [day([stop({ travel: 'flight', service: {} })]), /service 至少/],
+    [day([stop({ travel: 'transit', transit: { lines: [] } })]), /lines 至少/],
+    [
+      day([stop({ transit: { lines: [{ name: '1号线' }] } })]),
+      /transit 只用于/,
+    ],
     [day([stop({ time: { end: '25:00' } })]), /time\.end/],
     [day([stop({ note: 123 })]), /note/],
     [day([stop({ time: {} })]), /time 必须/],

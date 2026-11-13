@@ -8,16 +8,31 @@ const TRIP_TIME_ZONE = 'Asia/Shanghai'
 /** 停靠点时刻 `HH:mm`；schema、圆周适配器和草稿校验共用。 */
 export const CLOCK_TIME = /^([01]\d|2[0-3]):[0-5]\d$/
 export const STATUS_LABELS = { plan: '计划', record: '记录' }
+/** 两站之间的交通方式；schema、导入和页面共用这一份。 */
+export const ROUTE_MODES = /** @type {const} */ ([
+  'flight',
+  'train',
+  'ferry',
+  'taxi',
+  'drive',
+  'walk',
+  'bike',
+  'transit',
+])
 export const ROUTE_MODE_LABELS = {
-  drive: '驾车',
-  walk: '步行',
-  bike: '骑行',
   flight: '飞机',
   train: '火车',
   ferry: '船',
+  taxi: '打车',
+  drive: '开车',
+  walk: '步行',
+  bike: '骑行',
   transit: '公共交通',
-  straight: '直线',
 }
+/** 有班次的方式：可以写班次号和起止时刻，路径是两点直线。 */
+export const SCHEDULED_MODES = new Set(['flight', 'train', 'ferry'])
+/** 走路网的方式：可以向路线服务请求路径。 */
+export const ROAD_MODES = new Set(['taxi', 'drive', 'walk', 'bike'])
 const COLLAGE_SIZE = 3
 const WEEKDAYS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 // 按年份取模，新增年份不会改变已有年份的颜色；相邻年份不撞色。

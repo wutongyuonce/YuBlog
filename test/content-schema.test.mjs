@@ -116,7 +116,8 @@ test('trip days must be ordered and match start and end', () => {
     assert.equal(trip.safeParse(broken).success, false)
 })
 
-test('trip stops reject bad coordinates, times and one-point routes', () => {
+test('trip stops reject bad coordinates, times and malformed routes', () => {
+  const route = validTrip.days[0].stops[0].route
   const withStop = (patch) => ({
     ...validTrip,
     days: [
@@ -131,6 +132,21 @@ test('trip stops reject bad coordinates, times and one-point routes', () => {
     { coordinates: [200, 29.5] },
     { time: { start: '24:00' } },
     { route: { mode: 'drive', distance: 1, path: [[106.5, 29.5]] } },
+    { route: { ...route, mode: 'straight' } },
+    // 班次只属于飞机、火车、船，乘坐明细只属于公共交通。
+    { route: { ...route, mode: 'taxi', service: { number: 'G1' } } },
+    { route: { ...route, transit: { lines: [{ name: '9号线' }] } } },
   ])
     assert.equal(trip.safeParse(withStop(patch)).success, false)
+  for (const patch of [
+    { route: { ...route, mode: 'flight', service: { number: 'MU1' } } },
+    {
+      route: {
+        ...route,
+        mode: 'transit',
+        transit: { fare: '3元', lines: [{ name: '9号线', stops: 5 }] },
+      },
+    },
+  ])
+    assert.equal(trip.safeParse(withStop(patch)).success, true)
 })

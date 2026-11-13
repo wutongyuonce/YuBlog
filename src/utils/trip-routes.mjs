@@ -1,14 +1,19 @@
 /**
- * 停靠点之间的路线：按交通方式请求公共 Valhalla，解码、抽稀、取整；
- * 失败或没有结果时降级为直线，不让整次导入失败。只在导入时运行。
+ * 停靠点之间的路线：来源已给出路线（圆周）时直接抽稀使用；路网方式向公共
+ * Valhalla 请求；班次和公共交通画两点直线。失败时保留交通方式、按直线计里程，
+ * 不让整次导入失败。只在导入时运行。
  */
 
 import { EARTH_RADIUS, haversine } from './geo.mjs'
+import { SCHEDULED_MODES } from './trips.js'
 
 const VALHALLA_URL = 'https://valhalla1.openstreetmap.de/route'
-const COSTING = { drive: 'auto', walk: 'pedestrian', bike: 'bicycle' }
-/** 不走路网的交通方式：直接画两点直线并保留方式。 */
-const LINE_MODES = new Set(['flight', 'train', 'ferry', 'transit'])
+const COSTING = {
+  drive: 'auto',
+  taxi: 'auto',
+  walk: 'pedestrian',
+  bike: 'bicycle',
+}
 const TIMEOUT_MS = 15_000
 const TOLERANCE_METERS = 5
 
@@ -105,29 +110,49 @@ export function simplifyPath(path, tolerance = TOLERANCE_METERS) {
   return rounded
 }
 
-/** 飞机、火车或降级时的两点直线；只有班次给出了起止时间才带时长。 */
-function straight(from, to, mode = 'straight', duration) {
+/**
+ * 两点直线：班次本来就画直线；其余方式是没有路线时的降级，标上 `straight`。
+ * 只有已知时长才带。
+ */
+function straight(from, to, mode, duration) {
   return {
     mode,
     distance: Math.round(haversine(from, to)),
     ...(duration !== undefined && { duration }),
+    ...(!SCHEDULED_MODES.has(mode) && { straight: true }),
     path: simplifyPath([from, to]),
   }
 }
 
 /**
- * 一段路线。`warning` 只在降级为直线时出现。
- * 飞机、火车、船和公共交通不请求路网，直接画直线。
- * @param {{ from: [number, number], to: [number, number], mode: string, duration?: number }} leg
+ * 一段路线。`warning` 只在路网方式降级为直线时出现。
+ * - 来源给了 `hint`（路径、距离、时长、公交明细）时直接使用，线头接回停靠点。
+ * - 开车、打车、步行、骑行向 Valhalla 请求。
+ * - 飞机、火车、船和没有路线的公共交通画两点直线。
+ * - 两站在同一点时是一段零里程的路，不请求。
+ * @param {{ from: [number, number], to: [number, number], mode: string, duration?: number, hint?: { distance: number, duration?: number, path: [number, number][], transit?: object } }} leg
  * @param {{ fetchImpl?: typeof fetch, timeoutMs?: number }} [options]
  */
 export async function requestRoute(
-  { from, to, mode, duration },
+  { from, to, mode, duration, hint },
   { fetchImpl = fetch, timeoutMs = TIMEOUT_MS } = {}
 ) {
+  if (from[0] === to[0] && from[1] === to[1])
+    return { route: { mode, distance: 0, path: simplifyPath([from, to]) } }
+  if (hint)
+    return {
+      route: {
+        mode,
+        distance: hint.distance,
+        ...((duration ?? hint.duration) !== undefined && {
+          duration: duration ?? hint.duration,
+        }),
+        path: simplifyPath([from, ...hint.path, to]),
+        ...(hint.transit && { transit: hint.transit }),
+      },
+    }
   const costing = COSTING[mode]
-  if (LINE_MODES.has(mode)) return { route: straight(from, to, mode, duration) }
-  if (!costing) return { route: straight(from, to) }
+  if (!costing) return { route: straight(from, to, mode, duration) }
   try {
     const response = await fetchImpl(VALHALLA_URL, {
       method: 'POST',
@@ -159,7 +184,7 @@ export async function requestRoute(
     }
   } catch (error) {
     return {
-      route: straight(from, to),
+      route: straight(from, to, mode, duration),
       warning: error instanceof Error ? error.message : String(error),
     }
   }
