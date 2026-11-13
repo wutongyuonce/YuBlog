@@ -1,7 +1,7 @@
 /**
- * 旅程回放：按一条时间线逐站停留、逐段画线，标记沿线前进、镜头跟随。
- * 减少动态效果时不画动画，只逐站切换。时间线是纯数据（`buildTimeline`），
- * 地图图层与帧循环在 `createReplay`。
+ * 旅程回放：按一条时间线逐天开场、逐站停留、逐段画线，标记带着交通方式的图标沿线前进、
+ * 镜头跟随；可以暂停、倍速、跳到上一站或下一站。减少动态效果时不画动画，只逐站切换。
+ * 时间线是纯数据（`buildTimeline`），地图图层与帧循环在 `createReplay`。
  */
 import type {
   ExpressionSpecification,
@@ -11,17 +11,31 @@ import type {
 
 import { haversine as distance } from './geo.mjs'
 import type { TripGeo, TripMap } from './trip-map'
+import { ROUTE_MODE_ICONS } from './trips.js'
 
-const DWELL_MS = 2200
+/** 每张照片在卡片上停留的时长；站点停留至少 `MIN_DWELL_MS`，照片多时按张数延长。 */
+export const PHOTO_MS = 1500
+const MIN_DWELL_MS = 3000
+const DAY_MS = 1800
 const REDUCED_DWELL_MS = 3000
 const MIN_TRAVEL_MS = 1200
 const MAX_TRAVEL_MS = 4500
 const MS_PER_KM = 450
+export const SPEEDS = [1, 1.5, 2] as const
 const LINE_SOURCE = 'trips-replay'
 const LINE_LAYER = 'trips-replay'
 const PLANNED_LAYER = 'trips-replay-planned'
 
 type Step =
+  | {
+      kind: 'day'
+      day: number
+      /** 这一天的第一站。 */
+      stop: number
+      start: number
+      duration: number
+      at: number
+    }
   | {
       kind: 'dwell'
       stop: number
@@ -33,6 +47,7 @@ type Step =
   | {
       kind: 'travel'
       stop: number
+      mode: string
       start: number
       duration: number
       from: number
@@ -48,15 +63,26 @@ function mercator([lng, lat]: [number, number]) {
   ]
 }
 
+/** 站点停留：至少三秒，照片多时每张一秒半，让每张都轮到一次。 */
+export function dwellFor(photos: number) {
+  return Math.max(MIN_DWELL_MS, photos * PHOTO_MS)
+}
+
 /**
  * 全程路径、沿线累计距离与时间线。路段的 `from`／`to` 是沿线距离（米）。
  * `projected` 是同一条路径在墨卡托平面上的累计长度，只用来换算画线进度。
+ * 每天第一站前有一段开场，卡片先写这一天。
+ * @param photosOf 某站的照片张数，决定停留时长
  */
-export function buildTimeline(trip: TripGeo, reducedMotion: boolean) {
+export function buildTimeline(
+  trip: TripGeo,
+  reducedMotion: boolean,
+  photosOf: (index: number) => number = () => 0
+) {
   const path: [number, number][] = []
   const cumulative: number[] = []
   const projected: number[] = []
-  const legRange = new Map<number, { from: number; to: number }>()
+  const legs = new Map<number, { from: number; to: number; mode: string }>()
   const stopAt = new Map<number, number>()
   const push = (point: [number, number]) => {
     const last = path.at(-1)
@@ -76,24 +102,38 @@ export function buildTimeline(trip: TripGeo, reducedMotion: boolean) {
     if (!leg) continue
     const from = cumulative.at(-1)!
     for (const point of leg.path) push(point)
-    legRange.set(stop.index, { from, to: cumulative.at(-1)! })
+    legs.set(stop.index, { from, to: cumulative.at(-1)!, mode: leg.mode })
   }
 
   const steps: Step[] = []
   let clock = 0
   for (const stop of trip.stops) {
-    const dwell = reducedMotion ? REDUCED_DWELL_MS : DWELL_MS
+    const at = stopAt.get(stop.index)!
+    if (stop.number === 1) {
+      steps.push({
+        kind: 'day',
+        day: stop.day,
+        stop: stop.index,
+        start: clock,
+        duration: DAY_MS,
+        at,
+      })
+      clock += DAY_MS
+    }
+    const dwell = reducedMotion
+      ? REDUCED_DWELL_MS
+      : dwellFor(photosOf(stop.index))
     steps.push({
       kind: 'dwell',
       stop: stop.index,
       start: clock,
       duration: dwell,
-      at: stopAt.get(stop.index)!,
+      at,
     })
     clock += dwell
-    const range = legRange.get(stop.index)
-    if (!range || reducedMotion) continue
-    const km = (range.to - range.from) / 1000
+    const leg = legs.get(stop.index)
+    if (!leg || reducedMotion) continue
+    const km = (leg.to - leg.from) / 1000
     const duration = Math.min(
       MAX_TRAVEL_MS,
       Math.max(MIN_TRAVEL_MS, km * MS_PER_KM)
@@ -103,7 +143,7 @@ export function buildTimeline(trip: TripGeo, reducedMotion: boolean) {
       stop: stop.index,
       start: clock,
       duration,
-      ...range,
+      ...leg,
     })
     clock += duration
   }
@@ -158,10 +198,18 @@ export function drawnRatio(
   return (projected[low] + (projected[high] - projected[low]) * t) / total
 }
 
+/** 某站停留步骤在时间线里的位置；跳站时用。 */
+export function dwellStepOf(steps: Step[], stop: number) {
+  return steps.findIndex((step) => step.kind === 'dwell' && step.stop === stop)
+}
+
 export interface ReplayOptions {
   tripMap: TripMap
   trip: TripGeo
   getPadding: () => PaddingOptions
+  photosOf: (index: number) => number
+  /** 新的一天开场。 */
+  onDay: (day: number) => void
   /** 到达某站（停留开始）。 */
   onStop: (index: number) => void
   onPlayingChange: (playing: boolean) => void
@@ -173,10 +221,13 @@ export async function createReplay(options: ReplayOptions) {
   const { map } = tripMap
   const maplibregl = await import('maplibre-gl')
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
-  const timeline = buildTimeline(trip, reducedMotion)
+  const timeline = buildTimeline(trip, reducedMotion, options.photosOf)
   const head = document.createElement('span')
   head.className = 'trips-replay-head'
   head.style.setProperty('--trip-color', trip.color)
+  const icon = document.createElement('span')
+  icon.setAttribute('aria-hidden', 'true')
+  head.append(icon)
   const marker: Marker = new maplibregl.Marker({ element: head }).setLngLat(
     timeline.path[0]
   )
@@ -187,6 +238,7 @@ export async function createReplay(options: ReplayOptions) {
   let playing = false
   let stepIndex = -1
   let finished = false
+  let speed = 1
 
   function removeLayers() {
     if (map.getLayer(LINE_LAYER)) map.removeLayer(LINE_LAYER)
@@ -253,6 +305,14 @@ export async function createReplay(options: ReplayOptions) {
     )
   }
 
+  /** 标记在路上时显示交通方式的图标，到站后是圆点。 */
+  function setMode(mode: string | undefined) {
+    head.classList.toggle('trips-replay-head--moving', Boolean(mode))
+    icon.className = mode
+      ? (ROUTE_MODE_ICONS[mode as keyof typeof ROUTE_MODE_ICONS] ?? '')
+      : ''
+  }
+
   function zoomFor(step: Extract<Step, { kind: 'travel' }>) {
     const from = timeline.cumulative.findIndex((value) => value >= step.from)
     const to = timeline.cumulative.findIndex((value) => value >= step.to)
@@ -265,30 +325,42 @@ export async function createReplay(options: ReplayOptions) {
 
   let travelZoom: { from: number; to: number } | undefined
 
+  function moveTo(center: [number, number], zoom: number) {
+    if (reducedMotion) map.jumpTo({ center, zoom, padding: getPadding() })
+    else map.easeTo({ center, zoom, padding: getPadding(), duration: 700 })
+  }
+
   function enter(step: Step) {
     const stop = trip.stops[step.stop]
-    if (step.kind === 'dwell') {
-      options.onStop(step.stop)
-      drawn(step.at)
-      marker.setLngLat(stop.coordinates)
-      const zoom = Math.max(map.getZoom(), 13)
-      if (reducedMotion)
-        map.jumpTo({ center: stop.coordinates, zoom, padding: getPadding() })
-      else
-        map.easeTo({
-          center: stop.coordinates,
-          zoom,
-          padding: getPadding(),
-          duration: 700,
-        })
-    } else {
+    if (step.kind === 'travel') {
+      setMode(step.mode)
       travelZoom = { from: map.getZoom(), to: zoomFor(step) }
+      return
     }
+    setMode(undefined)
+    drawn(step.at)
+    marker.setLngLat(stop.coordinates)
+    if (step.kind === 'day') {
+      options.onDay(step.day)
+      // 开场时框住这一天，看清当天要去的地方。
+      const points = trip.stops
+        .filter((item) => item.day === step.day)
+        .map((item) => item.coordinates)
+      const camera = tripMap.cameraFor(points, getPadding(), 14)
+      if (camera && points.length > 1)
+        reducedMotion
+          ? map.jumpTo(camera)
+          : map.easeTo({ ...camera, duration: 900 })
+      else moveTo(stop.coordinates, Math.max(map.getZoom(), 13))
+      return
+    }
+    options.onStop(step.stop)
+    moveTo(stop.coordinates, Math.max(map.getZoom(), 13))
   }
 
   function render(now: number) {
     if (!playing) return
-    const at = elapsed + (now - startedAt)
+    const at = elapsed + (now - startedAt) * speed
     if (at >= timeline.total) {
       elapsed = timeline.total
       drawn(timeline.length)
@@ -345,7 +417,7 @@ export async function createReplay(options: ReplayOptions) {
   function pause() {
     if (!playing) return
     cancelAnimationFrame(frame)
-    elapsed += performance.now() - startedAt
+    elapsed += (performance.now() - startedAt) * speed
     setPlaying(false)
   }
 
@@ -354,6 +426,22 @@ export async function createReplay(options: ReplayOptions) {
     finished = true
     setPlaying(false)
     options.onEnd()
+  }
+
+  /** 当前所在的站：停留时是这一站，路上是刚离开的那站，开场是当天第一站。 */
+  function currentStop() {
+    return timeline.steps[Math.max(0, stepIndex)].stop
+  }
+
+  /** 跳到某站开始停留；播放中继续播放，暂停时停在那里。 */
+  function seek(stop: number) {
+    const index = dwellStepOf(timeline.steps, stop)
+    if (index < 0) return
+    finished = false
+    elapsed = timeline.steps[index].start
+    startedAt = performance.now()
+    stepIndex = index
+    enter(timeline.steps[index])
   }
 
   // 换底图前页面会先退出回放，所以图层只加一次。
@@ -366,6 +454,22 @@ export async function createReplay(options: ReplayOptions) {
     toggle() {
       if (playing) pause()
       else play()
+    },
+    previous() {
+      seek(Math.max(0, currentStop() - 1))
+    },
+    /** 下一站；在路上时就是要去的那站。 */
+    next() {
+      seek(Math.min(trip.stops.length - 1, currentStop() + 1))
+    },
+    /** 改倍速；已走过的时间按旧倍速结算。 */
+    setSpeed(next: number) {
+      if (playing) {
+        const now = performance.now()
+        elapsed += (now - startedAt) * speed
+        startedAt = now
+      }
+      speed = next
     },
     /** 退出回放：拆掉图层与标记，恢复总览图层。 */
     destroy() {

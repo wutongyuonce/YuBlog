@@ -349,3 +349,23 @@ export const tripSchema = ({ image }: SchemaContext) =>
           message: 'start／end 必须等于第一天和最后一天。',
         })
     })
+
+/* =====================================================
+   日历 Schema - `src/data/calendar/<id>/entry.md` 的 frontmatter，正文是文字
+   ===================================================== */
+export const calendarSchema = ({ image }: SchemaContext) =>
+  z.object({
+    title: z.string().trim().min(1),
+    // YAML 会把没加引号的日期读成 Date，这里统一成 `YYYY-MM-DD`。
+    date: z.preprocess(
+      (value) =>
+        value instanceof Date ? value.toISOString().slice(0, 10) : value,
+      isoDate
+    ),
+    time: clockTime.optional(),
+    /** 有地点的记录会出现在旅行地图上。 */
+    place: z
+      .object({ name: z.string().trim().min(1), coordinates: lngLat })
+      .optional(),
+    photos: z.array(image()).default([]),
+  })

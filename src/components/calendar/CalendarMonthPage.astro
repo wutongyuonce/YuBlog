@@ -1,0 +1,967 @@
+---
+import { Image } from 'astro:assets'
+
+import Head from '~/components/base/Head.astro'
+import CalendarEntry from '~/components/calendar/CalendarEntry.astro'
+import ViewSwitch from '~/components/calendar/ViewSwitch.astro'
+import PhotoDialog from '~/components/trips/PhotoDialog.astro'
+import { AUTHOR_DISPLAY_NAME } from '~/config'
+import {
+  WEEKDAY_LABELS,
+  calendarMonths,
+  formatMonth,
+  monthCells,
+  monthKey,
+  monthPath,
+} from '~/utils/calendar.js'
+import { withBasePath } from '~/utils/path'
+import {
+  getCalendarEntries,
+  type CalendarEntry as Entry,
+} from '~/utils/trip-entries'
+import { formatDayLabel } from '~/utils/trips.js'
+
+// 日历某一个月的视图，`/calendar/` 与 `/calendar/<年>/<月>/` 共用。
+// 横屏是周一开头的月格，点记录在右侧抽屉展开本月时间线并定位；窄屏直接显示本月时间线。
+interface Props {
+  month: string
+}
+
+const { month } = Astro.props
+const allEntries = await getCalendarEntries()
+const months = calendarMonths(allEntries.map((entry) => entry.data))
+const activeMonth = month || months.at(-1) || ''
+const monthIndex = months.indexOf(activeMonth)
+const prevMonth = monthIndex > 0 ? months[monthIndex - 1] : undefined
+const nextMonth =
+  monthIndex >= 0 && monthIndex < months.length - 1
+    ? months[monthIndex + 1]
+    : undefined
+
+const entries = allEntries.filter(
+  (entry) => monthKey(entry.data.date) === activeMonth
+)
+const byDate = new Map<string, Entry[]>()
+for (const entry of entries) {
+  const list = byDate.get(entry.data.date) ?? []
+  list.push(entry)
+  byDate.set(entry.data.date, list)
+}
+const cells = activeMonth ? monthCells(activeMonth) : []
+const days = [...byDate.entries()]
+const years = [...new Set(months.map((item) => item.slice(0, 4)))].toReversed()
+const monthsByYear = years.map((year) => ({
+  year,
+  months: months.filter((item) => item.startsWith(`${year}-`)),
+}))
+const title = activeMonth ? `日历 · ${formatMonth(activeMonth)}` : '日历'
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <Head {title} description="按月记录日常点滴与旅途片段。" />
+  </head>
+  <body class="calendar-body">
+    <main class="calendar-page" data-calendar>
+      <header class="calendar-toolbar">
+        <a
+          class="calendar-home"
+          href={withBasePath('/')}
+          aria-label="回到博客首页"
+        >
+          <img
+            src={withBasePath('/avatar.webp')}
+            width="28"
+            height="28"
+            alt=""
+          />
+          <span>{AUTHOR_DISPLAY_NAME}</span>
+        </a>
+
+        {activeMonth && (
+          <div class="calendar-nav" aria-label="选择月份">
+            {prevMonth ? (
+              <a
+                class="calendar-step"
+                href={withBasePath(monthPath(prevMonth))}
+                aria-label={`上一个月：${formatMonth(prevMonth)}`}
+                title={formatMonth(prevMonth)}
+              >
+                <span class="i-ri-arrow-left-s-line" aria-hidden="true" />
+              </a>
+            ) : (
+              <span class="calendar-step" aria-disabled="true">
+                <span class="i-ri-arrow-left-s-line" aria-hidden="true" />
+              </span>
+            )}
+            <button
+              class="calendar-month-button"
+              type="button"
+              data-calendar-picker-toggle
+              aria-controls="calendar-picker"
+              aria-expanded="false"
+            >
+              <h1>{formatMonth(activeMonth)}</h1>
+              <span class="i-ri-arrow-down-s-line" aria-hidden="true" />
+            </button>
+            {nextMonth ? (
+              <a
+                class="calendar-step"
+                href={withBasePath(monthPath(nextMonth))}
+                aria-label={`下一个月：${formatMonth(nextMonth)}`}
+                title={formatMonth(nextMonth)}
+              >
+                <span class="i-ri-arrow-right-s-line" aria-hidden="true" />
+              </a>
+            ) : (
+              <span class="calendar-step" aria-disabled="true">
+                <span class="i-ri-arrow-right-s-line" aria-hidden="true" />
+              </span>
+            )}
+
+            <div
+              id="calendar-picker"
+              class="calendar-picker"
+              data-calendar-picker
+              hidden
+            >
+              {monthsByYear.map((group) => (
+                <section class="calendar-picker__year">
+                  <h2>{group.year}</h2>
+                  <div class="calendar-picker__months">
+                    {group.months.map((key) => (
+                      <a
+                        href={withBasePath(monthPath(key))}
+                        aria-current={key === activeMonth ? 'page' : undefined}
+                      >
+                        {Number(key.slice(5))} 月
+                      </a>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div class="calendar-toolbar__actions">
+          <ViewSwitch current="calendar" />
+        </div>
+      </header>
+
+      {!activeMonth ? (
+        <p class="calendar-empty">还没有日历记录。</p>
+      ) : (
+        <div class="calendar-stage">
+          <section
+            class="calendar-board"
+            aria-label={`${formatMonth(activeMonth)}月历`}
+          >
+            <div class="calendar-weekdays" aria-hidden="true">
+              {WEEKDAY_LABELS.map((label) => (
+                <span>周{label}</span>
+              ))}
+            </div>
+            <ol class="calendar-grid">
+              {cells.map((cell) => {
+                if (!cell)
+                  return <li class="calendar-cell is-pad" aria-hidden="true" />
+                const dayEntries = byDate.get(cell.date) ?? []
+                // 格子里主展示最新的一条，其余记入 +N。
+                const lead = dayEntries[0]
+                const photo = dayEntries.find((entry) => entry.data.photos[0])
+                  ?.data.photos[0]
+                const extra = dayEntries.length - 1
+                return (
+                  <li
+                    class:list={[
+                      'calendar-cell',
+                      dayEntries.length > 0 && 'has-entry',
+                      photo && 'has-photo',
+                    ]}
+                  >
+                    <span class="calendar-cell__day">{cell.day}</span>
+                    {lead && (
+                      <a
+                        class="calendar-cell__entry"
+                        href={`#${lead.id}`}
+                        data-calendar-open={lead.id}
+                        data-calendar-date={cell.date}
+                        aria-label={`${formatDayLabel(cell.date)}：${dayEntries.map((item) => item.data.title).join('、')}`}
+                      >
+                        {photo && (
+                          <Image
+                            src={photo}
+                            alt=""
+                            widths={[240, 480]}
+                            sizes="12rem"
+                            format="webp"
+                            loading="lazy"
+                          />
+                        )}
+                        <span class="calendar-cell__caption">
+                          <strong>{lead.data.title}</strong>
+                          {extra > 0 && <em>+{extra}</em>}
+                        </span>
+                      </a>
+                    )}
+                  </li>
+                )
+              })}
+            </ol>
+          </section>
+
+          <aside
+            id="calendar-drawer"
+            class="calendar-drawer"
+            data-calendar-drawer
+            aria-label={`${formatMonth(activeMonth)}记录`}
+          >
+            <header class="calendar-drawer__header">
+              <div>
+                <p>{entries.length} 条记录</p>
+                <h2>{formatMonth(activeMonth)}</h2>
+              </div>
+              <button
+                class="calendar-close"
+                type="button"
+                data-calendar-close
+                aria-label="收起时间线"
+                title="收起时间线"
+              >
+                <span class="i-ri-close-line" aria-hidden="true" />
+              </button>
+            </header>
+            <div class="calendar-drawer__scroll" data-calendar-scroll>
+              <ol class="calendar-timeline">
+                {days.map(([date, dayEntries]) => (
+                  <li class="calendar-day">
+                    <time class="calendar-day__date" datetime={date}>
+                      <strong>{Number(date.slice(8))}</strong>
+                      <span>{formatDayLabel(date).split(' ')[1]}</span>
+                    </time>
+                    <div class="calendar-day__entries">
+                      {dayEntries.map((entry) => (
+                        <div
+                          id={entry.id}
+                          data-calendar-target={entry.id}
+                          data-calendar-target-date={date}
+                        >
+                          <CalendarEntry {entry} />
+                        </div>
+                      ))}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      <PhotoDialog />
+    </main>
+
+    <script>
+      import { bindPhotoViewer } from '~/utils/photo-viewer'
+
+      function mountCalendar(page: HTMLElement, signal: AbortSignal) {
+        const viewer = bindPhotoViewer(page, signal)
+        const scroller = page.querySelector<HTMLElement>(
+          '[data-calendar-scroll]'
+        )
+        const pickerToggle = page.querySelector<HTMLButtonElement>(
+          '[data-calendar-picker-toggle]'
+        )
+        const picker = page.querySelector<HTMLElement>('[data-calendar-picker]')
+
+        function setPickerOpen(open: boolean, restoreFocus = false) {
+          if (!picker || !pickerToggle) return
+          picker.hidden = !open
+          pickerToggle.setAttribute('aria-expanded', String(open))
+          if (!open && restoreFocus) pickerToggle.focus()
+        }
+
+        function syncFromHash() {
+          let id = ''
+          try {
+            id = decodeURIComponent(location.hash.slice(1))
+          } catch {
+            // 编码损坏的片段按未选中处理。
+          }
+          const target = id
+            ? page.querySelector<HTMLElement>(
+                `[data-calendar-target="${CSS.escape(id)}"]`
+              )
+            : null
+          const activeDate = target?.dataset.calendarTargetDate
+          for (const node of page.querySelectorAll<HTMLElement>(
+            '[data-calendar-target]'
+          ))
+            node.toggleAttribute('data-active', node === target)
+          for (const cell of page.querySelectorAll<HTMLElement>(
+            '[data-calendar-open]'
+          ))
+            cell.toggleAttribute(
+              'data-active',
+              Boolean(activeDate && cell.dataset.calendarDate === activeDate)
+            )
+          if (!target) {
+            page.removeAttribute('data-calendar-open')
+            return
+          }
+          page.setAttribute('data-calendar-open', '')
+          // 等抽屉展开布局稳定后再滚到对应记录。
+          requestAnimationFrame(() => {
+            if (!scroller) return
+            if (getComputedStyle(scroller).overflowY === 'visible') {
+              target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              return
+            }
+            scroller.scrollTo({
+              top: Math.max(0, target.offsetTop - 16),
+              behavior: 'smooth',
+            })
+          })
+        }
+
+        pickerToggle?.addEventListener(
+          'click',
+          () => setPickerOpen(Boolean(picker?.hidden)),
+          { signal }
+        )
+        page.addEventListener(
+          'click',
+          (event) => {
+            const target = event.target as Element
+            if (target.closest('[data-calendar-close]')) {
+              history.replaceState(
+                history.state,
+                '',
+                `${location.pathname}${location.search}`
+              )
+              syncFromHash()
+              return
+            }
+            const open = target.closest<HTMLAnchorElement>(
+              'a[data-calendar-open]'
+            )
+            if (
+              open &&
+              event.button === 0 &&
+              !event.metaKey &&
+              !event.ctrlKey &&
+              !event.shiftKey &&
+              !event.altKey
+            ) {
+              event.preventDefault()
+              const next = `#${open.dataset.calendarOpen}`
+              if (open.hasAttribute('data-active')) {
+                history.replaceState(
+                  history.state,
+                  '',
+                  `${location.pathname}${location.search}`
+                )
+                syncFromHash()
+              } else {
+                location.hash = next
+              }
+            }
+          },
+          { signal }
+        )
+        document.addEventListener(
+          'pointerdown',
+          (event) => {
+            const target = event.target as Node
+            if (
+              picker &&
+              !picker.hidden &&
+              !picker.contains(target) &&
+              !pickerToggle?.contains(target)
+            )
+              setPickerOpen(false)
+          },
+          { signal }
+        )
+        addEventListener('hashchange', syncFromHash, { signal })
+        addEventListener(
+          'keydown',
+          (event) => {
+            if (viewer.isOpen() || event.key !== 'Escape') return
+            if (picker && !picker.hidden) setPickerOpen(false, true)
+            else if (page.hasAttribute('data-calendar-open')) {
+              history.replaceState(
+                history.state,
+                '',
+                `${location.pathname}${location.search}`
+              )
+              syncFromHash()
+            }
+          },
+          { signal }
+        )
+        syncFromHash()
+      }
+
+      let controller: AbortController | undefined
+      document.addEventListener('astro:page-load', () => {
+        controller?.abort()
+        controller = undefined
+        const page = document.querySelector<HTMLElement>('[data-calendar]')
+        if (!page) return
+        controller = new AbortController()
+        mountCalendar(page, controller.signal)
+      })
+      document.addEventListener('astro:before-swap', () => {
+        controller?.abort()
+        controller = undefined
+      })
+    </script>
+    <style is:global>
+      @media (min-width: 64.0625rem) {
+        html:has(.calendar-body),
+        .calendar-body {
+          height: 100%;
+          overflow: hidden;
+          overscroll-behavior: none;
+        }
+      }
+    </style>
+
+    <style>
+      .calendar-page {
+        --cal-glass: color-mix(in srgb, var(--c-bg) 88%, transparent);
+        --cal-border: color-mix(in srgb, var(--c-text) 10%, transparent);
+        --cal-muted: color-mix(in srgb, var(--c-text) 56%, var(--c-bg));
+        --cal-hover: color-mix(in srgb, var(--c-text) 5%, transparent);
+        --cal-drawer-width: 26rem;
+        display: flex;
+        flex-direction: column;
+        height: 100dvh;
+        padding: calc(1rem + env(safe-area-inset-top))
+          calc(1rem + env(safe-area-inset-right))
+          calc(1rem + env(safe-area-inset-bottom))
+          calc(1rem + env(safe-area-inset-left));
+        box-sizing: border-box;
+        background: var(--c-bg);
+        color: var(--c-text);
+      }
+
+      /* —— 顶栏：与旅行页同高同位置 —— */
+      .calendar-toolbar {
+        position: relative;
+        z-index: 4;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 0.75rem;
+        flex-shrink: 0;
+      }
+
+      .calendar-home {
+        justify-self: start;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        height: 2.75rem;
+        padding: 0 1rem 0 0.375rem;
+        border: 1px solid var(--cal-border);
+        border-radius: 999px;
+        background: var(--cal-glass);
+        box-shadow: 0 6px 24px rgb(0 0 0 / 0.08);
+        color: var(--c-text);
+        font-size: 0.9375rem;
+        font-weight: 500;
+        text-decoration: none;
+        backdrop-filter: blur(14px);
+
+        & img {
+          width: 2rem;
+          height: 2rem;
+          border-radius: 999px;
+        }
+
+        &:hover {
+          background: color-mix(in srgb, var(--c-bg) 96%, var(--c-text));
+        }
+      }
+
+      .calendar-toolbar__actions {
+        justify-self: end;
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .calendar-nav {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        height: 2.75rem;
+        padding: 0 0.375rem;
+        border: 1px solid var(--cal-border);
+        border-radius: 999px;
+        background: var(--cal-glass);
+        box-shadow: 0 6px 24px rgb(0 0 0 / 0.08);
+        backdrop-filter: blur(14px);
+      }
+
+      .calendar-step {
+        display: grid;
+        place-items: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 999px;
+        color: var(--cal-muted);
+        text-decoration: none;
+
+        & span {
+          font-size: 1.125rem;
+        }
+
+        &:is(a):hover {
+          background: var(--cal-hover);
+          color: var(--c-text);
+        }
+
+        &[aria-disabled='true'] {
+          opacity: 0.28;
+        }
+      }
+
+      .calendar-month-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        height: 2rem;
+        padding: 0 0.5rem;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--c-text);
+        cursor: pointer;
+
+        & h1 {
+          margin: 0;
+          font-size: 0.9375rem;
+          font-weight: 600;
+          font-variant-numeric: tabular-nums;
+        }
+
+        & span {
+          color: var(--cal-muted);
+          font-size: 1rem;
+        }
+
+        &:hover {
+          background: var(--cal-hover);
+        }
+      }
+
+      .calendar-picker {
+        position: absolute;
+        top: calc(100% + 0.5rem);
+        left: 50%;
+        width: min(19rem, 88vw);
+        padding: 0.875rem 1rem;
+        border: 1px solid var(--cal-border);
+        border-radius: 1rem;
+        background: color-mix(in srgb, var(--c-bg) 96%, transparent);
+        box-shadow: 0 12px 40px rgb(0 0 0 / 0.16);
+        translate: -50% 0;
+        backdrop-filter: blur(18px);
+      }
+
+      .calendar-picker__year {
+        & + & {
+          margin-top: 0.75rem;
+          padding-top: 0.75rem;
+          border-top: 1px solid var(--cal-border);
+        }
+
+        & h2 {
+          margin: 0 0 0.375rem;
+          color: var(--cal-muted);
+          font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+          font-size: 0.75rem;
+          font-weight: 400;
+        }
+      }
+
+      .calendar-picker__months {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.375rem;
+
+        & a {
+          padding: 0.3125rem 0.6875rem;
+          border-radius: 999px;
+          background: var(--cal-hover);
+          color: var(--c-text);
+          font-size: 0.8125rem;
+          font-variant-numeric: tabular-nums;
+          text-decoration: none;
+
+          &:hover {
+            background: color-mix(in srgb, var(--c-text) 12%, transparent);
+          }
+
+          &[aria-current='page'] {
+            background: var(--c-text);
+            color: var(--c-bg);
+          }
+        }
+      }
+
+      .calendar-empty {
+        margin: auto;
+        color: var(--cal-muted);
+      }
+
+      /* —— 舞台：横屏月视图 + 右侧抽屉 —— */
+      .calendar-stage {
+        position: relative;
+        flex: 1;
+        display: flex;
+        gap: 1rem;
+        min-height: 0;
+        margin-top: 0.875rem;
+      }
+
+      .calendar-board {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+        max-width: 72rem;
+        width: 100%;
+        margin: 0 auto;
+        transition: margin-right 240ms cubic-bezier(0.2, 0.7, 0.2, 1);
+      }
+
+      .calendar-page[data-calendar-open] .calendar-board {
+        max-width: none;
+        margin-right: calc(var(--cal-drawer-width) + 1rem);
+      }
+
+      .calendar-weekdays {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 0.5rem;
+        padding: 0 0.125rem 0.5rem;
+        color: var(--cal-muted);
+        font-size: 0.75rem;
+        text-align: center;
+      }
+
+      .calendar-grid {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        grid-auto-rows: minmax(0, 1fr);
+        gap: 0.5rem;
+        min-height: 0;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .calendar-cell {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--cal-border);
+        border-radius: 0.875rem;
+        background: color-mix(in srgb, var(--c-text) 2.5%, var(--c-bg));
+
+        &.is-pad {
+          border-color: transparent;
+          background: transparent;
+        }
+      }
+
+      .calendar-cell__day {
+        position: absolute;
+        top: 0.5rem;
+        left: 0.625rem;
+        z-index: 2;
+        color: var(--cal-muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.75rem;
+        pointer-events: none;
+
+        .calendar-cell.has-photo & {
+          padding: 0.0625rem 0.4375rem;
+          border-radius: 999px;
+          background: rgb(0 0 0 / 0.42);
+          color: #fff;
+          backdrop-filter: blur(6px);
+        }
+      }
+
+      .calendar-cell__entry {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 0.625rem;
+        color: inherit;
+        text-decoration: none;
+
+        & img {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: scale 200ms ease;
+        }
+
+        &:hover img {
+          scale: 1.03;
+        }
+
+        &[data-active] {
+          box-shadow: inset 0 0 0 2px var(--c-text);
+          border-radius: inherit;
+        }
+
+        .calendar-cell.has-photo &::after {
+          content: '';
+          position: absolute;
+          inset: 40% 0 0;
+          background: linear-gradient(transparent, rgb(0 0 0 / 0.68));
+          pointer-events: none;
+        }
+      }
+
+      .calendar-cell__caption {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.375rem;
+        font-size: 0.8125rem;
+        line-height: 1.35;
+
+        .calendar-cell.has-photo & {
+          color: #fff;
+        }
+
+        & strong {
+          overflow: hidden;
+          font-weight: 500;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        & em {
+          flex-shrink: 0;
+          padding: 0.0625rem 0.375rem;
+          border-radius: 999px;
+          background: color-mix(in srgb, var(--c-text) 12%, transparent);
+          font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+          font-size: 0.6875rem;
+          font-style: normal;
+
+          .calendar-cell.has-photo & {
+            background: rgb(255 255 255 / 0.22);
+          }
+        }
+      }
+
+      /* —— 右侧时间线抽屉 —— */
+      .calendar-drawer {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 3;
+        display: flex;
+        flex-direction: column;
+        width: var(--cal-drawer-width);
+        overflow: hidden;
+        border: 1px solid var(--cal-border);
+        border-radius: 1.25rem;
+        background: color-mix(in srgb, var(--c-bg) 96%, transparent);
+        box-shadow: 0 12px 40px rgb(0 0 0 / 0.14);
+        opacity: 0;
+        pointer-events: none;
+        translate: calc(100% + 1.5rem) 0;
+        transition:
+          translate 240ms cubic-bezier(0.2, 0.7, 0.2, 1),
+          opacity 180ms ease;
+        backdrop-filter: blur(18px);
+      }
+
+      .calendar-page[data-calendar-open] .calendar-drawer {
+        opacity: 1;
+        pointer-events: auto;
+        translate: 0 0;
+      }
+
+      .calendar-drawer__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 1rem 1.25rem 0.75rem;
+        border-bottom: 1px solid var(--cal-border);
+
+        & p {
+          margin: 0;
+          color: var(--cal-muted);
+          font-size: 0.75rem;
+        }
+
+        & h2 {
+          margin: 0.125rem 0 0;
+          font-size: 1.125rem;
+          font-weight: 600;
+        }
+      }
+
+      .calendar-close {
+        display: grid;
+        place-items: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border: 0;
+        border-radius: 999px;
+        background: var(--cal-hover);
+        color: var(--c-text);
+        cursor: pointer;
+
+        & span {
+          font-size: 1.125rem;
+        }
+      }
+
+      .calendar-drawer__scroll {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        padding: 0 1.25rem 1.5rem;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+      }
+
+      .calendar-timeline {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .calendar-day {
+        display: grid;
+        grid-template-columns: 2.75rem minmax(0, 1fr);
+        gap: 0.75rem;
+
+        & + & {
+          border-top: 1px solid var(--cal-border);
+        }
+      }
+
+      .calendar-day__date {
+        position: sticky;
+        top: 0.75rem;
+        align-self: start;
+        display: flex;
+        flex-direction: column;
+        padding-top: 1.125rem;
+        font-variant-numeric: tabular-nums;
+
+        & strong {
+          font-size: 1.375rem;
+          font-weight: 600;
+          line-height: 1.1;
+        }
+
+        & span {
+          margin-top: 0.125rem;
+          color: var(--cal-muted);
+          font-size: 0.75rem;
+        }
+      }
+
+      .calendar-day__entries [data-calendar-target][data-active] {
+        margin: 0 -0.625rem;
+        padding: 0 0.625rem;
+        border-radius: 0.75rem;
+        background: color-mix(in srgb, var(--c-text) 4.5%, transparent);
+      }
+
+      .calendar-home:focus-visible,
+      .calendar-step:focus-visible,
+      .calendar-month-button:focus-visible,
+      .calendar-picker a:focus-visible,
+      .calendar-cell__entry:focus-visible,
+      .calendar-close:focus-visible {
+        outline: 2px solid var(--c-text);
+        outline-offset: 2px;
+      }
+
+      /* —— 窄屏：直接展示本月时间线 —— */
+      @media (max-width: 64rem) {
+        .calendar-page {
+          height: auto;
+          min-height: 100dvh;
+        }
+
+        .calendar-home span {
+          display: none;
+        }
+
+        .calendar-home {
+          padding: 0 0.375rem;
+        }
+
+        .calendar-toolbar :global(.view-switch a) {
+          padding: 0 0.625rem;
+          font-size: 0;
+
+          & span {
+            font-size: 1rem;
+          }
+        }
+
+        .calendar-board,
+        .calendar-drawer__header {
+          display: none;
+        }
+
+        .calendar-drawer {
+          position: static;
+          width: min(40rem, 100%);
+          margin: 0 auto;
+          border: 0;
+          border-radius: 0;
+          background: transparent;
+          box-shadow: none;
+          opacity: 1;
+          pointer-events: auto;
+          translate: none;
+          backdrop-filter: none;
+        }
+
+        .calendar-drawer__scroll {
+          padding: 0 0.25rem 2rem;
+          overflow: visible;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .calendar-board,
+        .calendar-drawer,
+        .calendar-cell__entry img {
+          transition: none;
+        }
+      }
+    </style>
+  </body>
+</html>

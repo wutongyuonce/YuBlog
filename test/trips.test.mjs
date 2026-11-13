@@ -3,16 +3,19 @@ import test from 'node:test'
 
 import {
   collageImages,
+  dayDistance,
   formatDateRange,
   formatDayLabel,
   formatKilometers,
   formatStopTime,
+  routeSummary,
   xhsSearchUrl,
   todayInTripZone,
+  tripDistance,
   tripMapData,
   tripStatus,
   tripTotals,
-  yearColor,
+  yearColors,
 } from '../src/utils/trips.js'
 
 const stop = (name, extra = {}) => ({
@@ -54,6 +57,11 @@ test('a trip is a plan until its last day has passed in Shanghai', () => {
   assert.equal(todayInTripZone(new Date('2026-11-08T16:30:00Z')), '2026-11-09')
 })
 
+test('a day counts the legs leaving it, and the trip adds up its days', () => {
+  assert.deepEqual(trip.days.map(dayDistance), [2000, 0])
+  assert.equal(tripDistance(trip), 2000)
+})
+
 test('totals count calendar days, distinct places and every leg', () => {
   assert.deepEqual(tripTotals([trip, trip]), {
     count: 2,
@@ -87,10 +95,41 @@ test('date labels', () => {
   )
 })
 
-test('year colours depend only on the year and differ across six years', () => {
-  const years = [2024, 2025, 2026, 2027, 2028, 2029]
-  assert.equal(new Set(years.map(yearColor)).size, years.length)
-  assert.equal(yearColor(2030), yearColor(2024))
+test('year colours follow the years in order, so adding a newer one keeps the rest', () => {
+  const before = yearColors([2026, 2024, 2026])
+  assert.deepEqual([...before.keys()], [2024, 2026])
+  const after = yearColors([2024, 2026, 2027])
+  assert.equal(after.get(2024), before.get(2024))
+  assert.equal(after.get(2026), before.get(2026))
+  assert.equal(new Set(after.values()).size, 3)
+})
+
+test('a leg line names the service, the lines or the mode, with its distance', () => {
+  const flight = routeSummary({
+    mode: 'flight',
+    distance: 1_188_316,
+    duration: 8700,
+    service: { number: 'PN6458', depart: '22:00', arrive: '00:25' },
+  })
+  assert.equal(flight.text, 'PN6458 · 22:00–00:25 · 1,188 公里')
+  assert.equal(flight.icon, 'i-ri-plane-line')
+  assert.equal(
+    routeSummary({
+      mode: 'transit',
+      distance: 26_000,
+      duration: 5040,
+      transit: { fare: '7元', lines: [{ name: '9号线' }, { name: '10号线' }] },
+    }).text,
+    '9号线 → 10号线 · 7元 · 1 小时 24 分钟 · 26 公里'
+  )
+  assert.equal(
+    routeSummary({ mode: 'taxi', distance: 8807, duration: 1760 }).text,
+    '打车 · 29 分钟 · 8.8 公里'
+  )
+  assert.equal(
+    routeSummary({ mode: 'drive', distance: 3000, straight: true }).text,
+    '开车 · 直线约 3 公里'
+  )
 })
 
 test('collage prefers covers, then distinct stop photos, up to three', () => {
@@ -107,19 +146,33 @@ test('collage prefers covers, then distinct stop photos, up to three', () => {
   )
 })
 
-test('map data numbers stops across days and keeps legs from their stop', () => {
-  const data = tripMapData('2026-11-06', trip)
+test('map data numbers stops within each day and keeps legs with their day', () => {
+  const data = tripMapData(
+    '2026-11-06',
+    trip,
+    '#123456',
+    (photo) => `t/${photo}`
+  )
   assert.deepEqual(
-    data.stops.map(({ index, name }) => [index, name]),
+    data.stops.map(({ index, day, number, name, photo }) => [
+      index,
+      day,
+      number,
+      name,
+      photo,
+    ]),
     [
-      [0, 'A'],
-      [1, 'B'],
-      [2, 'A'],
+      [0, 0, 1, 'A', 't/a1'],
+      [1, 0, 2, 'B', undefined],
+      [2, 1, 1, 'A', 't/a1'],
     ]
   )
   assert.deepEqual(
-    data.legs.map(({ from }) => from),
-    [0, 1]
+    data.legs.map(({ from, day, mode }) => [from, day, mode]),
+    [
+      [0, 0, 'drive'],
+      [1, 0, 'drive'],
+    ]
   )
-  assert.equal(data.color, yearColor(2026))
+  assert.equal(data.color, '#123456')
 })

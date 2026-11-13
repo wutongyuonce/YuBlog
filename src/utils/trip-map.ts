@@ -1,14 +1,16 @@
 /**
- * 旅行页的地图（MapLibre GL + OpenFreeMap 底图）：全部路线与聚合停靠点、
- * 选中旅程的序号点、悬停提示，以及按设置应用底图风格和 3D 视角。
+ * 旅行页的地图（MapLibre GL + OpenFreeMap 底图）：全部路线、照片标记与聚合、
+ * 年份筛选、选中旅程的按天序号点与当天聚焦、悬停提示，以及按设置应用底图风格和 3D 视角。
  * 只管地图；面板、地址片段和回放由页面脚本与 `trip-replay.ts` 调度。
  */
 import type {
   ExpressionSpecification,
+  FilterSpecification,
   GeoJSONSource,
   LngLatBoundsLike,
   Map as MaplibreMap,
   MapMouseEvent,
+  Marker,
   PaddingOptions,
   Popup,
 } from 'maplibre-gl'
@@ -27,14 +29,23 @@ export interface MapSettings {
   tilt: boolean
 }
 
+/** 形状见 `tripMapData`（trips.js）。 */
 export interface TripStopGeo {
   name: string
   coordinates: [number, number]
+  /** 全程序号，0 起。 */
   index: number
+  /** 第几天，0 起。 */
+  day: number
+  /** 当天序号，1 起。 */
+  number: number
+  photo?: string
 }
 
 export interface TripLegGeo {
   from: number
+  day: number
+  mode: string
   path: [number, number][]
 }
 
@@ -48,29 +59,48 @@ export interface TripGeo {
   legs: TripLegGeo[]
 }
 
+/** 形状见 `calendarMapData`（calendar.js）。 */
+export interface CalendarGeo {
+  id: string
+  hash: string
+  title: string
+  date: string
+  place: string
+  coordinates: [number, number]
+  year: number
+  color: string
+  photo?: string
+}
+
+export interface MapData {
+  years: { year: number; color: string }[]
+  trips: TripGeo[]
+  calendar: CalendarGeo[]
+}
+
 export interface TripMapOptions {
   container: HTMLElement
-  trips: TripGeo[]
+  data: MapData
   /** 站点是否为深色主题。 */
   dark: boolean
   settings: MapSettings
   /** 地图四周被面板等遮住的部分，取景时让开。 */
   getPadding: () => PaddingOptions
   onSelectTrip: (id: string) => void
+  onSelectEntry: (id: string) => void
   onSelectStop: (index: number) => void
   onError: (message: string) => void
 }
 
 const SOURCES = {
   routes: 'trips-routes',
-  stops: 'trips-stops',
+  points: 'trips-points',
   selected: 'trips-selected',
 } as const
 const LAYERS = {
   routes: 'trips-routes',
-  clusters: 'trips-clusters',
-  clusterCount: 'trips-cluster-count',
-  stops: 'trips-stops',
+  flights: 'trips-routes-flight',
+  points: 'trips-points-hit',
   selected: 'trips-selected',
   selectedNumber: 'trips-selected-number',
 } as const
@@ -87,6 +117,8 @@ const CHINESE_NAME: ExpressionSpecification = [
   ['get', 'name:zh'],
   ['get', 'name'],
 ]
+const IS_FLIGHT: FilterSpecification = ['==', ['get', 'mode'], 'flight']
+const NOT_FLIGHT: FilterSpecification = ['!=', ['get', 'mode'], 'flight']
 
 /** 一组坐标的外接框；空数组返回 undefined。 */
 function boundsOf(points: [number, number][]): LngLatBoundsLike | undefined {
@@ -105,24 +137,37 @@ function boundsOf(points: [number, number][]): LngLatBoundsLike | undefined {
   ]
 }
 
+const escape = (text: string) =>
+  text.replace(/[&<>"]/g, (char) => `&#${char.charCodeAt(0)};`)
+
+const reducedMotion = () =>
+  matchMedia('(prefers-reduced-motion: reduce)').matches
+
 export async function createTripMap(options: TripMapOptions) {
-  const { container, trips, getPadding } = options
+  const { container, data, getPadding } = options
+  const { years, trips, calendar } = data
   const maplibregl = await import('maplibre-gl')
   maplibregl.setWorkerUrl(workerUrl)
   const byId = new Map(trips.map((trip) => [trip.id, trip]))
-  const allPoints = trips.flatMap((trip) =>
-    trip.stops.map((stop) => stop.coordinates)
-  )
-  const yearColors: ExpressionSpecification = [
-    'match',
-    ['get', 'year'],
-    ...[...new Map(trips.map((trip) => [trip.year, trip.color]))].flat(),
-    '#888888',
-  ] as unknown as ExpressionSpecification
+  const entries = new Map(calendar.map((entry) => [entry.id, entry]))
+  const yearColors = new Map(years.map(({ year, color }) => [year, color]))
+  const pointsOf = (year?: number) => [
+    ...trips
+      .filter((trip) => year === undefined || trip.year === year)
+      .flatMap((trip) => trip.stops.map((stop) => stop.coordinates)),
+    ...calendar
+      .filter((entry) => year === undefined || entry.year === year)
+      .map((entry) => entry.coordinates),
+  ]
+  const allPoints = pointsOf()
 
   let selected: string | undefined
+  let selectedEntry: string | undefined
   let lifted: string | undefined
   let activeStop: number | undefined
+  let focusedDay: number | undefined
+  let year: number | undefined
+  let baseVisible = true
   let style = resolveMapStyle(options.settings, options.dark)
   let tilt = options.settings.tilt
   let destroyed = false
@@ -159,7 +204,7 @@ export async function createTripMap(options: TripMapOptions) {
   const popup: Popup = new maplibregl.Popup({
     closeButton: false,
     closeOnClick: false,
-    offset: 12,
+    offset: 16,
     className: 'trips-popup',
   })
 
@@ -169,23 +214,57 @@ export async function createTripMap(options: TripMapOptions) {
       features: trips.flatMap((trip) =>
         trip.legs.map((leg) => ({
           type: 'Feature' as const,
-          properties: { trip: trip.id, color: trip.color },
+          properties: {
+            trip: trip.id,
+            color: trip.color,
+            year: trip.year,
+            day: leg.day,
+            mode: leg.mode,
+          },
           geometry: { type: 'LineString' as const, coordinates: leg.path },
         }))
       ),
     }
   }
 
-  function stopFeatures() {
+  /** 总览里的点：旅程各站与有地点的日历记录，按筛选的年份取。 */
+  function pointFeatures() {
+    const point = (
+      coordinates: [number, number],
+      properties: Record<string, unknown>
+    ) => ({
+      type: 'Feature' as const,
+      properties,
+      geometry: { type: 'Point' as const, coordinates },
+    })
     return {
       type: 'FeatureCollection' as const,
-      features: trips.flatMap((trip) =>
-        trip.stops.map((stop) => ({
-          type: 'Feature' as const,
-          properties: { trip: trip.id, color: trip.color, year: trip.year },
-          geometry: { type: 'Point' as const, coordinates: stop.coordinates },
-        }))
-      ),
+      features: [
+        ...trips
+          .filter((trip) => year === undefined || trip.year === year)
+          .flatMap((trip) =>
+            trip.stops.map((stop) =>
+              point(stop.coordinates, {
+                key: `${trip.id}:${stop.index}`,
+                trip: trip.id,
+                color: trip.color,
+                year: trip.year,
+                photo: stop.photo,
+              })
+            )
+          ),
+        ...calendar
+          .filter((entry) => year === undefined || entry.year === year)
+          .map((entry) =>
+            point(entry.coordinates, {
+              key: `calendar:${entry.id}`,
+              entry: entry.id,
+              color: entry.color,
+              year: entry.year,
+              photo: entry.photo,
+            })
+          ),
+      ],
     }
   }
 
@@ -198,13 +277,145 @@ export async function createTripMap(options: TripMapOptions) {
         type: 'Feature' as const,
         properties: {
           index: stop.index,
-          number: String(stop.index + 1),
+          day: stop.day,
+          number: String(stop.number),
           name: stop.name,
           color: trip.color,
         },
         geometry: { type: 'Point' as const, coordinates: stop.coordinates },
       })),
     }
+  }
+
+  // —— 照片标记：总览的点与聚合用 HTML 标记画，随视野同步 ——
+  const markers = new Map<string, Marker>()
+
+  function pinElement(properties: Record<string, unknown>, count?: number) {
+    const element = document.createElement('button')
+    element.type = 'button'
+    element.className = 'trips-pin'
+    const color =
+      properties.color ?? yearColors.get(Number(properties.year)) ?? '#f59e0b'
+    element.style.setProperty('--trip-color', String(color))
+    const photo = properties.photo
+    if (typeof photo === 'string') {
+      element.classList.add('trips-pin--photo')
+      const image = document.createElement('img')
+      image.src = photo
+      image.alt = ''
+      image.decoding = 'async'
+      element.append(image)
+    }
+    if (count) {
+      element.classList.add('trips-pin--cluster')
+      const badge = document.createElement('span')
+      badge.className = 'trips-pin__count'
+      badge.textContent = String(count)
+      element.append(badge)
+    }
+    return element
+  }
+
+  function describe(properties: Record<string, unknown>) {
+    const trip =
+      typeof properties.trip === 'string'
+        ? byId.get(properties.trip)
+        : undefined
+    if (trip)
+      return `<span>${escape(trip.dates)}</span><strong>${escape(trip.title)}</strong>`
+    const entry =
+      typeof properties.entry === 'string'
+        ? entries.get(properties.entry)
+        : undefined
+    return entry
+      ? `<span>${escape(entry.date)} · ${escape(entry.place)}</span><strong>${escape(entry.title)}</strong>`
+      : ''
+  }
+
+  function createMarker(
+    key: string,
+    coordinates: [number, number],
+    properties: Record<string, unknown>
+  ) {
+    const clusterId = properties.cluster_id as number | undefined
+    const count = properties.point_count as number | undefined
+    const element = pinElement(properties, count)
+    const label = count ? `${count} 个地点，放大查看` : describe(properties)
+    element.setAttribute(
+      'aria-label',
+      count ? label : label.replace(/<[^>]+>/g, ' ').trim()
+    )
+    element.addEventListener('click', (event) => {
+      event.stopPropagation()
+      popup.remove()
+      if (clusterId !== undefined) {
+        ;(map.getSource(SOURCES.points) as GeoJSONSource)
+          .getClusterExpansionZoom(clusterId)
+          .then((zoom) =>
+            map.easeTo({ center: coordinates, zoom: Math.min(zoom, 16) })
+          )
+          .catch(() => undefined)
+      } else if (typeof properties.trip === 'string')
+        options.onSelectTrip(properties.trip)
+      else if (typeof properties.entry === 'string')
+        options.onSelectEntry(properties.entry)
+    })
+    if (!count) {
+      element.addEventListener('pointerenter', () => {
+        if (selected) return
+        popup.setLngLat(coordinates).setHTML(describe(properties)).addTo(map)
+        if (typeof properties.trip === 'string') lift(properties.trip)
+      })
+      element.addEventListener('pointerleave', () => {
+        popup.remove()
+        lift(undefined)
+      })
+    }
+    const marker = new maplibregl.Marker({ element }).setLngLat(coordinates)
+    markers.set(key, marker)
+    return marker
+  }
+
+  /** 按当前视野里的点与聚合增删标记；选中旅程或回放时不显示。 */
+  function syncMarkers() {
+    const visible = new Set<string>()
+    if (
+      ready &&
+      baseVisible &&
+      !selected &&
+      map.getSource(SOURCES.points) &&
+      map.isSourceLoaded(SOURCES.points)
+    ) {
+      for (const feature of map.querySourceFeatures(SOURCES.points)) {
+        if (feature.geometry.type !== 'Point') continue
+        const properties = feature.properties ?? {}
+        const key =
+          properties.cluster_id !== undefined
+            ? `cluster:${year ?? 'all'}:${properties.cluster_id}:${properties.point_count}`
+            : String(properties.key)
+        if (visible.has(key)) continue
+        visible.add(key)
+        const marker =
+          markers.get(key) ??
+          createMarker(
+            key,
+            feature.geometry.coordinates as [number, number],
+            properties
+          )
+        marker
+          .getElement()
+          .classList.toggle(
+            'is-active',
+            properties.entry !== undefined && properties.entry === selectedEntry
+          )
+        if (!marker.getElement().isConnected) marker.addTo(map)
+      }
+    }
+    for (const [key, marker] of markers)
+      if (!visible.has(key)) {
+        marker.remove()
+        markers.delete(key)
+      }
   }
 
   /** 底图的地名标注改为中文；道路编号等非名称字段保持原样。 */
@@ -272,65 +483,62 @@ export async function createTripMap(options: TripMapOptions) {
     hideBasemapExtrusions()
     if (map.getSource(SOURCES.routes)) return
     map.addSource(SOURCES.routes, { type: 'geojson', data: routeFeatures() })
-    map.addSource(SOURCES.stops, {
+    map.addSource(SOURCES.points, {
       type: 'geojson',
-      data: stopFeatures(),
+      data: pointFeatures(),
       cluster: true,
-      clusterRadius: 42,
-      clusterMaxZoom: 11,
-      clusterProperties: { year: ['max', ['get', 'year']] },
+      clusterRadius: 48,
+      clusterMaxZoom: 14,
+      clusterProperties: {
+        // 聚合用第一张照片当封面，颜色取最新的年份。
+        photo: [
+          ['coalesce', ['accumulated'], ['get', 'photo']],
+          ['get', 'photo'],
+        ],
+        year: ['max', ['get', 'year']],
+      },
     })
     map.addSource(SOURCES.selected, {
       type: 'geojson',
       data: selectedFeatures(),
     })
 
+    const width: ExpressionSpecification = [
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      3,
+      2,
+      12,
+      4,
+    ]
     map.addLayer({
       id: LAYERS.routes,
       type: 'line',
       source: SOURCES.routes,
+      filter: NOT_FLIGHT,
       layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': ['get', 'color'], 'line-width': width },
+    })
+    // 飞机用粗虚线；虚线样式不能按要素取值，所以单独一层。
+    map.addLayer({
+      id: LAYERS.flights,
+      type: 'line',
+      source: SOURCES.routes,
+      filter: IS_FLIGHT,
+      layout: { 'line-join': 'round' },
       paint: {
         'line-color': ['get', 'color'],
-        'line-width': ['interpolate', ['linear'], ['zoom'], 3, 2, 12, 4],
+        'line-width': ['interpolate', ['linear'], ['zoom'], 3, 3, 12, 5],
+        'line-dasharray': [1.5, 1.5],
       },
     })
+    // 不可见的占位层：让聚合源随视野加载，`querySourceFeatures` 才有数据。
     map.addLayer({
-      id: LAYERS.clusters,
+      id: LAYERS.points,
       type: 'circle',
-      source: SOURCES.stops,
-      filter: ['has', 'point_count'],
-      paint: {
-        'circle-color': yearColors,
-        'circle-radius': ['step', ['get', 'point_count'], 13, 10, 16, 40, 20],
-        'circle-stroke-color': '#fff',
-        'circle-stroke-width': 2,
-      },
-    })
-    map.addLayer({
-      id: LAYERS.clusterCount,
-      type: 'symbol',
-      source: SOURCES.stops,
-      filter: ['has', 'point_count'],
-      layout: {
-        'text-field': ['get', 'point_count_abbreviated'],
-        'text-font': FONT,
-        'text-size': 12,
-        'text-allow-overlap': true,
-      },
-      paint: { 'text-color': '#fff' },
-    })
-    map.addLayer({
-      id: LAYERS.stops,
-      type: 'circle',
-      source: SOURCES.stops,
-      filter: ['!', ['has', 'point_count']],
-      paint: {
-        'circle-color': ['get', 'color'],
-        'circle-radius': 6,
-        'circle-stroke-color': '#fff',
-        'circle-stroke-width': 2,
-      },
+      source: SOURCES.points,
+      paint: { 'circle-radius': 0, 'circle-opacity': 0 },
     })
     map.addLayer({
       id: LAYERS.selected,
@@ -359,18 +567,39 @@ export async function createTripMap(options: TripMapOptions) {
     applyState()
   }
 
-  /** 选中、悬停与当前站决定各图层的可见度和强调。 */
+  /** 选中、悬停、当天、当前站与年份决定各图层的可见度和强调。 */
   function applyState() {
     if (!map.getLayer(LAYERS.routes)) return
     const focus = selected ?? lifted
-    map.setPaintProperty(
-      LAYERS.routes,
-      'line-opacity',
-      focus ? ['case', ['==', ['get', 'trip'], focus], 1, 0.15] : 0.8
+    const opacity: ExpressionSpecification | number = !focus
+      ? 0.85
+      : selected && focusedDay !== undefined
+        ? [
+            'case',
+            ['!=', ['get', 'trip'], selected],
+            0.08,
+            ['==', ['get', 'day'], focusedDay],
+            1,
+            0.22,
+          ]
+        : ['case', ['==', ['get', 'trip'], focus], 1, 0.15]
+    const yearFilter: FilterSpecification =
+      year === undefined || selected ? true : ['==', ['get', 'year'], year]
+    for (const [id, mode] of [
+      [LAYERS.routes, NOT_FLIGHT],
+      [LAYERS.flights, IS_FLIGHT],
+    ] as const) {
+      map.setPaintProperty(id, 'line-opacity', opacity)
+      map.setFilter(id, ['all', mode, yearFilter] as FilterSpecification)
+    }
+    map.setFilter(
+      LAYERS.selected,
+      focusedDay === undefined ? null : ['==', ['get', 'day'], focusedDay]
     )
-    const overview = selected ? 'none' : 'visible'
-    for (const id of [LAYERS.clusters, LAYERS.clusterCount, LAYERS.stops])
-      map.setLayoutProperty(id, 'visibility', overview)
+    map.setFilter(
+      LAYERS.selectedNumber,
+      focusedDay === undefined ? null : ['==', ['get', 'day'], focusedDay]
+    )
     map.setPaintProperty(
       LAYERS.selected,
       'circle-radius',
@@ -381,6 +610,7 @@ export async function createTripMap(options: TripMapOptions) {
     ;(map.getSource(SOURCES.selected) as GeoJSONSource).setData(
       selectedFeatures()
     )
+    syncMarkers()
   }
 
   /**
@@ -420,18 +650,30 @@ export async function createTripMap(options: TripMapOptions) {
       padding,
       maxZoom,
       pitch: framingPitch(bounds, padding, maxZoom),
-      duration: matchMedia('(prefers-reduced-motion: reduce)').matches
-        ? 0
-        : 900,
+      duration: reducedMotion() ? 0 : 900,
     })
+  }
+
+  function tripPoints(trip: TripGeo, day?: number) {
+    return trip.legs
+      .filter((leg) => day === undefined || leg.day === day)
+      .flatMap((leg) => leg.path)
+      .concat(
+        trip.stops
+          .filter((stop) => day === undefined || stop.day === day)
+          .map((stop) => stop.coordinates)
+      )
+  }
+
+  function lift(id: string | undefined) {
+    if (lifted === id) return
+    lifted = id
+    applyState()
   }
 
   function showPopup(event: MapMouseEvent, html: string) {
     popup.setLngLat(event.lngLat).setHTML(html).addTo(map)
   }
-
-  const escape = (text: string) =>
-    text.replace(/[&<>"]/g, (char) => `&#${char.charCodeAt(0)};`)
 
   // 构造时按平视取景；首次加载后按 3D 的倾斜重新框住总览，边缘的点不被裁掉。
   map.once('style.load', () => {
@@ -442,30 +684,11 @@ export async function createTripMap(options: TripMapOptions) {
     addLayers()
     applyTilt()
     ready = true
+    syncMarkers()
   })
+  map.on('render', syncMarkers)
 
-  map.on('click', LAYERS.clusters, (event) => {
-    const feature = event.features?.[0]
-    const source = map.getSource(SOURCES.stops) as GeoJSONSource
-    const clusterId = feature?.properties?.cluster_id
-    if (clusterId === undefined || feature?.geometry.type !== 'Point') return
-    const center = feature.geometry.coordinates as [number, number]
-    source
-      .getClusterExpansionZoom(clusterId)
-      .then((zoom) => map.easeTo({ center, zoom }))
-      .catch(() => undefined)
-  })
-  map.on(
-    'mouseenter',
-    LAYERS.clusters,
-    () => (map.getCanvas().style.cursor = 'pointer')
-  )
-  map.on(
-    'mouseleave',
-    LAYERS.clusters,
-    () => (map.getCanvas().style.cursor = '')
-  )
-  for (const layer of [LAYERS.routes, LAYERS.stops]) {
+  for (const layer of [LAYERS.routes, LAYERS.flights]) {
     map.on('click', layer, (event) => {
       const id = event.features?.[0]?.properties?.trip
       if (typeof id === 'string' && id !== selected) options.onSelectTrip(id)
@@ -504,51 +727,100 @@ export async function createTripMap(options: TripMapOptions) {
     /** 能否在地图上加回放图层。瓦片加载中也可以，只有换底图时不行。 */
     ready: () => ready && !failed,
     trip: (id: string) => byId.get(id),
+    hasEntry: (id: string) => entries.has(id),
     cameraFor,
-    /** 打开某段旅程或回到总览。 */
+    /** 打开某段旅程或回到总览（按筛选的年份取景）。 */
     select(id: string | undefined) {
       selected = id && byId.has(id) ? id : undefined
+      selectedEntry = undefined
       activeStop = undefined
+      focusedDay = undefined
       popup.remove()
       applyState()
       const trip = selected ? byId.get(selected) : undefined
-      if (trip)
-        fit(
-          trip.legs
-            .flatMap((leg) => leg.path)
-            .concat(trip.stops.map((s) => s.coordinates)),
-          14
-        )
-      else fit(allPoints, 10)
+      if (trip) fit(tripPoints(trip), 14)
+      else fit(pointsOf(year), 10)
     },
-    /** 列表悬停时强调路线，不移动镜头。 */
-    lift(id: string | undefined) {
-      if (lifted === id) return
-      lifted = id
+    /** 打开一条日历记录：总览不变，镜头移到它并强调它的标记。 */
+    selectEntry(id: string | undefined) {
+      selected = undefined
+      focusedDay = undefined
+      activeStop = undefined
+      selectedEntry = id && entries.has(id) ? id : undefined
+      popup.remove()
       applyState()
+      const entry = selectedEntry ? entries.get(selectedEntry) : undefined
+      if (entry)
+        map.easeTo({
+          center: entry.coordinates,
+          zoom: Math.max(map.getZoom(), 15),
+          padding: getPadding(),
+          duration: reducedMotion() ? 0 : 900,
+        })
     },
-    /** 强调某站；`fly` 时把它移到视野中央。 */
-    activateStop(index: number | undefined, fly = false) {
+    /** 只看某一年，`undefined` 为全部年份。 */
+    setYear(next: number | undefined) {
+      if (year === next) return
+      year = next
+      ;(map.getSource(SOURCES.points) as GeoJSONSource | undefined)?.setData(
+        pointFeatures()
+      )
+      applyState()
+      if (!selected && !selectedEntry) fit(pointsOf(year), 10)
+    },
+    /** 选中旅程里聚焦某一天：其它天的路线变淡、站点隐藏，镜头框住这一天。 */
+    focusDay(day: number | undefined) {
+      if (focusedDay === day || !selected) return
+      focusedDay = day
+      applyState()
+      const trip = byId.get(selected)!
+      const points = tripPoints(trip, day)
+      if (points.length > 0) fit(points, 15)
+    },
+    lift,
+    /** 强调某站；`fly` 时把它移到视野中央，`reveal` 时只在它出了视野才平移过去。 */
+    activateStop(
+      index: number | undefined,
+      move: 'fly' | 'reveal' | 'none' = 'none'
+    ) {
       activeStop = index
       applyState()
       const trip = selected ? byId.get(selected) : undefined
       const stop = index === undefined ? undefined : trip?.stops[index]
-      if (stop && fly)
+      if (!stop || move === 'none') return
+      if (move === 'reveal') {
+        const { x, y } = map.project(stop.coordinates)
+        const padding = getPadding()
+        const { clientWidth, clientHeight } = map.getContainer()
+        const { top = 0, right = 0, bottom = 0, left = 0 } = padding
+        const inside =
+          x > left &&
+          x < clientWidth - right &&
+          y > top &&
+          y < clientHeight - bottom
+        if (inside) return
         map.easeTo({
           center: stop.coordinates,
-          zoom: Math.max(map.getZoom(), 14),
-          padding: getPadding(),
-          duration: matchMedia('(prefers-reduced-motion: reduce)').matches
-            ? 0
-            : 700,
+          padding,
+          duration: reducedMotion() ? 0 : 600,
         })
+        return
+      }
+      map.easeTo({
+        center: stop.coordinates,
+        zoom: Math.max(map.getZoom(), 14),
+        padding: getPadding(),
+        duration: reducedMotion() ? 0 : 700,
+      })
     },
-    /** 只隐藏或恢复总览与选中图层，回放画自己的线。 */
+    /** 只隐藏或恢复总览与选中图层（含照片标记），回放画自己的线。 */
     setBaseLayersVisible(visible: boolean) {
+      baseVisible = visible
       if (!map.getLayer(LAYERS.routes)) return
       for (const id of Object.values(LAYERS))
         map.setLayoutProperty(id, 'visibility', visible ? 'visible' : 'none')
       if (visible) applyState()
+      else syncMarkers()
     },
     /**
      * 站点主题或地图设置变化后调用。底图风格变了会重新加载样式，
@@ -572,6 +844,8 @@ export async function createTripMap(options: TripMapOptions) {
       if (destroyed) return
       destroyed = true
       popup.remove()
+      for (const marker of markers.values()) marker.remove()
+      markers.clear()
       map.remove()
     },
   }

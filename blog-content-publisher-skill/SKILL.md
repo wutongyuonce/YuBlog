@@ -410,8 +410,8 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --frie
 
 `src/config.ts`：
 
-- 页面链接：`UI.internalNavs`（path / title / text）
-- 更多菜单中的友链／相册：`MORE_LINKS`。友链保持 `/friends/`，相册链接标为外链并显示 ↗；当前相册指向 `https://photos.wutongyu.site/`。
+- 页面链接：`UI.internalNavs`（path / title / text；文稿、标签、归档、日历、旅行、拾趣、更多）
+- 更多菜单中的关于／项目／友链／简历／相册／访问统计：`MORE_LINKS`。站内四项选中「更多」，相册与访问统计标为外链并显示 ↗；当前相册指向 `https://photos.wutongyu.site/`。
 - 顶栏 GitHub：`UI.socialLinks`，只留本仓库链接。和搜索、主题同属右侧工具组。
 - 站点名、描述、域名：`SITE`
 

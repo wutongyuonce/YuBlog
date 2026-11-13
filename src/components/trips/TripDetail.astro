@@ -4,32 +4,34 @@ import { Image, getImage } from 'astro:assets'
 import TripCover from '~/components/trips/TripCover.astro'
 import type { TripEntry } from '~/utils/trip-entries'
 import {
-  ROUTE_MODE_LABELS,
   collageImages,
+  dayDistance,
   formatDateRange,
   formatDayLabel,
-  formatDuration,
   formatStopTime,
+  numberedStops,
+  routeSummary,
   xhsSearchUrl,
   formatKilometers,
   tripDayCount,
   tripDistance,
   tripPlaceCount,
-  tripYear,
-  yearColor,
 } from '~/utils/trips.js'
 
 // 一段旅程的详情：无 JS 时由 `:target` 展开，有 JS 时由页面脚本按地址片段切换。
+// 每天的站从 1 编号；`data-trip-stop` 是全程序号，与地图载荷一致。
 interface Props {
   trip: TripEntry
   status: 'plan' | 'record'
   statusLabel: string
+  /** 年份颜色，见 `getYearColors`。 */
+  color: string
 }
 
-const { trip, status, statusLabel } = Astro.props
+const { trip, status, statusLabel, color } = Astro.props
 const { id, data } = trip
-const color = yearColor(tripYear(data))
 const stops = data.days.flatMap((day) => day.stops)
+const positions = new Map(numberedStops(data).map((item) => [item.stop, item]))
 const outline = stops.flatMap((stop) => stop.route?.path ?? [stop.coordinates])
 const figures = [
   { value: tripDayCount(data), unit: '天' },
@@ -50,21 +52,14 @@ const days = await Promise.all(
   data.days.map(async (day, dayIndex) => ({
     ...day,
     label: `第 ${dayIndex + 1} 天 · ${formatDayLabel(day.date)}`,
+    distance: dayDistance(day),
     stops: await Promise.all(
       day.stops.map(async (stop) => ({
         ...stop,
-        number: stops.indexOf(stop) + 1,
+        index: positions.get(stop)!.index,
+        number: positions.get(stop)!.number,
         time: formatStopTime(stop.time),
-        leg:
-          stop.route &&
-          [
-            ROUTE_MODE_LABELS[stop.route.mode],
-            `${formatKilometers(stop.route.distance)} 公里`,
-            stop.route.duration !== undefined &&
-              formatDuration(stop.route.duration),
-          ]
-            .filter(Boolean)
-            .join(' · '),
+        leg: stop.route && routeSummary(stop.route),
         photos: await Promise.all(
           stop.photos.map(async (photo) => ({
             photo,
@@ -81,6 +76,7 @@ const days = await Promise.all(
   class="trip-detail"
   {id}
   data-trip-detail={id}
+  data-photo-group
   aria-labelledby={`${id}-title`}
   style={`--trip-color: ${color}`}
 >
@@ -127,10 +123,15 @@ const days = await Promise.all(
   </button>
 
   <ol class="trip-days">
-    {days.map((day) => (
-      <li class="trip-day">
+    {days.map((day, dayIndex) => (
+      <li class="trip-day" data-trip-day={dayIndex}>
         <h3>
-          {day.label}
+          <span data-trip-day-label>{day.label}</span>
+          {day.distance > 0 && (
+            <span class="trip-day__distance" data-trip-day-distance>
+              {formatKilometers(day.distance)} 公里
+            </span>
+          )}
           {day.summary && <small>{day.summary}</small>}
         </h3>
         {day.stops.length === 0 ? (
@@ -138,7 +139,7 @@ const days = await Promise.all(
         ) : (
           <ol class="trip-stops">
             {day.stops.map((stop) => (
-              <li class="trip-stop" data-trip-stop={stop.number - 1}>
+              <li class="trip-stop" data-trip-stop={stop.index}>
                 <button
                   class="trip-stop__head"
                   type="button"
@@ -177,7 +178,7 @@ const days = await Promise.all(
                       <li>
                         <a
                           href={large}
-                          data-trip-photo
+                          data-photo
                           data-caption={stop.name}
                           aria-label={`查看大图：${stop.name} 第 ${index + 1} 张`}
                         >
@@ -194,7 +195,13 @@ const days = await Promise.all(
                     ))}
                   </ul>
                 )}
-                {stop.leg && <p class="trip-stop__leg">{stop.leg}</p>}
+                {stop.leg && (
+                  <p class="trip-stop__leg" data-trip-leg={stop.route!.mode}>
+                    <span class={stop.leg.icon} aria-hidden="true" />
+                    <span class="sr-only">{stop.leg.label}：</span>
+                    {stop.leg.text}
+                  </p>
+                )}
               </li>
             ))}
           </ol>
@@ -328,11 +335,19 @@ const days = await Promise.all(
       font-weight: 600;
 
       & small {
+        flex-basis: 100%;
         color: var(--trips-muted);
         font-size: 0.8125rem;
         font-weight: 400;
       }
     }
+  }
+
+  .trip-day__distance {
+    color: var(--trips-muted);
+    font-size: 0.8125rem;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
   }
 
   .trip-day__empty {
@@ -459,8 +474,17 @@ const days = await Promise.all(
   }
 
   .trip-stop__leg {
-    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-top: 0.625rem;
     font-size: 0.75rem;
+
+    & > span:first-child {
+      flex-shrink: 0;
+      font-size: 0.875rem;
+      color: var(--trip-color);
+    }
   }
 
   .trip-stop__note {

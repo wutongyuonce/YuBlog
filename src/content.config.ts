@@ -3,6 +3,7 @@ import { defineCollection } from 'astro:content'
 
 import {
   aboutSchema,
+  calendarSchema,
   interestSchema,
   interestTabSchema,
   friendSchema,
@@ -58,6 +59,16 @@ const trips = defineCollection({
   schema: tripSchema,
 })
 
+// 一条日历记录一个目录，目录名即 id（`/trips/#calendar/<id>`）。
+const calendar = defineCollection({
+  loader: glob({
+    base: './src/data/calendar',
+    pattern: '*/entry.md',
+    generateId: ({ entry }) => entry.split('/')[0],
+  }),
+  schema: calendarSchema,
+})
+
 export const collections = {
   interests,
   interestTabs,
@@ -66,4 +77,5 @@ export const collections = {
   friends,
   about,
   trips,
+  calendar,
 }

@@ -9,6 +9,7 @@ import {
 
 import { UI, INTEREST_ICONS, AUTHOR_LINKS, MORE_LINKS } from './src/config'
 import projectsData from './src/content/projects/data.json'
+import { ROUTE_MODE_ICONS } from './src/utils/trips.js'
 
 import type {
   IconNavItem,
@@ -111,6 +112,8 @@ export default defineConfig({
     ...Object.values(INTEREST_ICONS),
     ...MORE_LINKS.map(({ icon }) => icon),
     ...AUTHOR_LINKS.map(({ icon }) => icon),
+    /* 旅行页回放标记在脚本里按交通方式换图标 */
+    ...Object.values(ROUTE_MODE_ICONS),
 
     /* BaseLayout */
     'focus:not-sr-only',

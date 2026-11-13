@@ -1,0 +1,84 @@
+---
+import { withBasePath } from '~/utils/path'
+
+// 日历与旅行地图之间的切换胶囊，两页都放在右上角的工具栏里。
+interface Props {
+  current: 'calendar' | 'trips'
+}
+
+const { current } = Astro.props
+const items = [
+  {
+    id: 'calendar',
+    href: '/calendar/',
+    label: '日历',
+    icon: 'i-ri-calendar-line',
+  },
+  { id: 'trips', href: '/trips/', label: '旅行', icon: 'i-ri-map-2-line' },
+]
+---
+
+<nav class="view-switch" aria-label="切换日历与旅行">
+  {items.map((item) => (
+    <a
+      href={withBasePath(item.href)}
+      aria-current={item.id === current ? 'page' : undefined}
+    >
+      <span class={item.icon} aria-hidden="true" />
+      {item.label}
+    </a>
+  ))}
+</nav>
+
+<style>
+  .view-switch {
+    display: inline-grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: center;
+    gap: 0.125rem;
+    height: 2.75rem;
+    padding: 0.25rem;
+    border: 1px solid color-mix(in srgb, var(--c-text) 10%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--c-bg) 86%, transparent);
+    box-shadow: 0 6px 24px rgb(0 0 0 / 0.08);
+    backdrop-filter: blur(14px);
+
+    & a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3125rem;
+      height: 100%;
+      padding: 0 0.75rem;
+      border-radius: 999px;
+      color: color-mix(in srgb, var(--c-text) 62%, var(--c-bg));
+      font-size: 0.8125rem;
+      text-decoration: none;
+      white-space: nowrap;
+      transition:
+        background-color 160ms ease,
+        color 160ms ease;
+
+      &:hover {
+        color: var(--c-text);
+      }
+
+      &[aria-current='page'] {
+        background: var(--c-text);
+        color: var(--c-bg);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--c-text);
+        outline-offset: 2px;
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .view-switch a {
+      transition: none;
+    }
+  }
+</style>
