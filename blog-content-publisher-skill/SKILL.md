@@ -27,8 +27,8 @@ description: >
 | 改影音书游（电影／动漫／剧／游戏／书） | 拾趣「影音书游」合页 | 条目 `src/data/media/items.json`；封面 `src/content/interests/{movie,anime,tv,game,book}/` |
 | 改设备、配件、订阅、Mac／手机软件 | 拾趣「设备与软件」合页 | `src/content/interests/gear/<页签>.md`，配图同放 `gear/` |
 | 加歌单、换歌单封面 | 拾趣「歌单」子页 | 配置 `src/data/playlists.json`；封面放 `src/content/interests/playlists/` |
-| 加旅行、更新或删除行程（圆周旅迹链接，或用户给的照片、行程信息与素材） | 旅行 `/trips/` | 运行 `pnpm trips:import` 生成 `src/data/trips/<id>/`，不手写 |
-| 记日历、改或删日历条目（文字、照片、地点） | 日历；有地点的也上旅行地图 | `src/data/calendar/<id>/entry.md`，图放同目录 |
+| 加旅行、更新或删除行程（圆周旅迹链接，或用户给的照片、行程信息与素材） | 旅行 `/trips/` | 运行 `pnpm trips:import` 生成 `src/content/trips/<id>/`，不手写 |
+| 记日历、改或删日历条目（文字、照片、地点） | 日历；有地点的也上旅行地图 | `src/content/calendar/<id>/entry.md`，图放同目录 |
 | 友链增删改、申请模板里的站名/链接 | 友链 | `data.json` 或 `FriendsApplyPanel.astro` 的 `friendInfo` |
 | 顶栏页面名、顶栏 GitHub | 全站顶栏 | `src/config.ts` 的 `UI` |
 | 个人社交（名字、链接、图标） | 首页与关于 | `config.ts` 的 `AUTHOR_LINKS`；若 `about.md` 也展示同一联系方式，再同步该字段 |
@@ -364,9 +364,9 @@ python3 blog-content-publisher-skill/scripts/validate_content.py --root . --blog
 
 加旅行、导入圆周旅迹、把照片和零散信息整理成行程，或增改日历条目时，先读 [references/trips-and-calendar.md](references/trips-and-calendar.md)，按其中的流程和草稿格式操作。要点：
 
-- 旅程只由 `pnpm trips:import` 生成到 `src/data/trips/<id>/`，不手写；每次先带 `--check` 校验，按问题分类处理干净后再正式导入。
+- 旅程只由 `pnpm trips:import` 生成到 `src/content/trips/<id>/`，不手写；每次先带 `--check` 校验，按问题分类处理干净后再正式导入。
 - 照片的拍摄时间、坐标和候选地点用 `pnpm trips:photos <照片或目录>... --geocode` 读取，再带用户逐步确认。
-- 日历条目手写在 `src/data/calendar/<id>/entry.md`，图片放同目录，和旅程互不关联。
+- 日历条目手写在 `src/content/calendar/<id>/entry.md`，图片放同目录，和旅程互不关联。
 
 ---
 

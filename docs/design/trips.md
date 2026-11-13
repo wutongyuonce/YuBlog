@@ -2,7 +2,7 @@
 
 `/trips/` 是一张全屏地图，记录作者的旅行计划、已经走完的行程，以及带地点的日历记录；`/calendar/` 是按月浏览的日历视图。两页都不使用站点顶栏和页脚，左上角的作者胶囊回到博客首页，右上角有日历与地图的切换胶囊。顶栏在「归档」右侧直接放置「日历」与「旅行」两个入口。
 
-行程来自圆周旅迹的分享链接，或由 AI 按作者提供的照片与信息整理成的草稿，都由同一个导入脚本转换成站内的中立数据后提交到仓库；日历记录手写在 `src/data/calendar/<id>/entry.md`。页面只读仓库数据，不在访问时请求圆周旅迹或路线服务。
+行程来自圆周旅迹的分享链接，或由 AI 按作者提供的照片与信息整理成的草稿，都由同一个导入脚本转换成站内的中立数据后提交到仓库；日历记录手写在 `src/content/calendar/<id>/entry.md`。页面只读仓库数据，不在访问时请求圆周旅迹或路线服务。
 
 ## 旅行页 `/trips/`
 
@@ -44,7 +44,7 @@
 
 ## 数据
 
-### 旅程 `src/data/trips/<id>/trip.json`
+### 旅程 `src/content/trips/<id>/trip.json`
 
 字段契约以 `src/content/schema.ts` 的 `tripSchema` 为准：
 
@@ -95,7 +95,7 @@
 - **路线与交通方式。** 共八种：`flight`、`train`、`ferry`、`taxi`、`drive`、`walk`、`bike`、`transit`。班次类（飞机、火车、船）可带 `service`，路径为两点直线；公共交通可带 `transit` 线路明细与票价；路线服务失败退回两点直线时保留原 `mode` 并标记 `straight: true`，不再把「直线」当作一种交通方式。未显式设置交通方式时按两站大圆距离自动推断：1.5 公里以内 `walk`，超过 1.5 公里 `drive`。
 - **图片与动图。** 导入时静态图长边缩到 1280px 以内、转成质量 80 的 JPEG；GIF 动图保留全部帧，转成带动画的 WebP；构建时 Astro 输出的 WebP 同样保留动画帧。
 
-### 日历 `src/data/calendar/<id>/entry.md`
+### 日历 `src/content/calendar/<id>/entry.md`
 
 每条记录一个目录，目录名即 `id`，图片放同目录，字段契约见 `calendarSchema`：
 

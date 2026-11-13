@@ -73,7 +73,7 @@ dev 搜索使用模拟数据，真实 Pagefind 搜索需先构建再预览。`pn
 | 拾趣分类与配图 | `src/content/interests/<id>.md` 或 `.mdx`，配图放对应子目录 |
 | 歌单 | `src/data/playlists.json`，封面放 `src/content/interests/playlists/` |
 | 首页近期书影游 | 自动取 `src/data/media/items.json` 的待看条目 |
-| 旅行／日历 | `pnpm trips:import '<圆周旅迹分享链接>'` 或 `--from <草稿.json>` 生成 `src/data/trips/<id>/`；日历条目在 `src/data/calendar/<id>/entry.md`，见 [旅行与日历设计](docs/design/trips.md) |
+| 旅行／日历 | `pnpm trips:import '<圆周旅迹分享链接>'` 或 `--from <草稿.json>` 生成 `src/content/trips/<id>/`；日历条目在 `src/content/calendar/<id>/entry.md`，见 [旅行与日历设计](docs/design/trips.md) |
 | 作者介绍 | `src/content/about/about.md` |
 | 项目／友链 | `src/content/projects/data.json`／`src/content/friends/data.json` |
 

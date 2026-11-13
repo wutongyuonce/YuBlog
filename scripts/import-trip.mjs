@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 圆周旅迹分享链接或手写草稿 → `src/data/trips/<id>/`（trip.json + 图片）。
+ * 圆周旅迹分享链接或手写草稿 → `src/content/trips/<id>/`（trip.json + 图片）。
  *
  *   pnpm trips:import '<分享链接或行程 ID>' [--id <站内 id>] [--check]
  *   pnpm trips:import --from <草稿.json> [--id <站内 id>] [--check]
@@ -29,7 +29,7 @@ import {
 import { parseTripDraft } from '../src/utils/trip-draft.mjs'
 import { requestRoute } from '../src/utils/trip-routes.mjs'
 
-const TRIPS_DIR = resolve(import.meta.dirname, '../src/data/trips')
+const TRIPS_DIR = resolve(import.meta.dirname, '../src/content/trips')
 const ID_PATTERN = /^[a-z0-9][a-z0-9-]*$/
 const MAX_EDGE = 1280
 const FALLBACK_COVERS = 3
@@ -304,7 +304,7 @@ try {
       `「${trip.title}」${trip.start} ~ ${trip.end}：${days.length} 天，${flat.length} 个地点，` +
       `${photoCount} 张照片；路线 ${routes.length - straight} 段，直线 ${straight} 段。`
     if (check) {
-      console.log(`校验通过，将写入 src/data/trips/${id}/`)
+      console.log(`校验通过，将写入 src/content/trips/${id}/`)
       console.log(summary.replace('直线', '直线或待规划'))
     } else {
       await writeFile(join(staging, 'trip.json'), serialize(trip))
@@ -319,7 +319,7 @@ try {
         throw error
       }
       await rm(previous, { recursive: true, force: true })
-      console.log(`已写入 src/data/trips/${id}/`)
+      console.log(`已写入 src/content/trips/${id}/`)
       console.log(summary)
     }
   }

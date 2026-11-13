@@ -236,7 +236,7 @@ export const interestTabSchema = z.object({
 })
 
 /* =====================================================
-   旅行 Schema - `src/data/trips/<id>/trip.json`，由导入脚本生成
+   旅行 Schema - `src/content/trips/<id>/trip.json`，由导入脚本生成
    ===================================================== */
 const isoDate = z.iso.date({ error: '日期必须是 YYYY-MM-DD。' })
 const clockTime = z.string().regex(CLOCK_TIME, '时间必须是 HH:mm。')
@@ -351,7 +351,7 @@ export const tripSchema = ({ image }: SchemaContext) =>
     })
 
 /* =====================================================
-   日历 Schema - `src/data/calendar/<id>/entry.md` 的 frontmatter，正文是文字
+   日历 Schema - `src/content/calendar/<id>/entry.md` 的 frontmatter，正文是文字
    ===================================================== */
 export const calendarSchema = ({ image }: SchemaContext) =>
   z.object({

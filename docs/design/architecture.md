@@ -34,8 +34,8 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | `/projects/` | 分类网格 | `src/pages/projects.mdx` | `src/content/projects/data.json` |
 | `/about/` | 作者介绍 | `src/pages/about.mdx` | `src/content/about/about.md` |
 | `/friends/` | 友链卡片 + 申请模板 | `src/pages/friends.mdx` | `src/content/friends/data.json` |
-| `/calendar/`、`/calendar/[year]/[month]/` | 按月日历、右侧时间线抽屉与窄屏时间线；不用站点顶栏和居中版心 | `src/pages/calendar/index.astro`、`src/pages/calendar/[year]/[month]/index.astro` | `calendar` 集合（`src/data/calendar/<id>/entry.md`），见 [旅行与日历](./trips.md) |
-| `/trips/` | 全屏地图、旅程与日历面板、详情与回放；不用站点顶栏和居中版心 | `src/pages/trips/index.astro`、`src/pages/trips/map.json.ts` | `trips` 与 `calendar` 集合，见 [旅行与日历](./trips.md) |
+| `/calendar/`、`/calendar/[year]/[month]/` | 按月日历、右侧时间线抽屉与窄屏时间线；不用站点顶栏和居中版心 | `src/pages/calendar/index.astro`、`src/pages/calendar/[year]/[month]/index.astro` | `calendar` 集合（`src/content/calendar/<id>/entry.md`），见 [旅行与日历](./trips.md) |
+| `/trips/` | 全屏地图、旅程与日历面板、详情与回放；不用站点顶栏和居中版心 | `src/pages/trips/index.astro`、`src/pages/trips/map.json.ts` | `trips`（`src/content/trips/<id>/trip.json`）与 `calendar` 集合，见 [旅行与日历](./trips.md) |
 | `/blogs/[slug]/` | 正文、右侧 TOC | `src/pages/blogs/[...slug].astro` | 单篇 `blogs` |
 | `/rss.xml` | 订阅源 | `src/pages/rss.xml.js` | 已发布 `blogs`（不含拾趣） |
 
@@ -288,7 +288,7 @@ shell.css + src/styles       壳层 + 正文
 ```text
 src/
   config.ts  types.ts  content.config.ts
-  content/   blogs  about  interests  projects  friends
+  content/   blogs  about  interests  projects  friends  trips  calendar
   pages/
   layouts/   BaseLayout  BlogIndexLayout  StandardLayout
   components/

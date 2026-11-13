@@ -942,7 +942,7 @@ test('home listening ships skeletons the runtime endpoints fill', async () => {
 test('the trips page lists every trip, renders each detail and ships its map data', async () => {
   const page = await load('trips/index.html')
   const dirs = (
-    await readdir(new URL('../src/data/trips/', import.meta.url), {
+    await readdir(new URL('../src/content/trips/', import.meta.url), {
       withFileTypes: true,
     })
   )
@@ -972,7 +972,7 @@ test('the trips page lists every trip, renders each detail and ships its map dat
     assert.ok(detail && 'dataTripDetail' in detail.properties, `${id}: detail`)
     const trip = JSON.parse(
       await readFile(
-        new URL(`../src/data/trips/${id}/trip.json`, import.meta.url),
+        new URL(`../src/content/trips/${id}/trip.json`, import.meta.url),
         'utf8'
       )
     )
