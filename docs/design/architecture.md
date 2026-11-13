@@ -34,11 +34,12 @@ Astro 7 静态站。主路径是**读文章**：首页名片、写作热力与�
 | `/projects/` | 分类网格 | `src/pages/projects.mdx` | `src/content/projects/data.json` |
 | `/about/` | 作者介绍 | `src/pages/about.mdx` | `src/content/about/about.md` |
 | `/friends/` | 友链卡片 + 申请模板 | `src/pages/friends.mdx` | `src/content/friends/data.json` |
-| `/trips/` | 全屏地图、旅程面板、详情与回放；不用站点顶栏和居中版心 | `src/pages/trips/index.astro`、`src/pages/trips/map.json.ts` | `trips` 集合（`src/data/trips/<id>/trip.json`），见 [旅行](./trips.md) |
+| `/calendar/`、`/calendar/[year]/[month]/` | 按月日历、右侧时间线抽屉与窄屏时间线；不用站点顶栏和居中版心 | `src/pages/calendar/index.astro`、`src/pages/calendar/[year]/[month]/index.astro` | `calendar` 集合（`src/content/calendar/<id>/entry.md`），见 [旅行与日历](./trips.md) |
+| `/trips/` | 全屏地图、旅程与日历面板、详情与回放；不用站点顶栏和居中版心 | `src/pages/trips/index.astro`、`src/pages/trips/map.json.ts` | `trips`（`src/content/trips/<id>/trip.json`）与 `calendar` 集合，见 [旅行与日历](./trips.md) |
 | `/blogs/[slug]/` | 正文、右侧 TOC | `src/pages/blogs/[...slug].astro` | 单篇 `blogs` |
 | `/rss.xml` | 订阅源 | `src/pages/rss.xml.js` | 已发布 `blogs`（不含拾趣） |
 
-顶栏页面链接由 `src/config.ts` 的 `UI.internalNavs` 维护；更多菜单由 `MORE_LINKS` 提供友链、简历、旅行、相册及访问统计条目，友链页对应更多选中态。旅行页是全屏页，直接使用 `Head`，不经过 `BaseLayout`，没有顶栏。相册链接指向独立部署的 `https://photos.wutongyu.site/`，访问统计链接指向无需登录的 Umami 公开分享看板；两个外链均带 ↗ 并在新标签页打开。拾趣与更多下拉框最大宽度 200px。工具组读取 `UI.socialLinks` 中的本仓库 GitHub 链接，并包含搜索、配色和主题按钮。个人社交由 `AUTHOR_LINKS` 维护：首页 GitHub 指向个人主页，与 X、Instagram、Bilibili、小红书、邮箱一起展示；关于正文独立维护作者希望公开的联系方式。
+顶栏页面链接由 `src/config.ts` 的 `UI.internalNavs` 维护（文稿、标签、归档、日历、旅行、拾趣、更多）；更多菜单由 `MORE_LINKS` 提供关于、项目、友链、简历、相册及访问统计条目，站内四页均对应更多选中态。日历与旅行页是全屏页，直接使用 `Head`，不经过 `BaseLayout`，没有顶栏。相册链接指向独立部署的 `https://photos.wutongyu.site/`，访问统计链接指向无需登录的 Umami 公开分享看板；两个外链均带 ↗ 并在新标签页打开。拾趣与更多下拉框最大宽度 200px。工具组读取 `UI.socialLinks` 中的本仓库 GitHub 链接，并包含搜索、配色和主题按钮。个人社交由 `AUTHOR_LINKS` 维护：首页 GitHub 指向个人主页，与 X、Instagram、Bilibili、小红书、邮箱一起展示；关于正文独立维护作者希望公开的联系方式。
 
 `nav-path.js` 统一导航路径归一化、下拉类型和父级选中，服务端 `NavBar`／`NavItem` 与客户端共用规则；配置的尾斜杠及站点 base 不改变结果。
 
@@ -287,7 +288,7 @@ shell.css + src/styles       壳层 + 正文
 ```text
 src/
   config.ts  types.ts  content.config.ts
-  content/   blogs  about  interests  projects  friends
+  content/   blogs  about  interests  projects  friends  trips  calendar
   pages/
   layouts/   BaseLayout  BlogIndexLayout  StandardLayout
   components/

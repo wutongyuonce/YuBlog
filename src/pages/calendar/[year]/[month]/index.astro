@@ -1,0 +1,17 @@
+---
+import CalendarMonthPage from '~/components/calendar/CalendarMonthPage.astro'
+import { calendarMonths } from '~/utils/calendar.js'
+import { getCalendarEntries } from '~/utils/trip-entries'
+
+export async function getStaticPaths() {
+  const entries = await getCalendarEntries()
+  return calendarMonths(entries.map((entry) => entry.data)).map((key) => {
+    const [year, month] = key.split('-')
+    return { params: { year, month }, props: { month: key } }
+  })
+}
+
+const { month } = Astro.props
+---
+
+<CalendarMonthPage {month} />

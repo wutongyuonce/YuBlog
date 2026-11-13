@@ -356,6 +356,8 @@ test('section pages select the correct navigation parent before scripts run', ()
     [blogs, sitePath('blogs/')],
     ...articles.map((page) => [page, sitePath('blogs/')]),
     [interests, sitePath('interests/')],
+    [about, sitePath('friends/')],
+    [projects, sitePath('friends/')],
     [friends, sitePath('friends/')],
   ]) {
     const current = elements(
@@ -940,7 +942,7 @@ test('home listening ships skeletons the runtime endpoints fill', async () => {
 test('the trips page lists every trip, renders each detail and ships its map data', async () => {
   const page = await load('trips/index.html')
   const dirs = (
-    await readdir(new URL('../src/data/trips/', import.meta.url), {
+    await readdir(new URL('../src/content/trips/', import.meta.url), {
       withFileTypes: true,
     })
   )
@@ -970,7 +972,7 @@ test('the trips page lists every trip, renders each detail and ships its map dat
     assert.ok(detail && 'dataTripDetail' in detail.properties, `${id}: detail`)
     const trip = JSON.parse(
       await readFile(
-        new URL(`../src/data/trips/${id}/trip.json`, import.meta.url),
+        new URL(`../src/content/trips/${id}/trip.json`, import.meta.url),
         'utf8'
       )
     )
@@ -989,4 +991,17 @@ test('the trips page lists every trip, renders each detail and ships its map dat
     )
   }
   assert.equal(map.trips.length, dirs.length)
+  assert.ok(Array.isArray(map.years) && Array.isArray(map.calendar))
+})
+
+test('the calendar page renders the month view, timeline and view switch', async () => {
+  const page = await load('calendar/index.html')
+  assert.equal(
+    elements(page, (node) => node.properties.id === 'nav-menu-more').length,
+    0
+  )
+  const homeLink = elements(page, (node) => hasClass(node, 'calendar-home'))[0]
+  assert.equal(homeLink.properties.href, sitePath('/'))
+  const switchLinks = elements(page, (node) => hasClass(node, 'view-switch'))[0]
+  assert.ok(switchLinks, 'calendar includes the calendar/trips switch')
 })

@@ -3,6 +3,8 @@ export function normalizeNavPath(pathname) {
   return pathname.endsWith('/') ? pathname : `${pathname}/`
 }
 
+const MORE_SECTIONS = ['about', 'projects', 'friends', 'resume']
+
 /** Only these navigation entries own child pages and dropdowns.
  * @param {string} pathname
  * @param {string} [home]
@@ -12,7 +14,7 @@ export function getNavSection(pathname, home = '/') {
   const root = normalizeNavPath(home)
   if (path === `${root}blogs/`) return 'blogs'
   if (path === `${root}interests/`) return 'interests'
-  if (path === `${root}friends/` || path === `${root}resume/`) return 'more'
+  if (MORE_SECTIONS.some((name) => path === `${root}${name}/`)) return 'more'
   return null
 }
 

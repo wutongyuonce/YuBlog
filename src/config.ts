@@ -59,6 +59,20 @@ export const AUTHOR_LINKS = [
 
 export const MORE_LINKS = [
   {
+    title: '关于',
+    description: '个人介绍与联系',
+    href: '/about/',
+    icon: 'i-ri-user-smile-line',
+    external: false,
+  },
+  {
+    title: '项目',
+    description: '开源与日常造物',
+    href: '/projects/',
+    icon: 'i-ri-code-box-line',
+    external: false,
+  },
+  {
     title: '友链',
     description: '推荐与双向友链',
     href: '/friends/',
@@ -70,13 +84,6 @@ export const MORE_LINKS = [
     description: '个人经历与项目实践',
     href: '/resume/',
     icon: 'i-ri-file-user-line',
-    external: false,
-  },
-  {
-    title: '旅行',
-    description: '行程计划与地图记录',
-    href: '/trips/',
-    icon: 'i-ri-map-2-line',
     external: false,
   },
   {
@@ -116,22 +123,22 @@ export const UI: Ui = {
       text: '归档',
     },
     {
+      path: '/calendar/',
+      title: '日历',
+      displayMode: 'alwaysText',
+      text: '日历',
+    },
+    {
+      path: '/trips/',
+      title: '旅行',
+      displayMode: 'alwaysText',
+      text: '旅行',
+    },
+    {
       path: '/interests/',
       title: '拾趣',
       displayMode: 'alwaysText',
       text: '拾趣',
-    },
-    {
-      path: '/projects',
-      title: '项目',
-      displayMode: 'alwaysText',
-      text: '项目',
-    },
-    {
-      path: '/about',
-      title: '关于',
-      displayMode: 'alwaysText',
-      text: '关于',
     },
     {
       path: '/friends',

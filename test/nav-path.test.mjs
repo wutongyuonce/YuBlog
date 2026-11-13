@@ -29,9 +29,10 @@ test('More keeps friends as its real route, including base and trailing slash va
   for (const home of ['/', '/demo/']) {
     for (const target of [`${home}friends`, `${home}friends/`]) {
       assert.equal(getNavSection(target, home), 'more')
-      assert.equal(isCurrentNav(`${home}friends/`, target, home), true)
-      assert.equal(getNavSection(`${home}resume/`, home), 'more')
-      assert.equal(isCurrentNav(`${home}resume/`, target, home), true)
+      for (const section of ['about', 'projects', 'friends', 'resume']) {
+        assert.equal(getNavSection(`${home}${section}/`, home), 'more')
+        assert.equal(isCurrentNav(`${home}${section}/`, target, home), true)
+      }
       assert.equal(isCurrentNav(`${home}resume-other/`, target, home), false)
       assert.equal(isCurrentNav(`/other/resume/`, target, home), false)
       assert.equal(isCurrentNav(`${home}interests/book/`, target, home), false)

@@ -1,0 +1,1220 @@
+---
+import { Image } from 'astro:assets'
+
+import Head from '~/components/base/Head.astro'
+import CalendarEntry from '~/components/calendar/CalendarEntry.astro'
+import ViewSwitch from '~/components/calendar/ViewSwitch.astro'
+import PhotoDialog from '~/components/trips/PhotoDialog.astro'
+import { AUTHOR_DISPLAY_NAME } from '~/config'
+import {
+  WEEKDAY_LABELS,
+  calendarMonths,
+  formatMonth,
+  monthCells,
+  monthKey,
+  monthPath,
+  monthPickerGroups,
+} from '~/utils/calendar.js'
+import { withBasePath } from '~/utils/path'
+import {
+  getCalendarEntries,
+  type CalendarEntry as Entry,
+} from '~/utils/trip-entries'
+import { formatDayLabel, todayInTripZone } from '~/utils/trips.js'
+
+// 日历某一个月的视图，`/calendar/` 与 `/calendar/<年>/<月>/` 共用。
+// 横屏是周一开头的月格（参考 hyoban.cc/calendar），点记录在右侧抽屉展开本月时间线并定位；窄屏直接显示本月时间线。
+interface Props {
+  month: string
+}
+
+const { month } = Astro.props
+const allEntries = await getCalendarEntries()
+const months = calendarMonths(allEntries.map((entry) => entry.data))
+const activeMonth = month || months.at(-1) || ''
+const monthIndex = months.indexOf(activeMonth)
+const prevMonth = monthIndex > 0 ? months[monthIndex - 1] : undefined
+const nextMonth =
+  monthIndex >= 0 && monthIndex < months.length - 1
+    ? months[monthIndex + 1]
+    : undefined
+const today = todayInTripZone()
+const entries = allEntries.filter(
+  (entry) => monthKey(entry.data.date) === activeMonth
+)
+const byDate = new Map<string, Entry[]>()
+for (const entry of entries) {
+  const list = byDate.get(entry.data.date) ?? []
+  list.push(entry)
+  byDate.set(entry.data.date, list)
+}
+const cells = activeMonth ? monthCells(activeMonth) : []
+const weeks = Math.max(1, cells.length / 7)
+const days = [...byDate.entries()]
+const monthsByYear = monthPickerGroups(months, activeMonth)
+const title = activeMonth ? `日历 · ${formatMonth(activeMonth)}` : '日历'
+const pad2 = (value: number) => String(value).padStart(2, '0')
+const shortDate = (date: string) =>
+  `${Number(date.slice(5, 7))}/${Number(date.slice(8, 10))}`
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <Head {title} description="按月记录日常点滴与旅途片段。" />
+  </head>
+  <body class="calendar-body">
+    <main
+      class="calendar-page"
+      data-calendar
+      style={`--calendar-weeks: ${weeks}`}
+    >
+      <h1 class="sr-only">{title}</h1>
+      <header class="calendar-toolbar">
+        <a
+          class="calendar-home"
+          href={withBasePath('/')}
+          aria-label="回到博客首页"
+        >
+          <img
+            src={withBasePath('/avatar.webp')}
+            width="28"
+            height="28"
+            alt=""
+          />
+          <span>{AUTHOR_DISPLAY_NAME}</span>
+        </a>
+
+        {activeMonth && (
+          <nav class="month-navigation" aria-label="月份导航">
+            {prevMonth ? (
+              <a
+                class="month-navigation__arrow"
+                href={withBasePath(monthPath(prevMonth))}
+                aria-label={`上一个月：${formatMonth(prevMonth)}`}
+                title={formatMonth(prevMonth)}
+              >
+                <span class="i-ri-arrow-left-s-line" aria-hidden="true" />
+              </a>
+            ) : (
+              <span
+                class="month-navigation__arrow month-navigation__arrow--disabled"
+                aria-disabled="true"
+              >
+                <span class="i-ri-arrow-left-s-line" aria-hidden="true" />
+              </span>
+            )}
+
+            <details class="month-picker" data-calendar-picker>
+              <summary>
+                {formatMonth(activeMonth)}
+                <span class="i-ri-arrow-down-s-line" aria-hidden="true" />
+              </summary>
+              <div class="month-picker__panel">
+                {monthsByYear.map((group) => (
+                  <section class="month-picker__year">
+                    <h2>
+                      {group.year}
+                      <span
+                        class="i-ri-arrow-right-s-line"
+                        aria-hidden="true"
+                      />
+                    </h2>
+                    <div class="month-picker__months">
+                      {group.slots.map((slot) =>
+                        slot.active ? (
+                          <a
+                            href={withBasePath(monthPath(slot.key))}
+                            aria-label={`${group.year} 年 ${slot.number} 月`}
+                            aria-current={slot.current ? 'date' : undefined}
+                            class:list={[
+                              'month-picker__month',
+                              'month-picker__month--active',
+                              slot.current && 'month-picker__month--current',
+                            ]}
+                          >
+                            {slot.number}
+                          </a>
+                        ) : (
+                          <span
+                            class="month-picker__month"
+                            aria-disabled="true"
+                          >
+                            {slot.number}
+                          </span>
+                        )
+                      )}
+                    </div>
+                  </section>
+                ))}
+              </div>
+            </details>
+
+            {nextMonth ? (
+              <a
+                class="month-navigation__arrow"
+                href={withBasePath(monthPath(nextMonth))}
+                aria-label={`下一个月：${formatMonth(nextMonth)}`}
+                title={formatMonth(nextMonth)}
+              >
+                <span class="i-ri-arrow-right-s-line" aria-hidden="true" />
+              </a>
+            ) : (
+              <span
+                class="month-navigation__arrow month-navigation__arrow--disabled"
+                aria-disabled="true"
+              >
+                <span class="i-ri-arrow-right-s-line" aria-hidden="true" />
+              </span>
+            )}
+          </nav>
+        )}
+
+        <div class="calendar-toolbar__actions">
+          <ViewSwitch current="calendar" />
+        </div>
+      </header>
+
+      {!activeMonth ? (
+        <p class="calendar-empty">还没有日历记录。</p>
+      ) : (
+        <div class="calendar-stage">
+          <section
+            class="desktop-calendar"
+            aria-label={`${formatMonth(activeMonth)}月历`}
+          >
+            <div class="weekday-row" aria-hidden="true">
+              {WEEKDAY_LABELS.map((label) => (
+                <span>{label}</span>
+              ))}
+            </div>
+            <div class="calendar-grid">
+              {cells.map((cell) => {
+                if (!cell)
+                  return (
+                    <div
+                      class="calendar-day calendar-day--empty"
+                      aria-hidden="true"
+                    />
+                  )
+                const dayEntries = byDate.get(cell.date) ?? []
+                const lead = dayEntries[0]
+                const allPhotos = dayEntries.flatMap(
+                  (entry) => entry.data.photos
+                )
+                const photo = allPhotos[0]
+                const extraCount =
+                  allPhotos.length > 1
+                    ? allPhotos.length - 1
+                    : dayEntries.length - 1
+                const isToday = cell.date === today
+                if (!lead) {
+                  return (
+                    <div
+                      class:list={[
+                        'calendar-day',
+                        isToday && 'calendar-day--today',
+                      ]}
+                    >
+                      <span class="calendar-day__number">{pad2(cell.day)}</span>
+                    </div>
+                  )
+                }
+                return (
+                  <a
+                    href={`#${lead.id}`}
+                    data-calendar-open={lead.id}
+                    data-calendar-date={cell.date}
+                    class:list={[
+                      'calendar-day',
+                      'calendar-day--active',
+                      isToday && 'calendar-day--today',
+                      photo && 'calendar-day--with-media',
+                    ]}
+                    aria-label={`${formatDayLabel(cell.date)}（${dayEntries.length} 条记录）`}
+                  >
+                    {photo && (
+                      <Image
+                        class="calendar-day__img"
+                        src={photo}
+                        alt=""
+                        widths={[240, 480]}
+                        sizes="(min-width: 60rem) 10rem, calc((100vw - 2rem) / 7)"
+                        format="webp"
+                        loading="lazy"
+                      />
+                    )}
+                    <span class="calendar-day__shade" aria-hidden="true" />
+                    <span class="calendar-day__number" aria-hidden="true">
+                      {pad2(cell.day)}
+                    </span>
+                    {photo ? (
+                      <div class="calendar-day__bottom" aria-hidden="true">
+                        {lead.data.title && (
+                          <span class="calendar-day__tag">
+                            {lead.data.title}
+                          </span>
+                        )}
+                        {extraCount > 0 && (
+                          <span class="calendar-day__count">+{extraCount}</span>
+                        )}
+                      </div>
+                    ) : (
+                      <span class="calendar-day__activity" aria-hidden="true">
+                        <span class="calendar-day__dot" />
+                        {dayEntries.length}
+                      </span>
+                    )}
+                  </a>
+                )
+              })}
+            </div>
+          </section>
+
+          <aside
+            id="calendar-drawer"
+            class="calendar-drawer"
+            data-calendar-drawer
+            aria-label={`${formatMonth(activeMonth)}记录`}
+          >
+            <header class="calendar-drawer__header">
+              <div>
+                <p>{entries.length} 条记录</p>
+                <h2>{formatMonth(activeMonth)}</h2>
+              </div>
+              <button
+                class="calendar-close"
+                type="button"
+                data-calendar-close
+                aria-label="收起时间线"
+                title="收起时间线"
+              >
+                <span class="i-ri-close-line" aria-hidden="true" />
+              </button>
+            </header>
+
+            {days.length > 0 && (
+              <nav class="calendar-agenda__index" aria-label="本月有记录的日期">
+                {days.toReversed().map(([date]) => (
+                  <button
+                    type="button"
+                    data-agenda-target={`day-${date}`}
+                    aria-label={`定位到 ${formatDayLabel(date)}`}
+                  >
+                    {pad2(Number(date.slice(8)))}
+                  </button>
+                ))}
+              </nav>
+            )}
+
+            <div class="calendar-drawer__scroll" data-calendar-scroll>
+              <ol class="calendar-timeline">
+                {days.map(([date, dayEntries]) => (
+                  <li
+                    class="calendar-timeline__day"
+                    id={`day-${date}`}
+                    tabindex="-1"
+                  >
+                    <span class="calendar-timeline__dot" aria-hidden="true" />
+                    <time class="calendar-timeline__date" datetime={date}>
+                      <strong>{shortDate(date)}</strong>
+                      <span>{formatDayLabel(date).split(' ')[1]}</span>
+                    </time>
+                    <div class="calendar-timeline__entries">
+                      {dayEntries.map((entry) => (
+                        <div
+                          id={entry.id}
+                          data-calendar-target={entry.id}
+                          data-calendar-target-date={date}
+                        >
+                          <CalendarEntry {entry} />
+                        </div>
+                      ))}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      <PhotoDialog />
+    </main>
+
+    <script>
+      import { bindPhotoViewer } from '~/utils/photo-viewer'
+
+      function mountCalendar(page: HTMLElement, signal: AbortSignal) {
+        const viewer = bindPhotoViewer(page, signal)
+        const scroller = page.querySelector<HTMLElement>(
+          '[data-calendar-scroll]'
+        )
+        const picker = page.querySelector<HTMLDetailsElement>(
+          '[data-calendar-picker]'
+        )
+
+        function syncFromHash() {
+          let id = ''
+          try {
+            id = decodeURIComponent(location.hash.slice(1))
+          } catch {
+            // 编码损坏的片段按未选中处理。
+          }
+          const target = id
+            ? page.querySelector<HTMLElement>(
+                `[data-calendar-target="${CSS.escape(id)}"]`
+              )
+            : null
+          const activeDate = target?.dataset.calendarTargetDate
+          for (const node of page.querySelectorAll<HTMLElement>(
+            '[data-calendar-target]'
+          ))
+            node.toggleAttribute('data-active', node === target)
+          for (const cell of page.querySelectorAll<HTMLElement>(
+            '[data-calendar-open]'
+          ))
+            cell.toggleAttribute(
+              'data-active',
+              Boolean(activeDate && cell.dataset.calendarDate === activeDate)
+            )
+          if (!target) {
+            page.removeAttribute('data-calendar-open')
+            return
+          }
+          page.setAttribute('data-calendar-open', '')
+          // 等抽屉展开布局稳定后再滚到对应记录。
+          requestAnimationFrame(() => {
+            if (!scroller) return
+            if (getComputedStyle(scroller).overflowY === 'visible') {
+              target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              return
+            }
+            const top =
+              scroller.scrollTop +
+              target.getBoundingClientRect().top -
+              scroller.getBoundingClientRect().top -
+              16
+            scroller.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+          })
+        }
+
+        page.addEventListener(
+          'click',
+          (event) => {
+            const target = event.target as Element
+            const agendaButton = target.closest<HTMLButtonElement>(
+              '[data-agenda-target]'
+            )
+            if (agendaButton) {
+              const dayNode = document.getElementById(
+                agendaButton.dataset.agendaTarget!
+              )
+              dayNode?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              return
+            }
+            if (target.closest('[data-calendar-close]')) {
+              history.replaceState(
+                history.state,
+                '',
+                `${location.pathname}${location.search}`
+              )
+              syncFromHash()
+              return
+            }
+            const open = target.closest<HTMLAnchorElement>(
+              'a[data-calendar-open]'
+            )
+            if (
+              open &&
+              event.button === 0 &&
+              !event.metaKey &&
+              !event.ctrlKey &&
+              !event.shiftKey &&
+              !event.altKey
+            ) {
+              event.preventDefault()
+              const next = `#${open.dataset.calendarOpen}`
+              if (open.hasAttribute('data-active')) {
+                history.replaceState(
+                  history.state,
+                  '',
+                  `${location.pathname}${location.search}`
+                )
+                syncFromHash()
+              } else {
+                location.hash = next
+              }
+            }
+          },
+          { signal }
+        )
+        document.addEventListener(
+          'pointerdown',
+          (event) => {
+            const target = event.target as Node
+            if (picker?.open && !picker.contains(target)) picker.open = false
+          },
+          { signal }
+        )
+        addEventListener('hashchange', syncFromHash, { signal })
+        addEventListener(
+          'keydown',
+          (event) => {
+            if (viewer.isOpen() || event.key !== 'Escape') return
+            if (picker?.open) {
+              picker.open = false
+              picker.querySelector('summary')?.focus()
+            } else if (page.hasAttribute('data-calendar-open')) {
+              history.replaceState(
+                history.state,
+                '',
+                `${location.pathname}${location.search}`
+              )
+              syncFromHash()
+            }
+          },
+          { signal }
+        )
+        syncFromHash()
+      }
+
+      let controller: AbortController | undefined
+      let mountedPage: HTMLElement | undefined
+      function bootCalendar() {
+        const page = document.querySelector<HTMLElement>('[data-calendar]')
+        if (!page || page === mountedPage) return
+        controller?.abort()
+        mountedPage = page
+        controller = new AbortController()
+        mountCalendar(page, controller.signal)
+      }
+      document.addEventListener('astro:page-load', bootCalendar)
+      document.addEventListener('astro:before-swap', () => {
+        controller?.abort()
+        controller = undefined
+        mountedPage = undefined
+      })
+      bootCalendar()
+    </script>
+    <style is:global>
+      @media (min-width: 56.0625rem) {
+        html:has(.calendar-body),
+        .calendar-body {
+          height: 100%;
+          overflow: hidden;
+          overscroll-behavior: none;
+        }
+      }
+    </style>
+
+    <style>
+      .calendar-page {
+        --cal-border: color-mix(in srgb, var(--c-text) 12%, transparent);
+        --cal-inline: color-mix(in srgb, var(--c-text) 4.5%, var(--c-bg));
+        --cal-hover: color-mix(in srgb, var(--c-text) 8%, var(--c-bg));
+        --cal-tx-2: color-mix(in srgb, var(--c-text) 68%, var(--c-bg));
+        --cal-tx-3: color-mix(in srgb, var(--c-text) 46%, var(--c-bg));
+        --cal-glass: color-mix(in srgb, var(--c-bg) 84%, transparent);
+        --cal-drawer-width: 27rem;
+        --font-mono:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          'Liberation Mono', 'Courier New', monospace;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        width: 100%;
+        height: 100dvh;
+        padding: calc(1.5rem + env(safe-area-inset-top))
+          calc(1.5rem + env(safe-area-inset-right))
+          calc(1.5rem + env(safe-area-inset-bottom))
+          calc(1.5rem + env(safe-area-inset-left));
+        box-sizing: border-box;
+        background: var(--c-bg);
+        color: var(--c-text);
+        transition: padding-right 320ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .calendar-page[data-calendar-open] {
+        padding-right: calc(var(--cal-drawer-width) + 1.5rem);
+      }
+
+      /* —— 顶栏：左作者胶囊、中月份导航、右视图切换 —— */
+      .calendar-toolbar {
+        position: relative;
+        z-index: 20;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        width: 100%;
+        max-width: 68rem;
+        margin: 0 auto 1rem;
+      }
+
+      .calendar-home {
+        justify-self: start;
+        display: inline-flex;
+        flex-shrink: 0;
+        align-items: center;
+        gap: 0.5rem;
+        height: 2.5rem;
+        padding: 0 0.875rem 0 0.3125rem;
+        border: 1px solid var(--cal-border);
+        border-radius: 9999px;
+        background: var(--cal-glass);
+        color: var(--c-text);
+        font-size: 0.875rem;
+        font-weight: 500;
+        white-space: nowrap;
+        text-decoration: none;
+        backdrop-filter: blur(1rem);
+
+        & img {
+          flex-shrink: 0;
+          width: 1.875rem;
+          height: 1.875rem;
+          border-radius: 9999px;
+        }
+
+        &:hover {
+          background: var(--cal-hover);
+        }
+      }
+
+      .calendar-toolbar__actions {
+        justify-self: end;
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .month-navigation {
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        gap: 1.25rem;
+        white-space: nowrap;
+      }
+      .calendar-page[data-calendar-open] .month-navigation {
+        gap: 0.25rem;
+      }
+
+      .month-navigation__arrow {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 9999px;
+        color: var(--cal-tx-2);
+        text-decoration: none;
+
+        & span {
+          font-size: 1.125rem;
+        }
+
+        &:is(a):hover {
+          background: var(--cal-inline);
+          color: var(--c-text);
+        }
+      }
+
+      .month-navigation__arrow--disabled {
+        color: var(--cal-tx-3);
+        opacity: 0.35;
+      }
+
+      .month-picker {
+        position: relative;
+
+        & summary {
+          display: flex;
+          align-items: center;
+          gap: 0.375rem;
+          padding: 0.375rem 0.75rem;
+          border-radius: 9999px;
+          font-family: var(--font-mono);
+          font-size: 0.9375rem;
+          font-variant-numeric: tabular-nums;
+          list-style: none;
+          cursor: pointer;
+
+          &::-webkit-details-marker {
+            display: none;
+          }
+
+          &:hover {
+            background: var(--cal-inline);
+          }
+
+          & span {
+            color: var(--cal-tx-3);
+            font-size: 1rem;
+          }
+        }
+      }
+
+      .month-picker__panel {
+        position: absolute;
+        top: calc(100% + 0.5rem);
+        left: 50%;
+        z-index: 30;
+        width: min(22rem, calc(100vw - 2rem));
+        max-height: min(32rem, 70vh);
+        overflow-y: auto;
+        padding: 1rem;
+        border: 1px solid var(--cal-border);
+        border-radius: 0.75rem;
+        background: var(--c-bg);
+        box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.24);
+        translate: -50% 0;
+      }
+
+      .month-picker__year {
+        & + & {
+          margin-top: 1rem;
+          padding-top: 1rem;
+          border-top: 1px solid var(--cal-border);
+        }
+
+        & h2 {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.125rem;
+          margin: 0 0 0.625rem;
+          color: var(--cal-tx-2);
+          font-family: var(--font-mono);
+          font-size: 0.8125rem;
+          font-weight: 500;
+        }
+      }
+
+      .month-picker__months {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 0.25rem;
+      }
+
+      .month-picker__month {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 2rem;
+        border-radius: 0.375rem;
+        color: var(--cal-tx-3);
+        font-family: var(--font-mono);
+        font-size: 0.9375rem;
+        font-variant-numeric: tabular-nums;
+        text-decoration: none;
+
+        &:is(a):hover {
+          background: var(--cal-inline);
+        }
+      }
+
+      .month-picker__month--active {
+        color: var(--c-text);
+      }
+
+      .month-picker__month--current {
+        background: var(--cal-inline);
+        box-shadow: inset 0 0 0 1px var(--cal-border);
+      }
+
+      .calendar-empty {
+        margin: auto;
+        color: var(--cal-tx-3);
+      }
+
+      /* —— 舞台：横屏月视图 + 右侧抽屉 —— */
+      .calendar-stage {
+        position: relative;
+        min-height: 0;
+        width: 100%;
+        max-width: 68rem;
+        margin: 0 auto;
+      }
+
+      .desktop-calendar {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        height: 100%;
+        min-height: 0;
+        container-type: inline-size;
+      }
+
+      .weekday-row {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        margin-bottom: 0.625rem;
+        color: var(--cal-tx-3);
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        line-height: 1rem;
+        text-align: center;
+
+        & span:nth-last-child(-n + 2) {
+          color: var(--cal-tx-2);
+        }
+      }
+
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        grid-template-rows: repeat(var(--calendar-weeks), minmax(0, 1fr));
+        gap: 1px;
+        height: 100%;
+        min-height: 0;
+        max-height: calc(100cqw * var(--calendar-weeks) / 7);
+        overflow: hidden;
+        border: 1px solid var(--cal-border);
+        border-radius: 0.75rem;
+        background: var(--cal-border);
+      }
+
+      .calendar-day {
+        position: relative;
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+        padding: 0.75rem;
+        background: var(--c-bg);
+        color: var(--cal-tx-3);
+        font-family: var(--font-mono);
+        font-size: 0.9375rem;
+      }
+
+      .calendar-day--empty {
+        background: var(--cal-inline);
+        color: var(--cal-tx-2);
+      }
+
+      .calendar-day--active {
+        color: var(--c-text);
+        text-decoration: none;
+
+        &:hover {
+          background: var(--cal-inline);
+        }
+
+        &:focus-visible {
+          outline: 2px solid var(--c-text);
+          outline-offset: -3px;
+        }
+
+        &[data-active] {
+          z-index: 2;
+          box-shadow: inset 0 0 0 2px var(--c-text);
+        }
+      }
+
+      .calendar-day__img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: scale 180ms ease;
+
+        .calendar-day:hover & {
+          scale: 1.025;
+        }
+      }
+
+      .calendar-day__shade {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to bottom,
+          rgb(0 0 0 / 0.22),
+          transparent 45%,
+          rgb(0 0 0 / 0.36)
+        );
+        opacity: 0;
+        pointer-events: none;
+
+        .calendar-day--with-media & {
+          opacity: 1;
+        }
+      }
+
+      .calendar-day__number {
+        position: relative;
+        z-index: 1;
+
+        .calendar-day--with-media & {
+          color: #fff;
+          text-shadow: 0 1px 0.25rem rgb(0 0 0 / 0.45);
+        }
+
+        .calendar-day--today & {
+          margin: -0.125rem -0.25rem;
+          padding: 0.125rem 0.25rem;
+          border-radius: 9999px;
+          background: var(--c-text);
+          color: var(--c-bg);
+          text-shadow: none;
+        }
+      }
+
+      .calendar-day__bottom {
+        position: absolute;
+        right: 0.625rem;
+        bottom: 0.625rem;
+        left: 0.625rem;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.375rem;
+        min-width: 0;
+      }
+
+      .calendar-day__tag {
+        min-width: 0;
+        overflow: hidden;
+        padding: 0.125rem 0.375rem;
+        border-radius: 0.25rem;
+        background: rgb(0 0 0 / 0.48);
+        color: #fff;
+        font-family: var(--font-sans, inherit);
+        font-size: 0.6875rem;
+        line-height: 1.25;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        backdrop-filter: blur(6px);
+      }
+
+      .calendar-day__count {
+        flex-shrink: 0;
+        margin-left: auto;
+        color: #fff;
+        font-size: 0.6875rem;
+        text-shadow: 0 1px 0.25rem rgb(0 0 0 / 0.45);
+      }
+
+      .calendar-day__activity {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin-top: 0.375rem;
+        color: var(--cal-tx-3);
+        font-size: 0.6875rem;
+      }
+
+      .calendar-day__dot {
+        width: 0.375rem;
+        height: 0.375rem;
+        border-radius: 9999px;
+        background: var(--cal-tx-3);
+      }
+
+      /* —— 右侧时间线抽屉 —— */
+      .calendar-drawer {
+        position: fixed;
+        inset-block: 0;
+        right: 0;
+        z-index: 30;
+        display: flex;
+        flex-direction: column;
+        width: min(var(--cal-drawer-width), 100vw);
+        border-left: 1px solid var(--cal-border);
+        background: var(--c-bg);
+        box-shadow: -1rem 0 3rem rgb(0 0 0 / 0.08);
+        opacity: 0;
+        pointer-events: none;
+        translate: calc(100% + 2px) 0;
+        transition:
+          translate 320ms cubic-bezier(0.22, 1, 0.36, 1),
+          opacity 200ms ease;
+      }
+
+      .calendar-page[data-calendar-open] .calendar-drawer {
+        opacity: 1;
+        pointer-events: auto;
+        translate: 0 0;
+      }
+
+      .calendar-drawer__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 1.5rem 1.5rem 0.75rem;
+
+        & p {
+          margin: 0;
+          color: var(--cal-tx-3);
+          font-family: var(--font-mono);
+          font-size: 0.75rem;
+        }
+
+        & h2 {
+          margin: 0.125rem 0 0;
+          font-size: 1.0625rem;
+          font-weight: 600;
+        }
+      }
+
+      .calendar-close {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border: 0;
+        border-radius: 9999px;
+        background: transparent;
+        color: var(--cal-tx-2);
+        cursor: pointer;
+
+        & span {
+          font-size: 1.125rem;
+        }
+
+        &:hover {
+          background: var(--cal-inline);
+          color: var(--c-text);
+        }
+      }
+
+      .calendar-agenda__index {
+        display: none;
+      }
+
+      .calendar-drawer__scroll {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        padding: 0 1.5rem 2.5rem;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+      }
+
+      .calendar-timeline {
+        position: relative;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: 1.75rem;
+          bottom: 0;
+          left: 4.5rem;
+          width: 1px;
+          background: var(--cal-border);
+        }
+      }
+
+      .calendar-timeline__day {
+        position: relative;
+        display: grid;
+        grid-template-columns: 4.5rem minmax(0, 1fr);
+        scroll-margin-top: 5rem;
+
+        &:focus {
+          outline: none;
+        }
+      }
+
+      .calendar-timeline__dot {
+        position: absolute;
+        top: 1.625rem;
+        left: 4.5rem;
+        width: 0.4375rem;
+        height: 0.4375rem;
+        border-radius: 9999px;
+        background: var(--cal-tx-3);
+        box-shadow: 0 0 0 4px var(--c-bg);
+        translate: -50% 0;
+      }
+
+      .calendar-timeline__date {
+        position: sticky;
+        top: 0.75rem;
+        align-self: start;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        padding: 1.25rem 1rem 0 0;
+        color: var(--cal-tx-2);
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+
+        & strong {
+          font-size: 0.875rem;
+          font-weight: 500;
+          line-height: 1.25;
+        }
+
+        & span {
+          margin-top: 0.125rem;
+          color: var(--cal-tx-3);
+          font-size: 0.75rem;
+          line-height: 1;
+        }
+      }
+
+      .calendar-timeline__entries {
+        min-width: 0;
+        padding-left: 1.25rem;
+      }
+
+      .calendar-timeline__entries [data-calendar-target] {
+        padding: 0.75rem 0;
+      }
+
+      .calendar-timeline__entries [data-calendar-target][data-active] {
+        margin: 0.25rem -0.75rem;
+        padding: 0.75rem;
+        border-radius: 0.75rem;
+        background: var(--cal-inline);
+      }
+
+      @media (max-width: 72rem) {
+        .calendar-page[data-calendar-open] {
+          --cal-drawer-width: 23rem;
+        }
+        .calendar-page[data-calendar-open] .calendar-home span {
+          display: none;
+        }
+        .calendar-page[data-calendar-open] .calendar-home {
+          padding: 0 0.3125rem;
+        }
+      }
+      /* —— 窄屏（< 896px）：隐藏月格，直接展示带日期索引的时间线 —— */
+      @media (max-width: 56rem) {
+        .calendar-page,
+        .calendar-page[data-calendar-open] {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          max-width: 42rem;
+          height: auto;
+          min-height: 100dvh;
+          margin-inline: auto;
+          padding-inline: 1rem;
+        }
+
+        .calendar-toolbar {
+          display: contents;
+        }
+
+        .calendar-toolbar__actions {
+          margin-left: auto;
+        }
+
+        .month-navigation {
+          position: sticky;
+          top: 0;
+          z-index: 10;
+          order: 1;
+          flex-basis: 100%;
+          height: 2.75rem;
+          margin-top: 0.5rem;
+          background: var(--c-bg);
+          box-shadow:
+            -1rem 0 var(--c-bg),
+            1rem 0 var(--c-bg),
+            0 -0.5rem var(--c-bg);
+        }
+
+        .calendar-stage {
+          order: 2;
+          flex-basis: 100%;
+          padding-right: 0 !important;
+        }
+
+        .desktop-calendar,
+        .calendar-drawer__header {
+          display: none;
+        }
+
+        .calendar-drawer {
+          position: static;
+          width: 100%;
+          border: 0;
+          background: transparent;
+          box-shadow: none;
+          opacity: 1;
+          pointer-events: auto;
+          translate: none;
+        }
+
+        .calendar-agenda__index {
+          position: sticky;
+          top: 2.75rem;
+          z-index: 9;
+          display: flex;
+          justify-content: safe center;
+          gap: 0.5rem;
+          margin: 0.5rem 0 0;
+          padding-block: 0.25rem;
+          overflow-x: auto;
+          border-block: 1px solid var(--cal-border);
+          background: var(--c-bg);
+          box-shadow:
+            -1rem 0 var(--c-bg),
+            1rem 0 var(--c-bg),
+            -1rem -0.5rem var(--c-bg),
+            0 -0.5rem var(--c-bg),
+            1rem -0.5rem var(--c-bg);
+          scrollbar-width: none;
+
+          &::-webkit-scrollbar {
+            display: none;
+          }
+
+          & button {
+            display: flex;
+            flex: none;
+            align-items: center;
+            justify-content: center;
+            min-width: 2.5rem;
+            height: 2.5rem;
+            border: 0;
+            border-radius: 9999px;
+            background: transparent;
+            color: var(--cal-tx-2);
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            cursor: pointer;
+
+            &:hover {
+              background: var(--cal-inline);
+              color: var(--c-text);
+            }
+          }
+        }
+
+        .calendar-drawer__scroll {
+          padding: 0 0 2rem;
+          overflow: visible;
+        }
+
+        .calendar-timeline__day {
+          scroll-margin-top: 6.75rem;
+        }
+
+        .calendar-timeline__date {
+          top: 6.25rem;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .calendar-page,
+        .calendar-drawer,
+        .calendar-day__img {
+          transition: none;
+        }
+      }
+    </style>
+  </body>
+</html>

@@ -4,10 +4,11 @@ import test from 'node:test'
 import {
   buildTimeline,
   drawnRatio,
+  dwellFor,
   pointAlong,
 } from '../src/utils/trip-replay.ts'
 
-// 三站，前两段各有路径；第二段终点与第三站重合。
+// 两天三站，前两段各有路径；第二段跨天，终点与第三站重合。
 const trip = {
   id: 't',
   title: 'T',
@@ -15,13 +16,15 @@ const trip = {
   color: '#000',
   year: 2026,
   stops: [
-    { name: 'A', coordinates: [106.5, 29.5], index: 0 },
-    { name: 'B', coordinates: [106.51, 29.5], index: 1 },
-    { name: 'C', coordinates: [106.51, 29.51], index: 2 },
+    { name: 'A', coordinates: [106.5, 29.5], index: 0, day: 0, number: 1 },
+    { name: 'B', coordinates: [106.51, 29.5], index: 1, day: 0, number: 2 },
+    { name: 'C', coordinates: [106.51, 29.51], index: 2, day: 1, number: 1 },
   ],
   legs: [
     {
       from: 0,
+      day: 0,
+      mode: 'walk',
       path: [
         [106.5, 29.5],
         [106.505, 29.5],
@@ -30,6 +33,8 @@ const trip = {
     },
     {
       from: 1,
+      day: 0,
+      mode: 'flight',
       path: [
         [106.51, 29.5],
         [106.51, 29.51],
@@ -38,15 +43,21 @@ const trip = {
   ],
 }
 
-test('each stop dwells, then travels its leg along the joined path', () => {
+test('each day opens, each stop dwells, then travels its leg along the joined path', () => {
   const timeline = buildTimeline(trip, false)
   assert.deepEqual(
     timeline.steps.map((step) => `${step.kind}:${step.stop}`),
-    ['dwell:0', 'travel:0', 'dwell:1', 'travel:1', 'dwell:2']
+    ['day:0', 'dwell:0', 'travel:0', 'dwell:1', 'travel:1', 'day:2', 'dwell:2']
+  )
+  assert.deepEqual(
+    timeline.steps
+      .filter((step) => step.kind === 'travel')
+      .map((step) => step.mode),
+    ['walk', 'flight']
   )
   // 重复的衔接点只保留一次。
   assert.equal(timeline.path.length, 4)
-  const [, firstLeg, secondStop, secondLeg, lastStop] = timeline.steps
+  const [, , firstLeg, secondStop, secondLeg, , lastStop] = timeline.steps
   assert.equal(firstLeg.from, 0)
   assert.equal(secondStop.at, firstLeg.to)
   assert.equal(secondLeg.from, firstLeg.to)
@@ -58,12 +69,22 @@ test('each stop dwells, then travels its leg along the joined path', () => {
   assert.equal(timeline.total, lastStop.start + lastStop.duration)
 })
 
-test('reduced motion only dwells at each stop', () => {
+test('reduced motion skips the travel animation', () => {
   const timeline = buildTimeline(trip, true)
   assert.deepEqual(
     timeline.steps.map((step) => step.kind),
-    ['dwell', 'dwell', 'dwell']
+    ['day', 'dwell', 'dwell', 'day', 'dwell']
   )
+})
+
+test('a stop stays long enough for each photo to show once', () => {
+  assert.equal(dwellFor(0), 3000)
+  assert.equal(dwellFor(5), 7500)
+  const timeline = buildTimeline(trip, false, (index) => (index === 1 ? 4 : 0))
+  const dwell = timeline.steps.find(
+    (step) => step.kind === 'dwell' && step.stop === 1
+  )
+  assert.equal(dwell.duration, 6000)
 })
 
 test('drawn progress follows map length, so the line head stays on the marker', () => {

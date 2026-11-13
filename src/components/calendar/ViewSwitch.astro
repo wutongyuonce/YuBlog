@@ -1,0 +1,102 @@
+---
+import { withBasePath } from '~/utils/path'
+
+// 日历与旅行地图之间的切换胶囊（带滑动底色 pill，复刻 hyoban.cc 的模式切换）。
+interface Props {
+  current: 'calendar' | 'trips'
+}
+
+const { current } = Astro.props
+---
+
+<nav class="view-switch" data-mode={current} aria-label="切换日历与旅行地图">
+  <span class="view-switch__indicator" aria-hidden="true" />
+  <a
+    href={withBasePath('/calendar/')}
+    aria-current={current === 'calendar' ? 'page' : undefined}
+  >
+    <span class="i-ri-calendar-line" aria-hidden="true" />
+    日历
+  </a>
+  <a
+    href={withBasePath('/trips/')}
+    aria-current={current === 'trips' ? 'page' : undefined}
+  >
+    <span class="i-ri-map-2-line" aria-hidden="true" />
+    地图
+  </a>
+</nav>
+
+<style>
+  .view-switch {
+    --switch-pad: 0.1875rem;
+    position: relative;
+    isolation: isolate;
+    display: inline-grid;
+    flex-shrink: 0;
+    grid-template-columns: repeat(2, 1fr);
+    align-items: center;
+    height: 2.5rem;
+    padding: var(--switch-pad);
+    border: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
+    border-radius: 9999px;
+    background: color-mix(in srgb, var(--c-bg) 84%, transparent);
+    backdrop-filter: blur(1rem);
+
+    & a {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.375rem;
+      min-width: 4.25rem;
+      height: 100%;
+      padding-inline: 0.6875rem;
+      border-radius: 9999px;
+      color: color-mix(in srgb, var(--c-text) 62%, var(--c-bg));
+      font-size: 0.8125rem;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: color 160ms ease;
+
+      &:hover,
+      &[aria-current='page'] {
+        color: var(--c-text);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--c-text);
+        outline-offset: 2px;
+      }
+
+      & span {
+        font-size: 0.9375rem;
+      }
+    }
+  }
+
+  .view-switch__indicator {
+    position: absolute;
+    inset-block: var(--switch-pad);
+    left: var(--switch-pad);
+    z-index: 0;
+    width: calc((100% - var(--switch-pad) * 2) / 2);
+    border-radius: 9999px;
+    background: color-mix(in srgb, var(--c-text) 9%, var(--c-bg));
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.12);
+    pointer-events: none;
+    transition: translate 260ms cubic-bezier(0.22, 1, 0.36, 1);
+
+    .view-switch[data-mode='trips'] > & {
+      translate: 100% 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .view-switch a,
+    .view-switch__indicator {
+      transition: none;
+    }
+  }
+</style>

@@ -1,0 +1,39 @@
+{
+  "code": 0,
+  "success": true,
+  "msg": "成功",
+  "data": {
+    "routeData": [
+      {
+        "travelType": 3,
+        "public_transit_info": {
+          "steps": [
+            { "distance": "450", "name": "步行", "type": 0, "duration": "460" },
+            {
+              "name": "轨道交通9号线",
+              "type": 2,
+              "duration": "780",
+              "distance": "6190",
+              "via_num": 5,
+              "origin": "溉澜溪",
+              "destination": "观音桥"
+            },
+            {
+              "name": "步行",
+              "type": 0,
+              "duration": "1249",
+              "distance": "1082"
+            }
+          ],
+          "cost": "3元",
+          "description": "步行 7分钟->轨道交通9号线(溉澜溪-观音桥) 13分钟->步行 20分钟"
+        },
+        "originPoiId": "e6df6249b1b4382ea263f5338187bd49",
+        "destinationPoiId": "3e0082970ed84b388c67b16411acd51c",
+        "duration": 2489,
+        "paths": ["106.5694890,29.5958090;106.5299960,29.5802490"],
+        "distance": 7722
+      }
+    ]
+  }
+}

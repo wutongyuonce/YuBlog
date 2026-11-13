@@ -48,7 +48,7 @@ function createNav() {
   }
   const home = new Anchor('/blogs/', 2)
   const brand = new Anchor('/', 0, true)
-  const about = new Anchor('/about/', 220)
+  const about = new Anchor('/archives/', 220)
   const friends = new Anchor('/friends/', 274)
   const interests = new Anchor('/interests/', 110)
   const links = [home, interests, about, friends]
@@ -132,7 +132,7 @@ test('intercepted navigation previews the target before the URL changes', async 
   assert.equal(nav.indicator.style.transform, 'translateX(220px)')
   assert.equal(nav.about.getAttribute('data-nav-current'), '')
 
-  nav.location.pathname = '/about/'
+  nav.location.pathname = '/archives/'
   nav.document.dispatchEvent(new Event('astro:page-load'))
   assert.equal(nav.about.getAttribute('aria-current'), 'page')
   assert.equal(nav.home.getAttribute('aria-current'), null)
@@ -152,7 +152,7 @@ test('a load that is not this navigation landing keeps the preview', async () =>
   assert.equal(nav.about.getAttribute('data-nav-current'), '')
   assert.equal(nav.home.getAttribute('aria-current'), 'page')
 
-  nav.location.pathname = '/about/'
+  nav.location.pathname = '/archives/'
   nav.document.dispatchEvent(new Event('astro:page-load'))
   assert.equal(nav.about.getAttribute('aria-current'), 'page')
 })
@@ -195,7 +195,7 @@ test('a newer navigation wins and page-load reconciles history navigation', () =
 
 test('the brand returns Home without falsely marking the manuscript link', () => {
   const nav = createNav()
-  nav.location.pathname = '/about/'
+  nav.location.pathname = '/archives/'
   nav.document.dispatchEvent(new Event('astro:page-load'))
   nav.prepare(nav.brand)
   assert.equal(nav.about.getAttribute('aria-current'), 'page')
@@ -249,7 +249,7 @@ test('interest subpage navigation keeps the pill on its top-level parent', () =>
 test('manuscript categories and preview articles target the top-level manuscript pill', () => {
   for (const index of [1, 2]) {
     const nav = createNav()
-    nav.location.pathname = '/about/'
+    nav.location.pathname = '/archives/'
     nav.document.dispatchEvent(new Event('astro:page-load'))
     nav.prepare(nav.submenuLinks[index])
     assert.equal(nav.indicator.style.transform, 'translateX(2px)')
@@ -264,7 +264,7 @@ test('manuscript categories and preview articles target the top-level manuscript
 
 test('article links outside the header preview manuscripts before the page swaps', () => {
   const nav = createNav()
-  nav.location.pathname = '/about/'
+  nav.location.pathname = '/archives/'
   nav.document.dispatchEvent(new Event('astro:page-load'))
   // Archive, tags and recent-writing links are not descendants of the header.
   const article = new nav.home.constructor('/blogs/an-article/', 0)
@@ -280,7 +280,7 @@ test('article links outside the header preview manuscripts before the page swaps
 
 test('swapping to home reconciles the pill before the next page can paint', () => {
   const nav = createNav()
-  nav.location.pathname = '/about/'
+  nav.location.pathname = '/archives/'
   nav.document.dispatchEvent(new Event('astro:page-load'))
   nav.location.pathname = '/'
   nav.document.dispatchEvent(new Event('astro:after-swap'))
@@ -290,7 +290,7 @@ test('swapping to home reconciles the pill before the next page can paint', () =
 
 test('an older request cannot roll back a newer article under the same parent', () => {
   const nav = createNav()
-  nav.location.pathname = '/about/'
+  nav.location.pathname = '/archives/'
   nav.document.dispatchEvent(new Event('astro:page-load'))
   const old = new AbortController()
   nav.prepare(new nav.home.constructor('/blogs/first/', 0), old.signal)
@@ -329,7 +329,7 @@ test('an older queued swap cannot finish the newer destination preview', () => {
   nav.prepare(nav.about)
   nav.prepare(nav.friends)
   // The earlier swap may already be queued when the newer preparation begins.
-  nav.location.pathname = '/about/'
+  nav.location.pathname = '/archives/'
   nav.document.dispatchEvent(new Event('astro:after-swap'))
   nav.document.dispatchEvent(new Event('astro:page-load'))
   assert.equal(nav.about.getAttribute('aria-current'), 'page')

@@ -1,0 +1,95 @@
+---
+// 旅行页与日历页共用的照片对话框；行为在 `src/utils/photo-viewer.ts`。
+---
+
+<dialog class="photo-dialog" data-photo-dialog aria-label="照片">
+  <img alt="" />
+  <p></p>
+  <button class="photo-dialog__prev" type="button" aria-label="上一张">
+    <span class="i-ri-arrow-left-s-line" aria-hidden="true"></span>
+  </button>
+  <button class="photo-dialog__next" type="button" aria-label="下一张">
+    <span class="i-ri-arrow-right-s-line" aria-hidden="true"></span>
+  </button>
+  <button class="photo-dialog__close" type="button" aria-label="关闭">
+    <span class="i-ri-close-line" aria-hidden="true"></span>
+  </button>
+</dialog>
+
+<style>
+  .photo-dialog {
+    width: min(64rem, 100vw);
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #fff;
+
+    &::backdrop {
+      background: rgb(0 0 0 / 0.86);
+    }
+
+    &[open] {
+      display: grid;
+      grid-template-rows: 1fr auto;
+      place-items: center;
+    }
+
+    & img {
+      max-width: calc(100% - 7rem);
+      max-height: calc(100dvh - 5rem);
+      border-radius: 0.5rem;
+      object-fit: contain;
+    }
+
+    & p {
+      margin: 0 0 1.25rem;
+      font-size: 0.875rem;
+      opacity: 0.8;
+    }
+
+    & button {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      width: 2.75rem;
+      height: 2.75rem;
+      border: 0;
+      border-radius: 999px;
+      background: rgb(255 255 255 / 0.12);
+      color: #fff;
+      font-size: 1.375rem;
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.3;
+        cursor: default;
+      }
+
+      &:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 2px;
+      }
+    }
+  }
+
+  .photo-dialog__prev {
+    top: 50%;
+    left: 0.75rem;
+    translate: 0 -50%;
+  }
+
+  .photo-dialog__next {
+    top: 50%;
+    right: 0.75rem;
+    translate: 0 -50%;
+  }
+
+  .photo-dialog__close {
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+</style>

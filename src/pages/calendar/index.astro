@@ -1,0 +1,11 @@
+---
+import CalendarMonthPage from '~/components/calendar/CalendarMonthPage.astro'
+import { calendarMonths } from '~/utils/calendar.js'
+import { getCalendarEntries } from '~/utils/trip-entries'
+
+// `/calendar/` 直接展示最近一个有记录的月份。
+const entries = await getCalendarEntries()
+const latest = calendarMonths(entries.map((entry) => entry.data)).at(-1) ?? ''
+---
+
+<CalendarMonthPage month={latest} />

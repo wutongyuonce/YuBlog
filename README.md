@@ -27,6 +27,7 @@
 | 项目 | `/projects/` | 按分类展示项目卡片 |
 | 关于 | `/about/` | 作者介绍，维护一份 Markdown |
 | 友链 | `/friends/` | 推荐／双向友链、交换模板、留言申请 |
+| 日历 | `/calendar/` | 按月浏览日常点滴，点击格子展开时间线，地点可跳转地图 |
 | 旅行 | `/trips/` | 全屏地图上的旅行计划与记录，按天查看停靠点、照片和路线回放 |
 | 订阅 | `/rss.xml` | 订阅所有已发布博客的完整正文 |
 
@@ -72,7 +73,7 @@ dev 搜索使用模拟数据，真实 Pagefind 搜索需先构建再预览。`pn
 | 拾趣分类与配图 | `src/content/interests/<id>.md` 或 `.mdx`，配图放对应子目录 |
 | 歌单 | `src/data/playlists.json`，封面放 `src/content/interests/playlists/` |
 | 首页近期书影游 | 自动取 `src/data/media/items.json` 的待看条目 |
-| 旅行 | `pnpm trips:import '<圆周旅迹分享链接>'` 或 `--from <草稿.json>` 生成 `src/data/trips/<id>/`，见 [旅行设计](docs/design/trips.md) |
+| 旅行／日历 | `pnpm trips:import '<圆周旅迹分享链接>'` 或 `--from <草稿.json>` 生成 `src/content/trips/<id>/`；日历条目在 `src/content/calendar/<id>/entry.md`，见 [旅行与日历设计](docs/design/trips.md) |
 | 作者介绍 | `src/content/about/about.md` |
 | 项目／友链 | `src/content/projects/data.json`／`src/content/friends/data.json` |
 

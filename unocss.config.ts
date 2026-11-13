@@ -9,6 +9,7 @@ import {
 
 import { UI, INTEREST_ICONS, AUTHOR_LINKS, MORE_LINKS } from './src/config'
 import projectsData from './src/content/projects/data.json'
+import { ROUTE_MODE_ICONS } from './src/utils/trips.js'
 
 import type {
   IconNavItem,
@@ -111,6 +112,8 @@ export default defineConfig({
     ...Object.values(INTEREST_ICONS),
     ...MORE_LINKS.map(({ icon }) => icon),
     ...AUTHOR_LINKS.map(({ icon }) => icon),
+    /* 旅行页回放标记在脚本里按交通方式换图标 */
+    ...Object.values(ROUTE_MODE_ICONS),
 
     /* BaseLayout */
     'focus:not-sr-only',
@@ -119,8 +122,9 @@ export default defineConfig({
     'focus:top-1.5',
     'focus:op-20',
 
-    /* PostMeta：静态类本可被扫描覆盖；保留作防御性 safelist，防 content 扫描边界漏抽 */
+    /* PostMeta 与视图切换防御性 safelist */
     'i-ri-calendar-line',
+    'i-ri-map-2-line',
     'i-ri-history-fill',
     'i-ri-pen-nib-line',
     'i-ri-timer-line',
