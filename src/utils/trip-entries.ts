@@ -4,7 +4,7 @@
  */
 import { getCollection, type CollectionEntry } from 'astro:content'
 
-import { sortEntries } from './calendar.js'
+import { entryYear, sortEntries } from './calendar.js'
 import { tripYear, yearColors } from './trips.js'
 
 export type TripEntry = CollectionEntry<'trips'>
@@ -33,6 +33,6 @@ export async function getYearColors(): Promise<Map<number, string>> {
     ...trips.map((trip) => tripYear(trip.data)),
     ...entries
       .filter((entry) => entry.data.place)
-      .map((entry) => Number(entry.data.date.slice(0, 4))),
+      .map((entry) => entryYear(entry.data)),
   ])
 }

@@ -1,7 +1,7 @@
 import type { APIRoute, ImageMetadata } from 'astro'
 import { getImage } from 'astro:assets'
 
-import { calendarMapData } from '~/utils/calendar.js'
+import { calendarMapData, entryYear } from '~/utils/calendar.js'
 import {
   getCalendarEntries,
   getTrips,
@@ -62,7 +62,7 @@ export const GET: APIRoute = async () => {
               calendarMapData(
                 id,
                 { ...data, place: data.place },
-                colors.get(Number(data.date.slice(0, 4)))!,
+                colors.get(entryYear(data))!,
                 data.photos[0] && thumbOf(data.photos[0])
               ),
             ]

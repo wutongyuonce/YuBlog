@@ -87,7 +87,16 @@ const outline = (trip: (typeof trips)[number]) =>
           <span>{AUTHOR_DISPLAY_NAME}</span>
         </a>
         <div class="trips-toolbar__actions">
-          <ViewSwitch current="trips" />
+          <button
+            class="trips-tool"
+            type="button"
+            data-trips-fit
+            aria-label="显示全部旅程"
+            title="显示全部旅程"
+            disabled
+          >
+            <span class="i-ri-focus-3-line" aria-hidden="true"></span>
+          </button>
           <button
             class="trips-tool"
             type="button"
@@ -103,16 +112,6 @@ const outline = (trip: (typeof trips)[number]) =>
           <button
             class="trips-tool"
             type="button"
-            data-trips-fit
-            aria-label="显示全部旅程"
-            title="显示全部旅程"
-            disabled
-          >
-            <span class="i-ri-focus-3-line" aria-hidden="true"></span>
-          </button>
-          <button
-            class="trips-tool"
-            type="button"
             data-trips-panel-toggle
             aria-controls="trips-panel"
             aria-expanded="true"
@@ -121,6 +120,7 @@ const outline = (trip: (typeof trips)[number]) =>
           >
             <span class="i-ri-side-bar-line" aria-hidden="true"></span>
           </button>
+          <ViewSwitch current="trips" />
         </div>
       </header>
 
@@ -317,95 +317,117 @@ const outline = (trip: (typeof trips)[number]) =>
       )}
 
       <section class="trips-replay" data-trips-replay aria-live="polite" hidden>
-        <div class="trips-replay__media" data-replay-media hidden></div>
-        <div class="trips-replay__row">
-          <div class="trips-replay__text">
-            <p data-replay-day></p>
-            <h2>
-              <span class="trips-replay__number" data-replay-number></span>
-              <span data-replay-name></span>
-            </h2>
-            <p class="trips-replay__meta" data-replay-meta></p>
-            <p class="trips-replay__note" data-replay-note></p>
-          </div>
-          <div class="trips-replay__controls">
-            <button
-              class="trips-tool"
-              type="button"
-              data-replay-previous
-              aria-label="上一站"
-              title="上一站"
-            >
-              <span class="i-ri-skip-back-fill" aria-hidden="true"></span>
-            </button>
-            <button
-              class="trips-tool trips-replay__toggle"
-              type="button"
-              data-replay-toggle
-              aria-label="暂停"
-            >
-              <span class="i-ri-pause-fill" aria-hidden="true"></span>
-            </button>
-            <button
-              class="trips-tool"
-              type="button"
-              data-replay-next
-              aria-label="下一站"
-              title="下一站"
-            >
-              <span class="i-ri-skip-forward-fill" aria-hidden="true"></span>
-            </button>
-            <button
-              class="trips-tool trips-replay__speed"
-              type="button"
-              data-replay-speed
-              aria-label="倍速 1x"
-              title="切换倍速"
-            >
-              1x
-            </button>
-            <button
-              class="trips-tool"
-              type="button"
-              data-replay-exit
-              aria-label="退出回放"
-              title="退出回放"
-            >
-              <span class="i-ri-close-line" aria-hidden="true"></span>
-            </button>
-          </div>
+        <ol
+          class="trips-replay__progress"
+          data-replay-progress
+          aria-label="回放进度"
+        ></ol>
+        <header class="trips-replay__header">
+          <p data-replay-day></p>
+          <h2>
+            <span class="trips-replay__number" data-replay-number></span>
+            <span data-replay-name></span>
+          </h2>
+          <p class="trips-replay__meta" data-replay-meta></p>
+        </header>
+        <div class="trips-replay__body">
+          <div class="trips-replay__media" data-replay-media hidden></div>
+          <p class="trips-replay__note" data-replay-note></p>
         </div>
+        <footer class="trips-replay__controls">
+          <button
+            class="trips-tool"
+            type="button"
+            data-replay-previous
+            aria-label="上一站"
+            title="上一站"
+          >
+            <span class="i-ri-skip-back-fill" aria-hidden="true"></span>
+          </button>
+          <button
+            class="trips-tool trips-replay__toggle"
+            type="button"
+            data-replay-toggle
+            aria-label="暂停"
+          >
+            <span class="i-ri-pause-fill" aria-hidden="true"></span>
+          </button>
+          <button
+            class="trips-tool"
+            type="button"
+            data-replay-next
+            aria-label="下一站"
+            title="下一站"
+          >
+            <span class="i-ri-skip-forward-fill" aria-hidden="true"></span>
+          </button>
+          <button
+            class="trips-tool trips-replay__speed"
+            type="button"
+            data-replay-speed
+            aria-label="倍速 1x"
+            title="切换倍速"
+          >
+            1x
+          </button>
+          <button
+            class="trips-tool"
+            type="button"
+            data-replay-exit
+            aria-label="退出回放"
+            title="退出回放"
+          >
+            <span class="i-ri-close-line" aria-hidden="true"></span>
+          </button>
+        </footer>
       </section>
 
       <PhotoDialog />
     </main>
 
     <script>
-      import 'maplibre-gl/dist/maplibre-gl.css'
-
       import { mountTripsPage } from '~/utils/trips-page'
 
       let controller: AbortController | undefined
-      document.addEventListener('astro:page-load', () => {
-        controller?.abort()
-        controller = undefined
+      let mountedPage: HTMLElement | undefined
+      function bootTrips() {
         const page = document.querySelector<HTMLElement>('[data-trips]')
-        if (!page) return
+        if (!page || page === mountedPage) return
+        controller?.abort()
+        mountedPage = page
         controller = new AbortController()
         mountTripsPage(page, controller.signal)
-      })
+      }
+      document.addEventListener('astro:page-load', bootTrips)
       document.addEventListener('astro:before-swap', () => {
         controller?.abort()
         controller = undefined
+        mountedPage = undefined
       })
+      bootTrips()
     </script>
     <style is:global>
+      @import 'maplibre-gl/dist/maplibre-gl.css';
       /* 地图与面板占满视口，不跟随正文滚动。 */
       html:has(.trips-body),
       .trips-body {
         height: 100%;
         overflow: hidden;
         overscroll-behavior: none;
+      }
+
+      @media (min-width: 48.0625rem) {
+        .trips-page[data-trips-replaying] .maplibregl-ctrl-bottom-left {
+          left: calc(min(22.5rem, 100vw - 2rem) + 1.25rem);
+        }
+      }
+      @media (max-width: 48rem) {
+        .trips-page[data-trips-replaying] .maplibregl-ctrl-bottom-left {
+          display: none;
+        }
+      }
+      .trips-popup {
+        pointer-events: none;
       }
 
       .trips-popup .maplibregl-popup-content {
@@ -431,137 +453,252 @@ const outline = (trip: (typeof trips)[number]) =>
       }
 
       .trips-replay-head {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 6;
+        width: 0;
+        height: 0;
+        pointer-events: none;
+      }
+
+      .trips-replay-head__badge {
+        position: absolute;
+        top: -0.5625rem;
+        left: -0.5625rem;
         display: grid;
         place-items: center;
         width: 1.125rem;
         height: 1.125rem;
-        border: 3px solid #fff;
+        border: 2.5px solid #fff;
         border-radius: 999px;
         background: var(--trip-color);
-        box-shadow: 0 0 0 6px
-          color-mix(in srgb, var(--trip-color) 30%, transparent);
+        box-shadow: 0 2px 8px rgb(0 0 0 / 0.28);
         color: #fff;
         transition:
-          width 200ms ease,
-          height 200ms ease;
+          top 180ms ease,
+          left 180ms ease,
+          width 180ms ease,
+          height 180ms ease;
       }
 
-      /* 路上时换成交通方式的图标。 */
-      .trips-replay-head--moving {
-        width: 2.125rem;
-        height: 2.125rem;
-        border-width: 2px;
-        font-size: 1.125rem;
+      /* 路上时换成交通方式的图标圆章（复刻图 3）。 */
+      .trips-replay-head--moving .trips-replay-head__badge {
+        top: -0.875rem;
+        left: -0.875rem;
+        width: 1.75rem;
+        height: 1.75rem;
+        border: 2px solid var(--c-bg);
+        background: var(--c-text);
+        color: var(--c-bg);
+        font-size: 0.9375rem;
+      }
+
+      .trips-replay-head__clock {
+        position: absolute;
+        top: 0;
+        left: 1.125rem;
+        display: grid;
+        gap: 0.0625rem;
+        width: max-content;
+        padding: 0.3125rem 0.625rem 0.375rem;
+        border: 1px solid color-mix(in srgb, var(--c-text) 14%, transparent);
+        border-radius: 0.625rem;
+        background: color-mix(in srgb, var(--c-bg) 94%, transparent);
+        box-shadow: 0 4px 20px rgb(0 0 0 / 0.16);
+        color: var(--c-text);
+        line-height: 1.3;
+        white-space: nowrap;
+        translate: 0 -50%;
+        backdrop-filter: blur(12px);
+      }
+
+      .trips-replay-head__clock[hidden] {
+        display: none;
+      }
+
+      .trips-replay-head__clock small {
+        color: color-mix(in srgb, var(--c-text) 56%, var(--c-bg));
+        font-size: 0.6875rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .trips-replay-head__clock strong {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .trips-stop-label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 5;
+        padding: 0.375rem 0.75rem;
+        border: 1px solid color-mix(in srgb, var(--c-text) 14%, transparent);
+        border-radius: 0.625rem;
+        background: color-mix(in srgb, var(--c-bg) 94%, transparent);
+        box-shadow: 0 4px 20px rgb(0 0 0 / 0.16);
+        color: var(--c-text);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        line-height: 1.35;
+        white-space: nowrap;
+        pointer-events: none;
+        backdrop-filter: blur(12px);
       }
 
       /*
-       * 地图上的地点标记：有照片时是带白框的缩略图和年份色点，没有时是年份色圆点；
-       * 聚合是叠起来的一摞加数字。MapLibre 用 transform 定位，放大只用 scale。
+       * 地图上的地点标记：根元素保持 0×0（不覆盖邻近点，也不在 MapLibre 的定位元素上做缩放），
+       * 视觉子元素居中在锚点上：单张带白框与右下角年份色点，聚合是三张扇形叠片加右上角计数。
        */
+      /* 必须保持 position: absolute（由 .maplibregl-marker 提供），绝不能写 position: relative。 */
       .trips-pin {
-        position: relative;
-        display: grid;
-        place-items: center;
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: block;
+        width: 0;
+        height: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+      }
+
+      .trips-pin--cluster {
+        width: 2.5rem;
+        height: 2.5rem;
+      }
+
+      .trips-pin:focus-visible {
+        outline: none;
+      }
+
+      .trips-pin > span {
+        transition:
+          transform 200ms cubic-bezier(0.34, 1.4, 0.64, 1),
+          box-shadow 160ms ease;
+      }
+
+      .trips-pin:is(:hover, :focus-visible) {
+        z-index: 3;
+      }
+
+      .trips-pin:is(:hover, :focus-visible)
+        > :is(.trips-pin__photo, .trips-pin__dot, .trips-pin__stack) {
+        transform: scale(1.12);
+      }
+
+      .trips-pin__dot {
+        position: absolute;
+        top: -0.5rem;
+        left: -0.5rem;
+        display: block;
         width: 1rem;
         height: 1rem;
-        padding: 0;
         border: 2px solid #fff;
         border-radius: 999px;
         background: var(--trip-color);
         box-shadow: 0 1px 4px rgb(0 0 0 / 0.3);
-        cursor: pointer;
-        transition: scale 140ms ease;
-
-        &:hover,
-        &:focus-visible {
-          z-index: 2;
-          scale: 1.1;
-        }
-
-        &:focus-visible {
-          outline: 2px solid var(--trip-color);
-          outline-offset: 2px;
-        }
-
-        & img {
-          width: 100%;
-          height: 100%;
-          border-radius: 0.375rem;
-          object-fit: cover;
-        }
       }
 
-      .trips-pin--photo {
-        width: 2.875rem;
-        height: 2.875rem;
-        border-width: 3px;
+      .trips-pin__photo {
+        position: relative;
+        display: block;
+        width: 2.25rem;
+        height: 2.25rem;
+        border: 2px solid #fff;
         border-radius: 0.625rem;
         background: #fff;
-        box-shadow: 0 3px 10px rgb(0 0 0 / 0.28);
-
-        &::after {
-          position: absolute;
-          right: -0.375rem;
-          bottom: -0.375rem;
-          width: 0.75rem;
-          height: 0.75rem;
-          border: 2px solid #fff;
-          border-radius: 999px;
-          background: var(--trip-color);
-          content: '';
-        }
+        box-shadow:
+          0 1px 6px rgb(0 0 0 / 0.3),
+          0 0 0 0.5px rgb(0 0 0 / 0.12);
       }
 
-      .trips-pin--cluster {
-        width: 2.125rem;
-        height: 2.125rem;
+      .trips-pin > .trips-pin__photo {
+        position: absolute;
+        top: -1.125rem;
+        left: -1.125rem;
+      }
 
-        &.trips-pin--photo {
-          width: 3.125rem;
-          height: 3.125rem;
-          /* 后面叠着的两张。 */
-          box-shadow:
-            4px -4px 0 -1px #fff,
-            4px -4px 0 0 rgb(0 0 0 / 0.12),
-            8px -8px 0 -2px #fff,
-            8px -8px 0 -1px rgb(0 0 0 / 0.1),
-            0 3px 10px rgb(0 0 0 / 0.28);
-        }
+      .trips-pin__photo img,
+      .trips-pin__face {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 0.5rem;
+        background: var(--trip-color);
+        object-fit: cover;
+      }
+
+      .trips-pin__year {
+        position: absolute;
+        right: -0.3125rem;
+        bottom: -0.3125rem;
+        width: 0.625rem;
+        height: 0.625rem;
+        border: 1.5px solid #fff;
+        border-radius: 999px;
+        background: var(--trip-color);
+        box-shadow: 0 0 2px rgb(0 0 0 / 0.25);
+      }
+
+      .trips-pin__stack {
+        position: relative;
+        display: block;
+        width: 2.5rem;
+        height: 2.5rem;
+      }
+
+      .trips-pin__stack > .trips-pin__photo {
+        position: absolute;
+        inset: 0;
+        width: auto;
+        height: auto;
+      }
+
+      .trips-pin__stack > .trips-pin__photo:nth-last-child(3) {
+        transform: translate(0.5625rem, -0.1875rem) rotate(10deg) scale(0.86);
+      }
+
+      .trips-pin__stack > .trips-pin__photo:nth-last-child(2) {
+        transform: translate(-0.5rem, -0.125rem) rotate(-9deg) scale(0.9);
       }
 
       .trips-pin__count {
         position: absolute;
-        top: -0.625rem;
+        top: -0.5rem;
         right: -0.625rem;
-        display: grid;
-        place-items: center;
-        min-width: 1.375rem;
-        height: 1.375rem;
-        padding: 0 0.3125rem;
+        min-width: 1.125rem;
+        height: 1.125rem;
+        padding: 0 0.25rem;
+        border: 1.5px solid #fff;
         border-radius: 999px;
-        background: var(--c-text);
-        color: var(--c-bg);
-        font-size: 0.6875rem;
+        background: var(--trip-color);
+        box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
+        color: #fff;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.625rem;
         font-weight: 600;
+        line-height: calc(1.125rem - 3px);
+        text-align: center;
         font-variant-numeric: tabular-nums;
-
-        .trips-pin--cluster:not(.trips-pin--photo) & {
-          position: static;
-          background: none;
-          color: #fff;
-        }
       }
 
       .trips-pin.is-active {
-        z-index: 3;
-        scale: 1.15;
+        z-index: 4;
+      }
+
+      .trips-pin.is-active > :is(.trips-pin__photo, .trips-pin__dot) {
+        transform: scale(1.18);
         box-shadow:
           0 0 0 3px var(--trip-color),
           0 3px 10px rgb(0 0 0 / 0.28);
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .trips-pin,
+        .trips-pin > span,
         .trips-replay-head {
           transition: none;
         }
@@ -589,6 +726,8 @@ const outline = (trip: (typeof trips)[number]) =>
       .trips-canvas {
         position: absolute;
         inset: 0;
+        z-index: 0;
+        isolation: isolate;
       }
 
       .trips-message {
@@ -636,19 +775,22 @@ const outline = (trip: (typeof trips)[number]) =>
 
       .trips-home {
         display: inline-flex;
+        flex-shrink: 0;
         align-items: center;
         gap: 0.5rem;
-        height: 2.75rem;
-        padding: 0 1rem 0 0.375rem;
+        height: 2.5rem;
+        padding: 0 0.875rem 0 0.3125rem;
         border-radius: 999px;
         color: var(--c-text);
-        font-size: 0.9375rem;
+        font-size: 0.875rem;
         font-weight: 500;
+        white-space: nowrap;
         text-decoration: none;
 
         & img {
-          width: 2rem;
-          height: 2rem;
+          flex-shrink: 0;
+          width: 1.875rem;
+          height: 1.875rem;
           border-radius: 999px;
         }
 
@@ -659,6 +801,8 @@ const outline = (trip: (typeof trips)[number]) =>
 
       .trips-toolbar__actions {
         display: flex;
+        flex-shrink: 0;
+        align-items: center;
         gap: 0.5rem;
       }
 
@@ -666,8 +810,8 @@ const outline = (trip: (typeof trips)[number]) =>
         display: grid;
         flex-shrink: 0;
         place-items: center;
-        width: 2.75rem;
-        height: 2.75rem;
+        width: 2.5rem;
+        height: 2.5rem;
         border-radius: 999px;
         color: color-mix(in srgb, var(--c-text) 72%, var(--c-bg));
         cursor: pointer;
@@ -1054,19 +1198,23 @@ const outline = (trip: (typeof trips)[number]) =>
       /* —— 图例 —— */
       .trips-legend {
         position: absolute;
-        bottom: calc(1.5rem + env(safe-area-inset-bottom));
+        bottom: calc(2.25rem + env(safe-area-inset-bottom));
         left: 50%;
-        z-index: 1;
+        z-index: 2;
         display: flex;
         align-items: center;
         gap: 0.625rem;
+        max-width: calc(100% - var(--trips-panel-width) - 3.5rem);
         padding: 0.25rem 0.875rem 0.25rem 0.25rem;
+        overflow-x: auto;
         border: 1px solid var(--trips-glass-border);
         border-radius: 999px;
         background: var(--trips-glass);
         color: color-mix(in srgb, var(--c-text) 72%, var(--c-bg));
         font-size: 0.8125rem;
+        white-space: nowrap;
         translate: calc(-50% - (var(--trips-panel-width) + 2rem) / 2) 0;
+        scrollbar-width: none;
         backdrop-filter: blur(14px);
 
         & ul {
@@ -1194,22 +1342,21 @@ const outline = (trip: (typeof trips)[number]) =>
         font-size: 0.8125rem;
       }
 
-      /* —— 回放卡片：横屏照片在左，竖屏照片在上 —— */
+      /* —— 回放面板：复刻参考博客左下角纵向卡片（窄屏在底部） —— */
       .trips-replay {
         position: absolute;
-        bottom: calc(1.5rem + env(safe-area-inset-bottom));
-        left: 50%;
-        z-index: 3;
+        bottom: calc(1rem + env(safe-area-inset-bottom));
+        left: calc(1rem + env(safe-area-inset-left));
+        z-index: 10;
         display: flex;
-        gap: 0.875rem;
-        width: min(44rem, calc(100% - 2rem));
-        max-height: calc(100dvh - 7rem);
-        padding: 0.75rem;
+        flex-direction: column;
+        width: min(22.5rem, calc(100% - 2rem));
+        max-height: calc(100dvh - 6rem);
+        overflow: hidden;
         border: 1px solid var(--trips-glass-border);
-        border-radius: 1.125rem;
-        background: color-mix(in srgb, var(--c-bg) 94%, transparent);
-        box-shadow: 0 12px 40px rgb(0 0 0 / 0.16);
-        translate: -50% 0;
+        border-radius: 0.875rem;
+        background: color-mix(in srgb, var(--c-bg) 96%, transparent);
+        box-shadow: 0 1.5rem 5rem rgb(0 0 0 / 0.18);
         backdrop-filter: blur(18px);
 
         &[hidden] {
@@ -1221,14 +1368,16 @@ const outline = (trip: (typeof trips)[number]) =>
           align-items: center;
           gap: 0.5rem;
           margin: 0.125rem 0 0;
-          font-size: 1rem;
+          font-size: 1.0625rem;
           font-weight: 600;
+          line-height: 1.4;
         }
 
         & p {
           margin: 0;
           color: var(--trips-muted);
-          font-size: 0.8125rem;
+          font-size: 0.75rem;
+          line-height: 1.25;
         }
 
         & [hidden] {
@@ -1236,87 +1385,143 @@ const outline = (trip: (typeof trips)[number]) =>
         }
       }
 
-      .trips-replay__media {
+      .trips-replay__progress {
+        display: flex;
         flex-shrink: 0;
-        width: 15rem;
+        gap: 0.1875rem;
+        margin: 0;
+        padding: 0.75rem 1rem 0;
+        list-style: none;
+      }
 
-        & button {
-          display: block;
-          width: 100%;
-          padding: 0;
-          overflow: hidden;
-          border: 0;
-          border-radius: 0.5rem;
-          background: var(--trips-hover);
-          cursor: zoom-in;
+      .trips-replay :global(.trips-replay__progress-item) {
+        flex: 1 1 0%;
+        min-width: 0;
+      }
 
-          &:focus-visible {
-            outline: 2px solid var(--c-text);
-            outline-offset: 2px;
-          }
-        }
+      .trips-replay :global(.trips-replay__progress-btn) {
+        display: block;
+        width: 100%;
+        margin: -0.375rem 0;
+        padding: 0.375rem 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+      }
 
-        & img {
-          display: block;
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
+      .trips-replay :global(.trips-replay__progress-bar) {
+        display: block;
+        height: 0.125rem;
+        overflow: hidden;
+        border-radius: 999px;
+        background: var(--trips-line);
+      }
+
+      .trips-replay :global(.trips-replay__progress-fill) {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background: var(--c-text);
+        transform: scaleX(0);
+        transform-origin: left;
+      }
+
+      .trips-replay__header {
+        flex-shrink: 0;
+        padding: 0.625rem 1rem 0.25rem;
+      }
+
+      .trips-replay__meta {
+        margin-top: 0.125rem !important;
+      }
+
+      .trips-replay__body {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-height: 0;
+        padding: 0.375rem 1rem 0.75rem;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: none;
+      }
+
+      .trips-replay__media {
+        width: 100%;
+      }
+
+      .trips-replay__media :global(button) {
+        display: block;
+        width: 100%;
+        padding: 0;
+        overflow: hidden;
+        border: 0;
+        border-radius: 0.5rem;
+        background: var(--trips-hover);
+        cursor: zoom-in;
+      }
+
+      .trips-replay__media :global(button:focus-visible) {
+        outline: 2px solid var(--c-text);
+        outline-offset: 2px;
+      }
+
+      .trips-replay__media :global(img) {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        object-fit: cover;
       }
 
       .trips-replay__media.is-grid {
         display: grid;
         grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
-        align-content: start;
         gap: 0.25rem;
-
-        & button {
-          aspect-ratio: 1;
-        }
-
-        & button:only-child {
-          aspect-ratio: 4 / 3;
-        }
       }
 
-      .trips-replay__main {
+      .trips-replay__media.is-grid :global(.trips-replay__grid-btn) {
+        aspect-ratio: 1;
+        transition: opacity 150ms ease;
+      }
+
+      .trips-replay__media.is-grid :global(.trips-replay__grid-btn:only-child) {
         aspect-ratio: 4 / 3;
+        max-height: 14rem;
       }
 
-      .trips-replay__strip {
+      .trips-replay__media.is-grid
+        :global(.trips-replay__grid-btn[aria-current]) {
+        box-shadow: inset 0 0 0 2px var(--c-text);
+      }
+
+      .trips-replay :global(.trips-replay__main) {
+        aspect-ratio: 4 / 3;
+        max-height: 14rem;
+      }
+
+      .trips-replay :global(.trips-replay__strip) {
         display: flex;
         gap: 0.25rem;
         margin-top: 0.375rem;
         overflow-x: auto;
         scrollbar-width: none;
-
-        & button {
-          flex: none;
-          width: 2.5rem;
-          height: 2.5rem;
-          border-radius: 0.375rem;
-          cursor: pointer;
-          opacity: 0.55;
-          transition: opacity 140ms ease;
-
-          &[aria-current] {
-            opacity: 1;
-            box-shadow: inset 0 0 0 2px var(--c-text);
-          }
-        }
       }
 
-      .trips-replay__row {
-        display: flex;
-        flex: 1;
-        flex-direction: column;
-        gap: 0.75rem;
-        min-width: 0;
+      .trips-replay :global(.trips-replay__strip button) {
+        flex: none;
+        width: 2.625rem;
+        height: 2.625rem;
+        border-radius: 0.375rem;
+        cursor: pointer;
+        opacity: 0.55;
+        transition: opacity 140ms ease;
       }
 
-      .trips-replay__text {
-        flex: 1;
-        min-width: 0;
+      .trips-replay :global(.trips-replay__strip button[aria-current]) {
+        opacity: 1;
+        outline: 2px solid var(--c-text);
+        outline-offset: -2px;
       }
 
       .trips-replay[data-replay-kind='day'] h2 {
@@ -1337,24 +1542,32 @@ const outline = (trip: (typeof trips)[number]) =>
       }
 
       .trips-replay .trips-replay__note {
-        display: -webkit-box;
-        margin-top: 0.25rem;
-        overflow: hidden;
         color: var(--c-text);
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2;
+        font-size: 0.8125rem;
+        line-height: 1.5;
+        white-space: pre-line;
       }
 
       .trips-replay__controls {
         display: flex;
+        flex-shrink: 0;
         align-items: center;
-        gap: 0.375rem;
+        gap: 0.25rem;
+        padding: 0.375rem 0.625rem;
+        border-top: 1px solid var(--trips-glass-border);
+        background: color-mix(in srgb, var(--c-bg) 96%, transparent);
 
         & .trips-tool {
-          width: 2.25rem;
-          height: 2.25rem;
+          width: 2.125rem;
+          height: 2.125rem;
+          border: 0;
+          background: transparent;
           box-shadow: none;
           backdrop-filter: none;
+        }
+
+        & .trips-tool:hover:not(:disabled) {
+          background: var(--trips-hover);
         }
 
         & .trips-replay__toggle {
@@ -1362,6 +1575,7 @@ const outline = (trip: (typeof trips)[number]) =>
           color: var(--c-bg);
 
           &:hover:not(:disabled) {
+            background: var(--c-text);
             color: var(--c-bg);
             opacity: 0.88;
           }
@@ -1369,18 +1583,35 @@ const outline = (trip: (typeof trips)[number]) =>
 
         & .trips-replay__speed {
           width: auto;
-          min-width: 2.75rem;
+          min-width: 2.5rem;
+          margin-left: auto;
           padding: 0 0.5rem;
           font: inherit;
           font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
           font-size: 0.75rem;
         }
-
-        & [data-replay-exit] {
-          margin-left: auto;
-        }
       }
 
+      /* —— 中等屏（769px–992px）：面板展开时收紧宽度与左上角文字，防顶栏挤压 —— */
+      @media (max-width: 62rem) {
+        .trips-page {
+          --trips-panel-width: min(22.5rem, 42vw);
+        }
+      }
+      @media (max-width: 58rem) {
+        .trips-page:not([data-trips-collapsed], [data-trips-replaying])
+          .trips-home
+          span {
+          display: none;
+        }
+        .trips-page:not([data-trips-collapsed], [data-trips-replaying])
+          .trips-home {
+          padding: 0 0.3125rem;
+        }
+        .trips-page:not([data-trips-collapsed]) .trips-legend__routes {
+          display: none !important;
+        }
+      }
       /* —— 窄屏：面板成为底部面板 —— */
       @media (max-width: 48rem) {
         .trips-page {
@@ -1440,28 +1671,18 @@ const outline = (trip: (typeof trips)[number]) =>
         }
 
         .trips-replay {
+          right: calc(0.75rem + env(safe-area-inset-right));
           bottom: calc(0.75rem + env(safe-area-inset-bottom));
-          flex-direction: column;
-          gap: 0.625rem;
-        }
-
-        .trips-replay__media {
-          width: 100%;
-        }
-
-        .trips-replay__main {
-          aspect-ratio: 16 / 10;
-          max-height: 32dvh;
-        }
-
-        .trips-replay__media.is-grid button:only-child {
-          aspect-ratio: 16 / 10;
-          max-height: 32dvh;
+          left: calc(0.75rem + env(safe-area-inset-left));
+          width: auto;
+          max-height: 54dvh;
         }
 
         /* 窄屏只留切换胶囊的图标。 */
         .trips-toolbar :global(.view-switch a) {
-          padding: 0 0.625rem;
+          min-width: 2.25rem;
+          gap: 0;
+          padding: 0 0.5rem;
           font-size: 0;
 
           & span {

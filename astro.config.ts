@@ -81,7 +81,7 @@ export default defineConfig({
       // 默认 500KB
     },
     optimizeDeps: {
-      include: ['@excalidraw/excalidraw'],
+      include: ['@excalidraw/excalidraw', 'maplibre-gl'],
     },
   },
 

@@ -4,10 +4,13 @@ import test from 'node:test'
 import {
   collageImages,
   dayDistance,
+  defaultTravelMode,
+  findBetweenMarks,
   formatDateRange,
   formatDayLabel,
   formatKilometers,
   formatStopTime,
+  getReadingOffset,
   routeSummary,
   xhsSearchUrl,
   todayInTripZone,
@@ -175,4 +178,29 @@ test('map data numbers stops within each day and keeps legs with their day', () 
     ]
   )
   assert.equal(data.color, '#123456')
+})
+
+test('reading offset catches up to the last stop at the bottom of the panel', () => {
+  const offset = getReadingOffset({
+    end: 1950,
+    maxScroll: 1200,
+    readingLine: 300,
+    scrollTop: 1200,
+    viewport: 800,
+  })
+  assert.equal(offset, 1950)
+  assert.deepEqual(findBetweenMarks([100, 400, 900], 50), {
+    index: -1,
+    fraction: 0,
+  })
+  assert.deepEqual(findBetweenMarks([100, 400, 900], 250), {
+    index: 0,
+    fraction: 0.5,
+  })
+  assert.deepEqual(findBetweenMarks([100, 400, 900], 950), {
+    index: 1,
+    fraction: 1,
+  })
+  assert.equal(defaultTravelMode([106.5, 29.5], [106.505, 29.5]), 'walk')
+  assert.equal(defaultTravelMode([106.5, 29.5], [106.7, 29.5]), 'drive')
 })

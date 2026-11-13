@@ -5,13 +5,13 @@
  */
 import type {
   ExpressionSpecification,
+  GeoJSONSource,
   Marker,
   PaddingOptions,
 } from 'maplibre-gl'
 
 import { haversine as distance } from './geo.mjs'
 import type { TripGeo, TripMap } from './trip-map'
-import { ROUTE_MODE_ICONS } from './trips.js'
 
 /** 每张照片在卡片上停留的时长；站点停留至少 `MIN_DWELL_MS`，照片多时按张数延长。 */
 export const PHOTO_MS = 1500
@@ -25,6 +25,8 @@ export const SPEEDS = [1, 1.5, 2] as const
 const LINE_SOURCE = 'trips-replay'
 const LINE_LAYER = 'trips-replay'
 const PLANNED_LAYER = 'trips-replay-planned'
+const STOPS_SOURCE = 'trips-replay-stops'
+const STOPS_LAYER = 'trips-replay-stops'
 
 type Step =
   | {
@@ -212,6 +214,8 @@ export interface ReplayOptions {
   onDay: (day: number) => void
   /** 到达某站（停留开始）。 */
   onStop: (index: number) => void
+  /** 当前站及该站时段（停留+路途）的完成比例（0–1），用于更新进度条。 */
+  onProgress?: (stop: number, ratio: number) => void
   onPlayingChange: (playing: boolean) => void
   onEnd: () => void
 }
@@ -222,15 +226,19 @@ export async function createReplay(options: ReplayOptions) {
   const maplibregl = await import('maplibre-gl')
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
   const timeline = buildTimeline(trip, reducedMotion, options.photosOf)
-  const head = document.createElement('span')
-  head.className = 'trips-replay-head'
-  head.style.setProperty('--trip-color', trip.color)
-  const icon = document.createElement('span')
-  icon.setAttribute('aria-hidden', 'true')
-  head.append(icon)
-  const marker: Marker = new maplibregl.Marker({ element: head }).setLngLat(
-    timeline.path[0]
-  )
+  const head = tripMap.createRouteHead()
+  head.set({ color: trip.color })
+  const marker: Marker = new maplibregl.Marker({
+    anchor: 'center',
+    element: head.element,
+  }).setLngLat(timeline.path[0])
+  const stopLabelEl = document.createElement('span')
+  stopLabelEl.className = 'trips-stop-label'
+  const stopLabelMarker: Marker = new maplibregl.Marker({
+    anchor: 'top',
+    offset: [0, 14],
+    element: stopLabelEl,
+  })
 
   let elapsed = 0
   let startedAt = 0
@@ -240,7 +248,20 @@ export async function createReplay(options: ReplayOptions) {
   let finished = false
   let speed = 1
 
+  function stopFeatures(reached: number) {
+    return {
+      type: 'FeatureCollection' as const,
+      features: trip.stops.map((stop) => ({
+        type: 'Feature' as const,
+        properties: { visited: stop.index <= reached },
+        geometry: { type: 'Point' as const, coordinates: stop.coordinates },
+      })),
+    }
+  }
+
   function removeLayers() {
+    if (map.getLayer(STOPS_LAYER)) map.removeLayer(STOPS_LAYER)
+    if (map.getSource(STOPS_SOURCE)) map.removeSource(STOPS_SOURCE)
     if (map.getLayer(LINE_LAYER)) map.removeLayer(LINE_LAYER)
     if (map.getLayer(PLANNED_LAYER)) map.removeLayer(PLANNED_LAYER)
     if (map.getSource(LINE_SOURCE)) map.removeSource(LINE_SOURCE)
@@ -288,12 +309,28 @@ export async function createReplay(options: ReplayOptions) {
         'line-gradient': progress(0),
       },
     })
+    map.addSource(STOPS_SOURCE, {
+      type: 'geojson',
+      data: stopFeatures(0),
+    })
+    map.addLayer({
+      id: STOPS_LAYER,
+      type: 'circle',
+      source: STOPS_SOURCE,
+      paint: {
+        'circle-color': ['case', ['get', 'visited'], '#fff', 'rgba(0,0,0,0)'],
+        'circle-radius': ['case', ['get', 'visited'], 4.5, 3.5],
+        'circle-stroke-color': trip.color,
+        'circle-stroke-width': 2,
+      },
+    })
     tripMap.setBaseLayersVisible(false)
   }
 
   /** 路线进度 `ratio` 之前着色、之后透明。数据只发一次，每帧只改这个表达式。 */
   function progress(ratio: number): ExpressionSpecification {
-    return ['step', ['line-progress'], trip.color, ratio, 'rgba(0, 0, 0, 0)']
+    const safe = Math.max(1e-5, Math.min(1, ratio))
+    return ['step', ['line-progress'], trip.color, safe, 'rgba(0, 0, 0, 0)']
   }
 
   function drawn(at: number) {
@@ -305,12 +342,23 @@ export async function createReplay(options: ReplayOptions) {
     )
   }
 
-  /** 标记在路上时显示交通方式的图标，到站后是圆点。 */
-  function setMode(mode: string | undefined) {
-    head.classList.toggle('trips-replay-head--moving', Boolean(mode))
-    icon.className = mode
-      ? (ROUTE_MODE_ICONS[mode as keyof typeof ROUTE_MODE_ICONS] ?? '')
-      : ''
+  /** 标记在路上时显示交通方式的图标与日期时刻，到站后是圆点并展示站点名称标签。 */
+  function updateHead(step: Step) {
+    const stop = trip.stops[step.stop]
+    ;(map.getSource(STOPS_SOURCE) as GeoJSONSource | undefined)?.setData(
+      stopFeatures(step.stop)
+    )
+    if (step.kind === 'travel') {
+      head.set({ color: trip.color, mode: step.mode, stop })
+      stopLabelMarker.remove()
+    } else if (step.kind === 'day') {
+      head.set({ color: trip.color })
+      stopLabelMarker.remove()
+    } else {
+      head.set({ color: trip.color, stop })
+      stopLabelEl.textContent = stop.name
+      stopLabelMarker.setLngLat(stop.coordinates).addTo(map)
+    }
   }
 
   function zoomFor(step: Extract<Step, { kind: 'travel' }>) {
@@ -332,12 +380,11 @@ export async function createReplay(options: ReplayOptions) {
 
   function enter(step: Step) {
     const stop = trip.stops[step.stop]
+    updateHead(step)
     if (step.kind === 'travel') {
-      setMode(step.mode)
       travelZoom = { from: map.getZoom(), to: zoomFor(step) }
       return
     }
-    setMode(undefined)
     drawn(step.at)
     marker.setLngLat(stop.coordinates)
     if (step.kind === 'day') {
@@ -358,12 +405,32 @@ export async function createReplay(options: ReplayOptions) {
     moveTo(stop.coordinates, Math.max(map.getZoom(), 13))
   }
 
+  function reportProgress(step: Step, at: number) {
+    if (!options.onProgress) return
+    if (step.kind === 'day') {
+      options.onProgress(step.stop, 0)
+      return
+    }
+    const dwellIdx = dwellStepOf(timeline.steps, step.stop)
+    const dwellStep = timeline.steps[dwellIdx]
+    const nextStep = timeline.steps[dwellIdx + 1]
+    const start = dwellStep?.start ?? step.start
+    const end =
+      nextStep?.kind === 'travel' && nextStep.stop === step.stop
+        ? nextStep.start + nextStep.duration
+        : (dwellStep?.start ?? step.start) +
+          (dwellStep?.duration ?? step.duration)
+    const span = Math.max(1, end - start)
+    options.onProgress(step.stop, Math.max(0, Math.min(1, (at - start) / span)))
+  }
+
   function render(now: number) {
     if (!playing) return
     const at = elapsed + (now - startedAt) * speed
     if (at >= timeline.total) {
       elapsed = timeline.total
       drawn(timeline.length)
+      options.onProgress?.(trip.stops.length - 1, 1)
       finish()
       return
     }
@@ -378,6 +445,7 @@ export async function createReplay(options: ReplayOptions) {
       enter(timeline.steps[index])
     }
     const step = timeline.steps[index]
+    reportProgress(step, at)
     if (step.kind === 'travel') {
       const t = Math.min(1, (at - step.start) / step.duration)
       const eased = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2
@@ -411,7 +479,7 @@ export async function createReplay(options: ReplayOptions) {
     map.stop()
     startedAt = performance.now()
     setPlaying(true)
-    frame = requestAnimationFrame(render)
+    render(startedAt)
   }
 
   function pause() {
@@ -442,6 +510,7 @@ export async function createReplay(options: ReplayOptions) {
     startedAt = performance.now()
     stepIndex = index
     enter(timeline.steps[index])
+    options.onProgress?.(stop, 0)
   }
 
   // 换底图前页面会先退出回放，所以图层只加一次。
@@ -451,6 +520,7 @@ export async function createReplay(options: ReplayOptions) {
 
   return {
     play,
+    seek,
     toggle() {
       if (playing) pause()
       else play()
@@ -458,9 +528,11 @@ export async function createReplay(options: ReplayOptions) {
     previous() {
       seek(Math.max(0, currentStop() - 1))
     },
-    /** 下一站；在路上时就是要去的那站。 */
+    /** 下一站；开场卡时直接进当天第一站，在路上时去下一站。 */
     next() {
-      seek(Math.min(trip.stops.length - 1, currentStop() + 1))
+      const current = timeline.steps[Math.max(0, stepIndex)]
+      const target = current?.kind === 'day' ? current.stop : currentStop() + 1
+      seek(Math.min(trip.stops.length - 1, target))
     },
     /** 改倍速；已走过的时间按旧倍速结算。 */
     setSpeed(next: number) {
@@ -476,6 +548,7 @@ export async function createReplay(options: ReplayOptions) {
       cancelAnimationFrame(frame)
       playing = false
       marker.remove()
+      stopLabelMarker.remove()
       removeLayers()
       tripMap.setBaseLayersVisible(true)
     },

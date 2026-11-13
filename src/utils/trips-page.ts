@@ -15,12 +15,19 @@ import {
   parseMapSettings,
 } from './trip-map-settings.js'
 import { createReplay, PHOTO_MS, SPEEDS, type Replay } from './trip-replay'
-import { STATUS_LABELS, todayInTripZone, tripStatus } from './trips.js'
+import {
+  STATUS_LABELS,
+  findBetweenMarks,
+  getReadingOffset,
+  todayInTripZone,
+  tripStatus,
+} from './trips.js'
 
 const NARROW = '(max-width: 48rem)'
 /** 竖屏时回放卡片最多直接排开的照片数；横屏是九宫格。 */
 const PORTRAIT = '(orientation: portrait)'
 const SPEED_KEY = 'trips-replay-speed'
+const READING_LINE_SHARE = 0.38
 
 // 详情里的文字带模板缩进，合并成单个空格。
 const text = (node: Node | null | undefined) =>
@@ -35,6 +42,7 @@ export function mountTripsPage(page: HTMLElement, signal: AbortSignal) {
   const fitButton = $<HTMLButtonElement>('[data-trips-fit]')
   const toggle = $<HTMLButtonElement>('[data-trips-panel-toggle]')
   const replayCard = $<HTMLElement>('[data-trips-replay]')
+  const progressBox = page.querySelector<HTMLElement>('[data-replay-progress]')
   const mediaBox = $<HTMLElement>('[data-replay-media]')
   const speedButton = $<HTMLButtonElement>('[data-replay-speed]')
   const settingsToggle = $<HTMLButtonElement>('[data-trips-settings-toggle]')
@@ -81,16 +89,44 @@ export function mountTripsPage(page: HTMLElement, signal: AbortSignal) {
   const replaying = () => page.hasAttribute('data-trips-replaying')
 
   function getPadding(): PaddingOptions {
-    // 留出比标记更宽的边距，边缘上的点不会被切掉一半。
+    // 留出比标记更宽的边距，边缘上的点不会被切掉一半；对卡片和面板尺寸做上限保护。
     const gap = 56
     const base = { top: 88, right: gap, bottom: 80, left: gap }
-    if (replaying())
-      return { ...base, bottom: replayCard.getBoundingClientRect().height + 48 }
+    if (replaying()) {
+      const rect = replayCard.getBoundingClientRect()
+      return narrow.matches
+        ? {
+            ...base,
+            bottom: Math.min(
+              Math.round(innerHeight * 0.45),
+              Math.round(rect.height + 36)
+            ),
+          }
+        : {
+            ...base,
+            left: Math.min(
+              Math.round(innerWidth * 0.42),
+              Math.round(rect.right + 36)
+            ),
+          }
+    }
     if (collapsed()) return base
     const rect = panel.getBoundingClientRect()
     return narrow.matches
-      ? { ...base, bottom: Math.max(base.bottom, innerHeight - rect.top + gap) }
-      : { ...base, right: innerWidth - rect.left + gap }
+      ? {
+          ...base,
+          bottom: Math.min(
+            Math.round(innerHeight * 0.48),
+            Math.max(base.bottom, Math.round(innerHeight - rect.top + gap))
+          ),
+        }
+      : {
+          ...base,
+          right: Math.min(
+            Math.round(innerWidth * 0.45),
+            Math.max(base.right, Math.round(innerWidth - rect.left + gap))
+          ),
+        }
   }
 
   function setCollapsed(next: boolean) {
@@ -189,36 +225,76 @@ export function mountTripsPage(page: HTMLElement, signal: AbortSignal) {
     tripMap?.setYear(year)
   }
 
-  // —— 详情滚动联动地图：滚到哪一天就聚焦哪一天，滚到哪一站就强调哪一站 ——
+  // —— 详情滚动联动地图（参考 hyoban.cc 的 trip-scroll）：最后一屏自动追平到底，确保最后一天与最后一站完整展示 ——
   let scrollFrame = 0
   function syncScroll() {
     const root = detail(selected)
     if (!root || replaying()) return
-    const box = scroller.getBoundingClientRect()
-    const line = box.top + Math.min(160, box.height * 0.3)
-    let day: number | undefined
-    for (const item of root.querySelectorAll<HTMLElement>('[data-trip-day]'))
-      if (item.getBoundingClientRect().top <= line)
-        day = Number(item.dataset.tripDay)
+    const scrollerOrigin =
+      scroller.getBoundingClientRect().top - scroller.scrollTop
+    const stopNodes = [
+      ...root.querySelectorAll<HTMLElement>('.trip-stop[data-trip-stop]'),
+    ]
+    const lastNode = stopNodes.at(-1)
+    if (!lastNode) return
+
+    const entries = stopNodes.map((node) => {
+      const rect = node.getBoundingClientRect()
+      const dayNode = node.closest<HTMLElement>('[data-trip-day]')
+      return {
+        stopIndex: Number(node.dataset.tripStop),
+        day: Number(dayNode?.dataset.tripDay ?? 0),
+        top: rect.top - scrollerOrigin,
+        bottom: rect.bottom - scrollerOrigin,
+      }
+    })
+    const firstDayNode = root.querySelector<HTMLElement>('[data-trip-day]')
+    const firstDayTop = firstDayNode
+      ? firstDayNode.getBoundingClientRect().top - scrollerOrigin
+      : entries[0].top
+
+    const readingLine = scroller.clientHeight * READING_LINE_SHARE
+    const maxScroll = Math.max(0, scroller.scrollHeight - scroller.clientHeight)
+    const offset = getReadingOffset({
+      end: entries.at(-1)!.bottom,
+      maxScroll,
+      readingLine,
+      scrollTop: scroller.scrollTop,
+      viewport: scroller.clientHeight,
+    })
+
+    // 停在顶部封面和统计区时，看整段旅程。
+    if (scroller.scrollTop <= 12 || offset < firstDayTop) {
+      if (focusedDay !== undefined) {
+        focusedDay = undefined
+        tripMap?.focusDay(undefined)
+      }
+      if (activeStop !== undefined) activateStop(undefined, 'none')
+      tripMap?.setScrollProgress(undefined)
+      return
+    }
+
+    const last = entries.at(-1)!
+    const marks = [...entries, { ...last, top: last.bottom }]
+    let prevTop = -Infinity
+    const offsets = marks.map((mark) => (prevTop = Math.max(prevTop, mark.top)))
+    const { index, fraction } = findBetweenMarks(offsets, offset)
+    if (index < 0) return
+
+    const currentMark = entries[Math.min(index, entries.length - 1)]
+    const day = currentMark.day
     const dayChanged = day !== focusedDay
     if (dayChanged) {
       focusedDay = day
       tripMap?.focusDay(day)
     }
-    // 回到顶部（封面和数字还在视野里）时看整段旅程。
-    if (day === undefined) {
-      if (dayChanged) activateStop(undefined, 'none')
-      return
+    if (currentMark.stopIndex !== activeStop) {
+      activateStop(currentMark.stopIndex, dayChanged ? 'none' : 'reveal')
     }
-    let stop: number | undefined
-    for (const item of root.querySelectorAll<HTMLElement>(
-      `[data-trip-day="${day}"] [data-trip-stop]`
-    ))
-      if (item.getBoundingClientRect().top <= line + 48)
-        stop = Number(item.dataset.tripStop)
-    // 换天时镜头正在框住当天，不再追加平移。
-    if (stop !== undefined && stop !== activeStop)
-      activateStop(stop, dayChanged ? 'none' : 'reveal')
+    tripMap?.setScrollProgress({
+      stopIndex: currentMark.stopIndex,
+      fraction,
+    })
   }
   scroller.addEventListener(
     'scroll',
@@ -248,6 +324,43 @@ export function mountTripsPage(page: HTMLElement, signal: AbortSignal) {
     }
   }
 
+  function buildProgress(id: string) {
+    if (!progressBox) return
+    const trip = tripMap?.trip(id)
+    if (!trip) return
+    progressBox.replaceChildren(
+      ...trip.stops.map((stop) => {
+        const li = document.createElement('li')
+        li.className = 'trips-replay__progress-item'
+        const button = document.createElement('button')
+        button.type = 'button'
+        button.className = 'trips-replay__progress-btn'
+        button.title = `第 ${stop.day + 1} 天 · ${stop.name}`
+        button.setAttribute('aria-label', button.title)
+        const bar = document.createElement('span')
+        bar.className = 'trips-replay__progress-bar'
+        const fill = document.createElement('span')
+        fill.className = 'trips-replay__progress-fill'
+        fill.dataset.progressFill = ''
+        bar.append(fill)
+        button.append(bar)
+        button.addEventListener('click', () => replay?.seek(stop.index))
+        li.append(button)
+        return li
+      })
+    )
+  }
+
+  function renderProgress(activeIndex: number, ratio: number) {
+    if (!progressBox) return
+    for (const [i, item] of [...progressBox.children].entries()) {
+      const fill = item.querySelector<HTMLElement>('[data-progress-fill]')
+      if (!fill) continue
+      const amount = i < activeIndex ? 1 : i > activeIndex ? 0 : ratio
+      fill.style.transform = `scaleX(${amount})`
+    }
+  }
+
   let speed: number = SPEEDS[0]
   try {
     const saved = Number(localStorage.getItem(SPEED_KEY))
@@ -261,7 +374,7 @@ export function mountTripsPage(page: HTMLElement, signal: AbortSignal) {
   }
   renderSpeed()
 
-  /** 照片轮播：单张模式下每张停 `PHOTO_MS`（按倍速缩短），路上也继续。 */
+  /** 照片轮播：单张模式（横屏>9张、竖屏>3张）下每张停 `PHOTO_MS`（按倍速缩短），路上也继续。 */
   let media: { links: HTMLAnchorElement[]; index: number } = {
     links: [],
     index: 0,
@@ -293,43 +406,63 @@ export function mountTripsPage(page: HTMLElement, signal: AbortSignal) {
     const main = mediaBox.querySelector<HTMLImageElement>(
       '.trips-replay__main img'
     )
-    if (!main) return
-    const link = media.links[index]
-    main.src = link.href
-    main.alt = link.querySelector('img')?.alt ?? ''
-    mediaBox
-      .querySelectorAll<HTMLElement>('.trips-replay__strip button')
-      .forEach((button, i) =>
-        button.toggleAttribute('aria-current', i === index)
+    if (main) {
+      const link = media.links[index]
+      main.src = link.href
+      main.alt = link.querySelector('img')?.alt ?? ''
+      const stripButtons = mediaBox.querySelectorAll<HTMLElement>(
+        '.trips-replay__strip button'
       )
+      stripButtons.forEach((button, i) => {
+        const current = i === index
+        button.toggleAttribute('aria-current', current)
+        if (current)
+          button.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+      })
+      return
+    }
+    const gridButtons = mediaBox.querySelectorAll<HTMLElement>(
+      '.trips-replay__grid-btn'
+    )
+    gridButtons.forEach((button, i) =>
+      button.toggleAttribute(
+        'aria-current',
+        media.links.length > 1 && i === index
+      )
+    )
   }
 
   /**
-   * 竖屏三张以内、横屏九张以内直接排开；更多时显示一张大图，下面是缩略图条。
+   * 竖屏三张以内、横屏九张以内直接网格排开；更多时显示一张大图，下面是缩略图条。
    * 点大图或排开的照片打开照片对话框。
    */
   function renderMedia(links: HTMLAnchorElement[]) {
     media = { links, index: 0 }
     mediaBox.replaceChildren()
     mediaBox.hidden = links.length === 0
-    const single = links.length > (portrait.matches ? 3 : 9)
+    const isPortrait = narrow.matches || portrait.matches
+    const single = links.length > (isPortrait ? 3 : 9)
     mediaBox.className = `trips-replay__media ${
       links.length === 0 ? '' : single ? 'is-single' : 'is-grid'
     }`
-    // 四张排成两行两列，其余最多三列。
-    mediaBox.style.setProperty(
-      '--cols',
-      String(links.length === 4 ? 2 : Math.min(links.length, 3))
-    )
+    // 1 张单列，2 或 4 张两列，其余三列。
+    const cols =
+      links.length <= 1 ? 1 : links.length === 2 || links.length === 4 ? 2 : 3
+    mediaBox.style.setProperty('--cols', String(cols))
     if (!single) {
-      for (const link of links) {
+      links.forEach((link, index) => {
         const button = document.createElement('button')
         button.type = 'button'
+        button.className = 'trips-replay__grid-btn'
         button.setAttribute('aria-label', `查看大图：${link.dataset.caption}`)
-        button.append(thumbnail(link, '10rem'))
-        button.addEventListener('click', () => viewer.open(link))
+        button.append(thumbnail(link, cols === 1 ? '22rem' : '8rem'))
+        button.addEventListener('click', () => {
+          showPhoto(index)
+          viewer.open(link)
+        })
         mediaBox.append(button)
-      }
+      })
+      showPhoto(0)
     } else if (links.length > 0) {
       const main = document.createElement('button')
       main.type = 'button'
@@ -429,6 +562,7 @@ export function mountTripsPage(page: HTMLElement, signal: AbortSignal) {
     const run = ++replayRun
     page.toggleAttribute('data-trips-replaying', true)
     replayCard.hidden = false
+    buildProgress(id)
     try {
       const created = await createReplay({
         tripMap,
@@ -437,6 +571,7 @@ export function mountTripsPage(page: HTMLElement, signal: AbortSignal) {
         photosOf: (index) => photoLinks(index).length,
         onDay: showReplayDay,
         onStop: showReplayStop,
+        onProgress: renderProgress,
         onPlayingChange: setReplayPlaying,
         onEnd: () => setReplayPlaying(false),
       })
@@ -475,12 +610,14 @@ export function mountTripsPage(page: HTMLElement, signal: AbortSignal) {
       }
       const stop = target.closest<HTMLElement>('[data-trip-stop-focus]')
       if (stop) {
-        activateStop(
-          Number(
-            stop.closest<HTMLElement>('[data-trip-stop]')!.dataset.tripStop
-          ),
-          'fly'
-        )
+        const stopNode = stop.closest<HTMLElement>('[data-trip-stop]')!
+        const dayNode = stopNode.closest<HTMLElement>('[data-trip-day]')
+        const day = dayNode ? Number(dayNode.dataset.tripDay) : undefined
+        if (day !== undefined && day !== focusedDay) {
+          focusedDay = day
+          tripMap?.focusDay(day)
+        }
+        activateStop(Number(stopNode.dataset.tripStop), 'fly')
         return
       }
       const yearButton = target.closest<HTMLButtonElement>('[data-trips-year]')
@@ -693,7 +830,7 @@ export function mountTripsPage(page: HTMLElement, signal: AbortSignal) {
         return
       }
       tripMap = instance
-      tripMap.map.once('load', () => {
+      const enableMapControls = () => {
         fitButton.disabled = false
         settingsToggle.disabled = page.hasAttribute('data-trips-map-failed')
         for (const button of page.querySelectorAll<HTMLButtonElement>(
@@ -705,7 +842,9 @@ export function mountTripsPage(page: HTMLElement, signal: AbortSignal) {
         tripMap?.setYear(year)
         if (selectedEntry) tripMap?.selectEntry(selectedEntry)
         else if (selected) tripMap?.select(selected)
-      })
+      }
+      if (tripMap.ready()) enableMapControls()
+      else tripMap.map.once('style.load', enableMapControls)
       const unobserve = observeTheme(() => {
         // 「跟随主题」时会换底图，回放图层随之消失。
         if (settings.style === 'auto') stopReplay()

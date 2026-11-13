@@ -13,7 +13,7 @@
  * - `data`：个别条目缺数据被跳过或降级，不需要改代码。
  * 前两类是错误，导入会停下；`data` 只是警告。
  */
-import { CLOCK_TIME, SCHEDULED_MODES } from './trips.js'
+import { CLOCK_TIME, SCHEDULED_MODES, defaultTravelMode } from './trips.js'
 
 const DETAIL_URL =
   'https://www.pitravel.cn/api/slytherin/v1/web/journey/detail?journey_id='
@@ -30,7 +30,6 @@ const TRAVEL_MODES = {
   3: 'transit',
   5: 'taxi',
 }
-const DEFAULT_TRAVEL_CODE = 1
 /** 站内方式 → 向 `web/route` 请求时用的编码；班次方式不请求。 */
 const ROUTE_CODES = { drive: 0, walk: 1, bike: 2, transit: 3, taxi: 5 }
 /** 交通事件的类型范围；200 未细分，按班次号推断。 */
@@ -237,19 +236,21 @@ function photoUrls(event, reader, where) {
 }
 
 /** 去往下一站的方式编码；等知道是不是最后一站后再由 `resolveTravel` 解释。 */
-function pendingTravel(event, where) {
-  return { code: event.route_transportation_type ?? DEFAULT_TRAVEL_CODE, where }
+function pendingTravel(event, where, crossDay = false) {
+  return { code: event.route_transportation_type, where, crossDay }
 }
 
 /**
  * 给每站定下去往下一站的方式和路段请求。最后一站没有下一站，它的编码不读；
+ * 没设置交通方式（缺省、交通事件的到达站，或跨天时圆周没提供设置入口的 0）按距离自动选步行或开车；
  * 其余站遇到未知编码记为 source 问题，按驾车继续转换以便一次报出全部问题。
  */
 function resolveTravel(flat, reader) {
   flat.forEach((stop, index) => {
     const pending = stop.pending
     delete stop.pending
-    if (index === flat.length - 1) {
+    const next = flat[index + 1]
+    if (!next) {
       delete stop.travel
       delete stop.travelSeconds
       delete stop.service
@@ -257,7 +258,10 @@ function resolveTravel(flat, reader) {
       return
     }
     if (!pending) return
-    let mode = TRAVEL_MODES[pending.code]
+    let mode =
+      pending.code === undefined || (pending.crossDay && pending.code === 0)
+        ? defaultTravelMode(stop.coordinates, next.coordinates)
+        : TRAVEL_MODES[pending.code]
     if (!mode) {
       reader.report(
         'source',
@@ -433,16 +437,15 @@ function readJourney(response) {
     .filter((day) => day?.day_index !== -1 && Number.isFinite(day?.timestamp))
     .toSorted((a, b) => a.timestamp - b.timestamp)) {
     const date = dateIn(timeZone, day.timestamp)
-    const stops = (Array.isArray(day.events) ? day.events : []).flatMap(
-      (event, index) => {
-        const name = text(event?.name) ?? '（未命名）'
-        const where = `${date} 第 ${index + 1} 项「${name}」`
-        const stops = event ? toStops(event, reader, where) : []
-        if (stops.length === 0)
-          reader.report('data', `${where} 缺少坐标或名称，未导入。`)
-        return stops
-      }
-    )
+    const events = Array.isArray(day.events) ? day.events : []
+    const stops = events.flatMap((event, index) => {
+      const name = text(event?.name) ?? '（未命名）'
+      const where = `${date} 第 ${index + 1} 项「${name}」`
+      const stops = event ? toStops(event, reader, where) : []
+      if (stops.length === 0)
+        reader.report('data', `${where} 缺少坐标或名称，未导入。`)
+      return stops
+    })
     const previous = days.at(-1)
     // 两个日程落在同一天时合并，不丢地点。
     if (previous?.date === date) {
@@ -451,6 +454,9 @@ function readJourney(response) {
     } else days.push({ date, summary: text(day.remark), stops })
   }
   if (days.length === 0) throw new Error('行程里没有已安排日期的日程。')
+  for (const day of days) {
+    if (day.stops.at(-1)?.pending) day.stops.at(-1).pending.crossDay = true
+  }
   resolveTravel(
     days.flatMap((day) => day.stops),
     reader

@@ -4,6 +4,8 @@
  * 数据形状见 `tripSchema`（src/content/schema.ts）。
  */
 
+import { haversine } from './geo.mjs'
+
 const TRIP_TIME_ZONE = 'Asia/Shanghai'
 /** 停靠点时刻 `HH:mm`；schema、圆周适配器和草稿校验共用。 */
 export const CLOCK_TIME = /^([01]\d|2[0-3]):[0-5]\d$/
@@ -44,6 +46,11 @@ export const ROUTE_MODE_ICONS = {
 export const SCHEDULED_MODES = new Set(['flight', 'train', 'ferry'])
 /** 走路网的方式：可以向路线服务请求路径。 */
 export const ROAD_MODES = new Set(['taxi', 'drive', 'walk', 'bike'])
+/** 没有设置交通方式时按大圆距离推断：1.5 公里以内步行，更远开车。 */
+const WALK_DISTANCE_METERS = 1500
+export function defaultTravelMode(from, to) {
+  return haversine(from, to) <= WALK_DISTANCE_METERS ? 'walk' : 'drive'
+}
 const COLLAGE_SIZE = 3
 const WEEKDAYS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 // 按年份从旧到新依次取色，相邻年份不撞色。
@@ -299,19 +306,68 @@ export function tripMapData(id, trip, color, thumbnail) {
     dates: formatDateRange(trip.start, trip.end),
     color,
     year: tripYear(trip),
-    stops: all.map(({ stop, index, day, number }) => ({
-      name: stop.name,
-      coordinates: stop.coordinates,
-      index,
-      day,
-      number,
-      photo:
-        thumbnail && stop.photos[0] ? thumbnail(stop.photos[0]) : undefined,
-    })),
+    stops: all.map(({ stop, index, day, number }) => {
+      const dayDate = trip.days[day]?.date
+      const time =
+        stop.time?.start ?? stop.time?.end ?? stop.route?.service?.depart
+      return {
+        name: stop.name,
+        coordinates: stop.coordinates,
+        index,
+        day,
+        number,
+        ...(dayDate && { date: formatDayLabel(dayDate) }),
+        ...(time && { time }),
+        photo:
+          thumbnail && stop.photos[0] ? thumbnail(stop.photos[0]) : undefined,
+      }
+    }),
     legs: all.flatMap(({ stop, index, day }) =>
       stop.route
         ? [{ from: index, day, mode: stop.route.mode, path: stop.route.path }]
         : []
     ),
   }
+}
+
+/**
+ * 面板滚动时的阅读位置：跟在阅读线处；最后几项贴近底部够不到阅读线时，
+ * 在最后一屏的滚动里平滑追上末尾，让最后一天和最后一站也能被完整滚过。
+ * @param {{ end: number, maxScroll: number, readingLine: number, scrollTop: number, viewport: number }} input
+ */
+export function getReadingOffset({
+  end,
+  maxScroll,
+  readingLine,
+  scrollTop,
+  viewport,
+}) {
+  const short = Math.max(0, end - (maxScroll + readingLine))
+  const span = Math.min(maxScroll, Math.max(viewport, short * 2))
+  const caughtUp =
+    span > 0
+      ? Math.min(Math.max((scrollTop - (maxScroll - span)) / span, 0), 1)
+      : 1
+  return scrollTop + readingLine + short * caughtUp
+}
+
+/**
+ * `offset` 落在一组递增刻度里的哪一段，以及在该段内的比例（0–1）；
+ * 在第一个刻度之前时返回 `{ index: -1, fraction: 0 }`。
+ * @param {readonly number[]} offsets
+ * @param {number} offset
+ */
+export function findBetweenMarks(offsets, offset) {
+  const last = offsets.length - 1
+  if (last < 0 || offset < offsets[0]) return { index: -1, fraction: 0 }
+  for (let index = 0; index < last; index++) {
+    const start = offsets[index]
+    const end = offsets[index + 1]
+    if (offset < end)
+      return {
+        index,
+        fraction: end > start ? (offset - start) / (end - start) : 1,
+      }
+  }
+  return { index: Math.max(last - 1, 0), fraction: 1 }
 }

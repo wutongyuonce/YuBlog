@@ -122,8 +122,9 @@ export default defineConfig({
     'focus:top-1.5',
     'focus:op-20',
 
-    /* PostMeta：静态类本可被扫描覆盖；保留作防御性 safelist，防 content 扫描边界漏抽 */
+    /* PostMeta 与视图切换防御性 safelist */
     'i-ri-calendar-line',
+    'i-ri-map-2-line',
     'i-ri-history-fill',
     'i-ri-pen-nib-line',
     'i-ri-timer-line',

@@ -94,7 +94,6 @@ test('readExif takes the original local time, offset and signed GPS in either by
     takenAt: '2026-12-05T10:31',
     offset: '+08:00',
     coordinates: [106.5772, 29.56],
-    altitude: 245.5,
   })
   assert.deepEqual(
     readExif(sample(false, ['S', 'W'])).coordinates,

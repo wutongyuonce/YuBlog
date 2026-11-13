@@ -134,7 +134,7 @@ pnpm trips:import '<分享链接>' --id <id>
 
 - 顶层：`title` 必填；`coordinateSystem` 可省（默认 `wgs84`，或 `gcj02`）；`cover` 是封面候选；`days` 至少一天，每天 `date` 必须真实存在且严格递增，`summary`、`stops` 可省。
 - 每站：`name` 与 `coordinates` 必填；`category`、`emoji`、`address`、`note` 是非空文字；`time` 是 `{ "start"?: "HH:mm", "end"?: "HH:mm" }`，至少一项；`photos` 是相对草稿文件的路径或 http(s) 地址。
-- 交通字段都描述「从这一站去下一站」，`travel` 默认 `drive`：
+- 交通字段都描述「从这一站去下一站」，省略 `travel` 时按两站大圆距离自动推断（1.5 公里以内 `walk`，更远 `drive`）：
 
 | `travel` | 含义 | 地图画法 | 可加字段 |
 | :--- | :--- | :--- | :--- |
@@ -176,8 +176,8 @@ photos:
 早上推开窗，湖面一层白。
 ```
 
-- `title`、`date`（`YYYY-MM-DD`）必填。
-- `time` 可选，`HH:mm`，要加引号，否则 YAML 可能把它当成数字。
+- `date`（`YYYY-MM-DD`）必填；`title` 可选（纯文字日记可以不写标题）。
+- `time` 可选，`HH:mm`，要加引号，否则 YAML 可能把它当成数字；正文里若出现 `15:25`、`0:20` 这类时间，把冒号写成 `15\:25`，免得被 `remark-directive` 当成 `:25` 指令。
 - `place` 可选，`name` 和 `[经度, 纬度]` 都要写，坐标用 WGS84。高德、腾讯等国内地图给的是 GCJ-02，先换算：`node -e "import('./src/utils/pitravel.mjs').then((m) => console.log(m.gcj02ToWgs84(<经度>, <纬度>)))"`。查不到坐标就问用户，不要猜。
 - `photos` 可选，相对 `entry.md` 的图片路径，GIF 可以；HEIC 先转 JPEG。图片长边 1600px 以内即可，构建时会生成响应式 WebP；原图过大时用 `sips -Z 1600 <原图> --out <新图>` 缩小。
 - 正文是文字，可以为空；只有文字或只有照片的条目都可以。

@@ -13,6 +13,11 @@ export function monthKey(date) {
   return date.slice(0, 7)
 }
 
+/** 记录所在年份。 */
+export function entryYear(entry) {
+  return Number(entry.date.slice(0, 4))
+}
+
 /** 有记录的月份，从旧到新。 */
 export function calendarMonths(entries) {
   return [...new Set(entries.map((entry) => monthKey(entry.date)))].toSorted()
@@ -47,6 +52,29 @@ export function monthCells(key) {
 }
 
 /**
+ * 月份选择器的年份与 1–12 月网格：从旧到新按年分组，有记录的月份标 `active`，当前月标 `current`。
+ * @param {readonly string[]} months `YYYY-MM`（从旧到新）
+ * @param {string} activeMonth 当前月 `YYYY-MM`
+ */
+export function monthPickerGroups(months, activeMonth) {
+  const activeSet = new Set(months)
+  const years = [...new Set(months.map((item) => item.slice(0, 4)))]
+  return years.map((year) => ({
+    year,
+    slots: Array.from({ length: 12 }, (_, index) => {
+      const number = index + 1
+      const key = `${year}-${String(number).padStart(2, '0')}`
+      return {
+        number,
+        key,
+        active: activeSet.has(key),
+        current: key === activeMonth,
+      }
+    }),
+  }))
+}
+
+/**
  * 时间线顺序：新的在前；同一天有时间的按时间倒序，没写时间的排在当天最后。
  * @template {{ data: { date: string, time?: string } }} E
  * @param {E[]} entries
@@ -77,7 +105,7 @@ export function entryHash(id) {
 /**
  * `/trips/map.json` 里一条有地点的记录。
  * @param {string} id
- * @param {{ title: string, date: string, place: { name: string, coordinates: [number, number] } }} entry
+ * @param {{ title?: string, date: string, place: { name: string, coordinates: [number, number] } }} entry
  * @param {string} color 年份颜色
  * @param {string} [photo] 第一张照片的缩略图地址
  */
@@ -85,11 +113,11 @@ export function calendarMapData(id, entry, color, photo) {
   return {
     id,
     hash: entryHash(id),
-    title: entry.title,
+    title: entry.title ?? entry.place.name,
     date: formatDayLabel(entry.date),
     place: entry.place.name,
     coordinates: entry.place.coordinates,
-    year: Number(entry.date.slice(0, 4)),
+    year: entryYear(entry),
     color,
     photo,
   }

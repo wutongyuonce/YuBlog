@@ -355,7 +355,7 @@ export const tripSchema = ({ image }: SchemaContext) =>
    ===================================================== */
 export const calendarSchema = ({ image }: SchemaContext) =>
   z.object({
-    title: z.string().trim().min(1),
+    title: z.string().trim().min(1).optional(),
     // YAML 会把没加引号的日期读成 Date，这里统一成 `YYYY-MM-DD`。
     date: z.preprocess(
       (value) =>

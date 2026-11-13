@@ -3,9 +3,11 @@ import test from 'node:test'
 
 import {
   calendarMonths,
+  entryYear,
   formatEntryDate,
   monthCells,
   monthPath,
+  monthPickerGroups,
   sortEntries,
 } from '../src/utils/calendar.js'
 
@@ -31,10 +33,19 @@ test('months, paths and entry dates', () => {
     ['2025-03', '2026-11']
   )
   assert.equal(monthPath('2026-03'), '/calendar/2026/03/')
+  assert.equal(entryYear({ date: '2026-11-10' }), 2026)
   assert.equal(
     formatEntryDate({ date: '2026-11-10', time: '19:30' }),
     '11月10日 周二 · 19:30'
   )
+  const groups = monthPickerGroups(['2025-04', '2026-11'], '2026-11')
+  assert.deepEqual(
+    groups.map((g) => g.year),
+    ['2025', '2026']
+  )
+  assert.equal(groups[0].slots.length, 12)
+  assert.equal(groups[0].slots[3].active, true)
+  assert.equal(groups[1].slots[10].current, true)
 })
 
 test('the timeline puts newer days and later times first, untimed last', () => {

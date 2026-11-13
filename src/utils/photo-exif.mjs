@@ -97,7 +97,7 @@ function toDegrees(parts, ref) {
  * 解析 EXIF 块（`sharp(...).metadata()` 的 `exif`，以 `Exif\0\0` 开头；
  * 也接受裸 TIFF 头）。读不出的部分直接省略，任何输入都不抛错。
  * @param {Uint8Array | undefined} buffer
- * @returns {{ takenAt?: string, offset?: string, coordinates?: [number, number], altitude?: number }}
+ * @returns {{ takenAt?: string, offset?: string, coordinates?: [number, number] }}
  */
 export function readExif(buffer) {
   if (!(buffer instanceof Uint8Array)) return {}
@@ -135,9 +135,6 @@ export function readExif(buffer) {
     Math.abs(lng) <= 180
   )
     result.coordinates = [round6(lng), round6(lat)]
-  const altitude = gps.get(6)?.[0]
-  if (Number.isFinite(altitude))
-    result.altitude = gps.get(5)?.[0] === 1 ? -altitude : altitude
   return result
 }
 

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { z } from 'astro/zod'
 import {
+  calendarSchema,
   friendSchema,
   postSchema,
   projectSchema,
@@ -10,6 +11,7 @@ import {
 
 const post = postSchema({ image: () => z.any() })
 const trip = tripSchema({ image: () => z.string() })
+const calendar = calendarSchema({ image: () => z.string() })
 const requiredPost = {
   title: '  示例文章  ',
   pubDate: '2026-09-21',
@@ -149,4 +151,25 @@ test('trip stops reject bad coordinates, times and malformed routes', () => {
     },
   ])
     assert.equal(trip.safeParse(withStop(patch)).success, true)
+})
+
+test('calendar entries coerce YAML Date values and validate optional place and time', () => {
+  const parsed = calendar.parse({
+    title: ' 南京博物院 ',
+    date: new Date('2026-11-12T00:00:00Z'),
+    time: '14:30',
+    place: { name: ' 南京博物院 ', coordinates: [118.8253, 32.0414] },
+  })
+  assert.equal(parsed.title, '南京博物院')
+  assert.equal(parsed.date, '2026-11-12')
+  assert.deepEqual(parsed.photos, [])
+  assert.equal(
+    calendar.safeParse({ title: 'x', date: '2026-02-30' }).success,
+    false
+  )
+  assert.equal(
+    calendar.safeParse({ title: 'x', date: '2026-11-12', time: '25:00' })
+      .success,
+    false
+  )
 })

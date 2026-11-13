@@ -12,6 +12,7 @@ import {
   ROAD_MODES,
   ROUTE_MODES,
   SCHEDULED_MODES,
+  defaultTravelMode,
 } from './trips.js'
 
 const TRIP_KEYS = new Set(['title', 'coordinateSystem', 'cover', 'days'])
@@ -142,13 +143,13 @@ function toStop(stop, where, gcj02, baseDir) {
     Math.abs(lat) > 90
   )
     throw new Error(`${at} 的 coordinates 必须是 [经度, 纬度]。`)
-  const travel = stop.travel === undefined ? 'drive' : stop.travel
-  if (!ROUTE_MODES.includes(travel))
+  const travel = stop.travel
+  if (travel !== undefined && !ROUTE_MODES.includes(travel))
     throw new Error(`${at} 的 travel 只能是 ${ROUTE_MODES.join('／')}。`)
   const minutes = stop.travelMinutes
   if (minutes !== undefined) {
     // 路网方式的时长由路线服务给出。
-    if (ROAD_MODES.has(travel))
+    if (!travel || ROAD_MODES.has(travel))
       throw new Error(
         `${at} 的 travelMinutes 只用于 flight／train／ferry／transit。`
       )
@@ -226,6 +227,12 @@ export function parseTripDraft(value, baseDir) {
       `最后一站「${last.name}」没有下一站，不要写 travel、travelMinutes、service 或 transit。`
     )
 
+  const flat = days.flatMap((day) => day.stops)
+  flat.forEach((stop, index) => {
+    const next = flat[index + 1]
+    if (!next) delete stop.travel
+    else stop.travel ??= defaultTravelMode(stop.coordinates, next.coordinates)
+  })
   return {
     title,
     start: days[0].date,
