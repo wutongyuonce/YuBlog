@@ -29,6 +29,7 @@
     "test:sliding-indicator": "node --test test/sliding-indicator.test.mjs",
     "og:cover": "node ./scripts/gen-og-cover.mjs",
     "trips:import": "node ./scripts/import-trip.mjs",
+    "trips:photos": "node ./scripts/read-photos.mjs",
     "format": "prettier . --check --ignore-unknown",
     "format:write": "prettier . --write --ignore-unknown --cache",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0 --cache",
