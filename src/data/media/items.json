@@ -1178,11 +1178,14 @@
   {
     "id": "tv-doctor-x-白色黑手党时代",
     "category": "tv",
-    "status": "todo",
+    "status": "done",
     "title": "Doctor X：白色黑手党时代",
     "cover": "tv/doctor-x.jpg",
     "href": "https://zh.wikipedia.org/wiki/Doctor_X：白色黑手黨時代",
-    "tags": ["韩剧", "医疗"]
+    "score": 4.5,
+    "date": "2026-11-15",
+    "tags": ["韩剧", "医疗"],
+    "review": "跟着金智媛来的，没看过日版，叠加韩国的医疗现状，整个故事还是挺让人感动的"
   },
   {
     "id": "tv-谜探路德维希",
