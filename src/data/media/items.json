@@ -1531,6 +1531,17 @@
     "review": "IU 和三个叔叔的生活剧。很静，欠债、加班和一句关心都有重量。"
   },
   {
+    "id": "tv-我的解放日志",
+    "category": "tv",
+    "status": "done",
+    "title": "我的解放日志",
+    "cover": "tv/my-liberation-notes.jpg",
+    "href": "https://zh.wikipedia.org/wiki/我的出走日记",
+    "score": 4.5,
+    "tags": ["韩剧", "生活"],
+    "review": "丧丧的，但好像又能体会到一股无声的面对生活的勇气和力量。"
+  },
+  {
     "id": "tv-苦尽甘来遇见你",
     "category": "tv",
     "status": "done",
