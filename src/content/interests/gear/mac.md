@@ -23,8 +23,6 @@ order: 3
 | 代码 | [Tailscale](https://tailscale.com) |  |
 | 代码 | [Xcode](https://developer.apple.com/xcode/) |  |
 | 代码 | [Bruno](https://www.usebruno.com/) | |
-| 代码 | [Apifox](https://apifox.com/) | |
-| 代码 | [Postman](https://www.postman.com/) | |
 | 代码 | [Docker](https://www.docker.com/) | |
 | 代码 | [WhatThePort](https://whattheport.dev/) | 端口查看器 |
 | 笔记 | [Typora](https://typora.io/) | |
@@ -44,7 +42,6 @@ order: 3
 | 播放器 | [Lyrimuse](https://yudaotor.github.io/lyrimuse/zh/) | Mac 桌面歌词 |
 | 社交工作 | [Telegram](https://telegram.org/) | |
 | 社交工作 | [Discord](https://discord.com/) | |
-| 社交工作 | [钉钉](https://www.dingtalk.com/) | |
 | 社交工作 | [腾讯会议](https://meeting.tencent.com/) | |
 | 邮箱 | [网易邮箱大师](https://dashi.163.com/) | |
 | 媒体、信息 | ~~[Folo](https://folo.is/)~~ [PaperRSS](https://github.com/ohmyangboy/PaperRss) | RSS 订阅器 |
@@ -52,15 +49,14 @@ order: 3
 | 媒体、信息 | [剪映专业版](https://www.capcut.cn/) | 剪辑 |
 | 媒体、信息 | [ArcTime Pro](https://arctime.cn/arctime-pro.html) | 字幕 |
 | 媒体、信息 | [IINA](https://iina.io/) | 视频播放器 |
+| 媒体、信息 | [VidHub](https://vidhub.okaapps.com/) | 视频播放器 |
 | 媒体、信息 | [Downie4](https://software.charliemonroe.net/downie/) | 视频下载器 |
-| 媒体、信息 | [小宇宙](https://www.xiaoyuzhoufm.com/) | 播客 |
 | 媒体、信息 | [Cap](https://cap.so/) | 录屏剪辑 |
 | 其他工具 | [RunCatNeo](https://github.com/runcat-dev/RunCatNeo) | Mac 监控 |
 | 其他工具 | [Deck](https://deckclip.app/) | 最好用的 Mac 剪切板历史 |
 | 其他工具 | [PixPin](https://pixpin.com/) | 截图 |
 | 其他工具 | [Pearcleaner](https://github.com/alienator88/Pearcleaner) / [Tencent Lemon](https://lemon.qq.com/) / [mole](https://mole.fit/zh/) | 清理卸载 |
 | 其他工具 | [Slidepad](https://slidepad.app/) | 右侧浏览器 |
-| 其他工具 | [TopNotch](https://topnotch.app/) | 遮挡刘海 |
 | 其他工具 | [FineTune](https://github.com/ronitsingh10/FineTune) | 音频控制 |
 | 其他工具 | [超级右键](https://www.irightmouse.com/) | |
 | 其他工具 | [CleanMyKeyboard](https://apps.apple.com/us/app/cleanmykeyboard/id6468120888) | |
