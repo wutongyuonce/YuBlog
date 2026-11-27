@@ -1240,12 +1240,25 @@
   {
     "id": "tv-终极名单",
     "category": "tv",
-    "status": "todo",
-    "title": "终极名单",
+    "status": "done",
+    "title": "终极名单 第一季",
     "cover": "tv/terminal-list.jpg",
     "href": "https://zh.wikipedia.org/wiki/終極名單",
+    "score": 4.5,
+    "date": "2026-11-28",
+    "tags": ["美剧", "动作"]
+  },
+  {
+    "id": "tv-终极名单-第二季",
+    "category": "tv",
+    "status": "done",
+    "title": "终极名单 第二季",
+    "cover": "tv/terminal-list.jpg",
+    "href": "https://zh.wikipedia.org/wiki/終極名單",
+    "score": 4.5,
+    "date": "2026-11-28",
     "tags": ["美剧", "动作"],
-    "review": "准备看第一季。"
+    "review": "剧情挺写实刺激的，里斯真男人！第三季应该也会很不错"
   },
   {
     "id": "tv-昭雪",
