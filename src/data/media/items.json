@@ -692,6 +692,16 @@
     "review": "深渊往下越来越好看，也越来越狠。可爱画风和后面的代价反差很大。"
   },
   {
+    "id": "anime-来自深渊：烈日的黄金乡",
+    "category": "anime",
+    "status": "done",
+    "title": "来自深渊：烈日的黄金乡",
+    "cover": "anime/abyss-golden-city.jpg",
+    "href": "https://zh.wikipedia.org/wiki/来自深渊",
+    "score": 4.5,
+    "tags": ["日漫", "冒险"]
+  },
+  {
     "id": "anime-月色真美",
     "category": "anime",
     "status": "done",
